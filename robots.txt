@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dear-ded.github.io/wallstreet-tieling/sitemap.xml
