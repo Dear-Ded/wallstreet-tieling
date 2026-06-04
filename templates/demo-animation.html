@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动画演示 - 华尔街驻铁岭办事处</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #0a0a1a;
+            color: #f0f0ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #8888aa;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
+        /* 动画网格 */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 32px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+            border-color: #6366f1;
+        }
+        
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .card-desc {
+            color: #8888aa;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* 动画演示区域 */
+        .animation-demo {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 48px;
+            margin-bottom: 60px;
+        }
+        
+        .demo-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        /* 浮动球体 */
+        .floating-orbs {
+            position: relative;
+            height: 200px;
+            margin-bottom: 40px;
+            overflow: hidden;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.6;
+        }
+        
+        .orb-1 {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: float1 8s ease-in-out infinite;
+        }
+        
+        .orb-2 {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            animation: float2 10s ease-in-out infinite;
+        }
+        
+        .orb-3 {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            animation: float3 12s ease-in-out infinite;
+        }
+        
+        /* 进度条动画 */
+        .progress-bars {
+            margin-bottom: 40px;
+        }
+        
+        .progress-item {
+            margin-bottom: 20px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            width: 0;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .progress-fill.animated {
+            /* width will be set by JavaScript */
+        }
+        
+        .progress-fill.blue { background: linear-gradient(90deg, #667eea, #764ba2); }
+        .progress-fill.green { background: linear-gradient(90deg, #11998e, #38ef7d); }
+        .progress-fill.orange { background: linear-gradient(90deg, #f093fb, #f5576c); }
+        
+        /* 数字计数动画 */
+        .counters {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .counter-item {
+            text-align: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+        }
+        
+        .counter-value {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .counter-label {
+            font-size: 14px;
+            color: #8888aa;
+            margin-top: 8px;
+        }
+        
+        /* 脉冲动画 */
+        .pulse-demo {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .pulse-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6366f1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .pulse-dot:nth-child(2) { animation-delay: 0.3s; }
+        .pulse-dot:nth-child(3) { animation-delay: 0.6s; }
+        .pulse-dot:nth-child(4) { animation-delay: 0.9s; }
+        .pulse-dot:nth-child(5) { animation-delay: 1.2s; }
+        
+        /* 旋转动画 */
+        .spin-demo {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .spin-icon {
+            font-size: 48px;
+            animation: spin 3s linear infinite;
+        }
+        
+        .spin-icon.reverse {
+            animation-direction: reverse;
+        }
+        
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+        }
+        
+        [data-theme="light"] {
+            background: #f0f2f5;
+            color: #1a1a2e;
+        }
+        
+        [data-theme="light"] .card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        [data-theme="light"] .card-desc,
+        [data-theme="light"] .subtitle,
+        [data-theme="light"] .counter-label {
+            color: #6666aa;
+        }
+        
+        [data-theme="light"] .animation-demo {
+            background: rgba(0, 0, 0, 0.03);
+        }
+        
+        [data-theme="light"] .floating-orbs {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 动画关键帧 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes float1 {
+            0%, 100% { transform: translate(20%, 30%); }
+            25% { transform: translate(60%, 20%); }
+            50% { transform: translate(40%, 60%); }
+            75% { transform: translate(80%, 40%); }
+        }
+        
+        @keyframes float2 {
+            0%, 100% { transform: translate(70%, 60%); }
+            25% { transform: translate(30%, 70%); }
+            50% { transform: translate(50%, 30%); }
+            75% { transform: translate(20%, 50%); }
+        }
+        
+        @keyframes float3 {
+            0%, 100% { transform: translate(50%, 50%); }
+            25% { transform: translate(20%, 30%); }
+            50% { transform: translate(70%, 60%); }
+            75% { transform: translate(40%, 20%); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            .counters { grid-template-columns: 1fr; }
+            .demo-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- 主题切换 -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="切换主题">
+        <span id="themeIcon">🌙</span>
+    </button>
+    
+    <div class="container">
+        <h1>动画效果演示</h1>
+        <p class="subtitle">纯CSS+JavaScript实现，无需任何客户端</p>
+        
+        <!-- 卡片网格 -->
+        <div class="demo-grid">
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <div class="card-title">滚动触发动画</div>
+                <div class="card-desc">当元素进入视口时自动触发渐入动画，使用Intersection Observer API实现</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">✨</div>
+                <div class="card-title">悬停微交互</div>
+                <div class="card-desc">鼠标悬停时卡片上浮、放大、发光，使用CSS transition实现平滑过渡</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🌊</div>
+                <div class="card-title">浮动动画</div>
+                <div class="card-desc">背景装饰元素持续浮动，使用CSS @keyframes实现无限循环动画</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🌓</div>
+                <div class="card-title">主题切换</div>
+                <div class="card-desc">一键切换深色/浅色主题，使用CSS变量和localStorage持久化</div>
+            </div>
+        </div>
+        
+        <!-- 动画演示区域 -->
+        <div class="animation-demo">
+            <div class="demo-title">
+                <span>🎬</span>
+                动画效果演示
+            </div>
+            
+            <!-- 浮动球体 -->
+            <div class="floating-orbs">
+                <div class="orb orb-1"></div>
+                <div class="orb orb-2"></div>
+                <div class="orb orb-3"></div>
+            </div>
+            
+            <!-- 进度条动画 -->
+            <div class="progress-bars">
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>数据可溯源率</span>
+                        <span>95.7%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill blue" data-width="95.7"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>审计通过率</span>
+                        <span>87.3%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill green" data-width="87.3"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>风险覆盖率</span>
+                        <span>72.8%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill orange" data-width="72.8"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 数字计数动画 -->
+            <div class="counters">
+                <div class="counter-item">
+                    <div class="counter-value" data-target="70">0</div>
+                    <div class="counter-label">数据点总数</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-value" data-target="67">0</div>
+                    <div class="counter-label">可溯源数据</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-value" data-target="95.7" data-decimal="1">0</div>
+                    <div class="counter-label">可溯源率(%)</div>
+                </div>
+            </div>
+            
+            <!-- 脉冲动画 -->
+            <div class="demo-title">
+                <span>💓</span>
+                脉冲动画
+            </div>
+            <div class="pulse-demo">
+                <div class="pulse-dot"></div>
+                <div class="pulse-dot"></div>
+                <div class="pulse-dot"></div>
+                <div class="pulse-dot"></div>
+                <div class="pulse-dot"></div>
+            </div>
+            
+            <!-- 旋转动画 -->
+            <div class="demo-title">
+                <span>🔄</span>
+                旋转动画
+            </div>
+            <div class="spin-demo">
+                <div class="spin-icon">⚙️</div>
+                <div class="spin-icon reverse">🔄</div>
+                <div class="spin-icon">⏳</div>
+            </div>
+        </div>
+        
+        <!-- 更多卡片 -->
+        <div class="demo-grid">
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">数字计数动画</div>
+                <div class="card-desc">数字从0递增到目标值，使用requestAnimationFrame实现流畅动画</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <div class="card-title">进度条动画</div>
+                <div class="card-desc">进度条从0填充到目标宽度，使用CSS transition实现平滑动画</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🎨</div>
+                <div class="card-title">渐变色效果</div>
+                <div class="card-desc">标题和按钮使用渐变色，使用CSS linear-gradient实现</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔮</div>
+                <div class="card-title">毛玻璃效果</div>
+                <div class="card-desc">卡片使用毛玻璃效果，使用backdrop-filter: blur()实现</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 主题切换
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        // 初始化主题
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+        }
+        
+        // 滚动触发动画
+        function initScrollAnimations() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        
+                        // 触发进度条动画
+                        const progressFill = entry.target.querySelector('.progress-fill');
+                        if (progressFill) {
+                            const width = progressFill.getAttribute('data-width');
+                            progressFill.style.width = width + '%';
+                        }
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            document.querySelectorAll('.card').forEach(card => {
+                observer.observe(card);
+            });
+        }
+        
+        // 数字计数动画
+        function initCounters() {
+            const counters = document.querySelectorAll('.counter-value');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        const target = parseFloat(counter.getAttribute('data-target'));
+                        const decimal = parseInt(counter.getAttribute('data-decimal') || '0');
+                        const duration = 2000;
+                        const startTime = performance.now();
+                        
+                        function updateCounter(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            
+                            // 使用缓动函数
+                            const eased = 1 - Math.pow(1 - progress, 3);
+                            const current = eased * target;
+                            
+                            if (decimal > 0) {
+                                counter.textContent = current.toFixed(decimal);
+                            } else {
+                                counter.textContent = Math.floor(current);
+                            }
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(updateCounter);
+                            }
+                        }
+                        
+                        requestAnimationFrame(updateCounter);
+                        observer.unobserve(counter);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            counters.forEach(counter => {
+                observer.observe(counter);
+            });
+        }
+        
+        // 进度条动画
+        function initProgressBars() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const fills = entry.target.querySelectorAll('.progress-fill');
+                        fills.forEach(fill => {
+                            const width = fill.getAttribute('data-width');
+                            setTimeout(() => {
+                                fill.style.width = width + '%';
+                            }, 300);
+                        });
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            document.querySelectorAll('.progress-bars').forEach(bar => {
+                observer.observe(bar);
+            });
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initScrollAnimations();
+            initCounters();
+            initProgressBars();
+        });
+    </script>
+</body>
+</html>

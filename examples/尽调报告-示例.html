@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深圳前海微众银行股份有限公司 — 贷前尽调报告</title>
+    <style>
+        /* ============================================
+           华尔街驻铁岭办事处 - 尽调报告示例
+           ============================================ */
+        
+        :root {
+            --bg-base: #0a0a1a;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --text-primary: #f0f0ff;
+            --text-secondary: #a0a0cc;
+            --text-muted: #6666aa;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.2);
+            
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            
+            --color-blue: #6366f1;
+            --color-purple: #8b5cf6;
+            --color-green: #10b981;
+            --color-red: #ef4444;
+            --color-orange: #f59e0b;
+            --color-cyan: #06b6d4;
+            
+            --blur: 20px;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        [data-theme="light"] {
+            --bg-base: #f0f2f5;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.6);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --text-muted: #8888aa;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.5);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* 背景装饰 */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        .bg-orb-1 {
+            width: 500px;
+            height: 500px;
+            background: var(--gradient-primary);
+            top: -150px;
+            right: -150px;
+        }
+        
+        .bg-orb-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--gradient-success);
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -7s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        
+        /* 主题切换 */
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--border-glass);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        /* 头部 */
+        .report-header {
+            text-align: center;
+            padding: 80px 40px 60px;
+            margin-bottom: 48px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        .report-title {
+            font-size: 56px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--color-blue) 50%, var(--color-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .report-subtitle {
+            font-size: 22px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: 36px;
+        }
+        
+        .report-meta {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* 指标卡片 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 48px;
+        }
+        
+        .metric-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--blur));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .metric-card.red::before { background: var(--gradient-warning); }
+        .metric-card.green::before { background: var(--gradient-success); }
+        .metric-card.blue::before { background: var(--gradient-info); }
+        .metric-card.purple::before { background: var(--gradient-primary); }
+        
+        .metric-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        
+        .metric-value {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            line-height: 1;
+        }
+        
+        .metric-value.red { color: var(--color-red); }
+        .metric-value.green { color: var(--color-green); }
+        .metric-value.blue { color: var(--color-blue); }
+        .metric-value.purple { color: var(--color-purple); }
+        
+        .metric-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        /* 区块标题 */
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        /* 团队卡片 */
+        .team-section {
+            margin-bottom: 48px;
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+        }
+        
+        .team-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--blur));
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 20px 12px;
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .team-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-glow);
+            border-color: var(--color-blue);
+        }
+        
+        .team-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: var(--bg-glass);
+            border: 2px solid var(--border);
+        }
+        
+        .team-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .team-role {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        /* 表格 */
+        .table-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--blur));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: var(--bg-glass);
+        }
+        
+        th {
+            padding: 14px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background: var(--bg-glass);
+        }
+        
+        /* 风险标签 */
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .risk-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        
+        .risk-badge.high {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--color-red);
+        }
+        .risk-badge.high::before { background: var(--color-red); }
+        
+        .risk-badge.medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--color-orange);
+        }
+        .risk-badge.medium::before { background: var(--color-orange); }
+        
+        .risk-badge.low {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-green);
+        }
+        .risk-badge.low::before { background: var(--color-green); }
+        
+        /* 审计卡片 */
+        .audit-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--blur));
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border);
+            padding: 36px;
+            margin-bottom: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .audit-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-success);
+        }
+        
+        .audit-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        
+        .audit-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-success);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+        }
+        
+        .audit-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .audit-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        
+        .audit-stat {
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-glass);
+            border-radius: var(--radius-md);
+        }
+        
+        .audit-stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .audit-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* 来源标注 */
+        .source-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-glass);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+        
+        /* 页脚 */
+        .report-footer {
+            text-align: center;
+            padding: 48px 40px;
+            margin-top: 48px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .footer-logo {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .footer-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+        
+        /* 动画 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        .animate-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .team-grid { grid-template-columns: repeat(3, 1fr); }
+            .audit-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .report-title { font-size: 36px; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .team-grid { grid-template-columns: repeat(2, 1fr); }
+            .audit-stats { grid-template-columns: 1fr; }
+        }
+        
+        @media print {
+            .theme-toggle, .bg-decoration { display: none; }
+            body { background: white; color: #1a1a2e; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <div class="bg-decoration">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+    </div>
+    
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="切换主题">
+        <span id="themeIcon">🌙</span>
+    </button>
+    
+    <div class="container">
+        <!-- 头部 -->
+        <header class="report-header">
+            <div class="header-badge">🏛️ 华尔街驻铁岭办事处</div>
+            <h1 class="report-title">深圳前海微众银行股份有限公司</h1>
+            <p class="report-subtitle">贷前尽职调查报告 · 2025年6月4日</p>
+            <div class="report-meta">
+                <div class="meta-item">📅 报告日期：2025-06-04</div>
+                <div class="meta-item">📊 数据截止：2025-05-31</div>
+                <div class="meta-item">🔍 编号：DD-2025-0604-001</div>
+            </div>
+        </header>
+        
+        <!-- 核心指标 -->
+        <section class="metrics-grid animate-in">
+            <div class="metric-card red">
+                <div class="metric-label">资产负债率</div>
+                <div class="metric-value red">82.3%</div>
+                <div class="metric-desc">高于行业均值27.3pp</div>
+            </div>
+            <div class="metric-card blue">
+                <div class="metric-label">未结诉讼</div>
+                <div class="metric-value blue">3笔</div>
+                <div class="metric-desc">涉案金额1.2亿元</div>
+            </div>
+            <div class="metric-card green">
+                <div class="metric-label">数据可溯源率</div>
+                <div class="metric-value green">95.7%</div>
+                <div class="metric-desc">70个数据点</div>
+            </div>
+            <div class="metric-card purple">
+                <div class="metric-label">审计结论</div>
+                <div class="metric-value purple">✅</div>
+                <div class="metric-desc">无保留通过</div>
+            </div>
+        </section>
+        
+        <!-- 团队 -->
+        <section class="team-section animate-in">
+            <h2 class="section-title">
+                <span class="section-icon">👥</span>
+                调查团队
+            </h2>
+            <div class="team-grid">
+                <div class="team-card">
+                    <div class="team-avatar">👔</div>
+                    <div class="team-name">钱守正</div>
+                    <div class="team-role">总经理</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar">🔍</div>
+                    <div class="team-name">张铁柱</div>
+                    <div class="team-role">尽调组</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar">💰</div>
+                    <div class="team-name">李明远</div>
+                    <div class="team-role">财务组</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar">📊</div>
+                    <div class="team-name">王思远</div>
+                    <div class="team-role">行业组</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar">🚨</div>
+                    <div class="team-name">赵刚</div>
+                    <div class="team-role">风险组</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar">📝</div>
+                    <div class="team-name">刘文华</div>
+                    <div class="team-role">报告组</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 风险识别 -->
+        <section class="animate-in">
+            <h2 class="section-title">
+                <span class="section-icon">🚨</span>
+                风险识别
+            </h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>风险类型</th>
+                            <th>风险等级</th>
+                            <th>具体表现</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>信用风险</td>
+                            <td><span class="risk-badge high">高</span></td>
+                            <td>资产负债率82.3%，超行业红线</td>
+                        </tr>
+                        <tr>
+                            <td>合规风险</td>
+                            <td><span class="risk-badge medium">中</span></td>
+                            <td>2笔行政处罚记录</td>
+                        </tr>
+                        <tr>
+                            <td>经营风险</td>
+                            <td><span class="risk-badge medium">中</span></td>
+                            <td>客户集中度较高，前5大客户占比68%</td>
+                        </tr>
+                        <tr>
+                            <td>市场风险</td>
+                            <td><span class="risk-badge low">低</span></td>
+                            <td>行业处于成长期，政策环境稳定</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="source-tag">📎 来源：企查查/天眼查 双源验证</div>
+        </section>
+        
+        <!-- 审计意见 -->
+        <section class="audit-card animate-in">
+            <div class="audit-header">
+                <div class="audit-icon">🔎</div>
+                <h2 class="audit-title">审计意见</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 24px; line-height: 1.8;">
+                数据可溯源率95.7%，超过90%目标线。所有关键数据点均已标注来源，未发现数据幻觉或编造痕迹，逻辑一致性良好。
+            </p>
+            <div class="audit-stats">
+                <div class="audit-stat">
+                    <div class="audit-stat-value">70</div>
+                    <div class="audit-stat-label">数据点总数</div>
+                </div>
+                <div class="audit-stat">
+                    <div class="audit-stat-value">67</div>
+                    <div class="audit-stat-label">可溯源数据</div>
+                </div>
+                <div class="audit-stat">
+                    <div class="audit-stat-value">95.7%</div>
+                    <div class="audit-stat-label">可溯源率</div>
+                </div>
+                <div class="audit-stat">
+                    <div class="audit-stat-value">✅</div>
+                    <div class="audit-stat-label">审计结论</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 页脚 -->
+        <footer class="report-footer">
+            <div class="footer-logo">🏛️ 华尔街驻铁岭办事处</div>
+            <div class="footer-text">
+                本报告基于公开数据整理，仅供参考，不构成任何信贷决策建议<br>
+                数据截止日期：2025-05-31 · 报告生成时间：2025-06-04 18:00:00<br>
+                © 2025 华尔街驻铁岭办事处 · 版权所有
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // 主题切换
+        function toggleTheme() {
+            const body = document.body;
+            const current = body.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', next);
+            document.getElementById('themeIcon').textContent = next === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('theme', next);
+        }
+        
+        // 初始化主题
+        const saved = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', saved);
+        document.getElementById('themeIcon').textContent = saved === 'dark' ? '🌙' : '☀️';
+        
+        // 滚动动画
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
