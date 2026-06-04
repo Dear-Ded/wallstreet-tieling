@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.4.0-c9a84c?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.5.0-c9a84c?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/platform-WorkBuddy%20%7C%20OpenClaw%20%7C%20Marvis%20%7C%20CodeBuddy-blue?style=flat-square" alt="Platforms">
   <img src="https://img.shields.io/badge/models-Claude%20%7C%20GPT%20%7C%20Gemini%20%7C%20DeepSeek%20%7C%20混元%20%7C%209%2B-purple?style=flat-square" alt="Models">
