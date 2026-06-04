@@ -88,7 +88,7 @@ trigger_words:
   - 全面调查
   - 深度调查
   - OSINT
-version: 3.8.0
+version: 3.9.0
 author: 爹
 category: finance
 tags:
