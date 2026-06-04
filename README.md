@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.3.0-c9a84c?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.4.0-c9a84c?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/platform-WorkBuddy%20%7C%20OpenClaw%20%7C%20Marvis%20%7C%20CodeBuddy-blue?style=flat-square" alt="Platforms">
   <img src="https://img.shields.io/badge/models-Claude%20%7C%20GPT%20%7C%20Gemini%20%7C%20DeepSeek%20%7C%20混元%20%7C%209%2B-purple?style=flat-square" alt="Models">
   <img src="https://img.shields.io/badge/experts-11-orange?style=flat-square" alt="Experts">
   <img src="https://img.shields.io/badge/category-finance-c9a84c?style=flat-square" alt="Category">
-  <img src="https://img.shields.io/badge/triggers-60%2B-red?style=flat-square" alt="Triggers">
+  <img src="https://img.shields.io/badge/triggers-70%2B-red?style=flat-square" alt="Triggers">
 </p>
 
 # 华尔街驻铁岭办事处
@@ -59,6 +59,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 | **报告辅助** | 尽调报告、授信报告、信贷报告、风险报告 |
 | **输出格式** | Word文档、PDF、公文格式、公文排版、Markdown、纯文本 |
 | **English** | due diligence, credit analysis, loan review, financial analysis, risk assessment, UBO, KYC, KYB, AML |
+| **🔴 全网扒光** | 扒光、彻查、深挖、蛛丝马迹、追查到底、全面调查、深度调查、OSINT、开源情报 |
 
 ---
 
@@ -108,9 +109,10 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 | Tier | 类型 | 示例 |
 |------|------|------|
 | Tier 1 | 开箱即用 | WebSearch · WebFetch · 模型知识 |
-| Tier 2 | 本地增强 | 企查查 · 天眼查 · 金融数据 · 深度调研 |
+| Tier 2 | 本地增强 | 企查查 · 天眼查 · 启信宝 · 企业预警通 · 金融数据 |
 | Tier 3 | 全网猎取 | 周通动态发现：公开API · 网页抓取 · Bash脚本 |
 | Tier 4 | 用户协作 | 手动查询 · 文件上传 · API Key授权 |
+| 🔴 OSINT | 全网扒光 | 官方数据 · 商业平台 · 专业领域 · 舆情监控 · 蛛丝马迹追踪 |
 
 ---
 
