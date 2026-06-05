@@ -1,0 +1,91 @@
+{
+  "name": "wallstreet-tieling",
+  "version": "1.0.0",
+  "description": "华尔街驻铁岭办事处 | 信贷情报专家团 — MCP Server 封装",
+  "mcpServers": {
+    "wallstreet-tieling": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-prompt", "--name", "wallstreet-tieling", "--skill", "../SKILL.md"],
+      "env": {
+        "SKILL_NAME": "华尔街驻铁岭办事处",
+        "SKILL_DESCRIPTION": "银行信贷尽调+财务分析+行业研究+风险预警+人员穿透"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "due_diligence",
+      "description": "企业尽调：对指定企业进行全方位背景调查，返回工商/股权/诉讼/财务/风险分析结果",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company_name": { "type": "string", "description": "企业名称或统一社会信用代码" },
+          "depth": { "type": "string", "enum": ["quick", "standard", "deep"], "description": "尽调深度: quick快速/standard标准/deep深度扒光" },
+          "format": { "type": "string", "enum": ["markdown", "word", "pdf", "html", "text"], "description": "输出格式" }
+        },
+        "required": ["company_name"]
+      }
+    },
+    {
+      "name": "financial_analysis",
+      "description": "财务分析：对指定企业进行五维财务分析，包含偿债/盈利/现金流/粉饰识别/趋势对标",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company_name": { "type": "string" },
+          "years": { "type": "number", "description": "分析年份跨度", "default": 3 }
+        },
+        "required": ["company_name"]
+      }
+    },
+    {
+      "name": "people_investigation",
+      "description": "人员背景调查：对指定人员进行全维度背景穿透，包含身份/任职/司法/社交/资产分析",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "id_number": { "type": "string", "description": "身份证号(可选)" },
+          "phone": { "type": "string", "description": "手机号(可选)" },
+          "email": { "type": "string", "description": "邮箱(可选)" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "industry_research",
+      "description": "行业研究：PEST宏观分析+五力竞争+产业链+周期定位",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "industry": { "type": "string" },
+          "region": { "type": "string", "default": "中国" }
+        },
+        "required": ["industry"]
+      }
+    },
+    {
+      "name": "risk_assessment",
+      "description": "风险评估：风险雷达六维图+担保圈传染+合规扫描+贷后监控",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company_name": { "type": "string" },
+          "include_supply_chain": { "type": "boolean", "default": false }
+        },
+        "required": ["company_name"]
+      }
+    },
+    {
+      "name": "anti_nominee_detection",
+      "description": "反代持穿透：识别股权代持关系，突破实控人隔离",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company_name": { "type": "string" }
+        },
+        "required": ["company_name"]
+      }
+    }
+  ]
+}

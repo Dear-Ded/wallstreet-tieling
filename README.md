@@ -83,6 +83,21 @@ https://dear-ded.github.io/wallstreet-tieling/
 - ✅ **分级适配**：平台能力不同？Skill自动降级——有Connector用Connector，没有就用WebSearch
 - ✅ **Token自适应**：8K窗口用轻量模式，32K+用完整模式
 
+### 🎭 多种加载形态（不止Skill一种）
+
+| 形态 | 一句话说明 | 适用平台 |
+|------|-----------|---------|
+| **Skill.md** | 直接粘贴或 `npx skills add` | WorkBuddy · OpenClaw · CodeBuddy · 所有AI |
+| **MCP Server** | JSON配置,Agent直接调用工具 | Claude Desktop · Cursor · CodeBuddy |
+| **Custom GPT** | 粘贴到ChatGPT Instructions | ChatGPT |
+| **Claude Project** | 添加为Project Knowledge | Claude.ai |
+| **豆包智能体** | 创建智能体+粘贴设定 | 豆包 · 扣子(Coze) |
+| **百炼/千帆/元器** | 注入System Prompt | 阿里 · 百度 · 腾讯平台 |
+| **npm CLI** | 命令行工具 | 终端 · CI/CD |
+| **API/Docker** | HTTP API调用 | 任何可调API的平台 |
+
+> 📖 完整说明：[deploy/multi-platform-guide.md](deploy/multi-platform-guide.md)
+
 ### 兼容模型
 
 Claude · GPT · Gemini · DeepSeek · 通义千问 · GLM · Kimi · 混元 · MiniMax · 豆包 · Yi · Mistral · Llama · Step · Qwen(本地) · DeepSeek(本地) · Llama(本地)
