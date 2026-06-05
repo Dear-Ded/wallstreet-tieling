@@ -207,5 +207,96 @@ Target → Scanner Modules (100+) → Data Correlation Engine → Visual Graph �
 - SpiderFoot: https://github.com/smicallef/spiderfoot
 - OpenSanctions: https://github.com/opensanctions/opensanctions
 - OpenOwnership: https://github.com/openownership
+- OpenAI Role-Specific Plugins: https://github.com/openai/role-specific-plugins
+- Anthropic Financial Services Plugins: https://github.com/anthropics/financial-services-plugins
+
+---
+
+## 🔬 2026-06-05 新增：OpenAI Codex + Anthropic 金融插件分析
+
+### OpenAI Codex - Public Equity Investing Plugin
+
+**仓库**: https://github.com/openai/role-specific-plugins
+
+**核心能力**：
+- 审阅财报（自动提取关键财务指标）
+- 对比公司（同业对标分析）
+- 跟踪投资信号（监控关键指标变化）
+- 评估投资论点强弱（多维度证据链评估）
+
+**集成数据源**：Moody's · Daloopa · Datasite · FactSet · LSEG · S&P · PitchBook · Hebbia
+
+**可借鉴思路**：
+
+| 特性 | Codex 实现 | 对我们的借鉴 |
+|------|-----------|-------------|
+| **投资论点跟踪** | 持续监控+强度评估 | 贷后监控可增加"风险变化趋势"自动追踪 |
+| **专业数据源集成** | Moody's/S&P/FactSet/PitchBook | 反馈到我们的Tier 0: 增加机构级数据源清单 |
+| **Plugin 规范开源** | role-specific-plugins | 可参考其SKILL.md规范优化我们的结构 |
+| **目标用户** | 基金经理+股票分析师 | 与我们互补——我们做信贷尽调，他们做股权分析 |
+
+### Anthropic Financial-Services-Plugins
+
+**仓库**: https://github.com/anthropics/financial-services-plugins
+
+**三层架构**：Vertical Plugins → Agent Plugins → Partner Plugins  
+**四类组件**：Skill · Command · MCP Connector · Agent  
+**覆盖领域**：financial-analysis / equity-research / investment-banking / private-equity / wealth-management / fund-admin
+
+#### 与我们高度相关的模块
+
+| 模块 | 核心技能 | 我们当前覆盖 | 建议借鉴 |
+|------|----------|-------------|---------|
+| **financial-analysis** | 3-statement/DCF/LBO/comparable-company | ❌ 缺失 | 新增财务建模能力组 |
+| **equity-research** | 首次覆盖5阶段流水线 + 盈利分析 + 论点追踪 | 部分（行业研究） | 流水线式工作流设计 |
+| **private-equity** | 交易寻源 → 尽调 → IC备忘录 → 投后 | 部分（贷后监控） | 交易寻源+IC备忘录模板 |
+| **investment-banking** | pitch-deck + data-pack-builder | ❌ 缺失 | 推介材料+数据包构建 |
+
+#### 五阶段流水线设计（借鉴 equity-research 首次覆盖）
+
+```
+Task 1: Company Research（公司研究）
+Task 2: Financial Modeling（财务建模）
+Task 3: Valuation Analysis（估值分析）
+Task 4: Chart Generation（图表生成）
+Task 5: Report Assembly（报告组装）
+```
+
+#### Command（斜杠命令）设计
+
+| Anthropic 命令 | 功能 | 我们的对应 |
+|---------------|------|-----------|
+| `/comps` | 可比公司分析 | → 张铁柱+王思远 |
+| `/earnings` | 盈利分析 | → 李明远 |
+| `/thesis` | 论点追踪 | → 赵刚（风险论点） |
+
+#### MCP Connector 标准化
+
+Anthropic 的 `.mcp.json` 模式：每个数据源一个标准化的 MCP 连接器配置。这比我们当前的"接口扩展协议"更规范——我们应参考。
+
+### 三方对比与我们的定位
+
+| 维度 | Codex PE Investing | Anthropic Financial | 华尔街驻铁岭 |
+|------|-------------------|---------------------|-------------|
+| **核心场景** | 股票投资分析 | 全能金融服务 | **信贷尽调+贷后监控** |
+| **财务建模** | ✅ 强 | ✅ 强 | ❌ 缺失 |
+| **估值模型** | ✅ | ✅ | ❌ 缺失 |
+| **企业尽调** | 部分 | ❌ 弱 | ✅ **核心优势** |
+| **人员穿透** | ❌ | ❌ | ✅ **独家能力** |
+| **反代持穿透** | ❌ | ❌ | ✅ **独家能力** |
+| **合规/反洗钱** | ❌ | 部分(KYC) | ✅ 强 |
+| **报告生成** | ✅ | ✅ | ✅ |
+
+### 建议升级项
+
+| 优先级 | 升级项 | 来源 | 说明 |
+|--------|--------|------|------|
+| **P0** | 新增财务建模能力（3-statement/DCF） | Anthropic financial-analysis | 李明远能力升级 |
+| **P0** | 新增可比公司分析 | Anthropic equity-research | 王思远能力升级 |
+| **P1** | 五阶段流水线式尽调SOP | Anthropic equity-research | 标准化工作流 |
+| **P1** | MCP Connector标准化 | Anthropic `.mcp.json` | 周通接口管理 |
+| **P1** | Command斜杠命令 | Anthropic commands | `/尽调` `/财务` `/扒光` |
+| **P2** | 论点追踪器 | Codex thesis tracker | 赵刚风险论点追踪 |
+| **P2** | 专业数据源扩展 | Codex data sources | Moody's/S&P/FactSet |
 - Credit-Risk-Intelligence: https://github.com/Sol-so-special/Credit-Risk-Intelligence
 - Awesome OSINT: https://github.com/jivoi/awesome-osint
