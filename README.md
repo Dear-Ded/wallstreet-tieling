@@ -1,43 +1,52 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-c9a84c?style=for-the-badge&logo=v&logoColor=white" alt="Version">
-  <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=mit&logoColor=white" alt="License">
-  <img src="https://img.shields.io/badge/stars-⭐_your_star-brightgreen?style=for-the-badge" alt="Stars">
+  <img src="https://img.shields.io/badge/version-1.0.0--public--beta-c9a84c?style=for-the-badge&logo=v&logoColor=white" alt="v1.0.0-beta">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=mit&logoColor=white" alt="MIT">
+  <a href="https://github.com/Dear-Ded/wallstreet-tieling"><img src="https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=for-the-badge&color=brightgreen" alt="Stars"></a>
   <br>
   <img src="https://img.shields.io/badge/platform-14+_平台-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Platforms">
   <img src="https://img.shields.io/badge/models-15+_模型-purple?style=for-the-badge&logo=openai&logoColor=white" alt="Models">
+  <img src="https://img.shields.io/badge/deploy-8种形态-ff69b4?style=for-the-badge&logo=amazondocumentdb&logoColor=white" alt="8 Deploy Forms">
   <br>
-  <img src="https://img.shields.io/badge/experts-11位金融老兵-orange?style=for-the-badge&logo=teamviewer&logoColor=white" alt="Experts">
-  <img src="https://img.shields.io/badge/triggers-80+-red?style=for-the-badge&logo=trigger&logoColor=white" alt="Triggers">
-  <img src="https://img.shields.io/badge/sources-Wind_|_Bloomberg_|_Reuters_|_AKShare_|_QCC_|_TYC-gold?style=for-the-badge&logo=databricks&logoColor=white" alt="Data Sources">
+  <img src="https://img.shields.io/badge/experts-12位金融老兵-orange?style=for-the-badge&logo=teamviewer&logoColor=white" alt="12 Experts">
+  <img src="https://img.shields.io/badge/triggers-95+-red?style=for-the-badge&logo=trigger&logoColor=white" alt="95+ Triggers">
+  <img src="https://img.shields.io/badge/sources-50+-gold?style=for-the-badge&logo=databricks&logoColor=white" alt="50+ Sources">
   <br>
-  <img src="https://img.shields.io/badge/auto_update-5档可选-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" alt="Auto Update">
-  <img src="https://img.shields.io/badge/output-Markdown_|_Word_|_PDF_|_HTML_|_纯文本-lightgrey?style=for-the-badge&logo=readme&logoColor=white" alt="Output">
-  <br>
-  <img src="https://img.shields.io/badge/中文-尽调_信贷_风控_反洗钱_企业调查-blue?style=for-the-badge" alt="中文关键词">
-  <img src="https://img.shields.io/badge/English-Due_Diligence_KYC_AML_OSINT-purple?style=for-the-badge" alt="English">
-  <img src="https://img.shields.io/badge/SkillFind-尽调_信贷_财务分析_企业调查-green?style=for-the-badge" alt="SkillFind">
+  <img src="https://img.shields.io/badge/自动更新-5档可选-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" alt="Auto Update">
+  <img src="https://img.shields.io/badge/输出-Markdown_Word_PDF_HTML_纯文本-lightgrey?style=for-the-badge&logo=readme&logoColor=white" alt="5 Outputs">
+  <img src="https://img.shields.io/badge/安装-一句话_搞定-6366f1?style=for-the-badge&logo=npm&logoColor=white" alt="One Click">
+</p>
 
 <h1 align="center">🏛️ 华尔街驻铁岭办事处</h1>
 
 <p align="center">
   <b>信贷情报 · 企业尽调 · 财务分析 · 行业研究 · 风险预警 · 贷后管理 · 反洗钱 · KYC · KYB · OSINT</b>
   <br><br>
-  <i>一群从华尔街被发配到东北的金融精英，蹲在铁岭大炕上，用曼哈顿的脑子干县城的活儿。</i>
+  <i>12位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿。</i>
   <br>
   <b>西装脱了，标准没脱。只摆事实，不给建议。</b>
-  <br><br>
-  🌐 <a href="https://dear-ded.github.io/wallstreet-tieling/"><b>在线主页</b></a> | 📦 <a href="#-安装"><b>一键安装</b></a> | 📖 <a href="SKILL.md"><b>完整文档</b></a> | 💬 <a href="https://github.com/Dear-Ded/wallstreet-tieling/issues"><b>反馈建议</b></a>
-  <br>
-  <sub>🔍 搜索关键词: 尽调 贷前调查 贷后管理 财务分析 行业研究 风险预警 授信评估 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 审计 信贷报告 反洗钱<br>
-  风控 合规 客户尽职调查 企业征信 信用评级 财务尽调 合规审查 制裁筛查 空壳识别 关联交易 资金占用<br>
-  due diligence credit analysis KYC KYB AML OSINT UBO beneficial owner financial investigation risk assessment</sub>
 </p>
+
+<p align="center">
+  <a href="https://dear-ded.github.io/wallstreet-tieling/">🌐 在线主页</a> ·
+  <a href="SKILL.md">📖 完整文档</a> ·
+  <a href="https://github.com/Dear-Ded/wallstreet-tieling/issues">💬 反馈</a>
+</p>
+
+---
+
+## ⚡ 快速开始（10秒装上）
+
+```bash
+npx skills add Dear-Ded/wallstreet-tieling -g -y
+```
+
+> 或者直接复制 [SKILL.md](SKILL.md) 全文粘贴到 ChatGPT / Claude / 豆包 / Kimi / 通义千问 / 文心一言 / 任意AI对话窗口 → 立刻激活
 
 ---
 
 ## 🎯 一句话介绍
 
-> 当你提到尽调、贷前、贷后、财务分析、行业研究、风险预警、授信评估、股东穿透、实控人查询、财报解读时，11 位前华尔街金融老兵自动组队为你服务。
+> 当你提到尽调、贷前、贷后、财务分析、行业研究、风险预警、授信评估、股东穿透、实控人查询、财报解读时，12位前华尔街金融老兵自动组队为你服务。
 
 **适用角色**：银行信贷经理 · 风控专员 · 投行分析师 · 企业财务 · 合规审计
 
