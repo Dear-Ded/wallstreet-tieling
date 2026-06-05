@@ -606,6 +606,22 @@ body{
 
 .footer a:hover{text-decoration:underline}
 
+
+/* === Premium Design Enhancements === */
+.animate-on-scroll{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(.23,1,.32,1)}
+.animate-on-scroll.visible{opacity:1;transform:translateY(0)}
+.animate-on-scroll:nth-child(1){transition-delay:0s}
+.animate-on-scroll:nth-child(2){transition-delay:.08s}
+.animate-on-scroll:nth-child(3){transition-delay:.16s}
+.animate-on-scroll:nth-child(4){transition-delay:.24s}
+.animate-on-scroll:nth-child(5){transition-delay:.32s}
+.animate-on-scroll:nth-child(6){transition-delay:.40s}
+.section:nth-child(even) .section-header::before{content:'';display:block;width:60px;height:2px;background:var(--grad-accent);margin:0 auto 20px;border-radius:1px;opacity:.3}
+.hero-badge{border:2px solid transparent;background:linear-gradient(var(--surface2),var(--surface)) padding-box,linear-gradient(135deg,var(--accent),var(--accent2)) border-box}
+.nav-links a::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--accent);border-radius:1px;transition:width .3s ease}
+.nav-links a:hover::after{width:20px}
+.section-title::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:40px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);border-radius:1px}
+.glass-card{box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 0 0 1px rgba(255,255,255,.02) inset}
 /* === Responsive === */
 @media(max-width:768px){
   .nav{padding:0 16px}
@@ -975,6 +991,38 @@ function closeModal(){
 
 // Close modal on Escape
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+// === Scroll Entrance Observer ===
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})
+},{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.glass-card,.team-card,.wf-step,.rule-card,.section,.install-card,.glass-table').forEach(el=>{
+  el.classList.add('animate-on-scroll');observer.observe(el)
+});
+
+// === Hero Mouse Parallax ===
+const hero=document.querySelector('.hero');
+const orbs=document.querySelectorAll('.orb');
+if(hero&&orbs.length){
+  document.addEventListener('mousemove',e=>{
+    const x=(e.clientX/window.innerWidth-.5)*20;
+    const y=(e.clientY/window.innerHeight-.5)*20;
+    hero.style.transform=`translate(${x*.3}px,${y*.3}px)`;
+    orbs.forEach((orb,i)=>{
+      const depth=(i+1)*.3;
+      orb.style.transform=`translate(${x*depth}px,${y*depth}px)`;
+    });
+  });
+}
+
+// === Smooth Scroll ===
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
 </script>
 
 </body>
