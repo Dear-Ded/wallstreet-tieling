@@ -12,19 +12,25 @@
   <br>
   <img src="https://img.shields.io/badge/auto_update-5档可选-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" alt="Auto Update">
   <img src="https://img.shields.io/badge/output-Markdown_|_Word_|_PDF_|_HTML_|_纯文本-lightgrey?style=for-the-badge&logo=readme&logoColor=white" alt="Output">
-  <img src="https://img.shields.io/badge/category-finance_|_credit_intelligence-c9a84c?style=for-the-badge&logo=bank&logoColor=white" alt="Category">
-</p>
+  <br>
+  <img src="https://img.shields.io/badge/中文-尽调_信贷_风控_反洗钱_企业调查-blue?style=for-the-badge" alt="中文关键词">
+  <img src="https://img.shields.io/badge/English-Due_Diligence_KYC_AML_OSINT-purple?style=for-the-badge" alt="English">
+  <img src="https://img.shields.io/badge/SkillFind-尽调_信贷_财务分析_企业调查-green?style=for-the-badge" alt="SkillFind">
 
 <h1 align="center">🏛️ 华尔街驻铁岭办事处</h1>
 
 <p align="center">
-  <b>信贷情报专家团</b> — 银行信贷经理的全流程 AI 情报服务
+  <b>信贷情报 · 企业尽调 · 财务分析 · 行业研究 · 风险预警 · 贷后管理 · 反洗钱 · KYC · KYB · OSINT</b>
   <br><br>
   <i>一群从华尔街被发配到东北的金融精英，蹲在铁岭大炕上，用曼哈顿的脑子干县城的活儿。</i>
   <br>
   <b>西装脱了，标准没脱。只摆事实，不给建议。</b>
   <br><br>
   🌐 <a href="https://dear-ded.github.io/wallstreet-tieling/"><b>在线主页</b></a> | 📦 <a href="#-安装"><b>一键安装</b></a> | 📖 <a href="SKILL.md"><b>完整文档</b></a> | 💬 <a href="https://github.com/Dear-Ded/wallstreet-tieling/issues"><b>反馈建议</b></a>
+  <br>
+  <sub>🔍 搜索关键词: 尽调 贷前调查 贷后管理 财务分析 行业研究 风险预警 授信评估 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 审计 信贷报告 反洗钱<br>
+  风控 合规 客户尽职调查 企业征信 信用评级 财务尽调 合规审查 制裁筛查 空壳识别 关联交易 资金占用<br>
+  due diligence credit analysis KYC KYB AML OSINT UBO beneficial owner financial investigation risk assessment</sub>
 </p>
 
 ---
@@ -222,5 +228,33 @@ MIT License · 作者：**爹** · [GitHub](https://github.com/Dear-Ded/wallstre
 ---
 
 <p align="center">
-  <sub>🔎 搜索关键词: credit intelligence, due diligence, loan review, financial analysis, risk assessment, banking, KYC, KYB, AML, UBO, shareholder penetration, corporate investigation, Wind API, Bloomberg, Reuters, OSINT financial, 尽调, 贷前调查, 贷后管理, 财务分析, 行业研究, 风险预警, 授信评估, 信贷审查, 企业调查, 股东穿透, 实际控制人, 关联方, 财报分析, 担保圈, 审计, 万得, 彭博, 路透, AKShare, Tushare</sub>
+  <sub>🔎 GitHub Search Keywords</sub>
+</p>
+
+<!-- ====== 搜索关键词优化区 ====== -->
+<!-- 中文核心词 -->
+> **尽调 贷前调查 贷后管理 财务分析 行业研究 风险预警 授信评估 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 审计 信贷报告 反洗钱**
+> **风控 合规 KYC KYB AML 客户尽职调查 企业征信 信用评级 财务尽调 合规审查 制裁筛查 空壳识别 关联交易 资金占用**
+> **万得 Wind 彭博 Bloomberg 路透 Reuters 企查查 QCC 天眼查 TYC AKShare Tushare 开源情报 OSINT**
+> **银行信贷 贷前 贷后 企业调查 背景调查 风险管理 财务分析 财务报表 尽调报告 授信报告 信贷报告**
+> **法定代表人 董监高 受益人 UBO 实际控制人 股权穿透 壳公司 代持 资金占用 财务造假识别 异常信号**
+> **制裁名单 OFAC 联合国制裁 排污许可证 碳排放权 知识产权质押 招投标 海关数据 出口退税 不动产登记**
+> **人员背景调查 高管调查 交叉任职 隐性关联 关联人员 社保欠缴 司法拍卖 离岸公司 环保处罚**
+> **AI Skill AI技能 Agent Skill 智能体 信贷智能 金融AI 金融情报 企业情报 商业情报**
+
+<!-- 英文核心词 -->
+> **due diligence credit intelligence financial analysis risk assessment banking loan review corporate investigation KYC KYB AML**
+> **UBO ultimate beneficial owner shareholder penetration related party guarantee circle credit risk post-lending monitoring**
+> **industry research OSINT open source intelligence sanctions screening PEP politically exposed person**
+> **enterprise background check compliance fraud detection shell company identification related party transaction**
+> **financial data Wind Bloomberg Reuters LSEG Refinitiv corporate registry beneficial ownership**
+> **AI agent skill prompt engineering workflow automation credit underwriting intelligence gathering corporate intelligence**
+> **people investigation social graph digital footprint OSINT tools maigret sherlock spiderfoot theHarvester**
+> **supply chain mapping customs data environmental compliance carbon emission bidding data land registration**
+> **China banking Chinese enterprise investigation Gongshang due diligence Chinese corporate registry**
+
+<!-- SkillFind 搜索优化 -->
+> **skillfind: 尽调 信贷 财务分析 企业调查 银行 风险 风控 反洗钱 合规 授信 贷前 贷后 审计 报告**
+
+<!-- ====== 搜索优化区结束 ====== -->
 </p>

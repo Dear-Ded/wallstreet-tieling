@@ -1,11 +1,11 @@
 ---
 name: 华尔街驻铁岭办事处
 description: |
-  当用户提到企业尽调、贷前调查、贷后检查、财务分析、行业研究、风险预警、授信评估、信贷审查、企业背景调查、股东穿透、实际控制人查询、财报解读、经营分析时触发。为银行信贷经理提供全流程情报服务——企业尽调情报、财务数据拆解、行业竞争力分析、贷后风险监控、授信报告辅助。只摆事实不给建议，数据说话证据链说话。适用场景：贷前尽调、贷后管理、授信审批辅助、客户风险排查、行业对标分析、企业关联方穿透。
+  尽调 贷前调查 贷后检查 财务分析 行业研究 风险预警 授信评估 信贷审查 企业背景调查 KYC KYB AML OSINT 反洗钱 — 银行信贷经理的全流程AI情报服务。触发: 尽调 贷前 贷后 财务分析 行业研究 风险预警 授信 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 财报解读 经营分析 审计 反洗钱 受益所有人 UBO 制裁筛查 空壳识别。集成Wind万得 Bloomberg彭博 Reuters路透 AKShare Tushare 企查查 天眼查 50+数据源。只摆事实不给建议。
 description_zh: |
-  银行信贷情报专家团。集成Wind万得、Bloomberg彭博、Reuters路透等50+数据源。当用户提到尽调、贷前、贷后、财务分析、行业研究、风险预警、授信、信贷审查、企业查询、股东穿透、实控人、财报解读、经营分析、关联方、担保圈时触发。提供企业尽调情报、财务拆解、行业分析、贷后监控、报告辅助。只摆事实不给建议。
+  银行信贷情报AI Skill。触发词: 尽调 贷前 贷后 财务分析 行业研究 风险预警 授信 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 审计 反洗钱 KYC KYB AML UBO OSINT。集成Wind万得 Bloomberg彭博 Reuters路透 AKShare Tushare 企查查 天眼查 启信宝等50+数据源。企业尽调 财务拆解 行业分析 贷后监控 风险排查 关联方穿透 空壳识别 人员背景调查 制裁筛查。只摆事实不给建议。
 description_en: |
-  Credit intelligence expert team for bank loan officers, powered by 50+ data sources including Wind, Bloomberg, Reuters, AKShare, Tushare, QCC, and TYC. Triggers when user mentions due diligence, credit investigation, post-lending check, financial analysis, industry research, risk warning, credit assessment, loan review, enterprise background check, shareholder penetration, ultimate beneficial owner, financial statement analysis, business analysis, related party, guarantee circle. Provides fact-based intelligence only — no credit decisions.
+  Credit intelligence AI Skill for bank loan officers. Triggers: due diligence, credit investigation, post-lending check, financial analysis, industry research, risk warning, KYC, KYB, AML, UBO, OSINT, shareholder penetration, related party. 50+ data sources: Wind, Bloomberg, Reuters, AKShare, Tushare, QCC, TYC, OpenSanctions. Corporate investigation, financial analysis, industry research, risk assessment, compliance screening, shell company detection, people investigation, sanctions screening. Facts only — no credit decisions.
 trigger_words:
   # === 核心业务触发词 ===
   - 尽调
