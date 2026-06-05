@@ -3,6 +3,13 @@
 > **免责声明**：本文档所列全部工具、方法、数据源均为公开可得信息。使用者应遵守所在地法律法规，在合法授权范围内使用。本文档仅供技术研究参考，作者不对使用者的任何行为承担责任。
 >
 > 借鉴项目：Maigret (13K+)、Blackbird (5K+)、SpiderFoot (12K+)、theHarvester (12K+)、Recon-ng、Sherlock (60K+)、Holehe (8K+)、PhoneInfoga、GHunt (17K+)、Social Analyzer (12K+)、Maltego、Awesome-OSINT、Cipher387 OSINT Collection、BrewedIntel OSINT Resources、Cybersight OSINT Toolkit、PimEyes、DeHashed、IntelX、SnusBase、LeakCheck、Have I Been Pwned、WhatsMyName (500+)、Twint、Instaloader、Toutatis、OSINT Framework、OSINT.place、OWASP SocialOSINTAgent
+>
+> **当前环境可用性 (2026-06-05 验证)**：
+> | 状态 | 项目 |
+> |------|------|
+> | ✅ 可用 | ip-api.com、Shodan免费API、GitHub API、DNSDumpster、nslookup、curl、Python requests/bs4/dnspython/whois |
+> | ⚠️ 需Key | HIBP、OpenSanctions |
+> | ❌ 暂不通 | blockchain.info、Etherscan（当前网络限制） |
 
 ---
 
