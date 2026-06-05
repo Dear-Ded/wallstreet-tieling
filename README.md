@@ -3,8 +3,8 @@
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=mit&logoColor=white" alt="License">
   <img src="https://img.shields.io/badge/stars-⭐_your_star-brightgreen?style=for-the-badge" alt="Stars">
   <br>
-  <img src="https://img.shields.io/badge/platform-WorkBuddy_|_OpenClaw_|_CodeBuddy-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Platforms">
-  <img src="https://img.shields.io/badge/models-Claude_|_GPT_|_Gemini_|_DeepSeek_|_9+-purple?style=for-the-badge&logo=openai&logoColor=white" alt="Models">
+  <img src="https://img.shields.io/badge/platform-14+_平台-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Platforms">
+  <img src="https://img.shields.io/badge/models-15+_模型-purple?style=for-the-badge&logo=openai&logoColor=white" alt="Models">
   <br>
   <img src="https://img.shields.io/badge/experts-11位金融老兵-orange?style=for-the-badge&logo=teamviewer&logoColor=white" alt="Experts">
   <img src="https://img.shields.io/badge/triggers-80+-red?style=for-the-badge&logo=trigger&logoColor=white" alt="Triggers">
@@ -39,18 +39,51 @@
 
 ---
 
-## 📦 安装
+## 📦 安装（多种方式，随便选）
+
+### 方式一：Skill 市场一键安装（推荐）
 
 ```bash
 npx skills add Dear-Ded/wallstreet-tieling -g -y
 ```
 
-| 平台 | 命令 |
-|------|------|
-| WorkBuddy / OpenClaw / CodeBuddy | `npx skills add Dear-Ded/wallstreet-tieling -g -y` |
-| SkillFind 搜索 | 关键词：`尽调` `信贷` `财务分析` `企业调查` |
-| 通用 AI 平台 | 复制 [SKILL.md](SKILL.md) 粘贴到对话中 |
-| 在线体验 | https://dear-ded.github.io/wallstreet-tieling/ |
+### 方式二：直接粘贴到任意 AI 对话
+
+复制 [SKILL.md](SKILL.md) 全文，粘贴到下列任意平台的对话窗口，即可激活：
+
+| 平台类型 | 支持的平台 | 使用方式 |
+|----------|-----------|----------|
+| **Skill 平台** | WorkBuddy / OpenClaw / CodeBuddy | `npx skills add` 一键安装 |
+| **国产AI应用** | 豆包 / Kimi / 通义千问 / 文心一言 / 智谱清言 / 元宝 / DeepSeek | 粘贴SKILL.md到对话 |
+| **国际AI应用** | ChatGPT / Claude / Gemini / Perplexity / Poe | 粘贴SKILL.md到对话 |
+| **AI开发平台** | 百炼 / 千帆 / 元器 / 扣子(Coze) | 复制到智能体设定/知识库 |
+| **Claude生态** | Claude Projects / Custom GPTs | 添加为Project Knowledge |
+| **Gemini生态** | Gemini Gems | 粘贴为Gem Instructions |
+| **API调用** | 任意支持System Prompt的API | 注入为system message |
+| **本地模型** | Ollama / LM Studio / vLLM | 作为System Prompt加载 |
+
+### 方式三：SkillFind 搜索
+
+在 SkillFind 中搜索：`尽调` `信贷` `财务分析` `due diligence` `banking`
+
+### 方式四：在线体验
+
+https://dear-ded.github.io/wallstreet-tieling/
+
+### 跨平台通用性
+
+- ✅ **无外部依赖**：核心能力仅需模型对话能力 + WebSearch/WebFetch
+- ✅ **Markdown原生**：SKILL.md为纯Markdown，任何平台可直接加载
+- ✅ **分级适配**：平台能力不同？Skill自动降级——有Connector用Connector，没有就用WebSearch
+- ✅ **Token自适应**：8K窗口用轻量模式，32K+用完整模式
+
+### 兼容模型
+
+Claude · GPT · Gemini · DeepSeek · 通义千问 · GLM · Kimi · 混元 · MiniMax · 豆包 · Yi · Mistral · Llama · Step · Qwen(本地) · DeepSeek(本地) · Llama(本地)
+
+### 兼容平台（14+）
+
+WorkBuddy · OpenClaw · CodeBuddy · 豆包 · 通义千问 · 文心一言 · 智谱清言 · Kimi Chat · DeepSeek Chat · 百炼 · 千帆 · 元器 · 扣子 · ChatGPT · Claude · Gemini · Perplexity · Poe
 
 ---
 

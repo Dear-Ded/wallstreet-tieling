@@ -276,22 +276,80 @@ metadata:
     - 巨潮资讯
 compatibility:
   models:
-    - claude
-    - gpt
-    - gemini
-    - qwen
-    - deepseek
-    - glm
-    - hunyuan
-    - minimax
-    - kimi
+    # 国际主流模型
+    - claude                   # Anthropic Claude 3.5/4 系列
+    - gpt                      # OpenAI GPT-4o/4.1/o3/o4 系列
+    - gemini                   # Google Gemini 2.5 系列
+    # 国产大模型
+    - deepseek                 # DeepSeek V3/R1/V4 系列
+    - qwen                     # 通义千问 Qwen3/Max 系列
+    - glm                      # 智谱 GLM-4/5 系列
+    - kimi                     # 月之暗面 Kimi K2 系列
+    - hunyuan                  # 腾讯混元 Turbo/T1 系列
+    - minimax                  # MiniMax-01/M2 系列
+    - yi                       # 零一万物 Yi-Lightning 系列
+    - step                     # 阶跃星辰 Step-2 系列
+    - doubao                   # 字节豆包/火山引擎
+    - mistral                  # Mistral Large/Medium
+    - llama                    # Meta Llama 4 系列
+    - command-r                # Cohere Command R+
+    # 开源本地模型
+    - qwen-local               # Qwen3/Qwen2.5 本地部署
+    - deepseek-local           # DeepSeek 本地部署
+    - llama-local              # Llama 本地部署
+    - mistral-local            # Mistral 本地部署
+    # 金融垂直模型
+    - bloomberggpt             # BloombergGPT(如有API接入)
+    - finbert                  # FinBERT 金融NLP模型
   platforms:
-    - clawdhub
-    - openclaw
-    - codebuddy
-    - any-claw-compatible
+    # 字节系平台
+    - doubao-chat              # 豆包对话
+    - doubao-agent             # 豆包智能体
+    - coze                     # 扣子(Coze)平台
+    # 腾讯系平台
+    - workbuddy                # WorkBuddy AI助手
+    - yuanqi                   # 腾讯元器
+    - hunyuan-console          # 混元一站式
+    # 阿里系平台
+    - bailian                  # 百炼平台
+    - tongyi                   # 通义千问APP/Web
+    # 百度系
+    - qianfan                  # 千帆平台
+    - wenxin                   # 文心一言APP/Web
+    # 其他国产平台
+    - zhipu                    # 智谱清言APP/Web
+    - kimi-chat                # Kimi Chat APP/Web
+    - deepseek-chat            # DeepSeek Chat APP/Web
+    - xinghuo                  # 讯飞星火
+    # 国际平台
+    - chatgpt                  # ChatGPT (自定义GPTs/直接粘贴)
+    - claude-chat              # Claude Chat/Projects
+    - gemini-chat              # Gemini Chat/Gems
+    - perplexity               # Perplexity Spaces
+    - poe                      # Poe 机器人
+    # Claw系平台
+    - openclaw                 # OpenClaw 通用
+    - clawdhub                 # ClawdHub 技能市场
+    - any-claw-compatible      # 任何兼容Claw规范的平台
+    # Skill市场
+    - skillfind                # SkillFind 技能搜索
+    - codebuddy                # CodeBuddy IDE/CLI
+    # 通用方式
+    - any-llm-chat             # 任何LLM对话界面（直接粘贴SKILL.md）
+    - api-call                 # 通过API调用(system prompt注入)
+    - mcp-server               # 作为MCP Server运行
   min_context_window: 8000
   recommended_context_window: 32000
+  min_context_for_full_mode: 16000
+  token_saving_mode_available: true    # 轻量模式支持8K窗口
+  installation_methods:
+    skill_market: "npx skills add Dear-Ded/wallstreet-tieling -g -y"
+    direct_paste: "复制 SKILL.md 全文粘贴到任意LLM对话窗口即可激活"
+    system_prompt: "将 SKILL.md 注入到 system prompt / custom instructions"
+    api_injection: "将 SKILL.md 作为 system message 传入 API 调用"
+    custom_gpt: "在 ChatGPT 自定义 GPT 中粘贴 SKILL.md 内容作为 Instructions"
+    project_claude: "在 Claude Projects 中添加 SKILL.md 作为 Project Knowledge"
+    gem_gemini: "在 Gemini Gems 中粘贴 SKILL.md 内容"
 license: MIT
 repository: https://github.com/Dear-Ded/wallstreet-tieling
 ---
