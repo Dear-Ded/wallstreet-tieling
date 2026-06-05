@@ -87,6 +87,31 @@ WorkBuddy · OpenClaw · CodeBuddy · 豆包 · 通义千问 · 文心一言 · 
 
 ---
 
+## ⚙️ 运行环境（缺什么补什么，一句话搞定）
+
+### 最低要求——裸装也能跑
+- 任意 LLM 对话 + 8K+上下文窗口
+- 推荐开启 WebSearch/WebFetch（没有也能跑，数据标注[模型推理]）
+
+### 推荐环境——一句话补全
+> Skill 会自动检测当前环境缺失 → 告诉你缺什么 → 你回一个字"装"→ 自动补全
+
+| 能力 | 一句话 |
+|------|--------|
+| 企查查 Connector | `帮我连接企查查` |
+| 天眼查 MCP | `帮我装天眼查` |
+| Python 金融数据包 | `帮我装Python` → 自动装 akshare/tushare/yfinance |
+| Word/PDF 输出 | `帮我装文档生成` → 自动装 python-docx/reportlab |
+
+### 完整环境一键脚本
+```bash
+pip install akshare tushare baostock yfinance pandas python-docx reportlab && npx skills add tyc-mcp -g -y
+```
+
+> 详细环境说明见 SKILL.md 的 Step 0 自检章节
+
+---
+
 ## ✨ 核心能力
 
 <p align="center">
