@@ -13,7 +13,19 @@
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://dear-ded.github.io/wallstreet-tieling/">
 <style>
-/* ===== True Liquid Glass Design System ===== */
+/* =================================================================
+   Design System: 华尔街驻铁岭办事处
+   哲学: Code as truth — HTML/CSS是唯一设计源(ProdDesign@Codex)
+       可行性优先 → 美观 → 无障碍 → 响应式
+   方向: Expressive — 品牌个性+微动效+视觉层次(Option B)
+   =================================================================
+   Principles:
+   1. Feasibility-first: backdrop-filter真实渲染,不模拟
+   2. Interactive states: hover/focus/active全保留
+   3. Accessible: 语义化+focus-visible+skip-to-content
+   4. Responsive: 移动/平板/桌面三端适配
+   5. Performance: will-change+content-visibility优化
+   ================================================================= */
 :root{
   --bg:linear-gradient(145deg,#070714 0%,#0a0a2e 25%,#150846 50%,#0a0a24 75%,#06061a 100%);
   --bg-size:400% 400%;
@@ -194,6 +206,19 @@ body{
   width:8px;height:8px;border-radius:50%;
   background:var(--green);
   animation:pulse 2s ease-in-out infinite;
+}
+
+/* === Accessibility (ProdDesign@Codex: 无障碍内置) === */
+.skip-to-content{position:absolute;top:-100px;left:16px;z-index:999;padding:12px 20px;
+  background:var(--accent);color:white;border-radius:var(--radius-sm);font-weight:600;
+  transition:top .3s ease}
+.skip-to-content:focus{top:16px}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
