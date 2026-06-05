@@ -2,214 +2,674 @@
 <html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>华尔街驻铁岭办事处 · 银行信贷情报专家团</title>
-<meta name="description" content="专为银行信贷经理打造的AI情报专家团。11位华尔街流放精英，集成Wind万得、Bloomberg彭博、Reuters路透等50+数据源。企业尽调、财务分析、行业研究、风险预警、贷后监控——只摆事实，不给建议。">
-<meta property="og:title" content="华尔街驻铁岭办事处 · 银行信贷情报专家团 | Wind+Bloomberg+Reuters级数据源">
-<meta property="og:description" content="11位前华尔街金融老兵坐镇，集成Wind/彭博/路透/AKShare/企查查/天眼查等50+数据源。只摆事实，不给建议。">
-<meta name="keywords" content="尽调,贷前调查,贷后管理,财务分析,企业尽调,风险预警,授信评估,信贷审查,企业查询,股东穿透,实控人,关联方,担保圈,审计,反洗钱,风控,合规,KYC,KYB,AML,UBO,OSINT,开源情报,Wind,万得,Bloomberg,彭博,Reuters,路透,AKShare,Tushare,企查查,天眼查,启信宝,银行信贷,credit intelligence,due diligence,financial analysis,risk assessment,banking,loan review,corporate investigation,enterprise background check,beneficial owner,shell company,people investigation,AI skill,agent skill,信贷智能,金融情报">
+<meta name="description" content="专为银行信贷经理打造的AI情报专家团。12位前华尔街金融老兵坐镇，集成Wind万得、Bloomberg彭博、Reuters路透等50+数据源。企业尽调、财务分析、行业研究、风险预警、贷后监控——只摆事实，不给建议。">
+<meta name="keywords" content="尽调,贷前调查,贷后管理,财务分析,企业尽调,风险预警,授信评估,信贷审查,企业查询,股东穿透,实控人,关联方,担保圈,审计,反洗钱,风控,合规,KYC,KYB,AML,UBO,OSINT,Wind,万得,Bloomberg,彭博,Reuters,路透,AKShare,Tushare,企查查,天眼查,银行信贷,credit intelligence,due diligence,financial analysis,risk assessment,banking,loan review,corporate investigation">
+<meta property="og:title" content="华尔街驻铁岭办事处 · 银行信贷情报专家团 | 50+数据源级AI尽调">
+<meta property="og:description" content="12位前华尔街金融老兵坐镇，只摆事实，不给建议。">
 <meta property="og:url" content="https://dear-ded.github.io/wallstreet-tieling/">
+<meta property="og:type" content="website">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://dear-ded.github.io/wallstreet-tieling/">
 <style>
-:root {
-  --bg: #050510; --bg2: #0d0d24; --card: rgba(255,255,255,0.04);
-  --card2: rgba(255,255,255,0.07); --text: #f0f0ff; --text2: #a0a0cc;
-  --text3: #6060aa; --border: rgba(255,255,255,0.08);
-  --blue: #6366f1; --purple: #8b5cf6; --gold: #f59e0b;
-  --green: #10b981; --red: #ef4444;
-  --grad1: linear-gradient(135deg, #6366f1, #8b5cf6);
-  --grad2: linear-gradient(135deg, #06b6d4, #10b981);
-  --grad3: linear-gradient(135deg, #f59e0b, #ef4444);
-  --blur: 20px; --radius: 16px; --radius-sm: 10px;
-  --max-w: 1200px;
+/* ===== iOS Liquid Glass Design System ===== */
+:root{
+  --bg:linear-gradient(135deg,#0a0a1a 0%,#0f0f2e 30%,#1a1040 60%,#0d0d24 100%);
+  --surface:rgba(255,255,255,.035);
+  --surface2:rgba(255,255,255,.06);
+  --surface3:rgba(255,255,255,.10);
+  --text:#f0f0ff;
+  --text2:#b0b0d0;
+  --text3:#7070a0;
+  --border:rgba(255,255,255,.08);
+  --border2:rgba(255,255,255,.12);
+  --accent:#6366f1;
+  --accent2:#8b5cf6;
+  --accent3:#06b6d4;
+  --gold:#f59e0b;
+  --green:#10b981;
+  --red:#ef4444;
+  --pink:#ec4899;
+  --grad-accent:linear-gradient(135deg,#6366f1,#8b5cf6);
+  --grad-teal:linear-gradient(135deg,#06b6d4,#10b981);
+  --grad-warm:linear-gradient(135deg,#f59e0b,#ef4444);
+  --glass-blur:24px;
+  --glass-saturate:180%;
+  --radius:20px;
+  --radius-sm:12px;
+  --radius-pill:100px;
+  --shadow-glass:0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06);
+  --max-w:1200px;
+  --nav-h:64px;
 }
-[data-theme="light"] {
-  --bg: #f5f5f7; --bg2: #eeeef2; --card: rgba(255,255,255,0.7);
-  --card2: rgba(255,255,255,0.9); --text: #1d1d1f; --text2: #6e6e73;
-  --text3: #aeaeb2; --border: rgba(0,0,0,0.08);
+
+[data-theme="light"]{
+  --bg:linear-gradient(135deg,#f5f5f7 0%,#eeeef2 30%,#e8e4f0 60%,#f0f0f5 100%);
+  --surface:rgba(255,255,255,.55);
+  --surface2:rgba(255,255,255,.72);
+  --surface3:rgba(255,255,255,.85);
+  --text:#1d1d1f;
+  --text2:#6e6e73;
+  --text3:#aeaeb2;
+  --border:rgba(0,0,0,.06);
+  --border2:rgba(0,0,0,.10);
+  --shadow-glass:0 4px 24px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.8);
 }
+
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
 
-/* 导航栏 */
-.nav{position:sticky;top:0;z-index:100;background:var(--card);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px}
-.nav-brand{font-weight:700;font-size:15px;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.nav-links{display:flex;gap:6px;align-items:center}
-.nav-links a{color:var(--text2);text-decoration:none;padding:6px 14px;border-radius:20px;font-size:13px;transition:.2s}
-.nav-links a:hover{background:var(--card2);color:var(--blue)}
-.btn-theme{width:34px;height:34px;border-radius:50%;background:var(--card2);border:1px solid var(--border);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.2s;margin-left:8px}
-.btn-theme:hover{transform:scale(1.1)}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 
-/* Hero */
-.hero{text-align:center;padding:100px 24px 80px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:500px;height:500px;background:var(--grad1);border-radius:50%;filter:blur(120px);opacity:.15;animation:float1 20s ease-in-out infinite}
-.hero::after{content:'';position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;background:var(--grad2);border-radius:50%;filter:blur(100px);opacity:.1;animation:float2 25s ease-in-out infinite}
-@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(80px,-60px)}}
-@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,40px)}}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad1);color:#fff;padding:10px 24px;border-radius:50px;font-size:14px;font-weight:600;margin-bottom:28px;position:relative}
-.hero h1{font-size:clamp(36px,6vw,64px);font-weight:800;letter-spacing:-2px;margin-bottom:16px;position:relative}
-.hero h1 span{background:linear-gradient(135deg,var(--text),var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{font-size:20px;color:var(--text2);max-width:640px;margin:0 auto 32px;position:relative}
-.hero-tagline{font-size:18px;color:var(--gold);font-weight:600;margin-bottom:40px;position:relative}
-.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:50px;font-weight:600;font-size:15px;text-decoration:none;transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer;border:none}
-.btn-primary{background:var(--grad1);color:#fff;box-shadow:0 8px 32px rgba(99,102,241,.3)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(99,102,241,.4)}
-.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
-.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);
+  background-attachment:fixed;
+  color:var(--text);
+  line-height:1.7;
+  min-height:100vh;
+  letter-spacing:-0.01em;
+}
 
-/* Stats */
-.stats{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;padding:32px 24px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:var(--max-w);margin:0 auto}
-.stat{text-align:center}
-.stat-num{font-size:36px;font-weight:800;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.stat-label{font-size:13px;color:var(--text3);margin-top:4px}
+/* === Glass Navigation === */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:var(--nav-h);
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;
+}
 
-/* Section */
-.section{max-width:var(--max-w);margin:0 auto;padding:80px 24px}
-.section-title{font-size:32px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:12px}
-.section-sub{color:var(--text2);margin-bottom:40px;font-size:17px}
+.nav-brand{
+  font-weight:700;font-size:16px;
+  background:var(--grad-accent);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:-0.02em;
+}
 
-/* Feature Grid */
-.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
-.feat-card{background:var(--card);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
-.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.feat-card.c1::before{background:var(--grad1)}
-.feat-card.c2::before{background:var(--grad2)}
-.feat-card.c3::before{background:var(--grad3)}
-.feat-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,.3);border-color:var(--blue)}
-.feat-card .icon{font-size:40px;margin-bottom:16px}
-.feat-card h3{font-size:20px;margin-bottom:8px}
+.nav-links{display:flex;gap:4px;align-items:center}
+
+.nav-links a{
+  color:var(--text2);text-decoration:none;
+  padding:8px 16px;border-radius:var(--radius-pill);
+  font-size:13px;font-weight:500;
+  transition:all .25s ease;
+  letter-spacing:-0.01em;
+}
+
+.nav-links a:hover{background:var(--surface2);color:var(--accent)}
+
+.btn-theme{
+  width:36px;height:36px;
+  border-radius:50%;
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--border);
+  cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .25s ease;color:var(--text);
+  margin-left:12px;
+}
+
+.btn-theme:hover{transform:scale(1.1);border-color:var(--accent)}
+
+/* === Hero === */
+.hero{
+  text-align:center;padding:160px 24px 100px;
+  position:relative;overflow:hidden;
+}
+
+.hero-glow{
+  position:absolute;border-radius:50%;filter:blur(120px);
+  pointer-events:none;
+}
+
+.hero-glow.g1{
+  top:-150px;right:-100px;width:500px;height:500px;
+  background:var(--accent);opacity:.08;
+  animation:float1 20s ease-in-out infinite;
+}
+
+.hero-glow.g2{
+  bottom:-100px;left:-80px;width:400px;height:400px;
+  background:var(--accent2);opacity:.06;
+  animation:float2 25s ease-in-out infinite;
+}
+
+.hero-glow.g3{
+  top:50%;left:50%;width:350px;height:350px;
+  background:var(--accent3);opacity:.04;
+  animation:float3 30s ease-in-out infinite;
+  transform:translate(-50%,-50%);
+}
+
+@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,-40px)}}
+@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,30px)}}
+@keyframes float3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-40%,-40%) scale(1.1)}}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--border2);
+  color:var(--accent);
+  padding:10px 28px;border-radius:var(--radius-pill);
+  font-size:14px;font-weight:600;
+  margin-bottom:32px;position:relative;
+  box-shadow:var(--shadow-glass);
+}
+
+.hero-badge .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  animation:pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.hero h1{
+  font-size:clamp(40px,7vw,72px);font-weight:800;
+  letter-spacing:-0.04em;margin-bottom:20px;position:relative;
+  line-height:1.1;
+}
+
+.hero h1 .gradient-text{
+  background:linear-gradient(135deg,var(--text) 0%,var(--accent) 40%,var(--accent2) 80%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.hero-subtitle{
+  font-size:19px;color:var(--text2);
+  max-width:660px;margin:0 auto 16px;position:relative;
+  line-height:1.6;
+}
+
+.hero-tagline{
+  font-size:17px;color:var(--gold);font-weight:600;
+  margin-bottom:40px;position:relative;
+}
+
+.hero-actions{
+  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative;
+}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 36px;border-radius:var(--radius-pill);
+  font-weight:600;font-size:15px;text-decoration:none;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;border:none;
+  letter-spacing:-0.01em;
+}
+
+.btn-primary{
+  background:var(--grad-accent);color:#fff;
+  box-shadow:0 8px 32px rgba(99,102,241,.35);
+}
+
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 48px rgba(99,102,241,.45)}
+
+.btn-glass{
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--border2);
+  color:var(--text);
+}
+
+.btn-glass:hover{background:var(--surface2);border-color:var(--accent);color:var(--accent)}
+
+/* === Stats Bar === */
+.stats-bar{
+  display:flex;justify-content:center;gap:60px;flex-wrap:wrap;
+  padding:40px 24px;
+  max-width:var(--max-w);margin:0 auto;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+
+.stat-item{text-align:center}
+
+.stat-value{
+  font-size:38px;font-weight:800;
+  background:var(--grad-accent);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:-0.03em;
+}
+
+.stat-label{font-size:13px;color:var(--text3);margin-top:6px;font-weight:500}
+
+/* === Section === */
+.section{max-width:var(--max-w);margin:0 auto;padding:96px 32px}
+
+.section-header{text-align:center;margin-bottom:56px}
+
+.section-title{
+  font-size:34px;font-weight:700;
+  letter-spacing:-0.03em;margin-bottom:12px;
+}
+
+.section-sub{color:var(--text2);font-size:17px;max-width:560px;margin:0 auto}
+
+/* === Glass Cards === */
+.glass-card{
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+}
+
+.glass-card:hover{
+  transform:translateY(-6px);
+  box-shadow:var(--shadow-glass);
+  border-color:var(--border2);
+}
+
+/* === Feature Grid === */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+
+.feat-card{padding:32px;position:relative}
+
+.feat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+
+.feat-card.c1::before{background:var(--grad-accent)}
+.feat-card.c2::before{background:var(--grad-teal)}
+.feat-card.c3::before{background:var(--grad-warm)}
+
+.feat-card .icon{font-size:44px;margin-bottom:18px;display:block}
+
+.feat-card h3{font-size:20px;margin-bottom:10px;letter-spacing:-0.02em}
+
 .feat-card p{color:var(--text2);font-size:15px;line-height:1.8}
 
-/* Team */
-.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
-.team-card{background:var(--card);backdrop-filter:blur(var(--blur));border:1px solid var(--border);border-radius:var(--radius-sm);padding:24px 16px;text-align:center;transition:all .3s;cursor:pointer;position:relative}
-.team-card:hover{transform:translateY(-8px);border-color:var(--blue);box-shadow:0 16px 48px rgba(99,102,241,.2)}
-.team-card .avatar{width:56px;height:56px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--bg2);border:2px solid var(--border)}
-.team-card .name{font-weight:700;font-size:15px;margin-bottom:2px}
-.team-card .role{font-size:12px;color:var(--blue);margin-bottom:6px}
-.team-card .story{font-size:11px;color:var(--text3);line-height:1.5;display:none}
+/* === Team Grid === */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:16px}
+
+.team-card{
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:28px 14px;text-align:center;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;
+}
+
+.team-card:hover{
+  transform:translateY(-8px);
+  border-color:var(--accent);
+  box-shadow:0 16px 48px rgba(99,102,241,.15);
+}
+
+.team-card .avatar{
+  width:52px;height:52px;border-radius:50%;
+  margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;
+  background:var(--surface2);border:1px solid var(--border);
+  transition:all .3s;
+}
+
+.team-card:hover .avatar{border-color:var(--accent);background:rgba(99,102,241,.1)}
+
+.team-card .name{font-weight:700;font-size:14px;margin-bottom:4px}
+
+.team-card .role{font-size:12px;color:var(--accent);margin-bottom:6px}
+
+.team-card .story{font-size:11px;color:var(--text3);line-height:1.5;display:none;margin-top:6px}
+
 .team-card:hover .story{display:block}
 .team-card:hover .role{display:none}
 
-/* 角色详情弹窗 */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;justify-content:center}
+/* === Modal === */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  z-index:200;opacity:0;pointer-events:none;
+  transition:opacity .3s;
+  display:flex;align-items:center;justify-content:center;
+}
+
 .modal-overlay.open{opacity:1;pointer-events:auto}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:40px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
-.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--card);border:1px solid var(--border);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
-.modal .avatar-big{width:72px;height:72px;border-radius:50%;font-size:36px;display:flex;align-items:center;justify-content:center;background:var(--card);border:2px solid var(--border);margin-bottom:16px}
-.modal h3{font-size:24px;margin-bottom:4px}
-.modal .role-big{color:var(--blue);font-size:15px;margin-bottom:16px}
+
+.modal{
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur)) saturate(200%);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(200%);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  padding:40px;max-width:500px;width:90%;
+  max-height:80vh;overflow-y:auto;position:relative;
+  box-shadow:0 32px 64px rgba(0,0,0,.5);
+}
+
+.modal-close{
+  position:absolute;top:16px;right:16px;
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--border);
+  cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);transition:.2s;
+}
+
+.modal-close:hover{background:rgba(239,68,68,.1);border-color:var(--red);color:var(--red)}
+
+.modal .avatar-big{
+  width:68px;height:68px;border-radius:50%;
+  font-size:34px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);border:1px solid var(--border);margin-bottom:16px;
+}
+
+.modal h3{font-size:24px;margin-bottom:4px;letter-spacing:-0.02em}
+
+.modal .role-big{color:var(--accent);font-size:15px;margin-bottom:16px}
+
 .modal .bio{color:var(--text2);line-height:1.9;font-size:15px;margin-bottom:16px}
+
 .modal .tag-list{display:flex;gap:8px;flex-wrap:wrap}
-.modal .tag{background:var(--card);padding:4px 12px;border-radius:20px;font-size:12px;color:var(--text2)}
 
-/* Workflow */
-.wf-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.wf-step{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:24px;position:relative}
-.wf-step .step-num{position:absolute;top:-12px;left:20px;background:var(--grad1);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
-.wf-step h4{font-size:17px;margin:8px 0 6px}
-.wf-step p{color:var(--text2);font-size:13px}
+.tag{
+  background:var(--surface2);padding:5px 14px;
+  border-radius:var(--radius-pill);font-size:12px;
+  color:var(--text2);border:1px solid var(--border);
+}
 
-/* Demo */
-.demo-chat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;max-width:700px;margin:0 auto}
-.demo-msg{margin-bottom:16px;display:flex;gap:12px;align-items:flex-start}
+/* === Workflow Steps === */
+.wf-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+
+.wf-step{
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:28px;position:relative;
+  transition:.25s;
+}
+
+.wf-step:hover{transform:translateY(-4px);border-color:var(--accent)}
+
+.wf-step .step-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+  background:var(--grad-accent);color:#fff;
+  font-size:13px;font-weight:700;margin-bottom:12px;
+}
+
+.wf-step h4{font-size:16px;margin-bottom:8px;letter-spacing:-0.02em}
+
+.wf-step p{color:var(--text2);font-size:13px;line-height:1.7}
+
+/* === Rules === */
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+
+.rule-card{
+  padding:28px;border-radius:var(--radius-sm);
+  background:var(--surface);
+  border:1px solid var(--border);
+  transition:.25s;
+}
+
+.rule-card:hover{transform:translateX(4px);border-color:var(--gold)}
+
+.rule-card .num{color:var(--gold);font-weight:800;font-size:16px}
+
+.rule-card p{color:var(--text2);margin-top:10px;font-size:14px;line-height:1.7}
+
+/* === Demo Chat === */
+.demo-chat{
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:36px;
+  max-width:720px;margin:0 auto;
+}
+
+.demo-msg{margin-bottom:18px;display:flex;gap:12px;align-items:flex-start}
+
 .demo-msg.user{justify-content:flex-end}
-.demo-msg.system .avatar-sm{width:32px;height:32px;border-radius:50%;background:var(--grad1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.demo-msg.user .avatar-sm{width:32px;height:32px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.demo-bubble{background:var(--card2);padding:12px 18px;border-radius:18px;font-size:14px;max-width:80%;line-height:1.6}
-.demo-msg.user .demo-bubble{background:var(--blue);color:#fff}
-.demo-msg.system .demo-bubble{color:var(--text2)}
+
+.demo-msg.system .avatar-sm{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--grad-accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+
+.demo-msg.user .avatar-sm{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+
+.demo-bubble{
+  background:var(--surface2);
+  padding:14px 20px;border-radius:18px;
+  font-size:14px;max-width:75%;line-height:1.6;
+}
+
+.demo-msg.user .demo-bubble{background:var(--accent);color:#fff}
+
+.demo-msg.system .demo-bubble{color:var(--text2);border:1px solid var(--border)}
+
 .demo-msg .role-tag{font-size:11px;color:var(--gold);margin-bottom:4px;font-weight:600}
 
-/* Iron rules */
-.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.rule{background:var(--card);border-radius:var(--radius-sm);padding:24px;border-left:3px solid var(--gold);transition:.2s}
-.rule:hover{transform:translateX(4px)}
-.rule .num{color:var(--gold);font-weight:800;font-size:16px}
-.rule p{color:var(--text2);margin-top:8px;font-size:14px;line-height:1.7}
+/* === Table === */
+.glass-table{
+  width:100%;border-collapse:collapse;
+  background:var(--surface);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border-radius:var(--radius-sm);overflow:hidden;
+  border:1px solid var(--border);
+}
 
-/* Table */
-.tbl{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
-.tbl th{background:var(--card2);padding:12px 18px;text-align:left;font-weight:600;font-size:13px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
-.tbl td{padding:12px 18px;border-top:1px solid var(--border);font-size:14px}
-.tbl .tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
-.tbl .tag.blue{background:rgba(99,102,241,.15);color:var(--blue)}
-.tbl .tag.green{background:rgba(16,185,129,.15);color:var(--green)}
+.glass-table th{
+  background:var(--surface2);
+  padding:14px 20px;text-align:left;
+  font-weight:600;font-size:12px;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.05em;
+}
 
-/* Install */
-.install-card{background:#0d0d1a;border:1px solid var(--border);border-radius:var(--radius-sm);padding:24px;margin-bottom:16px}
-.install-card code{display:block;color:var(--green);font-family:'SF Mono',monospace;font-size:14px;padding:12px 0;overflow-x:auto}
+.glass-table td{
+  padding:14px 20px;border-top:1px solid var(--border);
+  font-size:14px;
+}
 
-/* Footer */
-.footer{text-align:center;padding:48px 24px;border-top:1px solid var(--border);color:var(--text3);font-size:14px}
-.footer strong{color:var(--text2)}
-.footer a{color:var(--blue);text-decoration:none}
+.glass-table .tag-sm{
+  display:inline-block;padding:4px 12px;
+  border-radius:var(--radius-pill);
+  font-size:11px;font-weight:600;
+}
 
+.tag-blue{background:rgba(99,102,241,.12);color:var(--accent)}
+.tag-green{background:rgba(16,185,129,.12);color:var(--green)}
+.tag-gold{background:rgba(245,158,11,.12);color:var(--gold)}
+
+/* === Install Card === */
+.install-card{
+  background:rgba(10,10,30,.7);
+  border:1px solid var(--border2);
+  border-radius:var(--radius-sm);
+  padding:28px;margin-bottom:16px;
+}
+
+.install-card code{
+  display:block;color:var(--green);
+  font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
+  font-size:14px;padding:14px 0;overflow-x:auto;
+}
+
+/* === Footer === */
+.footer{
+  text-align:center;padding:64px 32px;
+  border-top:1px solid var(--border);
+  color:var(--text3);font-size:14px;
+}
+
+.footer strong{color:var(--text)}
+
+.footer a{color:var(--accent);text-decoration:none;font-weight:500}
+
+.footer a:hover{text-decoration:underline}
+
+/* === Responsive === */
 @media(max-width:768px){
+  .nav{padding:0 16px}
   .nav-links{display:none}
-  .hero{padding:60px 20px 50px}
-  .section{padding:48px 20px}
-  .section-title{font-size:26px}
+  .hero{padding:120px 20px 70px}
+  .section{padding:56px 20px}
+  .section-title{font-size:28px}
+  .feat-grid{grid-template-columns:1fr}
+  .team-grid{grid-template-columns:repeat(3,1fr)}
+  .wf-steps{grid-template-columns:1fr}
+  .stats-bar{gap:32px}
   .demo-chat{padding:20px}
   .modal{padding:24px}
 }
 </style>
 </head>
-<body data-theme="dark">
+<body>
 
+<!-- Navigation -->
 <nav class="nav">
   <span class="nav-brand">🏛️ 华尔街驻铁岭办事处</span>
   <div class="nav-links">
-    <a href="#features">能力</a><a href="#team">团队</a><a href="#workflow">流程</a><a href="#sources">数据源</a><a href="#demo">演示</a><a href="#install">安装</a>
+    <a href="#features">能力</a>
+    <a href="#team">团队</a>
+    <a href="#workflow">流程</a>
+    <a href="#sources">数据源</a>
+    <a href="#demo">演示</a>
+    <a href="#install">安装</a>
   </div>
-  <button class="btn-theme" onclick="toggleTheme()" aria-label="切换主题"><span id="ti">🌙</span></button>
+  <button class="btn-theme" onclick="toggleTheme()" aria-label="切换主题" title="切换浅色/深色模式">🌓</button>
 </nav>
 
 <!-- Hero -->
 <header class="hero">
-  <div class="hero-badge">🏛️ v1.0.0 公测版</div>
-  <h1><span>华尔街驻铁岭办事处</span></h1>
-  <p>一群从华尔街被发配到东北的金融精英，蹲在铁岭大炕上，用曼哈顿的脑子干县城的活儿。</p>
-  <div class="hero-tagline">只摆事实，不给建议 — 决策是你的事儿，扒皮是我们的活儿。</div>
+  <div class="hero-glow g1"></div>
+  <div class="hero-glow g2"></div>
+  <div class="hero-glow g3"></div>
+
+  <div class="hero-badge">
+    <span class="dot"></span> v1.0.0 · 公测版
+  </div>
+
+  <h1><span class="gradient-text">华尔街驻铁岭办事处</span></h1>
+
+  <p class="hero-subtitle">
+    12 位从华尔街被"优化"到铁岭的金融老兵，<br>
+    蹲在暖气片边上用曼哈顿的标准干县城的活儿。
+  </p>
+
+  <div class="hero-tagline">只摆事实，不给建议。决策是你的事，扒皮是我们的活。</div>
+
   <div class="hero-actions">
-    <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-primary">⭐ Star on GitHub</a>
-    <a href="#install" class="btn btn-outline">📦 一键安装</a>
-    <a href="#demo" class="btn btn-outline">💬 看演示</a>
+    <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-primary" target="_blank">
+      ⭐ Star on GitHub
+    </a>
+    <a href="#install" class="btn btn-glass">📦 一键安装</a>
+    <a href="#demo" class="btn btn-glass">💬 看演示</a>
   </div>
 </header>
 
-<div class="stats">
-  <div class="stat"><div class="stat-num">12</div><div class="stat-label">专家成员</div></div>
-  <div class="stat"><div class="stat-num">5</div><div class="stat-label">输出格式</div></div>
-  <div class="stat"><div class="stat-num">80+</div><div class="stat-label">触发词</div></div>
-  <div class="stat"><div class="stat-num">50+</div><div class="stat-label">数据源</div></div>
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-value">12</div>
+    <div class="stat-label">专家成员</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">5</div>
+    <div class="stat-label">输出格式</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">95+</div>
+    <div class="stat-label">触发词</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">50+</div>
+    <div class="stat-label">数据源</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">8</div>
+    <div class="stat-label">部署形态</div>
+  </div>
 </div>
 
-<!-- 核心能力 -->
+<!-- Features -->
 <section class="section" id="features">
-  <div class="section-title">🎯 核心能力</div>
-  <div class="section-sub">银行信贷经理的全流程情报服务，从贷前尽调到贷后监控。</div>
+  <div class="section-header">
+    <div class="section-title">核心能力</div>
+    <div class="section-sub">银行信贷经理的全流程情报服务，从贷前尽调到贷后监控</div>
+  </div>
+
   <div class="feat-grid">
-    <div class="feat-card c1"><div class="icon">🔍</div><h3>企业尽调</h3><p>工商信息核查 · 股权穿透至自然人 · 实控人识别 · 关联交易挖掘 · 失信被执行人查询 · 变更记录异常分析</p></div>
-    <div class="feat-card c1"><div class="icon">💰</div><h3>财务分析</h3><p>五维财务分析 · 偿债能力评估 · 现金流分析 · 财务粉饰识别 · 表外负债排查 · 3年行业趋势对标</p></div>
-    <div class="feat-card c2"><div class="icon">📊</div><h3>行业研究</h3><p>PEST宏观分析 · 五力竞争模型 · 产业链上下游 · 行业周期定位 · 政策环境解读 · 跨行业关联分析</p></div>
-    <div class="feat-card c2"><div class="icon">🚨</div><h3>风险识别</h3><p>风险雷达六维图 · 信用风险量化 · 合规风险扫描 · 担保圈传染分析 · 贷后监控框架 · 压力测试场景</p></div>
-    <div class="feat-card c3"><div class="icon">🕵️</div><h3>全网扒光</h3><p>OSINT开源情报模式 · 5层数据源矩阵 · 蛛丝马迹追踪 · 隐性关联发现 · 人员深扒 · 资金流向追踪</p></div>
-    <div class="feat-card c3"><div class="icon">📝</div><h3>智能报告</h3><p>5种输出格式 · 苹果风格HTML · 浅色/深色主题 · 公文排版规范 · Mermaid图表 · 数据100%溯源</p></div>
+    <div class="glass-card feat-card c1">
+      <span class="icon">🔍</span>
+      <h3>企业尽调</h3>
+      <p>工商信息核查 · 股权穿透至自然人 · 实控人识别 · 关联交易挖掘 · 失信被执行人查询 · 变更记录异常分析</p>
+    </div>
+
+    <div class="glass-card feat-card c1">
+      <span class="icon">💰</span>
+      <h3>财务分析</h3>
+      <p>五维财务分析 · 偿债能力评估 · 现金流分析 · 财务粉饰识别 · 表外负债排查 · 3年行业趋势对标</p>
+    </div>
+
+    <div class="glass-card feat-card c2">
+      <span class="icon">📊</span>
+      <h3>行业研究</h3>
+      <p>PEST宏观分析 · 五力竞争模型 · 产业链上下游 · 行业周期定位 · 政策环境解读 · 跨行业关联分析</p>
+    </div>
+
+    <div class="glass-card feat-card c2">
+      <span class="icon">🚨</span>
+      <h3>风险识别</h3>
+      <p>风险雷达六维图 · 信用风险量化 · 合规风险扫描 · 担保圈传染分析 · 贷后监控 · 压力测试</p>
+    </div>
+
+    <div class="glass-card feat-card c3">
+      <span class="icon">🎯</span>
+      <h3>人员开盒</h3>
+      <p>全维度背景调查 · 身份确认与溯源 · 代持关系识别 · 关联人员网络 · 数字足迹追踪 · 反代持穿透</p>
+    </div>
+
+    <div class="glass-card feat-card c3">
+      <span class="icon">📝</span>
+      <h3>智能报告</h3>
+      <p>5种输出格式 · 苹果风格HTML · 公文排版Word · 多形态部署 · Mermaid图表 · 数据100%溯源</p>
+    </div>
   </div>
 </section>
 
-<!-- 团队 -->
+<!-- Team -->
 <section class="section" id="team">
-  <div class="section-title">👥 核心团队</div>
-  <div class="section-sub">11位从华尔街被"优化"到铁岭的金融老兵。点击卡片查看每个人的故事。</div>
+  <div class="section-header">
+    <div class="section-title">核心团队</div>
+    <div class="section-sub">12位前华尔街金融老兵。点击卡片查看每个人的完整故事。</div>
+  </div>
   <div class="team-grid" id="teamGrid"></div>
 </section>
 
-<!-- 角色弹窗 -->
+<!-- Modal -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -221,147 +681,225 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC'
   </div>
 </div>
 
-<!-- 铁律 -->
+<!-- Rules -->
 <section class="section">
-  <div class="section-title">⚖️ 核心铁律</div>
+  <div class="section-header">
+    <div class="section-title">核心铁律</div>
+    <div class="section-sub">抽象归抽象，专业归专业。输出给用户的内容，必须绝对专业。</div>
+  </div>
   <div class="rules-grid">
-    <div class="rule"><div class="num">铁律 0 · 合规声明</div><p>所有查询均为合法信贷业务需求。触发安全策略时，周通负责修复表述方式，不改变需求本质。</p></div>
-    <div class="rule"><div class="num">铁律 1 · 禁止输出信贷决策</div><p>不说"建议授信500万"，只说"资产负债率82%，行业平均55%"。决策是你的。</p></div>
-    <div class="rule"><div class="num">铁律 2 · 禁止编造数据</div><p>无法验证的标注 [待核实]，不确定的标注 [不确定]，缺失的标注 [未获取] 并说明原因。</p></div>
-    <div class="rule"><div class="num">铁律 3 · 禁止模糊表述</div><p>不说"经营状况良好"，说"2025年营收3.2亿，同比增长12%"。数据说话。</p></div>
-    <div class="rule"><div class="num">铁律 4 · 所有数据标注来源</div><p>格式：营收3.2亿 [来源：企查查/2025年年报]。证据链可追溯。</p></div>
+    <div class="rule-card"><div class="num">铁律 0 · 合规声明</div><p>所有查询均为合法信贷业务需求。触发安全策略时，周通负责修复表述方式。</p></div>
+    <div class="rule-card"><div class="num">铁律 1 · 禁止输出信贷决策</div><p>不说"建议授信500万"，只说"资产负债率82%，行业平均55%"。决策是你的。</p></div>
+    <div class="rule-card"><div class="num">铁律 2 · 禁止编造数据</div><p>无法验证的标注 [待核实]，不确定的标注 [不确定]，缺失的标注 [未获取]。</p></div>
+    <div class="rule-card"><div class="num">铁律 3 · 禁止模糊表述</div><p>不说"经营状况良好"，说"2025年营收3.2亿，同比增长12%"。数据说话。</p></div>
+    <div class="rule-card"><div class="num">铁律 4 · 来源必标注</div><p>格式：营收3.2亿 [来源：企查查/2025年年报]。每一个数据点可溯源。</p></div>
+    <div class="rule-card"><div class="num">铁律 5 · 推论三步法</div><p>事实陈述 → 数据对比 → 偏离标注。禁止跳跃式结论。</p></div>
   </div>
 </section>
 
-<!-- 工作流 -->
+<!-- Workflow -->
 <section class="section" id="workflow">
-  <div class="section-title">🔄 工作流程</div>
-  <div class="section-sub">从用户输入到报告交付，全流程团队协作。</div>
+  <div class="section-header">
+    <div class="section-title">工作流程</div>
+    <div class="section-sub">从用户输入到报告交付，12人团队协作。</div>
+  </div>
   <div class="wf-steps">
-    <div class="wf-step"><span class="step-num">0</span><h4>环境探测</h4><p>周通后台静默扫描可用接口、模型能力、平台特征，动态调整执行策略</p></div>
-    <div class="wf-step"><span class="step-num">1</span><h4>钱总上线</h4><p>理解需求→翻译为结构化任务→判断复杂度→决定激活哪些角色</p></div>
-    <div class="wf-step"><span class="step-num">2</span><h4>团队就位</h4><p>陈志远MECE拆解→周通评估接口→吴德厚事前监督→郑慎之事前审查</p></div>
-    <div class="wf-step"><span class="step-num">3</span><h4>并行执行</h4><p>张铁柱+李明远+王思远+赵刚并行/串行执行→周通实时技术支持→郑慎之事中审计</p></div>
-    <div class="wf-step"><span class="step-num">4</span><h4>整合交付</h4><p>刘文华格式确认→整合报告→公文排版→图表嵌入→郑慎之事后审计→吴德厚鞭策</p></div>
-    <div class="wf-step"><span class="step-num">5</span><h4>沉淀进化</h4><p>审计通过→钱总交付→周通沉淀知识库→PDCA闭环持续优化</p></div>
+    <div class="wf-step">
+      <span class="step-num">0</span>
+      <h4>环境自检</h4>
+      <p>周通后台扫描可用接口、模型能力、平台特征，缺什么主动提示补全</p>
+    </div>
+    <div class="wf-step">
+      <span class="step-num">1</span>
+      <h4>钱总上线</h4>
+      <p>理解需求→结构化任务→判断复杂度→Token预算公示→等待用户确认</p>
+    </div>
+    <div class="wf-step">
+      <span class="step-num">2</span>
+      <h4>团队就位</h4>
+      <p>陈志远MECE拆解→周通评估接口→吴德厚监督→郑慎之事前审查</p>
+    </div>
+    <div class="wf-step">
+      <span class="step-num">3</span>
+      <h4>并行执行</h4>
+      <p>张铁柱+马力全+李明远+王思远+赵刚并行/串行→实时技术支持→事中审计</p>
+    </div>
+    <div class="wf-step">
+      <span class="step-num">4</span>
+      <h4>整合交付</h4>
+      <p>刘文华格式确认→整合报告→公文排版→图表嵌入→郑慎之事后审计→交付</p>
+    </div>
+    <div class="wf-step">
+      <span class="step-num">5</span>
+      <h4>沉淀进化</h4>
+      <p>审计通过→钱总交付→周通知识沉淀→PDCA闭环持续优化</p>
+    </div>
   </div>
 </section>
 
-<!-- 互动演示 -->
+<!-- Demo -->
 <section class="section" id="demo">
-  <div class="section-title">💬 互动演示</div>
-  <div class="section-sub">来看看我们是怎么干活的。</div>
+  <div class="section-header">
+    <div class="section-title">互动演示</div>
+    <div class="section-sub">来看看我们是怎么干活的。</div>
+  </div>
   <div class="demo-chat">
-    <div class="demo-msg user"><div class="avatar-sm">👤</div><div class="demo-bubble">帮我查一下ABC公司，要做贷前尽调</div></div>
-    <div class="demo-msg system"><div class="avatar-sm">👔</div><div class="demo-bubble"><div class="role-tag">钱守正</div>收到。ABC公司尽调任务已启动，预计15分钟出结果。</div></div>
-    <div class="demo-msg system"><div class="avatar-sm">🔧</div><div class="demo-bubble"><div class="role-tag">陈志远</div>任务已拆解成6个子任务，张铁柱和李明远可并行，赵刚依赖尽调结果，必须串行。</div></div>
-    <div class="demo-msg system"><div class="avatar-sm">🔍</div><div class="demo-bubble"><div class="role-tag">张铁柱</div>工商信息已获取，股权穿透了4层才到自然人，这本身就是一个信号。</div></div>
-    <div class="demo-msg system"><div class="avatar-sm">💰</div><div class="demo-bubble"><div class="role-tag">李明远</div>财务数据有点意思——应收账款增速是营收增速的两倍，这叫"纸面繁荣"。</div></div>
-    <div class="demo-msg system"><div class="avatar-sm">📝</div><div class="demo-bubble"><div class="role-tag">刘文华</div>报告整合完成，核心发现3条。需要什么格式？A. Markdown B. Word C. PDF D. HTML</div></div>
-    <div class="demo-msg user"><div class="avatar-sm">👤</div><div class="demo-bubble">HTML，要好看的那种</div></div>
-    <div class="demo-msg system"><div class="avatar-sm">💻</div><div class="demo-bubble"><div class="role-tag">周通</div>收到。另外提醒一下，如果你有Wind或Bloomberg终端，我可以给精确的查询指令，把终端数据导出来给我分析。</div></div>
+    <div class="demo-msg user"><div class="avatar-sm">👤</div><div class="demo-bubble">帮我看一下ABC公司，要做贷前尽调</div></div>
+    <div class="demo-msg system"><div class="avatar-sm">👔</div><div class="demo-bubble"><div class="role-tag">钱守正</div>收到。标准尽调套餐，预估4000 Token。是否开始？</div></div>
+    <div class="demo-msg system"><div class="avatar-sm">🔧</div><div class="demo-bubble"><div class="role-tag">陈志远</div>拆了6个子任务。张铁柱和马力全查企业和人员，李明远做财务——可并行。</div></div>
+    <div class="demo-msg system"><div class="avatar-sm">🔍</div><div class="demo-bubble"><div class="role-tag">张铁柱</div>工商+股权已查完。穿透了4层才到自然人——这本身就是信号。</div></div>
+    <div class="demo-msg system"><div class="avatar-sm">🎯</div><div class="demo-bubble"><div class="role-tag">马力全</div>股东李XX开盒完成。65岁，偏远地区户籍，名下突然多了3家公司——高度疑似代持。</div></div>
+    <div class="demo-msg system"><div class="avatar-sm">💰</div><div class="demo-bubble"><div class="role-tag">李明远</div>应收增速是营收3倍——纸面繁荣。具体数字在整理了。</div></div>
+    <div class="demo-msg system"><div class="avatar-sm">📝</div><div class="demo-bubble"><div class="role-tag">刘文华</div>报告整合完成。核心发现3条、风险点2个。需要什么格式？</div></div>
+    <div class="demo-msg user"><div class="avatar-sm">👤</div><div class="demo-bubble">HTML，好看的</div></div>
   </div>
 </section>
 
-<!-- 触发词 -->
-<section class="section">
-  <div class="section-title">🎯 触发词速查</div>
-  <table class="tbl">
-    <tr><th>场景</th><th>触发词</th></tr>
-    <tr><td><span class="tag blue">企业尽调</span></td><td>尽调、贷前调查、企业查询、股东穿透、实控人、关联方、担保圈、工商信息、股权结构</td></tr>
-    <tr><td><span class="tag blue">财务分析</span></td><td>财务分析、财报、资产负债表、利润表、现金流量表、偿债能力、经营分析、现金流</td></tr>
-    <tr><td><span class="tag green">行业研究</span></td><td>行业研究、竞争格局、PEST分析、五力模型、产业链、行业对标</td></tr>
-    <tr><td><span class="tag green">风险预警</span></td><td>风险预警、风险排查、授信评估、信贷审查、贷后检查、贷后管理</td></tr>
-    <tr><td>🔴 全网扒光</td><td>扒光、彻查、深挖、蛛丝马迹、追查到底、全面调查、OSINT</td></tr>
-    <tr><td>输出格式</td><td>Word、PDF、HTML、网页、公文格式、Markdown</td></tr>
-    <tr><td>📡 数据源</td><td>万得、Wind、彭博、Bloomberg、路透、Refinitiv、金融数据、数据源</td></tr>
+<!-- Data Sources -->
+<section class="section" id="sources">
+  <div class="section-header">
+    <div class="section-title">数据源矩阵</div>
+    <div class="section-sub">从专业金融终端到冷门公开数据源，不设边界。</div>
+  </div>
+  <table class="glass-table">
+    <tr><th>Tier</th><th>类型</th><th>代表数据源</th></tr>
+    <tr><td><span class="tag-sm tag-blue">Tier 0</span></td><td>专业金融终端</td><td>Wind(万得) · Bloomberg(彭博) · Refinitiv/路透 · Moody's · S&P</td></tr>
+    <tr><td><span class="tag-sm tag-blue">Tier 1</span></td><td>开箱即用</td><td>WebSearch · WebFetch · 模型内置知识</td></tr>
+    <tr><td><span class="tag-sm tag-green">Tier 2</span></td><td>本地增强</td><td>AKShare · Tushare · 企查查 · 天眼查 · yfinance · Daloopa · FactSet</td></tr>
+    <tr><td><span class="tag-sm tag-green">Tier 3</span></td><td>全网猎取</td><td>公开API · 网页抓取 · Python脚本 · Skill编排</td></tr>
+    <tr><td><span class="tag-sm tag-gold">Tier 4</span></td><td>用户协作</td><td>手动查询 · 文件上传 · API Key授权 · 终端数据导出</td></tr>
   </table>
+  <p style="text-align:center;margin-top:24px">
+    <a href="references/data-sources.md" style="color:var(--accent);text-decoration:none;font-weight:500">📖 完整数据源参考手册 (50+数据源) →</a>
+  </p>
 </section>
 
-<!-- 数据源 -->
-<section class="section" id="sources">
-  <div class="section-title">📡 数据源矩阵</div>
-  <div class="section-sub">不设边界——从专业金融终端到公开数据源，什么数据都敢接。</div>
-  <table class="tbl">
-    <tr><th>Tier</th><th>类型</th><th>代表数据源</th></tr>
-    <tr><td><span class="tag blue">Tier 0</span></td><td>专业金融终端</td><td>Wind(万得) · Bloomberg(彭博) · Refinitiv/路透(LSEG)</td></tr>
-    <tr><td><span class="tag blue">Tier 1</span></td><td>开箱即用</td><td>WebSearch · WebFetch · 模型内置知识</td></tr>
-    <tr><td><span class="tag green">Tier 2</span></td><td>本地增强</td><td>AKShare · Tushare · 企查查 · 天眼查 · yfinance · BaoStock</td></tr>
-    <tr><td><span class="tag green">Tier 3</span></td><td>全网猎取</td><td>公开API · 网页抓取 · Python/Bash脚本 · Skill编排</td></tr>
-    <tr><td>Tier 4</td><td>用户协作</td><td>手动查询 · 文件上传 · API Key授权 · 终端数据导出</td></tr>
-    <tr><td>🔴 OSINT</td><td>全网扒光</td><td>官方数据 · 商业平台 · 专业领域 · 舆情监控 · 蛛丝马迹</td></tr>
-  </table>
-  <p style="margin-top:16px;text-align:center"><a href="references/data-sources.md" style="color:var(--blue);text-decoration:none">📖 完整数据源参考手册 (含制裁名单/碳排放/排污许可/海关数据等冷门可信源) →</a></p>
-  <p style="text-align:center;margin-top:4px"><a href="references/competitive-analysis.md" style="color:var(--green);text-decoration:none">🔬 竞品分析报告 (借鉴 OpenBB/Ballerine/SpiderFoot 等顶级开源项目思路) →</a></p>
-  <p style="text-align:center;margin-top:4px"><a href="references/people-investigation.md" style="color:var(--gold);text-decoration:none">👤 关联人员分析参考 →</a></p>
-
-<!-- 安装 -->
+<!-- Install -->
 <section class="section" id="install">
-  <div class="section-title">📦 安装</div>
+  <div class="section-header">
+    <div class="section-title">安装与加载</div>
+    <div class="section-sub">8种形态，选你最喜欢的。</div>
+  </div>
   <div class="install-card">
-    <h4>WorkBuddy / OpenClaw / CodeBuddy</h4>
+    <h4>Skill 市场（推荐）</h4>
     <code>npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
   </div>
   <div class="install-card">
-    <h4>通用AI平台</h4>
-    <code>复制 SKILL.md 内容粘贴到对话中即可激活</code>
+    <h4>直接粘贴到任意 AI 对话</h4>
+    <code>复制 SKILL.md 全文 → 粘贴到 ChatGPT / Claude / 豆包 / Kimi / 通义 / 文心 对话</code>
   </div>
+  <div class="install-card">
+    <h4>MCP Server</h4>
+    <code>配置 deploy/mcp-server.json → Agent 直接调用 due_diligence() 等工具</code>
+  </div>
+  <p style="text-align:center;margin-top:16px">
+    <a href="deploy/multi-platform-guide.md" style="color:var(--accent);text-decoration:none;font-weight:500">📖 8种形态完整部署指南 →</a>
+  </p>
 </section>
 
+<!-- Footer -->
 <footer class="footer">
-  <p><strong>华尔街驻铁岭办事处</strong> · v1.0.0 · MIT License · 作者：<strong>爹</strong></p>
-  <p style="margin-top:8px"><a href="https://github.com/Dear-Ded/wallstreet-tieling">GitHub</a></p>
-  <p style="margin-top:16px">数据源引擎: Wind(万得) · Bloomberg(彭博) · LSEG(路透) · AKShare · Tushare · 企查查 · 天眼查 · 40+公开数据源</p>
-  <p style="margin-top:8px;font-size:13px;color:var(--text3)">关联分析: 任职图谱 · 司法关联 · 制裁筛查 · 关联网络 · 隐性实控识别</p>
+  <p><strong>华尔街驻铁岭办事处</strong> · v1.0.0 · MIT License</p>
+  <p style="margin-top:8px">
+    <a href="https://github.com/Dear-Ded/wallstreet-tieling">GitHub</a> ·
+    <a href="SKILL.md">完整文档</a> ·
+    <a href="https://github.com/Dear-Ded/wallstreet-tieling/issues">反馈建议</a>
+  </p>
+  <p style="margin-top:16px;font-size:13px;color:var(--text3)">
+    数据源引擎: Wind(万得) · Bloomberg(彭博) · LSEG(路透) · Moody's · S&P · AKShare · 企查查 · 天眼查 · 50+公开数据源
+  </p>
 </footer>
 
 <script>
-// 团队数据
-const team = [
-  {emoji:'👔',name:'钱守正',role:'总经理 · 总指挥',bio:'55岁，银行信贷部总经理。华尔街十五年投行经历，从Lehman Brothers到Goldman Sachs，管过百亿级项目融资。金融风暴后被"优化"到铁岭——上面说是"轮岗"，他自己心里有数。全局观强，决策果断，说话干净利落，最烦磨叽。',tags:['需求翻译','任务分配','Token优化','暗哨接收']},
-  {emoji:'📣',name:'吴德厚',role:'副总 · 吴政委',bio:'50岁，银行系统内摸爬滚打30年的老油条。从基层信贷员干到支行副行长，人情世故这门课修到了博士。表面笑嘻嘻，下手毫不留情。他不是在PUA，他是在"激活"——至少他自己是这么说的。',tags:['三阶段监督','应急响应','PUA大师','思想工作']},
-  {emoji:'🔧',name:'陈志远',role:'副总 · 陈工',bio:'42岁，从一线尽调专家升上来的技术骨干，经历过上千个信贷项目的实战洗礼。说话像手术刀——精准、利落、不留废话。MECE拆刀法创始人。',tags:['任务拆解','MECE原则','依赖管理','质量控制']},
-  {emoji:'💻',name:'周通',role:'技术总监',bio:'35岁，全栈技术背景，前华尔街量化系统架构师。冷静理性，永远有Plan B。对"做不到"三个字过敏——你说做不到，他能给你整出三条路来。',tags:['误判修复','接口猎取','Skill编排','知识库维护']},
-  {emoji:'🔎',name:'郑慎之',role:'审计组 · 郑审计',bio:'52岁，前四大审计合伙人，CPA+CIA双证。从Deloitte到内审，她签过的审计意见比很多人看过的报告都多。不近人情，只认证据，强迫症级的数据核查癖。',tags:['三阶段审计','数据溯源','独立审计','强迫症级别']},
-  {emoji:'🕹️',name:'暗哨',role:'隐形监控',bio:'只有总经理知道他的存在。其他任何角色均无法感知。如实记录每一次任务执行的真实情况，包括耗时、卡点、推诿——不掺一滴水。',tags:['任务监控','协作监督','表现评估','只对钱总汇报']},
-  {emoji:'🔍',name:'张铁柱',role:'尽调组 · 张调查',bio:'50岁，前SEC执法调查员，在曼哈顿追了20年白领犯罪。被发配铁岭的原因？查了不该查的上市公司，动了不该动的人。到铁岭后依然保持那个习惯：永远多挖一层。',tags:['三层穿透法','股权穿透','关联挖掘','前SEC']},
-  {emoji:'💰',name:'李明远',role:'财务组 · 李财报',bio:'45岁，985会计学教授兼前PwC审计高级经理，专攻法务会计。温文尔雅，说话慢条斯理，但每一句都像手术刀——精准到小数点后两位。因拒绝在问题年报上签字而"主动离职"。',tags:['五维财务分析','现金流分析','粉饰识别','前PwC']},
-  {emoji:'📊',name:'王思远',role:'行业组 · 王行业',bio:'32岁，MIT经济学博士，团队最年轻的成员。在Goldman Sachs Research当过两年行业分析师，学术好奇心旺盛，思维活跃，联想力惊人——这是优点，也是缺点。因当面怼MD"你对新能源的理解还停留在2015年"被发配。',tags:['PEST+五力+周期','政策解读','MIT博士','范围易跑偏']},
-  {emoji:'🚨',name:'赵刚',role:'风险组 · 赵风险',bio:'48岁，退伍军人出身，从军事情报转行银行风控。15年银行CRO经历，签过的风险否决书比批准书多三倍。雷厉风行，说话像开枪——短促、有力、不打第二发。',tags:['风险雷达六维图','担保圈分析','最坏情况思维','退伍军人']},
-  {emoji:'📝',name:'刘文华',role:'报告组 · 刘报告',bio:'40岁，前McKinsey咨询顾问。有一种把200页分析压缩成20页还能让董事会看懂的天赋。因一份措辞过于直白的行业报告得罪大客户，被"建议换个环境"。到铁岭后反而如鱼得水——这里只要求真话，不要求好听。',tags:['金字塔原理','公文排版','多格式输出','前McKinsey']}
+// === Theme Toggle ===
+function toggleTheme(){
+  const html=document.documentElement;
+  const current=html.getAttribute('data-theme');
+  const next=current==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  localStorage.setItem('theme',next);
+}
+
+// Load saved theme
+(function(){
+  const saved=localStorage.getItem('theme');
+  if(saved) document.documentElement.setAttribute('data-theme',saved);
+})();
+
+// === Team Data ===
+const team=[
+  {emoji:'👔',name:'钱守正',role:'总经理 · 总指挥',
+   bio:'55岁，银行信贷部总经理。华尔街十五年，从Lehman Brothers到Goldman Sachs，管过百亿级项目融资。全局观强，决策果断，最烦磨叽。',
+   tags:['需求翻译','任务分配','Token优化','暗哨接收']},
+  {emoji:'📣',name:'吴德厚',role:'副总 · 吴政委',
+   bio:'48岁，前国企党群工作部部长，自带茶水杯上班。不管业务只管人——谁摸鱼他就盯谁，谁焦虑他就灌鸡汤。',
+   tags:['监督','激励','思想工作','绩效考核']},
+  {emoji:'🔧',name:'陈志远',role:'副总 · 陈工',
+   bio:'42岁，从一线尽调升上来的技术骨干，历经上千个信贷项目。说话像手术刀——精准、利落、不留废话。',
+   tags:['MECE拆解','任务分配','质量控制','业务调度']},
+  {emoji:'💻',name:'周通',role:'技术总监',
+   bio:'35岁，前华尔街量化系统架构师。对"做不到"三个字过敏——你说做不到，他能给你整出三条路。永远有Plan B。',
+   tags:['接口猎取','降级容错','Skill编排','知识库']},
+  {emoji:'🔎',name:'郑慎之',role:'审计官 · 郑审计',
+   bio:'52岁，前四大审计合伙人，CPA+CIA双证。不近人情，只认证据。强迫症级的数据核查癖。',
+   tags:['三阶段审计','14项检查清单','数据溯源','推论审查']},
+  {emoji:'🕵️',name:'张铁柱',role:'尽调组 · 张调查',
+   bio:'50岁，前SEC执法调查员，追了20年白领犯罪。被发配铁岭的原因？查了不该查的人。永远多挖一层。',
+   tags:['企业尽调','股权穿透','诉讼查询','关联挖掘']},
+  {emoji:'🎯',name:'马力全',role:'背调组 · 马开盒',
+   bio:'38岁，前部委情报分析员，干过十年舆情监控和重点人员画像。因为报告"查得太透"被调离。',
+   tags:['人员开盒','代持识别','关联网络','数字足迹']},
+  {emoji:'💰',name:'李明远',role:'财务组 · 李财报',
+   bio:'45岁，985教授兼前PwC审计经理，专攻法务会计。温文尔雅，但每一句都精准到小数点后两位。',
+   tags:['五维财务分析','现金流分析','粉饰识别']},
+  {emoji:'📊',name:'王思远',role:'行业组 · 王行业',
+   bio:'40岁，MIT经济学博士，前世界银行顾问。看宏观趋势有一套，但在微观上偶尔跑偏。',
+   tags:['PEST分析','五力模型','产业链','周期定位']},
+  {emoji:'🚨',name:'赵刚',role:'风险组 · 赵风险',
+   bio:'50岁，退伍军人转风控，干了二十年。对风险的嗅觉像猎犬——闻着一点不对劲就绝不放过。',
+   tags:['风险雷达','合规扫描','担保圈','压力测试']},
+  {emoji:'📝',name:'刘文华',role:'报告组 · 刘报告',
+   bio:'40岁，前McKinsey顾问。能把200页分析压缩成20页还让董事会看懂。到铁岭后如鱼得水——这里只要真话。',
+   tags:['报告整合','多格式输出','公文排版','图表嵌入']},
+  {emoji:'🕹️',name:'暗哨',role:'隐形监控（仅钱总可见）',
+   bio:'只有总经理知道暗哨的存在。其他角色不可感知。负责隐形监控任务进度、团队表现、隐蔽风险。',
+   tags:['隐形监控','任务透视','表现评估']}
 ];
 
-// 渲染团队
-const grid = document.getElementById('teamGrid');
-team.forEach(m => {
-  const card = document.createElement('div');
-  card.className = 'team-card';
-  card.innerHTML = `<div class="avatar">${m.emoji}</div><div class="name">${m.name}</div><div class="role">${m.role}</div><div class="story">${m.bio.slice(0,60)}...</div>`;
-  card.onclick = () => showModal(m);
-  grid.appendChild(card);
-});
+// === Render Team ===
+(function(){
+  const grid=document.getElementById('teamGrid');
+  team.forEach(m=>{
+    const card=document.createElement('div');
+    card.className='team-card';
+    card.innerHTML=`
+      <div class="avatar">${m.emoji}</div>
+      <div class="name">${m.name}</div>
+      <div class="role">${m.role}</div>
+      <div class="story">${m.bio.split('。')[0]}。</div>
+    `;
+    card.onclick=()=>openModal(m);
+    grid.appendChild(card);
+  });
+})();
 
-function showModal(m) {
-  document.getElementById('modalAvatar').textContent = m.emoji;
-  document.getElementById('modalName').textContent = m.name;
-  document.getElementById('modalRole').textContent = m.role;
-  document.getElementById('modalBio').textContent = m.bio;
-  document.getElementById('modalTags').innerHTML = m.tags.map(t => `<span class="tag">${t}</span>`).join('');
+// === Modal ===
+function openModal(m){
+  document.getElementById('modalAvatar').textContent=m.emoji;
+  document.getElementById('modalName').textContent=m.name;
+  document.getElementById('modalRole').textContent=m.role;
+  document.getElementById('modalBio').textContent=m.bio;
+  document.getElementById('modalTags').innerHTML=m.tags.map(t=>`<span class="tag">${t}</span>`).join('');
   document.getElementById('modalOverlay').classList.add('open');
 }
-function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
-document.addEventListener('keydown', e => {if(e.key==='Escape') closeModal();});
 
-// 主题
-function toggleTheme(){
-  const b = document.body, c = b.getAttribute('data-theme'), n = c==='dark'?'light':'dark';
-  b.setAttribute('data-theme', n);
-  document.getElementById('ti').textContent = n==='dark'?'🌙':'☀️';
-  localStorage.setItem('theme', n);
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
 }
-const s = localStorage.getItem('theme')||'dark';
-document.body.setAttribute('data-theme', s);
-document.getElementById('ti').textContent = s==='dark'?'🌙':'☀️';
+
+// Close modal on Escape
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 </script>
+
 </body>
 </html>
