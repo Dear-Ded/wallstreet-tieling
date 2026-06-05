@@ -222,6 +222,78 @@ Step 5：出具结论
 
 ---
 
+## 一B2、多模态背景调查（图片/视频/音频线索提取）
+
+> **核心问题**：很多线索不在文字里。营业执照上的印章、监控视频里一闪而过的车牌、会议录音里的关键对话——这些都需要多模态能力来提取。当前模型不支持多模态时，自动降级为工具链方案。
+
+### 多模态能力矩阵
+
+| 模态 | 能力 | 尽调应用 | 可用工具 |
+|------|------|----------|----------|
+| 图片→文字 | OCR识别 | 营业执照/身份证/合同/发票/判决书扫描件 | Tesseract/腾讯云OCR/PaddleOCR |
+| 图片→信息 | 视觉理解 | 工厂实景/设备型号/库存状态/印章真伪 | 多模态模型或OCR降级 |
+| 视频→帧 | 逐帧+OCR | 监控/会议/产品演示录像 | ffmpeg + OCR |
+| 音频→文字 | 语音转录 | 访谈录音/电话录音/会议录音 | Whisper/腾讯云ASR |
+| 人脸→身份 | 人脸比对 | 确定照片/视频中人物身份 | PimEyes/FaceCheck |
+| 文档→结构 | 表格/PDF | 银行流水PDF/财报PDF | pymupdf/pdfplumber/camelot |
+
+### 模型多模态支持表
+
+| 模型 | 图片 | 视频 | 音频 | 无多模态时的降级方案 |
+|------|------|------|------|---------------------|
+| Claude 3.5/4 | ✅ | ❌ | ❌ | ffmpeg抽帧→OCR提文字→提交文字 |
+| GPT-4o/4.1 | ✅ | 帧 | ✅ | — |
+| Gemini 2.5 | ✅ | ✅ | ✅ | — |
+| DeepSeek V3 | ❌ | ❌ | ❌ | OCR工具链+Whisper+人工辅助 |
+| Qwen-VL/GLM-4V | ✅ | ❌ | ❌ | ffmpeg+Whisper降级 |
+| Kimi/混元/MiniMax | 部分✅ | ❌ | ❌ | 看具体版本 |
+
+### 多模态自动降级决策树（Step 0 执行）
+
+```
+当前模型支持图片？
+  ├── YES → 模式A: 图片直接提交模型分析
+  └── NO  → Python可用？
+              ├── YES → Tesseract/PaddleOCR提取文字 → 交模型
+              └── NO  → "请手动告诉我图片里的关键信息"
+
+当前模型支持音频？
+  ├── YES → 模式A: 音频直接提交
+  └── NO  → Whisper可用？
+              ├── YES → Whisper转录 → 交模型
+              └── NO  → "请描述录音中的关键对话"
+
+当前模型支持视频？
+  ├── YES → 直接提交
+  └── NO  → ffmpeg可用？
+              ├── YES → 抽帧+OCR → 交模型
+              └── NO  → "请截取视频关键画面"
+```
+
+### 多模态工具链
+
+| 工具 | 用途 | 安装 |
+|------|------|------|
+| Tesseract OCR | 图片→文字(开源) | `apt install tesseract-ocr` |
+| PaddleOCR | 图片→文字(百度,中文强) | `pip install paddleocr` |
+| 腾讯云OCR | 图片→文字(API) | SDK `tencentcloud-sdk-python` |
+| ffmpeg | 视频抽帧 | `pip install imageio-ffmpeg` |
+| Whisper | 音频→文字 | `pip install openai-whisper` |
+| pymupdf | PDF→图片+文字 | `pip install pymupdf` |
+| pdfplumber | PDF表格提取 | `pip install pdfplumber` |
+
+### 典型多模态尽调场景
+
+**营业执照核验**：图片 → OCR提取统一社会信用代码 → 企查查比对 → 标注一致/不一致
+
+**财务扫描件分析**：PDF → pymupdf转PNG → PaddleOCR逐页识别 → 提取金额 → 李明远趋势分析
+
+**监控视频分析**：MP4 → ffmpeg抽帧(每秒1帧) → 逐帧OCR车牌 → 企查查比对名下车辆
+
+**访谈录音分析**：MP3 → Whisper转录 → 提取关键人名/承诺条款 → 标注[口头承诺]
+
+---
+
 ## 一C、密码行为分析与撞库（借鉴 CUPP/Hashcat/CeWL/SET）
 
 > 免责声明：以下技术用于密码行为分析和安全评估。使用者应自行判断合规性。
