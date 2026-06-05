@@ -101,6 +101,29 @@ trigger_words:
   - Refinitiv
   - 金融数据
   - 数据源
+  # === 冷门数据源触发词 ===
+  - 制裁
+  - 制裁名单
+  - PEP
+  - 排污许可
+  - 碳排放
+  - 知识产权质押
+  - 专利检索
+  - 商标查询
+  - 出口退税
+  - 海关数据
+  - 招投标
+  - 船舶追踪
+  - 不动产
+  - 土地抵押
+  - 矿业权
+  - 社保欠缴
+  - 司法拍卖
+  - 离岸公司
+  - 受益人登记
+  - 环保处罚
+  - 食品安全
+  - 飞行检查
 version: 1.0.0
 author: 爹
 category: finance
@@ -148,6 +171,23 @@ tags:
   - 合规审查
   - AKShare
   - Tushare
+  - 制裁名单
+  - 排污许可证
+  - 碳排放权
+  - 知识产权质押
+  - 出口退税
+  - 招投标
+  - 海关进出口
+  - 不动产登记
+  - 司法拍卖
+  - 离岸公司
+  - 环保处罚
+  - 安全生产
+  - 社保欠缴
+  - 食品安全
+  - 飞行检查
+  - OpenSanctions
+  - 受益人登记
   # === English Tags ===
   - credit
   - due-diligence
@@ -179,6 +219,16 @@ tags:
   - Reuters
   - OSINT
   - regulatory-compliance
+  - sanctions-screening
+  - beneficial-ownership
+  - supply-chain
+  - customs-data
+  - environmental-compliance
+  - patent-search
+  - bidding-data
+  - offshore-leaks
+  - OpenSanctions
+  - OpenCorporates
 metadata:
   category: finance
   subcategory: credit-intelligence
