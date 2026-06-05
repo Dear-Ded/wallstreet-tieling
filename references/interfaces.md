@@ -32,7 +32,7 @@
   - `get_shareholder_info` - 股东信息
   - `get_actual_controller` - 实际控制人穿透（张铁柱三层穿透法关键接口）
   - `get_beneficial_owners` - 受益所有人（AML合规口径）
-  - `get_financial_data` - 财务数据（李明远五维X光数据源）
+  - `get_financial_data` - 财务数据（李明远五维财务分析数据源）
   - `get_external_investments` - 对外投资
   - `get_contact_info` - 联系方式
   - `get_change_records` - 工商变更记录（张铁柱变更异常分析）
