@@ -1,3 +1,7 @@
+<!-- GitHub搜索优化 (Search Engine Keywords) -->
+<!-- 尽调 贷前 贷后 财务分析 行业研究 风险预警 授信 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 反洗钱 KYC KYB AML OSINT UBO 审计 风控 合规 due diligence credit intelligence financial analysis risk assessment banking loan review corporate investigation AI skill agent skill WorkBuddy OpenClaw CodeBuddy -->
+<!-- SkillFind搜索优化: 尽调 信贷 财务分析 企业调查 银行 风险 风控 反洗钱 合规 授信 审计 报告 人员穿透 股东穿透 -->
+
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0--public--beta-c9a84c?style=for-the-badge&logo=v&logoColor=white" alt="v1.0.0-beta">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=mit&logoColor=white" alt="MIT">
