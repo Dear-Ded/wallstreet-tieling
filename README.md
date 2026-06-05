@@ -199,7 +199,7 @@ pip install akshare tushare baostock yfinance pandas python-docx reportlab && np
 ### 🌐 特色数据源
 
 - **Wind (万得)**：中国最大金融终端，最全面企业财务数据
-- **Bloomberg (彭博)**：全球最大金融终端，跨境企业分析利器
+- **Bloomberg (彭博)**：全球最大金融终端，跨境企业分析数据源
 - **Refinitiv (路透)**：全球宏观经济 + 大宗商品 + 供应链数据
 - **AKShare**：22K+ Star开源项目，聚合数十个免费数据源
 - **Tushare**：老牌量化数据平台，A股数据质量一流
