@@ -1,0 +1,47 @@
+{
+  "name": "wallstreet-tieling",
+  "displayName": "华尔街驻铁岭办事处",
+  "version": "1.0.0",
+  "description": "信贷情报专家团 — 银行信贷经理的全流程AI情报服务。企业尽调、财务分析、行业研究、风险预警、贷后监控、反洗钱、KYC/KYB/AML/OSINT。集成Wind/彭博/路透/企查查/天眼查等50+数据源。",
+  "description_en": "Credit Intelligence Expert Team for Bank Loan Officers. Due diligence, financial analysis, industry research, risk assessment, KYC, KYB, AML, OSINT. 50+ data sources: Wind, Bloomberg, Reuters, QCC, TYC, AKShare, Tushare.",
+  "category": "finance",
+  "subcategory": "credit-intelligence",
+  "tags": [
+    "finance",
+    "credit",
+    "due-diligence",
+    "banking",
+    "kyc",
+    "aml",
+    "osint",
+    "corporate-investigation",
+    "risk-assessment",
+    "financial-analysis",
+    "尽调",
+    "信贷",
+    "风控",
+    "反洗钱"
+  ],
+  "author": "爹",
+  "homepage": "https://dear-ded.github.io/wallstreet-tieling/",
+  "repository": "https://github.com/Dear-Ded/wallstreet-tieling",
+  "license": "MIT",
+  "compatibility": {
+    "openclaw": ">=1.0.0",
+    "workbuddy": "*",
+    "codebuddy": "*"
+  },
+  "requirements": {
+    "optional": ["qcc-company", "tyc-mcp", "python", "akshare"],
+    "recommended": ["web_search", "web_fetch"]
+  },
+  "triggerWords": [
+    "尽调", "贷前", "贷后", "财务分析", "行业研究", "风险预警", "授信",
+    "信贷审查", "企业查询", "股东穿透", "实控人", "关联方", "担保圈",
+    "due diligence", "credit analysis", "loan review", "KYC", "KYB", "AML"
+  ],
+  "install": "npx skills add Dear-Ded/wallstreet-tieling -g -y",
+  "screenshots": [
+    "https://dear-ded.github.io/wallstreet-tieling/"
+  ]
+}

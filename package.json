@@ -1,0 +1,53 @@
+{
+  "name": "wallstreet-tieling",
+  "version": "1.0.0",
+  "description": "华尔街驻铁岭办事处 | 信贷情报专家团 - 银行信贷经理的企业尽调/财务分析/行业研究/风险预警/贷后监控全流程情报服务 | Credit Intelligence Expert for Bank Loan Officers - Due Diligence, Financial Analysis, Risk Assessment, KYC, KYB, AML, OSINT",
+  "main": "SKILL.md",
+  "keywords": [
+    "credit-intelligence",
+    "due-diligence",
+    "financial-analysis",
+    "risk-assessment",
+    "banking",
+    "kyc",
+    "kyb",
+    "aml",
+    "osint",
+    "enterprise-investigation",
+    "corporate-intelligence",
+    "china-banking",
+    "loan-review",
+    "post-lending",
+    "shareholder-penetration",
+    "ubo",
+    "beneficial-owner",
+    "sanctions-screening",
+    "people-investigation",
+    "ai-skill",
+    "agent-skill",
+    "prompt-engineering",
+    "workbuddy",
+    "openclaw",
+    "codebuddy",
+    "尽调",
+    "信贷",
+    "风控",
+    "反洗钱",
+    "财务分析",
+    "行业研究",
+    "企业调查",
+    "股东穿透"
+  ],
+  "author": "爹",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dear-Ded/wallstreet-tieling"
+  },
+  "homepage": "https://dear-ded.github.io/wallstreet-tieling/",
+  "install": {
+    "skills.sh": "npx skills add Dear-Ded/wallstreet-tieling -g -y",
+    "clawhub": "clawhub install wallstreet-tieling",
+    "openclaw": "openclaw skills install wallstreet-tieling"
+  }
+}
