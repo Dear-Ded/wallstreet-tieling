@@ -3,7 +3,7 @@
 <!-- SkillFind搜索优化: 尽调 信贷 财务分析 企业调查 银行 风险 风控 反洗钱 合规 授信 审计 报告 人员穿透 股东穿透 -->
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0--public--beta-c9a84c?style=for-the-badge&logo=v&logoColor=white" alt="v1.0.0-beta">
+  <img src="https://img.shields.io/badge/version-2.0.1-c9a84c?style=for-the-badge&logo=v&logoColor=white" alt="v2.0.1">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=mit&logoColor=white" alt="MIT">
   <a href="https://github.com/Dear-Ded/wallstreet-tieling"><img src="https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=for-the-badge&color=brightgreen" alt="Stars"></a>
   <br>
