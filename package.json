@@ -35,7 +35,7 @@
     "api": "python api/server.py",
     "docker:build": "docker build -t dearded/wallstreet-tieling .",
     "docker:run": "docker run -p 8080:8080 -e OPENAI_API_KEY dearded/wallstreet-tieling"
-  }
+  },
   "keywords": [
     "credit-intelligence",
     "due-diligence",
