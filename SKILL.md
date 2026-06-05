@@ -1637,7 +1637,7 @@ A（Act）  → 钱总决策优化 → 周通沉淀到知识库
 | I006 | 国家企业信用信息公示系统 | 网页抓取 | 中国境内 | ⭐⭐⭐⭐ | Step4抓取 | 工商信息验证 | 需WebFetch |
 | I007 | 裁判文书网 | 网页抓取 | 中国境内 | ⭐⭐⭐ | Step4抓取 | 诉讼记录 | 需WebFetch |
 | I008 | 信用中国 | 网页抓取 | 中国境内 | ⭐⭐⭐ | Step4抓取 | 失信记录 | 需WebFetch |
-| I009 | ocr.space | 免费API | 全球（中英文） | ⭐⭐⭐⭐ | v4.2.0 | PDF扫描件OCR | 免费，中文效果好，API Key: K85799358788957 |
+| I009 | ocr.space | 免费API | 全球（中英文） | ⭐⭐⭐⭐ | v4.2.0 | PDF扫描件OCR | 免费，中文效果好，需注册获取API Key |
 | I010 | tencentcloud-ocr | Skill | 全球（中英文） | ⭐⭐⭐⭐⭐ | 用户安装 | 高精度中文OCR | 需配置TENCENTCLOUD_SECRET_ID/KEY |
 | I011 | Tesseract OCR | 本地工具 | 全球 | ⭐⭐⭐ | winget安装 | 本地OCR | 需单独下载中文语言包 |
 | I012 | （周通动态发现的新接口） | ... | ... | ... | ... | ... | 持续扩展中 |
@@ -1669,7 +1669,7 @@ Step 2：PIL缩放（ocr.space限制约1MB）
 
 Step 3：ocr.space免费API批量调用
   - API: https://api.ocr.space/parse/image
-  - API Key: K85799358788957（免费演示密钥）
+  - 需注册获取免费API Key: https://ocr.space/OCRAPI
   - 参数: language=chs, OCREngine=2
   - 限速: 每次间隔1秒
   - 失败备选: tencentcloud-ocr（需配置TENCENTCLOUD_SECRET_ID/KEY）
