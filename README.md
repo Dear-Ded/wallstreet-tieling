@@ -67,7 +67,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
     </tr>
     <tr>
       <td valign="top">工商信息核查<br>股权穿透至自然人<br>实控人识别<br>关联交易挖掘<br>失信被执行人</td>
-      <td valign="top">五维财务X光<br>偿债能力评估<br>现金流真相分析<br>粉饰识别<br>3年行业趋势对标</td>
+      <td valign="top">五维财务分析<br>偿债能力评估<br>现金流分析<br>粉饰识别<br>3年行业趋势对标</td>
       <td valign="top">PEST宏观分析<br>五力竞争模型<br>产业链上下游<br>行业周期定位<br>政策环境解读</td>
       <td valign="top">风险雷达六维图<br>信用风险量化<br>合规风险扫描<br>担保圈传染<br>贷后监控框架</td>
       <td valign="top">OSINT开源情报<br>40+数据源矩阵<br>蛛丝马迹追踪<br>隐性关联发现<br>资金流向追踪</td>
@@ -129,7 +129,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 ├── 郑慎之（审计）→ 三阶段独立审计(事前/事中/事后) · 数据溯源
 └── 业务组：
     ├── 张铁柱（尽调）· 前SEC调查员 · "三层穿透+蛛丝马迹"
-    ├── 李明远（财务）· 前PwC审计经理 · "五维财务X光"
+    ├── 李明远（财务）· 前PwC审计经理 · "五维财务分析"
     ├── 王思远（行业）· MIT经济学博士 · "PEST+五力+周期"
     ├── 赵刚（风险）   · 退伍军人+CRO · "风险雷达六维图"
     └── 刘文华（报告）· 前McKinsey顾问 · "金字塔+公文规范"
