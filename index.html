@@ -13,48 +13,55 @@
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://dear-ded.github.io/wallstreet-tieling/">
 <style>
-/* ===== iOS Liquid Glass Design System ===== */
+/* ===== True Liquid Glass Design System ===== */
 :root{
-  --bg:linear-gradient(135deg,#0a0a1a 0%,#0f0f2e 30%,#1a1040 60%,#0d0d24 100%);
-  --surface:rgba(255,255,255,.035);
-  --surface2:rgba(255,255,255,.06);
-  --surface3:rgba(255,255,255,.10);
-  --text:#f0f0ff;
-  --text2:#b0b0d0;
-  --text3:#7070a0;
-  --border:rgba(255,255,255,.08);
-  --border2:rgba(255,255,255,.12);
-  --accent:#6366f1;
-  --accent2:#8b5cf6;
-  --accent3:#06b6d4;
-  --gold:#f59e0b;
-  --green:#10b981;
-  --red:#ef4444;
-  --pink:#ec4899;
-  --grad-accent:linear-gradient(135deg,#6366f1,#8b5cf6);
-  --grad-teal:linear-gradient(135deg,#06b6d4,#10b981);
-  --grad-warm:linear-gradient(135deg,#f59e0b,#ef4444);
-  --glass-blur:24px;
-  --glass-saturate:180%;
-  --radius:20px;
-  --radius-sm:12px;
+  --bg:linear-gradient(145deg,#070714 0%,#0a0a2e 25%,#150846 50%,#0a0a24 75%,#06061a 100%);
+  --bg-size:400% 400%;
+  --surface:rgba(255,255,255,.025);
+  --surface2:rgba(255,255,255,.045);
+  --surface3:rgba(255,255,255,.07);
+  --surface-hover:rgba(255,255,255,.10);
+  --text:#ececf5;
+  --text2:#a8a8c8;
+  --text3:#686898;
+  --border:rgba(255,255,255,.06);
+  --border2:rgba(255,255,255,.10);
+  --accent:#7c6cf0;
+  --accent2:#a88cff;
+  --accent3:#5bc8f0;
+  --gold:#f5b82e;
+  --green:#2dd4a0;
+  --red:#f56c6c;
+  --pink:#f472a0;
+  --grad-accent:linear-gradient(135deg,#7c6cf0,#a88cff);
+  --grad-teal:linear-gradient(135deg,#5bc8f0,#2dd4a0);
+  --grad-warm:linear-gradient(135deg,#f5b82e,#f56c6c);
+  --glass-blur:32px;
+  --glass-saturate:140%;
+  --radius:22px;
+  --radius-sm:14px;
   --radius-pill:100px;
-  --shadow-glass:0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06);
+  --shadow-inner:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.2);
+  --shadow-outer:0 16px 48px rgba(0,0,0,.5);
+  --shadow-glow:0 0 40px rgba(124,108,240,.08);
   --max-w:1200px;
   --nav-h:64px;
 }
 
 [data-theme="light"]{
-  --bg:linear-gradient(135deg,#f5f5f7 0%,#eeeef2 30%,#e8e4f0 60%,#f0f0f5 100%);
-  --surface:rgba(255,255,255,.55);
-  --surface2:rgba(255,255,255,.72);
-  --surface3:rgba(255,255,255,.85);
-  --text:#1d1d1f;
-  --text2:#6e6e73;
-  --text3:#aeaeb2;
-  --border:rgba(0,0,0,.06);
-  --border2:rgba(0,0,0,.10);
-  --shadow-glass:0 4px 24px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.8);
+  --bg:linear-gradient(145deg,#f0f0f8 0%,#e8e6f5 25%,#e0daf5 50%,#eaeaf2 75%,#f2f2fa 100%);
+  --surface:rgba(255,255,255,.45);
+  --surface2:rgba(255,255,255,.65);
+  --surface3:rgba(255,255,255,.80);
+  --surface-hover:rgba(255,255,255,.88);
+  --text:#1a1a2e;
+  --text2:#5a5a7a;
+  --text3:#9a9ab4;
+  --border:rgba(0,0,0,.04);
+  --border2:rgba(0,0,0,.08);
+  --shadow-inner:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,0,0,.04);
+  --shadow-outer:0 8px 32px rgba(0,0,0,.04);
+  --shadow-glow:0 0 30px rgba(124,108,240,.04);
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -64,6 +71,8 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','PingFang SC','Microsoft YaHei',sans-serif;
   background:var(--bg);
+  background-size:var(--bg-size);
+  animation:bgFlow 20s ease infinite;
   background-attachment:fixed;
   color:var(--text);
   line-height:1.7;
@@ -71,16 +80,32 @@ body{
   letter-spacing:-0.01em;
 }
 
-/* === Glass Navigation === */
+@keyframes bgFlow{0%{background-position:0% 50%}25%{background-position:100% 0%}50%{background-position:100% 100%}75%{background-position:0% 100%}100%{background-position:0% 50%}}
+
+/* === Background Orbs === */
+.orb{
+  position:fixed;border-radius:50%;filter:blur(100px);
+  pointer-events:none;z-index:0;
+  animation:orbFloat 25s ease-in-out infinite;
+}
+.orb.o1{top:-200px;right:-150px;width:600px;height:600px;background:var(--accent);opacity:.06;animation-delay:0s}
+.orb.o2{bottom:-200px;left:-150px;width:500px;height:500px;background:var(--accent2);opacity:.04;animation-delay:-10s}
+.orb.o3{top:50%;left:40%;width:400px;height:400px;background:var(--accent3);opacity:.03;animation-delay:-18s}
+.orb.o4{top:20%;right:10%;width:300px;height:300px;background:var(--gold);opacity:.02;animation-delay:-6s}
+
+@keyframes orbFloat{0%,100%{transform:translate(0,0)}25%{transform:translate(80px,-60px)}50%{transform:translate(-40px,100px)}75%{transform:translate(-80px,-40px)}}
+
+/* === Nav === */
 .nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  height:var(--nav-h);
-  background:var(--surface);
+  position:fixed;top:12px;left:12px;right:12px;z-index:100;
+  height:var(--nav-h);border-radius:var(--radius);
+  background:var(--surface2);
   backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  border-bottom:1px solid var(--border);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-inner),var(--shadow-outer);
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 32px;
+  padding:0 28px;
 }
 
 .nav-brand{
@@ -162,7 +187,7 @@ body{
   padding:10px 28px;border-radius:var(--radius-pill);
   font-size:14px;font-weight:600;
   margin-bottom:32px;position:relative;
-  box-shadow:var(--shadow-glass);
+  box-shadow:var(--shadow-outer);
 }
 
 .hero-badge .dot{
@@ -271,7 +296,7 @@ body{
 
 .glass-card:hover{
   transform:translateY(-6px);
-  box-shadow:var(--shadow-glass);
+  box-shadow:var(--shadow-outer);
   border-color:var(--border2);
 }
 
