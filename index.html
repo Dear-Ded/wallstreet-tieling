@@ -622,6 +622,50 @@ body{
 .nav-links a:hover::after{width:20px}
 .section-title::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:40px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);border-radius:1px}
 .glass-card{box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 0 0 1px rgba(255,255,255,.02) inset}
+
+/* === iOS Spring Animation System === */
+@keyframes springIn{0%{transform:scale(.92);opacity:0}60%{transform:scale(1.03)}80%{transform:scale(.98)}100%{transform:scale(1);opacity:1}}
+@keyframes springUp{0%{transform:translateY(30px);opacity:0}60%{transform:translateY(-4px)}100%{transform:translateY(0);opacity:1}}
+@keyframes springDown{0%{transform:translateY(-10px);opacity:0}70%{transform:translateY(3px)}100%{transform:translateY(0);opacity:1}}
+
+/* iOS Press State */
+.team-card:active{transform:scale(.96)!important;transition:transform .15s ease}
+.glass-card:active{transform:perspective(800px) rotateX(1deg) scale(.97)!important;transition:transform .15s ease}
+.wf-step:active{transform:scale(.96)!important;transition:transform .15s ease}
+.rule-card:active{transform:scale(.97)!important;transition:transform .15s ease}
+.btn:active{transform:scale(.94)!important;transition:transform .1s ease}
+
+/* iOS Rubber Band Scroll */
+body{overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+
+/* iOS Deep Frosted Glass 2.0 */
+.glass-card{
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.05);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.05);
+}
+
+/* iOS Dynamic Island Pill */
+.hero-badge{
+  animation:springIn .8s cubic-bezier(.36,0,.66,-.56) both,
+             floatPill 6s ease-in-out infinite;
+}
+@keyframes floatPill{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* iOS Fluid Transition System */
+*,*::before,*::after{transition-timing-function:cubic-bezier(.4,0,0,1)}
+a,button,.team-card,.glass-card,.wf-step,.rule-card,.btn,.modal,.modal-overlay{
+  transition-timing-function:cubic-bezier(.34,1.56,.64,1)
+}
+
+/* iOS Content Fade Mask */
+.section{position:relative}
+.section::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:120px;
+  background:linear-gradient(to top,var(--surface),transparent);
+  pointer-events:none;opacity:0;transition:opacity .8s;
+}
+/* Hide on last section */
+footer.section::after{display:none}
 /* === Responsive === */
 @media(max-width:768px){
   .nav{padding:0 16px}
@@ -992,12 +1036,25 @@ function closeModal(){
 // Close modal on Escape
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
-// === Scroll Entrance Observer ===
-const observer=new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})
-},{threshold:.15,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.glass-card,.team-card,.wf-step,.rule-card,.section,.install-card,.glass-table').forEach(el=>{
-  el.classList.add('animate-on-scroll');observer.observe(el)
+// === iOS Spring Entrance Observer ===
+const springObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.animation='springUp .8s cubic-bezier(.34,1.56,.64,1) both';
+      e.target.style.opacity='1';
+      e.target.style.transform='none';
+    }
+  });
+},{threshold:.12,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.glass-card,.team-card,.wf-step,.rule-card,.install-card,.glass-table,.stat-item').forEach(el=>{
+  springObserver.observe(el);
+});
+
+// === iOS Press Feedback (Haptic Simulation) ===
+document.querySelectorAll('.team-card,.glass-card,.btn,.wf-step,.rule-card').forEach(el=>{
+  el.addEventListener('pointerdown',()=>{el.style.transition='transform .15s ease'});
+  el.addEventListener('pointerup',()=>{el.style.transition=''});
+  el.addEventListener('pointerleave',()=>{el.style.transition=''});
 });
 
 // === Hero Mouse Parallax ===
