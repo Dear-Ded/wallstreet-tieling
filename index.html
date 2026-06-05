@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>华尔街驻铁岭办事处 · 银行信贷情报专家团</title>
-<meta name="description" content="专为银行信贷经理打造的AI情报专家团。11位华尔街流放精英，企业尽调、财务分析、行业研究、风险预警、贷后监控——只摆事实，不给建议。">
-<meta property="og:title" content="华尔街驻铁岭办事处 · 银行信贷情报专家团">
-<meta property="og:description" content="西装脱了，标准没脱。只摆事实，不给建议。">
+<meta name="description" content="专为银行信贷经理打造的AI情报专家团。11位华尔街流放精英，集成Wind万得、Bloomberg彭博、Reuters路透等50+数据源。企业尽调、财务分析、行业研究、风险预警、贷后监控——只摆事实，不给建议。">
+<meta property="og:title" content="华尔街驻铁岭办事处 · 银行信贷情报专家团 | Wind+Bloomberg+Reuters级数据源">
+<meta property="og:description" content="11位前华尔街金融老兵坐镇，集成Wind/彭博/路透/AKShare/企查查/天眼查等50+数据源。只摆事实，不给建议。">
+<meta name="keywords" content="信贷尽调,贷前调查,贷后管理,财务分析,企业尽调,风险预警,OSINT,Wind,万得,Bloomberg,彭博,Reuters,路透,AKShare,Tushare,企查查,天眼查,银行信贷,credit intelligence,due diligence,financial analysis">
 <meta property="og:url" content="https://dear-ded.github.io/wallstreet-tieling/">
 <meta name="robots" content="index,follow">
 <style>
@@ -161,7 +162,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC'
 <nav class="nav">
   <span class="nav-brand">🏛️ 华尔街驻铁岭办事处</span>
   <div class="nav-links">
-    <a href="#features">能力</a><a href="#team">团队</a><a href="#workflow">流程</a><a href="#demo">演示</a><a href="#install">安装</a>
+    <a href="#features">能力</a><a href="#team">团队</a><a href="#workflow">流程</a><a href="#sources">数据源</a><a href="#demo">演示</a><a href="#install">安装</a>
   </div>
   <button class="btn-theme" onclick="toggleTheme()" aria-label="切换主题"><span id="ti">🌙</span></button>
 </nav>
@@ -182,8 +183,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC'
 <div class="stats">
   <div class="stat"><div class="stat-num">11</div><div class="stat-label">专家成员</div></div>
   <div class="stat"><div class="stat-num">5</div><div class="stat-label">输出格式</div></div>
-  <div class="stat"><div class="stat-num">70+</div><div class="stat-label">触发词</div></div>
-  <div class="stat"><div class="stat-num">40+</div><div class="stat-label">数据源</div></div>
+  <div class="stat"><div class="stat-num">80+</div><div class="stat-label">触发词</div></div>
+  <div class="stat"><div class="stat-num">50+</div><div class="stat-label">数据源</div></div>
 </div>
 
 <!-- 核心能力 -->
@@ -257,6 +258,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC'
     <div class="demo-msg system"><div class="avatar-sm">💰</div><div class="demo-bubble"><div class="role-tag">李明远</div>财务数据有点意思——应收账款增速是营收增速的两倍，这叫"纸面繁荣"。</div></div>
     <div class="demo-msg system"><div class="avatar-sm">📝</div><div class="demo-bubble"><div class="role-tag">刘文华</div>报告整合完成，核心发现3条。需要什么格式？A. Markdown B. Word C. PDF D. HTML</div></div>
     <div class="demo-msg user"><div class="avatar-sm">👤</div><div class="demo-bubble">HTML，要好看的那种</div></div>
+    <div class="demo-msg system"><div class="avatar-sm">💻</div><div class="demo-bubble"><div class="role-tag">周通</div>收到。另外提醒一下，如果你有Wind或Bloomberg终端，我可以给精确的查询指令，把终端数据导出来给我分析。</div></div>
   </div>
 </section>
 
@@ -271,8 +273,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC'
     <tr><td><span class="tag green">风险预警</span></td><td>风险预警、风险排查、授信评估、信贷审查、贷后检查、贷后管理</td></tr>
     <tr><td>🔴 全网扒光</td><td>扒光、彻查、深挖、蛛丝马迹、追查到底、全面调查、OSINT</td></tr>
     <tr><td>输出格式</td><td>Word、PDF、HTML、网页、公文格式、Markdown</td></tr>
+    <tr><td>📡 数据源</td><td>万得、Wind、彭博、Bloomberg、路透、Refinitiv、金融数据、数据源</td></tr>
   </table>
 </section>
+
+<!-- 数据源 -->
+<section class="section" id="sources">
+  <div class="section-title">📡 数据源矩阵</div>
+  <div class="section-sub">不设边界——从专业金融终端到公开数据源，什么数据都敢接。</div>
+  <table class="tbl">
+    <tr><th>Tier</th><th>类型</th><th>代表数据源</th></tr>
+    <tr><td><span class="tag blue">Tier 0</span></td><td>专业金融终端</td><td>Wind(万得) · Bloomberg(彭博) · Refinitiv/路透(LSEG)</td></tr>
+    <tr><td><span class="tag blue">Tier 1</span></td><td>开箱即用</td><td>WebSearch · WebFetch · 模型内置知识</td></tr>
+    <tr><td><span class="tag green">Tier 2</span></td><td>本地增强</td><td>AKShare · Tushare · 企查查 · 天眼查 · yfinance · BaoStock</td></tr>
+    <tr><td><span class="tag green">Tier 3</span></td><td>全网猎取</td><td>公开API · 网页抓取 · Python/Bash脚本 · Skill编排</td></tr>
+    <tr><td>Tier 4</td><td>用户协作</td><td>手动查询 · 文件上传 · API Key授权 · 终端数据导出</td></tr>
+    <tr><td>🔴 OSINT</td><td>全网扒光</td><td>官方数据 · 商业平台 · 专业领域 · 舆情监控 · 蛛丝马迹</td></tr>
+  </table>
+  <p style="margin-top:16px;text-align:center"><a href="references/data-sources.md" style="color:var(--blue);text-decoration:none">📖 完整数据源参考手册 →</a></p>
 
 <!-- 安装 -->
 <section class="section" id="install">
@@ -290,7 +308,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC'
 <footer class="footer">
   <p><strong>华尔街驻铁岭办事处</strong> · v1.0.0 · MIT License · 作者：<strong>爹</strong></p>
   <p style="margin-top:8px"><a href="https://github.com/Dear-Ded/wallstreet-tieling">GitHub</a></p>
-  <p style="margin-top:16px">西装脱了，标准没脱。我们不给建议——你拍板，我扒皮。扒得干干净净，摆得明明白白。</p>
+  <p style="margin-top:16px">数据源引擎: Wind(万得) · Bloomberg(彭博) · LSEG(路透) · AKShare · Tushare · 企查查 · 天眼查 · 40+公开数据源</p>
 </footer>
 
 <script>

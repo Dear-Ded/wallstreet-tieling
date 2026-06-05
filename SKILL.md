@@ -3,9 +3,9 @@ name: 华尔街驻铁岭办事处
 description: |
   当用户提到企业尽调、贷前调查、贷后检查、财务分析、行业研究、风险预警、授信评估、信贷审查、企业背景调查、股东穿透、实际控制人查询、财报解读、经营分析时触发。为银行信贷经理提供全流程情报服务——企业尽调情报、财务数据拆解、行业竞争力分析、贷后风险监控、授信报告辅助。只摆事实不给建议，数据说话证据链说话。适用场景：贷前尽调、贷后管理、授信审批辅助、客户风险排查、行业对标分析、企业关联方穿透。
 description_zh: |
-  银行信贷情报专家团。当用户提到尽调、贷前、贷后、财务分析、行业研究、风险预警、授信、信贷审查、企业查询、股东穿透、实控人、财报解读、经营分析、关联方、担保圈时触发。提供企业尽调情报、财务拆解、行业分析、贷后监控、报告辅助。只摆事实不给建议。
+  银行信贷情报专家团。集成Wind万得、Bloomberg彭博、Reuters路透等50+数据源。当用户提到尽调、贷前、贷后、财务分析、行业研究、风险预警、授信、信贷审查、企业查询、股东穿透、实控人、财报解读、经营分析、关联方、担保圈时触发。提供企业尽调情报、财务拆解、行业分析、贷后监控、报告辅助。只摆事实不给建议。
 description_en: |
-  Credit intelligence expert team for bank loan officers. Triggers when user mentions due diligence, credit investigation, post-lending check, financial analysis, industry research, risk warning, credit assessment, loan review, enterprise background check, shareholder penetration, ultimate beneficial owner, financial statement analysis, business analysis, related party, guarantee circle. Provides fact-based intelligence only — no credit decisions.
+  Credit intelligence expert team for bank loan officers, powered by 50+ data sources including Wind, Bloomberg, Reuters, AKShare, Tushare, QCC, and TYC. Triggers when user mentions due diligence, credit investigation, post-lending check, financial analysis, industry research, risk warning, credit assessment, loan review, enterprise background check, shareholder penetration, ultimate beneficial owner, financial statement analysis, business analysis, related party, guarantee circle. Provides fact-based intelligence only — no credit decisions.
 trigger_words:
   # === 核心业务触发词 ===
   - 尽调
@@ -92,6 +92,15 @@ trigger_words:
   - 全面调查
   - 深度调查
   - OSINT
+  # === 数据源触发词 ===
+  - 万得
+  - Wind
+  - 彭博
+  - Bloomberg
+  - 路透
+  - Refinitiv
+  - 金融数据
+  - 数据源
 version: 1.0.0
 author: 爹
 category: finance
@@ -121,6 +130,24 @@ tags:
   - PDF报告
   - 公文排版
   - 报告格式化
+  - 万得
+  - Wind
+  - 彭博
+  - Bloomberg
+  - 路透
+  - Refinitiv
+  - 金融数据
+  - 数据源
+  - 开源情报
+  - OSINT
+  - 工商信息
+  - 股权穿透
+  - 信用评级
+  - 企业征信
+  - 反洗钱
+  - 合规审查
+  - AKShare
+  - Tushare
   # === English Tags ===
   - credit
   - due-diligence
@@ -135,6 +162,23 @@ tags:
   - industry-research
   - corporate-intelligence
   - UBO
+  - financial-data
+  - credit-intelligence
+  - enterprise-investigation
+  - shareholder-penetration
+  - risk-warning
+  - post-lending
+  - loan-review
+  - AI-skill
+  - WorkBuddy
+  - OpenClaw
+  - CodeBuddy
+  - China-banking
+  - Wind-API
+  - Bloomberg
+  - Reuters
+  - OSINT
+  - regulatory-compliance
 metadata:
   category: finance
   subcategory: credit-intelligence
@@ -142,8 +186,16 @@ metadata:
   sources:
     - 企查查(qcc)企业数据API
     - 天眼查(tyc)企业数据API
+    - 万得(Wind)金融终端
+    - 彭博(Bloomberg)终端
+    - 路透/Refinitiv(LSEG)数据平台
+    - AKShare开源金融数据
+    - Tushare量化数据
     - 公开财务数据源
     - 国家企业信用信息公示系统
+    - 裁判文书网
+    - 信用中国
+    - 巨潮资讯
 compatibility:
   models:
     - claude
@@ -804,7 +856,19 @@ Step 5：交付与沉淀
 
 ## 五、兵器
 
-> **设计原则**：默认接口只是"开箱即用"的最低配置。周通有权、有义务、有能力随时扩展接口范围。不局限于任何单一接口或平台。
+> **设计原则**：默认接口只是"开箱即用"的最低配置。周通有权、有义务、有能力随时扩展接口范围。不局限于任何单一接口或平台。万德、彭博、路透等专业终端数据——我们不设边界，什么数据源都敢接。
+
+### Tier 0：专业金融终端（机构级数据源）
+
+> 这些是金融行业的标准配置——万德(Wind)、彭博(Bloomberg)、路透/Refinitiv(LSEG)。通常需要本地客户端+机构授权。我们可以通过用户协作方式间接利用终端数据。
+
+| 终端 | 定位 | Python SDK | 数据覆盖 | 接入方式 |
+|------|------|-----------|----------|----------|
+| **Wind（万得）** | 中国最大金融数据终端 | `WindPy` | A股/港股/债券/基金/期货/宏观/行业 | 用户在终端导出数据/调用SDK |
+| **Bloomberg（彭博）** | 全球最大金融数据终端 | `blpapi` | 全球股/债/汇/商品/衍生品/宏观 | 用户在终端运行BDP/BDS/BQL |
+| **Refinitiv Eikon（路透）** | 全球第二大金融数据 | `refinitiv-dataplatform` | 全球金融/宏观/大宗商品/供应链 | 用户在Eikon中导出数据 |
+
+> **协作模式**：当前平台无法直接调用终端SDK时，周通会给出精确的终端操作指引（如"在Wind中运行 `wsd('000001.SZ', 'roe')` 并导出Excel"），你来执行，我们来分析。完整数据源参考手册见 `references/data-sources.md`。
 
 ### Tier 1：开箱即用（任何平台都有）
 
