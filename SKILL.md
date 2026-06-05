@@ -148,44 +148,115 @@ compatibility_matrix:
 
 ```yaml
 trigger_words:
-  # === 原有触发词保持不变 ===
+  # === 中文触发词 ===
   - 尽调
   - 贷前调查
   - 财务分析
-  - # ... 其他原有触发词
-  
-  # === 新增：智能推导触发词 ===
+  - 风险评估
+  - 企业调查
+  - 背景调查
+  - 行业研究
+  - 风险预警
+  - 贷后监控
+  - 反洗钱
+  - KYC
+  - KYB
   - "帮我查一下{内容}"
   - "查一下{内容}"
-  - "调查{内容}"
-  - "深挖{内容}"
+  - "调查{content}"
+  - "深挖{content}"
+  - "扒光{content}"
   - "{企业名}的法人是谁"
   - "{企业名}的股东是谁"
   - "{企业名}有什么风险"
   - "查一下{手机号}"
   - "查一下{身份证号}"
   - "帮我查查{姓名}"
+  - "帮我看看{企业名}"
+  - "这个企业怎么样"
+  - "这个人是谁"
+  
+  # === 英文触发词 ===
+  - due diligence
+  - credit investigation
+  - risk assessment
+  - company research
+  - background check
+  - financial analysis
+  - industry analysis
+  - OSINT
+  - open source intelligence
+  - anti-money laundering
+  - "investigate {content}"
+  - "research {content}"
+  - "check {content}"
+  - "who is {name}"
+  - "what is {company}"
+  - "{company} risk"
+  - "{company} profile"
+  - "{company} analysis"
 ```
 
 ### 1.2 新增标签
 
 ```yaml
 tags:
-  # === 原有标签保持不变 ===
+  # === 核心功能标签（英文） ===
+  - due-diligence
+  - credit-investigation
+  - risk-assessment
+  - company-research
+  - background-check
+  - financial-analysis
+  - industry-analysis
+  - osint
+  - open-source-intelligence
+  - data-collection
+  - data-verification
+  - smart-inference
+  - deep-mining
+  
+  # === 应用场景标签（英文） ===
+  - banking
+  - loan
+  - credit
+  - compliance
+  - kyc
+  - kyb
+  - anti-money-laundering
+  
+  # === 技术标签（英文） ===
+  - ai-agent
+  - multi-agent
+  - team-collaboration
+  - workbuddy
+  
+  # === 核心功能标签（中文） ===
   - 信贷
   - 尽调
-  - # ... 其他原有标签
-  
-  # === 新增标签 ===
+  - 风险评估
+  - 企业调查
+  - 背景调查
+  - 财务分析
+  - 行业分析
   - 智能推导
   - 深度挖掘
-  - 一句话查询
-  - 自动推导
+  - 数据收集
+  - 数据验证
+  - 人肉搜索
+  - 开盒
   - 社工库
   - 数据泄露
   - OSINT深度
-  - 人肉搜索
-  - 开盒
+  
+  # === 应用场景标签（中文） ===
+  - 银行
+  - 贷款
+  - 合规
+  - 反洗钱
+  - 贷前调查
+  - 贷后监控
+  - 风险预警
 ```
 
 ---
