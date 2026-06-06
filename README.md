@@ -3,7 +3,7 @@
 <!-- SkillFind搜索优化: 尽调 信贷 财务分析 企业调查 银行 风险 风控 反洗钱 合规 授信 审计 报告 人员穿透 股东穿透 -->
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.1-c9a84c?style=for-the-badge&logo=v&logoColor=white" alt="v2.0.1">
+  <img src="https://img.shields.io/badge/version-2.3.0-c9a84c?style=for-the-badge&logo=v&logoColor=white" alt="v2.3.0">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=mit&logoColor=white" alt="MIT">
   <a href="https://github.com/Dear-Ded/wallstreet-tieling"><img src="https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=for-the-badge&color=brightgreen" alt="Stars"></a>
   <br>
@@ -11,9 +11,9 @@
   <img src="https://img.shields.io/badge/models-15+_模型-purple?style=for-the-badge&logo=openai&logoColor=white" alt="Models">
   <img src="https://img.shields.io/badge/deploy-8种形态-ff69b4?style=for-the-badge&logo=amazondocumentdb&logoColor=white" alt="8 Deploy Forms">
   <br>
-  <img src="https://img.shields.io/badge/experts-12位金融老兵-orange?style=for-the-badge&logo=teamviewer&logoColor=white" alt="12 Experts">
+  <img src="https://img.shields.io/badge/experts-13位金融老兵-orange?style=for-the-badge&logo=teamviewer&logoColor=white" alt="13 Experts">
   <img src="https://img.shields.io/badge/triggers-95+-red?style=for-the-badge&logo=trigger&logoColor=white" alt="95+ Triggers">
-  <img src="https://img.shields.io/badge/sources-50+-gold?style=for-the-badge&logo=databricks&logoColor=white" alt="50+ Sources">
+  <img src="https://img.shields.io/badge/sources-200+-gold?style=for-the-badge&logo=databricks&logoColor=white" alt="200+ Sources">
   <br>
   <img src="https://img.shields.io/badge/自动更新-5档可选-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" alt="Auto Update">
   <img src="https://img.shields.io/badge/输出-Markdown_Word_PDF_HTML_纯文本-lightgrey?style=for-the-badge&logo=readme&logoColor=white" alt="5 Outputs">
@@ -25,7 +25,7 @@
 <p align="center">
   <b>信贷情报 · 企业尽调 · 财务分析 · 行业研究 · 风险预警 · 贷后管理 · 反洗钱 · KYC · KYB · OSINT</b>
   <br><br>
-  <i>12位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿。</i>
+  <i>13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿。</i>
   <br>
   <b>西装脱了，标准没脱。只摆事实，不给建议。</b>
 </p>
