@@ -1,8 +1,8 @@
 # 华尔街驻铁岭办事处 - 最终版SKILL
 
-> 版本：v2.4.0
+> 版本：v2.5.0
 > 更新日期：2026-06-06
-> 更新内容：子母Skill架构实装、小米MiMo模型适配、13个子skill文件
+> 更新内容：调度架构设计、CrewAI风格调度、并行执行规则、状态管理机制
 > 兼容模式：纯文本模式 + 代码辅助模式
 
 ---
@@ -331,9 +331,181 @@ tags:
 
 ---
 
-## 三、团队机制更新
+## 三、调度架构设计
 
-### 3.1 团队角色（13人）
+### 3.1 CrewAI风格调度架构
+
+```yaml
+调度架构:
+  # 模式选择
+  modes:
+    sequential:
+      description: "流水线模式，任务按顺序执行"
+      use_case: "步骤明确、有先后依赖的流程"
+      example: "研究 → 分析 → 撰写"
+    
+    hierarchical:
+      description: "层次化模式，Manager动态协调"
+      use_case: "需要动态任务分配和中央协调"
+      example: "钱总调度，各角色执行"
+    
+    parallel:
+      description: "并行模式，独立任务同时执行"
+      use_case: "独立的、可同时进行的任务"
+      example: "张铁柱查工商、李明远查财务、王思远查行业"
+  
+  # 角色定义
+  agents:
+    manager:
+      name: "钱守正（钱总）"
+      role: "总经理"
+      goal: "统筹管理团队，确保任务质量和时效性"
+      backstory: "华尔街15年投行经验，全局观强，决策果断"
+      allow_delegation: true
+    
+    workers:
+      - name: "张铁柱"
+        role: "企业尽调专家"
+        goal: "深入调查企业背景，发现隐藏信息"
+        tools: ["WebSearch", "WebFetch", "OSINT工具"]
+      
+      - name: "李明远"
+        role: "财务分析专家"
+        goal: "分析财务数据，识别风险和机会"
+        tools: ["WebSearch", "WebFetch"]
+      
+      - name: "王思远"
+        role: "行业研究专家"
+        goal: "分析行业趋势，评估竞争格局"
+        tools: ["WebSearch", "WebFetch"]
+  
+  # 任务定义
+  tasks:
+    company_investigation:
+      description: "调查企业工商信息、股权结构、关联企业"
+      expected_output: "企业尽调报告"
+      agent: "张铁柱"
+      dependencies: []
+    
+    financial_analysis:
+      description: "分析财务数据，评估财务健康状况"
+      expected_output: "财务分析报告"
+      agent: "李明远"
+      dependencies: ["company_investigation"]
+    
+    industry_analysis:
+      description: "分析行业趋势，评估竞争格局"
+      expected_output: "行业分析报告"
+      agent: "王思远"
+      dependencies: []
+    
+    risk_assessment:
+      description: "评估企业风险，识别潜在问题"
+      expected_output: "风险评估报告"
+      agent: "赵刚"
+      dependencies: ["company_investigation", "financial_analysis"]
+  
+  # 流程控制
+  workflow:
+    step_1:
+      name: "任务拆解"
+      actor: "陈志远"
+      action: "将用户需求拆解为子任务"
+    
+    step_2:
+      name: "任务分配"
+      actor: "钱守正"
+      action: "将子任务分配给对应角色"
+    
+    step_3:
+      name: "并行执行"
+      actors: ["张铁柱", "李明远", "王思远"]
+      action: "同时执行独立任务"
+    
+    step_4:
+      name: "串行执行"
+      actors: ["赵刚", "郑慎之"]
+      action: "按依赖顺序执行"
+    
+    step_5:
+      name: "结果聚合"
+      actor: "刘文华"
+      action: "合并所有结果，生成报告"
+    
+    step_6:
+      name: "视觉设计"
+      actor: "颜好看"
+      action: "美化报告，优化视觉效果"
+    
+    step_7:
+      name: "质量检查"
+      actor: "郑慎之"
+      action: "交叉验证，确保数据质量"
+    
+    step_8:
+      name: "最终交付"
+      actor: "钱守正"
+      action: "审核报告，交付用户"
+```
+
+### 3.2 并行执行规则
+
+```yaml
+parallel_execution_rules:
+  # 可并行的任务
+  parallelizable:
+    - "企业工商信息查询"
+    - "财务数据分析"
+    - "行业趋势分析"
+    - "社交媒体搜索"
+    - "法律风险查询"
+  
+  # 必须串行的任务
+  serializable:
+    - "股权穿透（依赖工商信息）"
+    - "风险评估（依赖财务数据）"
+    - "交叉验证（依赖所有数据）"
+    - "报告生成（依赖所有分析）"
+  
+  # 并行度控制
+  concurrency_control:
+    max_parallel: 5
+    timeout_per_task: 300  # 5分钟
+    retry_on_failure: 3
+```
+
+### 3.3 状态管理机制
+
+```yaml
+state_management:
+  # 任务状态
+  task_states:
+    - pending: "待执行"
+    - running: "执行中"
+    - completed: "已完成"
+    - failed: "失败"
+    - retrying: "重试中"
+  
+  # 进度跟踪
+  progress_tracking:
+    - "实时监控每个任务的状态"
+    - "计算整体进度百分比"
+    - "识别瓶颈和阻塞点"
+    - "动态调整任务优先级"
+  
+  # 异常处理
+  error_handling:
+    - "任务失败时自动重试"
+    - "超过重试次数时通知钱总"
+    - "降级方案自动执行"
+    - "用户提示机制"
+```
+
+---
+
+## 四、团队机制更新
+
+### 4.1 团队角色（13人）
 
 | 角色 | 职责 | 负责的机制 |
 |------|------|------------|
