@@ -1,8 +1,8 @@
 # 华尔街驻铁岭办事处 - 最终版SKILL
 
-> 版本：v2.2.0
+> 版本：v2.3.0
 > 更新日期：2026-06-06
-> 更新内容：中小企业尽调能力增强、非财务指标分析、替代数据分析
+> 更新内容：信息搜集能力增强、依赖管理机制、降级方案
 > 兼容模式：纯文本模式 + 代码辅助模式
 
 ---
@@ -680,6 +680,162 @@ osint_mechanism:
       - "Telegram社工库Bot"
       - "暗网论坛社工库"
       - "GitHub泄露仓库"
+  
+  # 依赖配置
+  dependencies:
+    # 必需依赖（核心功能）
+    required:
+      - name: "WebSearch"
+        description: "网络搜索能力"
+        type: "平台内置"
+        install: "无需安装"
+        fallback: "无替代方案"
+      
+      - name: "WebFetch"
+        description: "网页抓取能力"
+        type: "平台内置"
+        install: "无需安装"
+        fallback: "无替代方案"
+    
+    # 推荐依赖（增强功能）
+    recommended:
+      - name: "maigret"
+        description: "3000+网站用户名搜索"
+        type: "Python包"
+        install: "pip install maigret"
+        fallback: "使用WebSearch手动搜索各平台"
+        priority: "high"
+      
+      - name: "sherlock"
+        description: "400+网站用户名追踪"
+        type: "Python包"
+        install: "pip install sherlock-project"
+        fallback: "使用WebSearch手动搜索各平台"
+        priority: "high"
+      
+      - name: "theHarvester"
+        description: "邮箱、子域、IP收集"
+        type: "Python包"
+        install: "pip install theHarvester"
+        fallback: "使用WebSearch手动搜索"
+        priority: "medium"
+    
+    # 可选依赖（高级功能）
+    optional:
+      - name: "maltego"
+        description: "关系网络可视化"
+        type: "桌面应用"
+        install: "https://www.maltego.com"
+        fallback: "使用文本描述关系网络"
+        priority: "low"
+      
+      - name: "spiderfoot"
+        description: "自动化OSINT"
+        type: "Python包"
+        install: "pip install spiderfoot"
+        fallback: "手动执行OSINT流程"
+        priority: "low"
+  
+  # 依赖检测机制
+  dependency_detection:
+    detection_timing: "任务开始时"
+    detection_method: "尝试调用工具，捕获异常"
+    
+    detection_script: |
+      💬 周通（技术总监）：
+      > "环境检测开始。"
+      > "正在检测OSINT工具..."
+      > ""
+      > "检测结果："
+      > "- WebSearch：✓ 可用"
+      > "- WebFetch：✓ 可用"
+      > "- Maigret：{可用/不可用}"
+      > "- Sherlock：{可用/不可用}"
+      > "- theHarvester：{可用/不可用}"
+      > ""
+      > "{可用工具数量}个工具可用，{不可用工具数量}个工具不可用。"
+  
+  # 用户提示机制
+  user_prompt:
+    when_to_prompt: "检测到推荐依赖不可用时"
+    
+    prompt_template: |
+      💬 周通（技术总监）：
+      > "检测到以下工具不可用："
+      > "- {工具名}：{功能描述}"
+      > ""
+      > "该工具可以增强信息搜集能力，但不是必需的。"
+      > ""
+      > "选项："
+      > "A. 安装该工具（推荐）"
+      > "B. 使用替代方案"
+      > "C. 跳过该功能"
+      > ""
+      > "请选择（默认B）："
+    
+    prompt_examples:
+      example_1:
+        tool: "maigret"
+        prompt: |
+          💬 周通（技术总监）：
+          > "检测到Maigret不可用。"
+          > "Maigret可以搜索3000+网站的用户名，大幅增强信息搜集能力。"
+          > ""
+          > "安装命令：pip install maigret"
+          > ""
+          > "选项："
+          > "A. 安装Maigret（推荐）"
+          > "B. 使用WebSearch手动搜索各平台"
+          > "C. 跳过用户名搜索功能"
+          > ""
+          > "请选择（默认B）："
+  
+  # 降级方案
+  fallback_strategies:
+    # 当Maigret不可用时
+    maigret_fallback:
+      description: "使用WebSearch手动搜索各平台"
+      steps:
+        - "搜索微博：{用户名} site:weibo.com"
+        - "搜索知乎：{用户名} site:zhihu.com"
+        - "搜索脉脉：{用户名} site:maimai.cn"
+        - "搜索小红书：{用户名} site:xiaohongshu.com"
+        - "搜索抖音：{用户名} site:douyin.com"
+        - "搜索B站：{用户名} site:bilibili.com"
+      efficiency: "中"
+      coverage: "200-500平台"
+    
+    # 当Sherlock不可用时
+    sherlock_fallback:
+      description: "使用WebSearch手动搜索各平台"
+      steps:
+        - "搜索GitHub：{用户名} site:github.com"
+        - "搜索Twitter：{用户名} site:twitter.com"
+        - "搜索Instagram：{用户名} site:instagram.com"
+        - "搜索LinkedIn：{用户名} site:linkedin.com"
+      efficiency: "中"
+      coverage: "100-200平台"
+    
+    # 当theHarvester不可用时
+    theharvester_fallback:
+      description: "使用WebSearch手动搜索"
+      steps:
+        - "搜索邮箱：{域名} email"
+        - "搜索子域：{域名} site:*.{域名}"
+        - "搜索IP：{域名} IP"
+      efficiency: "低"
+      coverage: "有限"
+    
+    # 当社工库不可用时
+    shegongku_fallback:
+      description: "使用其他数据源替代"
+      steps:
+        - "使用一证通查2.0查询手机号关联账号"
+        - "使用交管12123查询车辆信息"
+        - "使用企查查/天眼查查询企业信息"
+        - "使用社交媒体搜索个人信息"
+      efficiency: "中"
+      coverage: "基础信息"
 ```
 
 #### 四、交叉验证机制（郑慎之负责）
