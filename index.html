@@ -618,6 +618,53 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
   font-size:14px;padding:14px 0;overflow-x:auto;
 }
 
+/* === Install Main === */
+.install-main{
+  text-align:center;
+  margin-bottom:48px;
+}
+.install-command{
+  display:inline-flex;
+  align-items:center;
+  gap:16px;
+  background:rgba(10,10,30,.7);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  padding:16px 24px;
+  margin-bottom:16px;
+}
+.install-command code{
+  color:var(--green);
+  font-family:"SF Mono","Fira Code","Cascadia Code",monospace;
+  font-size:16px;
+}
+.copy-btn{
+  background:var(--accent);
+  color:white;
+  border:none;
+  border-radius:var(--radius-sm);
+  padding:8px 16px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+.copy-btn:hover{
+  background:#5558e6;
+}
+.install-hint{
+  color:var(--text3);
+  font-size:14px;
+}
+.install-options{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+}
+.install-icon{
+  font-size:32px;
+  margin-bottom:16px;
+}
 /* === Footer === */
 .footer{
   text-align:center;padding:64px 32px;
@@ -942,24 +989,42 @@ footer.section::after{display:none}
 <!-- Install -->
 <section class="section" id="install">
   <div class="section-header">
-    <div class="section-title">安装与加载</div>
-    <div class="section-sub">8种形态，选你最喜欢的。</div>
+    <div class="section-title">一行命令，即刻开始</div>
+    <div class="section-sub">支持14+平台，15+模型，一句话搞定</div>
   </div>
-  <div class="install-card">
-    <h4>Skill 市场（推荐）</h4>
-    <code>npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
+  
+  <div class="install-main">
+    <div class="install-command">
+      <code id="installCmd">npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
+      <button class="copy-btn" onclick="copyInstall()">
+        <span id="copyText">复制</span>
+      </button>
+    </div>
+    <p class="install-hint">在终端执行，或直接粘贴到任意AI对话窗口</p>
   </div>
-  <div class="install-card">
-    <h4>直接粘贴到任意 AI 对话</h4>
-    <code>复制 SKILL.md 全文 → 粘贴到 ChatGPT / Claude / 豆包 / Kimi / 通义 / 文心 对话</code>
+  
+  <div class="install-options">
+    <div class="install-card">
+      <div class="install-icon">🚀</div>
+      <h4>Skill 市场</h4>
+      <p>WorkBuddy / OpenClaw / CodeBuddy 一键安装</p>
+    </div>
+    <div class="install-card">
+      <div class="install-icon">📋</div>
+      <h4>直接粘贴</h4>
+      <p>复制 SKILL.md → 粘贴到任意AI对话</p>
+    </div>
+    <div class="install-card">
+      <div class="install-icon">🔧</div>
+      <h4>MCP Server</h4>
+      <p>配置 JSON → Agent 直接调用工具</p>
+    </div>
   </div>
-  <div class="install-card">
-    <h4>MCP Server</h4>
-    <code>配置 deploy/mcp-server.json → Agent 直接调用 due_diligence() 等工具</code>
-  </div>
-  <p style="text-align:center;margin-top:16px">
+  
+  <p style="text-align:center;margin-top:24px">
     <a href="deploy/multi-platform-guide.md" style="color:var(--accent);text-decoration:none;font-weight:500">📖 8种形态完整部署指南 →</a>
   </p>
+</section>
 </section>
 
 <!-- Footer -->
@@ -978,6 +1043,15 @@ footer.section::after{display:none}
 <script>
 // === Theme Toggle ===
 function toggleTheme(){
+// === Copy Install Command ===
+function copyInstall(){
+  var cmd = document.getElementById("installCmd").textContent;
+  navigator.clipboard.writeText(cmd).then(function(){
+    var btn = document.getElementById("copyText");
+    btn.textContent = "已复制!";
+    setTimeout(function(){ btn.textContent = "复制"; }, 2000);
+  });
+}
   const html=document.documentElement;
   const current=html.getAttribute('data-theme');
   const next=current==='dark'?'light':'dark';
