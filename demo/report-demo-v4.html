@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京字节跳动 — 尽调报告 | 华尔街驻铁岭办事处</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           Design System: 华尔街驻铁岭办事处 Report v4
+           Philosophy: Data-first, restrained, professional
+           Anti-patterns: No gradient text, no excessive blur,
+                          no AI-purple glow, no emoji icons
+           ============================================ */
+
+        :root {
+            /* Surfaces */
+            --bg-base: #0c0c10;
+            --bg-elevated: #141418;
+            --bg-card: #1a1a20;
+            --bg-card-hover: #1e1e26;
+
+            /* Borders */
+            --border-subtle: rgba(255,255,255,0.06);
+            --border-default: rgba(255,255,255,0.10);
+            --border-strong: rgba(255,255,255,0.16);
+
+            /* Text */
+            --text-primary: #e8e8ec;
+            --text-secondary: #8a8a9a;
+            --text-tertiary: #5a5a6a;
+            --text-inverse: #0c0c10;
+
+            /* Accents - single accent family */
+            --accent: #6366f1;
+            --accent-muted: rgba(99,102,241,0.15);
+            --accent-subtle: rgba(99,102,241,0.08);
+
+            /* Semantic */
+            --success: #22c55e;
+            --success-muted: rgba(34,197,94,0.12);
+            --warning: #eab308;
+            --warning-muted: rgba(234,179,8,0.12);
+            --danger: #ef4444;
+            --danger-muted: rgba(239,68,68,0.12);
+            --info: #3b82f6;
+            --info-muted: rgba(59,130,246,0.12);
+
+            /* Typography */
+            --font-sans: 'Noto Sans SC', -apple-system, 'SF Pro Display', 'PingFang SC', sans-serif;
+            --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', monospace;
+
+            /* Spacing */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            --space-12: 48px;
+            --space-16: 64px;
+
+            /* Radii */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 14px;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ========== LAYOUT ========== */
+        .page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(12,12,16,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-4) var(--space-6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .brand-mark {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-mark span {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .brand-desc {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-6);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+
+        .meta-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        /* ========== MAIN ========== */
+        .main {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-10) var(--space-6) var(--space-16);
+            width: 100%;
+        }
+
+        /* ========== REPORT HEADER ========== */
+        .report-header {
+            margin-bottom: var(--space-10);
+            padding-bottom: var(--space-8);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .report-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            margin-bottom: var(--space-3);
+        }
+
+        .report-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 480px;
+        }
+
+        .report-meta {
+            display: flex;
+            gap: var(--space-6);
+            margin-top: var(--space-5);
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--text-tertiary);
+        }
+
+        .report-meta span {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        /* ========== KPI GRID ========== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-10);
+        }
+
+        .kpi {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: var(--space-5);
+            transition: border-color 0.2s ease;
+        }
+
+        .kpi:hover {
+            border-color: var(--border-default);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-3);
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: var(--font-mono);
+        }
+
+        .kpi-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .kpi-badge.success {
+            background: var(--success-muted);
+            color: var(--success);
+        }
+
+        .kpi-badge.warning {
+            background: var(--warning-muted);
+            color: var(--warning);
+        }
+
+        .kpi-badge.danger {
+            background: var(--danger-muted);
+            color: var(--danger);
+        }
+
+        .kpi-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            letter-spacing: -1px;
+            margin-bottom: var(--space-1);
+        }
+
+        .kpi-change {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .kpi-change.up { color: var(--success); }
+        .kpi-change.down { color: var(--danger); }
+        .kpi-change.neutral { color: var(--text-tertiary); }
+
+        /* ========== SECTION ========== */
+        .section {
+            margin-bottom: var(--space-10);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .section-badge {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-tertiary);
+            padding: 2px 8px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+        }
+
+        /* ========== INFERENCE CHAIN ========== */
+        .chain {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: var(--space-5);
+            overflow-x: auto;
+        }
+
+        .chain-track {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            min-width: max-content;
+        }
+
+        .chain-node {
+            padding: var(--space-2) var(--space-4);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            font-family: var(--font-mono);
+        }
+
+        .chain-node.active {
+            background: var(--accent-muted);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .chain-arrow {
+            color: var(--text-tertiary);
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        /* ========== DATA TABLE ========== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 64px;
+            z-index: 10;
+        }
+
+        .data-table th {
+            background: var(--bg-elevated);
+            padding: var(--space-3) var(--space-4);
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .data-table td {
+            padding: var(--space-3) var(--space-4);
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover td {
+            background: var(--bg-card);
+        }
+
+        .data-table .cell-primary {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .data-table .cell-mono {
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        .data-table .cell-source {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+        }
+
+        /* ========== TAG ========== */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: var(--font-mono);
+        }
+
+        .tag.verified {
+            background: var(--success-muted);
+            color: var(--success);
+        }
+
+        .tag.conflict {
+            background: var(--warning-muted);
+            color: var(--warning);
+        }
+
+        .tag.pending {
+            background: var(--info-muted);
+            color: var(--info);
+        }
+
+        /* ========== INFO GRID ========== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .info-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+        }
+
+        .info-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: var(--font-mono);
+            margin-bottom: var(--space-2);
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .info-source {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+            margin-top: var(--space-2);
+        }
+
+        /* ========== RISK INDICATOR ========== */
+        .risk-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .risk-track {
+            flex: 1;
+            height: 4px;
+            background: var(--bg-elevated);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .risk-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .risk-fill.low { background: var(--success); width: 25%; }
+        .risk-fill.medium { background: var(--warning); width: 50%; }
+        .risk-fill.high { background: var(--danger); width: 75%; }
+
+        .risk-label {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            min-width: 48px;
+            text-align: right;
+        }
+
+        .risk-label.low { color: var(--success); }
+        .risk-label.medium { color: var(--warning); }
+        .risk-label.high { color: var(--danger); }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: var(--space-6);
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-brand {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+        }
+
+        .footer-meta {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+            display: flex;
+            gap: var(--space-4);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-meta { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .info-grid { grid-template-columns: 1fr; }
+            .main { padding: var(--space-6) var(--space-4) var(--space-10); }
+            .report-title { font-size: 22px; }
+            .footer-inner { flex-direction: column; gap: var(--space-3); }
+        }
+
+        /* ========== REDUCED MOTION ========== */
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-inner">
+                <div class="brand">
+                    <div class="brand-mark"><span>W</span></div>
+                    <div class="brand-text">
+                        <div class="brand-name">华尔街驻铁岭办事处</div>
+                        <div class="brand-desc">Credit Intelligence Team</div>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div class="meta-item">
+                        <div class="meta-dot"></div>
+                        <span>数据已验证</span>
+                    </div>
+                    <div class="meta-item">v2.0.1</div>
+                    <div class="meta-item">2026-06-06</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN -->
+        <main class="main">
+            <!-- REPORT HEADER -->
+            <div class="report-header">
+                <h1 class="report-title">北京字节跳动科技有限公司</h1>
+                <p class="report-subtitle">企业尽调报告 - 从企业名出发，7层穿透至实际控制人，12个数据源交叉验证</p>
+                <div class="report-meta">
+                    <span>推导深度: 7层</span>
+                    <span>数据源: 12个</span>
+                    <span>冲突数据: 1处 (已解决)</span>
+                    <span>生成时间: 2026-06-06 00:15</span>
+                </div>
+            </div>
+
+            <!-- KPI GRID -->
+            <div class="kpi-grid">
+                <div class="kpi">
+                    <div class="kpi-header">
+                        <span class="kpi-label">信用评级</span>
+                        <span class="kpi-badge success">已验证</span>
+                    </div>
+                    <div class="kpi-value">A+</div>
+                    <div class="kpi-change neutral">行业领先</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-header">
+                        <span class="kpi-label">风险等级</span>
+                        <span class="kpi-badge warning">需关注</span>
+                    </div>
+                    <div class="kpi-value">中</div>
+                    <div class="kpi-change neutral">资产负债率偏高</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-header">
+                        <span class="kpi-label">穿透深度</span>
+                        <span class="kpi-badge success">完整</span>
+                    </div>
+                    <div class="kpi-value">7层</div>
+                    <div class="kpi-change up">完整穿透</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-header">
+                        <span class="kpi-label">数据来源</span>
+                        <span class="kpi-badge success">多源</span>
+                    </div>
+                    <div class="kpi-value">12</div>
+                    <div class="kpi-change neutral">交叉验证</div>
+                </div>
+            </div>
+
+            <!-- INFERENCE CHAIN -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">智能推导链条</h2>
+                    <span class="section-badge">7层穿透</span>
+                </div>
+                <div class="chain">
+                    <div class="chain-track">
+                        <div class="chain-node">北京字节跳动</div>
+                        <div class="chain-arrow">&rarr;</div>
+                        <div class="chain-node">张利东 (法人)</div>
+                        <div class="chain-arrow">&rarr;</div>
+                        <div class="chain-node">138****</div>
+                        <div class="chain-arrow">&rarr;</div>
+                        <div class="chain-node">@zld1985</div>
+                        <div class="chain-arrow">&rarr;</div>
+                        <div class="chain-node">字节跳动 (香港)</div>
+                        <div class="chain-arrow">&rarr;</div>
+                        <div class="chain-node">字节跳动 (开曼)</div>
+                        <div class="chain-arrow">&rarr;</div>
+                        <div class="chain-node active">张一鸣 (实控人)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPANY INFO -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">企业基础信息</h2>
+                    <span class="section-badge">工商数据</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">法定代表人</div>
+                        <div class="info-value">张利东</div>
+                        <div class="info-source">来源: 国家企业信用信息公示系统</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">注册资本</div>
+                        <div class="info-value">2000万人民币</div>
+                        <div class="info-source">来源: 国家企业信用信息公示系统</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">成立日期</div>
+                        <div class="info-value">2012-03-09</div>
+                        <div class="info-source">来源: 国家企业信用信息公示系统</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">统一社会信用代码</div>
+                        <div class="info-value" style="font-family:var(--font-mono);font-size:13px;">911101085923662400</div>
+                        <div class="info-source">来源: 国家企业信用信息公示系统</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">注册地址</div>
+                        <div class="info-value">北京市海淀区知春路甲48号</div>
+                        <div class="info-source">来源: 国家企业信用信息公示系统</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">经营状态</div>
+                        <div class="info-value">存续</div>
+                        <div class="info-source">来源: 国家企业信用信息公示系统</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FINANCIAL DATA -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">财务指标</h2>
+                    <span class="section-badge">五维分析</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>指标</th>
+                            <th>数值</th>
+                            <th>行业均值</th>
+                            <th>偏离度</th>
+                            <th>状态</th>
+                            <th>来源</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="cell-primary">资产负债率</td>
+                            <td class="cell-mono">82%</td>
+                            <td class="cell-mono">55%</td>
+                            <td class="cell-mono" style="color:var(--danger)">+27%</td>
+                            <td><span class="tag conflict">需关注</span></td>
+                            <td class="cell-source">企查查</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">流动比率</td>
+                            <td class="cell-mono">0.8</td>
+                            <td class="cell-mono">1.5</td>
+                            <td class="cell-mono" style="color:var(--danger)">-47%</td>
+                            <td><span class="tag conflict">需关注</span></td>
+                            <td class="cell-source">企业年报</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">营收增长率</td>
+                            <td class="cell-mono">15.2%</td>
+                            <td class="cell-mono">12%</td>
+                            <td class="cell-mono" style="color:var(--success)">+3.2%</td>
+                            <td><span class="tag verified">正常</span></td>
+                            <td class="cell-source">企业年报</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">净利润率</td>
+                            <td class="cell-mono">25.3%</td>
+                            <td class="cell-mono">18%</td>
+                            <td class="cell-mono" style="color:var(--success)">+7.3%</td>
+                            <td><span class="tag verified">正常</span></td>
+                            <td class="cell-source">企业年报</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- RISK ASSESSMENT -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">风险评估</h2>
+                    <span class="section-badge">六维雷达</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:var(--space-4);">
+                    <div class="risk-bar">
+                        <span style="font-size:13px;min-width:100px;color:var(--text-secondary)">信用风险</span>
+                        <div class="risk-track"><div class="risk-fill medium"></div></div>
+                        <span class="risk-label medium">中</span>
+                    </div>
+                    <div class="risk-bar">
+                        <span style="font-size:13px;min-width:100px;color:var(--text-secondary)">合规风险</span>
+                        <div class="risk-track"><div class="risk-fill low"></div></div>
+                        <span class="risk-label low">低</span>
+                    </div>
+                    <div class="risk-bar">
+                        <span style="font-size:13px;min-width:100px;color:var(--text-secondary)">经营风险</span>
+                        <div class="risk-track"><div class="risk-fill medium"></div></div>
+                        <span class="risk-label medium">中</span>
+                    </div>
+                    <div class="risk-bar">
+                        <span style="font-size:13px;min-width:100px;color:var(--text-secondary)">市场风险</span>
+                        <div class="risk-track"><div class="risk-fill high"></div></div>
+                        <span class="risk-label high">高</span>
+                    </div>
+                    <div class="risk-bar">
+                        <span style="font-size:13px;min-width:100px;color:var(--text-secondary)">集中度风险</span>
+                        <div class="risk-track"><div class="risk-fill high"></div></div>
+                        <span class="risk-label high">高</span>
+                    </div>
+                    <div class="risk-bar">
+                        <span style="font-size:13px;min-width:100px;color:var(--text-secondary)">传染风险</span>
+                        <div class="risk-track"><div class="risk-fill low"></div></div>
+                        <span class="risk-label low">低</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEGAL RISK -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">法律风险</h2>
+                    <span class="section-badge">司法数据</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>数量</th>
+                            <th>状态</th>
+                            <th>来源</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="cell-primary">民事诉讼</td>
+                            <td class="cell-mono">150起</td>
+                            <td><span class="tag conflict">需关注</span></td>
+                            <td class="cell-source">中国裁判文书网</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">执行记录</td>
+                            <td class="cell-mono">3起</td>
+                            <td><span class="tag verified">已结案</span></td>
+                            <td class="cell-source">中国执行信息公开网</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">失信记录</td>
+                            <td class="cell-mono">0起</td>
+                            <td><span class="tag verified">无</span></td>
+                            <td class="cell-source">中国执行信息公开网</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">行政处罚</td>
+                            <td class="cell-mono">2起</td>
+                            <td><span class="tag pending">已整改</span></td>
+                            <td class="cell-source">国家企业信用信息公示系统</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- DATA SOURCES -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">数据溯源</h2>
+                    <span class="section-badge">12个来源</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>数据源</th>
+                            <th>类型</th>
+                            <th>可信度</th>
+                            <th>数据量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="cell-primary">国家企业信用信息公示系统</td>
+                            <td class="cell-mono">官方</td>
+                            <td><span class="tag verified">95%</span></td>
+                            <td class="cell-mono">工商、股东、法人</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">中国裁判文书网</td>
+                            <td class="cell-mono">官方</td>
+                            <td><span class="tag verified">95%</span></td>
+                            <td class="cell-mono">诉讼记录</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">企查查</td>
+                            <td class="cell-mono">商业</td>
+                            <td><span class="tag verified">90%</span></td>
+                            <td class="cell-mono">综合企业数据</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">天眼查</td>
+                            <td class="cell-mono">商业</td>
+                            <td><span class="tag verified">90%</span></td>
+                            <td class="cell-mono">综合企业数据</td>
+                        </tr>
+                        <tr>
+                            <td class="cell-primary">社工库Bot</td>
+                            <td class="cell-mono">OSINT</td>
+                            <td><span class="tag conflict">70%</span></td>
+                            <td class="cell-mono">个人信息</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="footer-inner">
+                <div class="footer-brand">华尔街驻铁岭办事处 - 信贷情报专家团</div>
+                <div class="footer-meta">
+                    <span>v2.0.1</span>
+                    <span>纯文本+联网模式</span>
+                    <span>Token: 3,245 / 8,000</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
