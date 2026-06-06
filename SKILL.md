@@ -1,8 +1,8 @@
 # 华尔街驻铁岭办事处 - 最终版SKILL
 
-> 版本：v2.3.0
+> 版本：v2.4.0
 > 更新日期：2026-06-06
-> 更新内容：信息搜集能力增强、依赖管理机制、降级方案
+> 更新内容：子母Skill架构实装、小米MiMo模型适配、13个子skill文件
 > 兼容模式：纯文本模式 + 代码辅助模式
 
 ---
@@ -138,6 +138,45 @@ compatibility_matrix:
     web_search: false
     mcp_available: false
     recommended_mode: "纯文本离线模式"
+  
+  # 小米MiMo模型适配
+  xiaomi_mimo:
+    code_executable: true
+    network_available: true
+    web_search: true
+    mcp_available: false
+    recommended_mode: "代码辅助模式"
+    models:
+      - name: "mimo-v2.5-pro"
+        context: 1048576
+        output: 131072
+        description: "旗舰Agent/Coding模型，1.02T参数，42B激活参数"
+        price: "¥3.00/百万tokens（输入）"
+      
+      - name: "mimo-v2.5"
+        context: 1048576
+        output: 131072
+        description: "全模态Agent模型，支持文本、图像、视频、音频"
+        price: "¥1.00/百万tokens（输入）"
+      
+      - name: "mimo-v2-flash"
+        context: 262144
+        output: 65536
+        description: "低成本文本模型，适合高频编程和简单任务"
+        price: "¥0.70/百万tokens（输入）"
+    
+    api_endpoints:
+      openai_compatible: "https://api.xiaomimimo.com/v1"
+      anthropic_compatible: "https://api.xiaomimimo.com/anthropic"
+      token_plan_cn: "https://token-plan-cn.xiaomimimo.com/v1"
+    
+    supported_tools:
+      - "Claude Code"
+      - "OpenCode"
+      - "Codex"
+      - "Cline"
+      - "Kilo"
+      - "Roo"
 ```
 
 ---
