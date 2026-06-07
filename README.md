@@ -14,7 +14,7 @@
 ![Stars](https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-14+-purple?style=flat-square)
 ![Models](https://img.shields.io/badge/models-15+-orange?style=flat-square)
-![Data Sources](https://img.shields.io/badge/data_sources-200+-gold?style=flat-square)
+![Data Sources](https://img.shields.io/badge/data_sources-30+-gold?style=flat-square)
 
 **👔 西装脱了，标准没脱。只摆事实，不给建议。**
 
@@ -71,7 +71,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 | 📊 **行业研究** | PEST宏观分析、五力竞争模型、产业链分析 | 王思远 |
 | 🚨 **风险识别** | 风险雷达六维图、信用风险、合规风险 | 赵刚 |
 | 🎯 **人员背调** | 开盒六面体、深度挖掘、跨平台身份关联 | 马力全 |
-| 🕵️ **全网扒光** | OSINT开源情报、200+数据源、蛛丝马迹追踪 | 周通 |
+| 🕵️ **全网扒光** | OSINT开源情报、200+数据源体系、蛛丝马迹追踪 | 周通 |
 
 ---
 
