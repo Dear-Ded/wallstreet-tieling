@@ -65,6 +65,8 @@ metadata:
 **项目真正价值**：角色化prompt输出质量、Token节省85-93%、质量检查减少编造、领域知识框架。
 **技术边界**：无真正并行/无状态管理/无中断续跑/无Agent辩论。
 **多Agent参考**：CrewAI / LangGraph / AutoGPT。
+> 💡 **最佳环境**：WorkBuddy能解决50%+原生缺陷（OSINT工具/文件产出/脚本执行）。单独运行时功能降级。详见 LIMITATIONS.md。
+
 
 ---
 
