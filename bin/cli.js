@@ -41,8 +41,8 @@ function outputSkill(brief = false) {
     // Extract key parts only
     const parts = content.split('---');
     const fm = parts.slice(0, 3).join('---');
-    const core = content.match(/## 一、我是谁[\s\S]{0,500}/)?.[0] || '';
-    const rules = content.match(/## 二、铁律[\s\S]{0,800}/)?.[0] || '';
+    const core = content.match(/## 一、平台检测[\s\S]{0,500}/)?.[0] || '';
+    const rules = content.match(/## 五、全局铁律[\s\S]{0,800}/)?.[0] || '';
     console.log(fm + '\n\n' + core + '\n\n' + rules);
   } else {
     console.log(content);

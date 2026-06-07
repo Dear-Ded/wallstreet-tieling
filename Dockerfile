@@ -6,6 +6,7 @@ WORKDIR /app
 COPY api/server.py api/
 COPY SKILL.md .
 COPY references/ references/
+COPY sub-skills/ sub-skills/
 
 # 安装依赖
 RUN pip install --no-cache-dir flask flask-cors requests

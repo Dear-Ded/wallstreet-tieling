@@ -1,6 +1,6 @@
 {
   "name": "wallstreet-tieling",
-  "version": "2.0.1",
+  "version": "3.0.2",
   "description": "华尔街驻铁岭办事处 | AI驱动的银行信贷情报专家团 — 尽调/财务分析/行业研究/风险预警/贷后监控/人员穿透 | Credit Intelligence AI Agent for Banking - Due Diligence, Financial Analysis, Risk Assessment, KYC, KYB, AML, OSINT",
   "main": "SKILL.md",
   "bin": {
@@ -15,6 +15,7 @@
     "api/",
     "deploy/",
     "references/",
+    "sub-skills/",
     "Dockerfile",
     "index.html",
     "LICENSE"

@@ -1,7 +1,7 @@
 {
   "name": "wallstreet-tieling",
-  "version": "1.0.0",
-  "description": "华尔街驻铁岭办事处 | 信贷情报专家团 — MCP Server 封装",
+  "version": "3.0.2",
+  "description": "华尔街驻铁岭办事处 | 信贷情报专家团 — 13人专家团",
   "mcpServers": {
     "wallstreet-tieling": {
       "command": "npx",

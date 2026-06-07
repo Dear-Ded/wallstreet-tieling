@@ -35,6 +35,9 @@ CORS(app)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 MODEL = os.environ.get("WALLSTREET_MODEL", "gpt-4o-mini")
+API_KEY_ENV = os.environ.get("WALLSTREET_API_KEY_ENV", "OPENAI_API_KEY")
+if API_KEY_ENV != "OPENAI_API_KEY":
+    OPENAI_API_KEY = os.environ.get(API_KEY_ENV, os.environ.get("OPENAI_API_KEY", ""))
 PORT = int(os.environ.get("PORT", 8080))
 
 
@@ -88,7 +91,7 @@ def call_llm(system_prompt: str, user_message: str, stream: bool = False) -> dic
 def index():
     return jsonify({
         "name": "华尔街驻铁岭办事处",
-        "version": "1.0.0",
+        "version": "3.0.2",
         "description": "银行信贷情报专家团 API",
         "endpoints": {
             "POST /api/analyze": "执行分析任务",
