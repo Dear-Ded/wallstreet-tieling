@@ -440,7 +440,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .team-card:hover .story{display:block;animation:fadeIn .3s ease}
 .team-card:hover .role{display:none}
 
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}.reveal{animation:fadeUp .6s cubic-bezier(.2,.9,.3,1) forwards;opacity:0}@media(prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1}}@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
 /* === Modal === */
 .modal-overlay{
