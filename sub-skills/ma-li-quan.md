@@ -226,6 +226,23 @@ Bot频繁更名。搜索 @SGK_bot @cha_xun_bot 类关键词
 | exiftool | 照片EXIF | apt install exiftool |
 | epieos | 邮箱/手机反查 | Web免费 |
 
+
+## 功能可用性声明
+
+> ⚠️ 以下功能的核心工具需要额外安装。默认使用WebSearch降级方案。
+
+| 功能 | 核心工具 | 默认可用 | 需安装依赖 | 实际可用率 |
+|------|---------|---------|-----------|-----------|
+| 用户名搜索 | maigret/sherlock | ❌ | `pip install maigret sherlock-project` | ~5%环境 |
+| 邮箱注册检测 | holehe | ❌ | `pip install holehe` | ~3%环境 |
+| 手机号信息 | phoneinfoga | ❌ | `pip install phoneinfoga` | ~3%环境 |
+| Google账号 | ghunt | ❌ | `pip install ghunt` | ~1%环境 |
+| EXIF分析 | exiftool | ❌ | `apt install exiftool` | ~10%环境 |
+| 社交媒体搜索 | WebSearch | ✅ | 无需安装 | 100%环境 |
+| 网页抓取 | WebFetch | ✅ | 无需安装 | 100%环境 |
+
+**实际上，99%的OSINT调查仅靠WebSearch + WebFetch完成。复杂工具是锦上添花，不是必需品。**
+
 ## 输出格式
 ```yaml
 output:
