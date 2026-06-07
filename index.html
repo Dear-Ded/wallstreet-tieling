@@ -2,6 +2,7 @@
 <html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
+<meta name="color-scheme" content="dark light">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>华尔街驻铁岭办事处 · 银行信贷情报专家团</title>
 <meta name="description" content="专为银行信贷经理打造的AI情报专家团。13位前华尔街金融老兵坐镇，集成Wind万得、Bloomberg彭博、Reuters路透等数据源体系。企业尽调、财务分析、行业研究、风险预警、贷后监控——只摆事实，不给建议。">
@@ -77,6 +78,8 @@
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
+*:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
 
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 
@@ -217,6 +220,24 @@ body{
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
+
+@media(prefers-color-scheme:light){
+  :root{
+    --glass-bg:rgba(245,245,250,0.7);
+    --glass-bg-hover:rgba(235,235,245,0.8);
+    --glass-edge:rgba(0,0,0,0.06);
+    --glass-edge-strong:rgba(0,0,0,0.1);
+    --glass-shadow:0 8px 32px rgba(0,0,0,0.08),0 2px 8px rgba(0,0,0,0.04);
+    --glass-inner:inset 0 1px 0 rgba(255,255,255,0.5);
+    --text-primary:rgba(0,0,0,0.88);
+    --text-secondary:rgba(0,0,0,0.55);
+    --text-tertiary:rgba(0,0,0,0.35);
+  }
+  body{background:#f5f5fa}
+  .nav-glass{background:rgba(245,245,250,0.85)}
+  .bg-aura{background:radial-gradient(ellipse 80% 60% at 50% 10%,rgba(99,102,241,0.04) 0%,transparent 70%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(99,102,241,0.02) 0%,transparent 70%)}
+  .install-bar{background:rgba(240,240,248,0.9)}
+}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
@@ -739,6 +760,14 @@ a,button,.team-card,.glass-card,.wf-step,.rule-card,.btn,.modal,.modal-overlay{
 /* Hide on last section */
 footer.section::after{display:none}
 /* === Responsive === */
+
+@media(max-width:375px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:24px;letter-spacing:-0.5px}
+  .hero-sub{font-size:14px}
+  .glass-card{padding:var(--space-md)}
+  .team-grid{grid-template-columns:1fr}
+}
 @media(max-width:768px){
   .nav{padding:0 16px}
   .nav-links{display:none}
@@ -760,12 +789,12 @@ footer.section::after{display:none}
 <nav class="nav">
   <span class="nav-brand">🏛️ 华尔街驻铁岭办事处</span>
   <div class="nav-links">
-    <a href="#features">能力</a>
-    <a href="#team">团队</a>
+    <a href="#features" aria-label="查看核心能力">能力</a>
+    <a href="#team" aria-label="查看团队成员">团队</a>
     <a href="#workflow">流程</a>
     <a href="#sources">数据源</a>
     <a href="#demo">演示</a>
-    <a href="#install">安装</a>
+    <a href="#install" aria-label="查看安装方式">安装</a>
   </div>
   <button class="btn-theme" onclick="toggleTheme()" aria-label="切换主题" title="切换浅色/深色模式">🌓</button>
 </nav>
@@ -793,7 +822,7 @@ footer.section::after{display:none}
     <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-primary" target="_blank">
       ⭐ Star on GitHub
     </a>
-    <a href="#install" class="btn btn-glass">📦 一键安装</a>
+    <a href="#install" aria-label="查看安装方式" class="btn btn-glass">📦 一键安装</a>
     <a href="#demo" class="btn btn-glass">💬 看演示</a>
   </div>
 </header>
@@ -827,7 +856,7 @@ footer.section::after{display:none}
 </div>
 
 <!-- Features -->
-<section class="section" id="features">
+<section class="section" id="features" role="region" aria-label="核心能力">
   <div class="section-header">
     <div class="section-title">核心能力</div>
     <div class="section-sub">13位前华尔街金融老兵，200+数据源，企业尽调、财务分析、行业研究、风险预警、贷后监控——只摆事实，不给建议</div>
@@ -873,7 +902,7 @@ footer.section::after{display:none}
 </section>
 
 <!-- Team -->
-<section class="section" id="team">
+<section class="section" id="team" role="region" aria-label="核心团队">
   <div class="section-header">
     <div class="section-title">核心团队</div>
     <div class="section-sub">13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿。点击卡片查看每个人的完整故事。</div>
@@ -987,7 +1016,7 @@ footer.section::after{display:none}
 </section>
 
 <!-- Install -->
-<section class="section" id="install">
+<section class="section" id="install" role="region" aria-label="安装方式">
   <div class="section-header">
     <div class="section-title">一行命令，即刻开始</div>
     <div class="section-sub">支持14+平台，15+模型，一句话搞定</div>
@@ -1032,7 +1061,7 @@ footer.section::after{display:none}
   <p><strong>华尔街驻铁岭办事处</strong> · v1.0.0 · MIT License</p>
   <p style="margin-top:8px">
     <a href="https://github.com/Dear-Ded/wallstreet-tieling">GitHub</a> ·
-    <a href="SKILL.md">完整文档</a> ·
+    <a href="SKILL.md" aria-label="完整技能文档">完整文档</a> ·
     <a href="https://github.com/Dear-Ded/wallstreet-tieling/issues">反馈建议</a>
   </p>
   <p style="margin-top:16px;font-size:13px;color:var(--text3)">

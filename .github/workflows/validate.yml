@@ -1,0 +1,28 @@
+name: Validate SKILL.md
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check frontmatter
+        run: |
+          head -1 SKILL.md | grep -q '^\-\-\-$' && echo "Frontmatter OK" || echo "Missing frontmatter"
+      - name: Check sub-skills exist
+        run: |
+          count=$(ls sub-skills/*.md 2>/dev/null | wc -l)
+          [ "$count" -eq 13 ] && echo "13 sub-skills OK" || echo "Expected 13, found $count"
+      - name: Check no stale data (12人/50+/v2.0)
+        run: |
+          ! grep -rn "12人\|50+\|v2\.0\." --include="*.md" --include="*.json" . | grep -v ".git\|CHANGELOG"
+          echo "No stale data found OK"
+      - name: Check data protocol exists
+        run: |
+          test -f references/data-protocol.md && echo "Protocol OK" || echo "Missing data-protocol.md"
+      - name: Check tests exist
+        run: |
+          test -f tests/regression.json && echo "Tests OK" || echo "Missing tests"
