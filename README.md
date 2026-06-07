@@ -191,7 +191,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 
 ## 📄 许可 & 作者
 
-MIT License · 作者：**爹** · [GitHub](https://github.com/Dear-Ded/wallstreet-tieling)
+MIT License · 作者：**爹** · [GitHub](https://github.com/Dear-Ded/wallstreet-tieling) · derrickdad@foxmail.com
 
 ---
 
