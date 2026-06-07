@@ -32,16 +32,40 @@
     "codebuddy": "*"
   },
   "requirements": {
-    "optional": ["qcc-company", "tyc-mcp", "python", "akshare"],
-    "recommended": ["web_search", "web_fetch"]
+    "optional": [
+      "qcc-company",
+      "tyc-mcp",
+      "python",
+      "akshare"
+    ],
+    "recommended": [
+      "web_search",
+      "web_fetch"
+    ]
   },
   "triggerWords": [
-    "尽调", "贷前", "贷后", "财务分析", "行业研究", "风险预警", "授信",
-    "信贷审查", "企业查询", "股东穿透", "实控人", "关联方", "担保圈",
-    "due diligence", "credit analysis", "loan review", "KYC", "KYB", "AML"
+    "尽调",
+    "贷前",
+    "贷后",
+    "财务分析",
+    "行业研究",
+    "风险预警",
+    "授信",
+    "信贷审查",
+    "企业查询",
+    "股东穿透",
+    "实控人",
+    "关联方",
+    "担保圈",
+    "due diligence",
+    "credit analysis",
+    "loan review",
+    "KYC",
+    "KYB",
+    "AML"
   ],
   "install": "npx skills add Dear-Ded/wallstreet-tieling -g -y",
   "screenshots": [
-    "https://dear-ded.github.io/wallstreet-tieling/"
+    "https://dear-ded.github.io/wallstreet-tieling/preview.png"
   ]
 }

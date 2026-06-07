@@ -1,4 +1,8 @@
 <!-- GitHub搜索优化 -->
+<!-- GitHub搜索优化 -->
+# 🏛️ WallStreet Tieling Office — AI Credit Intelligence Agent Team
+**A 13-member AI agent crew for banking due diligence, financial analysis, risk assessment, KYC/KYB/AML/OSINT.**
+`npx skills add Dear-Ded/wallstreet-tieling -g -y`
 <!-- 尽调 贷前 贷后 财务分析 行业研究 风险预警 授信 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 反洗钱 KYC KYB AML OSINT UBO 审计 风控 合规 due diligence credit intelligence financial analysis risk assessment banking loan review corporate investigation AI skill agent skill -->
 
 <div align="center">

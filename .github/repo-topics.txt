@@ -1,0 +1,16 @@
+# Copy these topics to GitHub repo settings → Topics:
+ai-agent
+agent-skill
+due-diligence
+financial-analysis
+risk-assessment
+osint
+banking
+kyc
+credit-intelligence
+workbuddy
+deepseek
+multi-agent
+skill
+corporate-investigation
+chinese

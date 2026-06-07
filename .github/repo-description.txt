@@ -1,0 +1,1 @@
+AI credit intelligence agent skill for banking due diligence, financial analysis, risk assessment, KYC/KYB/AML/OSINT. 13-agent crew with 10-30 data sources. Install: npx skills add Dear-Ded/wallstreet-tieling -g -y

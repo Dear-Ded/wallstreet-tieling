@@ -1,6 +1,6 @@
 ---
 name: wallstreet-tieling
-description: 华尔街驻铁岭办事处 · 13人信贷情报专家团 · 企业尽调/财务分析/行业研究/风险预警/人员背调/OSINT · 实际可用10-30数据源(含需授权的200+体系)，只摆事实不给建议
+description: WallStreet Tieling Office · 13-agent credit intelligence crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · 企业尽调/财务分析/行业研究/风险预警/人员背调/OSINT · 实际可用10-30数据源(含需授权的200+体系)，只摆事实不给建议
 version: 3.0.2
 author: Dear-Ded
 license: MIT
