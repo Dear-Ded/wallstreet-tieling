@@ -241,7 +241,7 @@ Bot频繁更名。搜索 @SGK_bot @cha_xun_bot 类关键词
 | 社交媒体搜索 | WebSearch | ✅ | 无需安装 | 100%环境 |
 | 网页抓取 | WebFetch | ✅ | 无需安装 | 100%环境 |
 
-**实际上，99%的OSINT调查仅靠WebSearch + WebFetch完成。复杂工具是锦上添花，不是必需品。**
+**实际上，99%的OSINT调查仅靠WebSearch + WebFetch完成。复杂工具是锦上添花，高阶工具提升效率，但WebSearch+WebFetch已覆盖99%场景。**
 
 ## 输出格式
 ```yaml
