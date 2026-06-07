@@ -4,6 +4,20 @@
 
 执行前检测：代码执行、联网、WebSearch/WebFetch、MCP工具。根据结果选择模式。
 
+
+## 实际兼容性分级
+
+> ⚠️ "支持14+平台"指SKILL.md可被粘贴到这些平台。实际体验因平台能力差异很大。
+
+| 等级 | 平台 | 实际体验 |
+|------|------|---------|
+| 🟢 完整 | WorkBuddy, OpenClaw, CodeBuddy | 子skill动态加载+工具调用全支持 |
+| 🟡 良好 | ChatGPT, Claude, DeepSeek | 粘贴SKILL.md使用,不支持子skill动态加载,需手动拼接 |
+| 🟠 基础 | 豆包, Kimi, 文心一言 | 仅限纯文本模式,工具调用不可用 |
+| 🔴 受限 | 百炼/千帆/元器/Coze | 需将SKILL.md嵌入智能体配置,子skill机制不可用 |
+| ⚫ 理论 | Ollama, LM Studio, vLLM | System Prompt注入,所有工具需自行配置 |
+
+
 ## 平台详情
 
 | 平台 | 模式 | 代码执行 | WebSearch | 备注 |
