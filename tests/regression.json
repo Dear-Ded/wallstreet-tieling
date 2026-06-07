@@ -1,0 +1,35 @@
+{
+  "description": "回归测试用例 — 每个子skill的输入→期望输出格式",
+  "tests": [
+    {
+      "skill": "zhang-tie-zhu",
+      "input": "查询北京字节跳动科技有限公司的工商信息",
+      "expect_sections": ["企业基础信息", "股权结构", "关联企业", "实际控制人"]
+    },
+    {
+      "skill": "li-ming-yuan",
+      "input": "分析字节跳动的财务状况",
+      "expect_sections": ["盈利能力分析", "偿债能力分析", "现金流分析", "粉饰识别"]
+    },
+    {
+      "skill": "wang-si-yuan",
+      "input": "分析短视频行业格局",
+      "expect_sections": ["行业概况", "PEST分析", "竞争格局", "产业链分析"]
+    },
+    {
+      "skill": "zhao-gang",
+      "input": "评估字节跳动的风险",
+      "expect_sections": ["综合风险评级", "六维雷达图", "关键风险点详述"]
+    },
+    {
+      "skill": "ma-li-quan",
+      "input": "查一下手机号13800138000",
+      "expect_sections": ["目标基本信息", "联系方式汇总", "社交媒体账号", "完整画像"]
+    },
+    {
+      "skill": "quality-check",
+      "input": "任意输出",
+      "expect_violations": ["不得含'建议'/'推荐'/'应授信'", "不得含'大概'/'可能'/'也许'", "数据必须标注来源"]
+    }
+  ]
+}

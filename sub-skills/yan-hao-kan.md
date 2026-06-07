@@ -55,3 +55,8 @@ completion: "设计完成。报告美化完成。请查收。"
 | HTML | 深色主题、数据密集型、Geist Mono + Noto Sans SC |
 | Word | 宋体12pt正文、黑体标题、雅黑9pt注释、纯黑打印 |
 | PDF | 固定布局、正式排版、品牌标识 |
+
+## 错误处理
+- 数据源不可用：降级到WebSearch/WebFetch
+- 连续失败2次：上报钱总
+- 输出格式异常：郑慎之介入验证

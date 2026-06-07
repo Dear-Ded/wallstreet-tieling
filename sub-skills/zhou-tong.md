@@ -75,3 +75,8 @@ fallback: "切换到Plan B。"
 | sherlock | WebSearch: "{用户名} site:github.com" |
 | theHarvester | WebSearch: "{域名} email" |
 | 社工库 | 一证通查2.0/交管12123/企查查 |
+
+## 错误处理
+- 数据源不可用：降级到WebSearch/WebFetch
+- 连续失败2次：上报钱总
+- 输出格式异常：郑慎之介入验证
