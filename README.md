@@ -158,7 +158,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 | 9 | ⚖️ 权威优先，参考展示 |
 
 
-> ⚠️ **技术诚实声明**：本项目是角色扮演式prompt工程，不是真正的多Agent系统。13个角色由同一LLM在单一上下文中串行扮演。详情见 [LIMITATIONS.md](LIMITATIONS.md)。
+> 🏗️ **架构说明**：当前为角色扮演式prompt工程，13个角色由同一LLM调度。多Agent并行架构在演进路线图中。详情见 [LIMITATIONS.md](LIMITATIONS.md)。
 
 ---
 
