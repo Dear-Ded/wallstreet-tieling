@@ -27,9 +27,9 @@ tags:
   - banking
   - corporate-investigation
   - SME
+  - prompt-engineering
+  - role-playing
   - 多智能体
-  - multi-agent
-  - crew
 metadata:
   openclaw:
     always: true

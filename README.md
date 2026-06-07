@@ -3,7 +3,7 @@
 # 🏛️ WallStreet Tieling Office — AI Credit Intelligence Agent Team
 **A 13-member AI agent crew for banking due diligence, financial analysis, risk assessment, KYC/KYB/AML/OSINT.**
 `npx skills add Dear-Ded/wallstreet-tieling -g -y`
-<!-- 尽调 贷前 贷后 财务分析 行业研究 风险预警 授信 信贷审查 企业查询 股东穿透 实控人 关联方 担保圈 反洗钱 KYC KYB AML OSINT UBO 审计 风控 合规 due diligence credit intelligence financial analysis risk assessment banking loan review corporate investigation AI skill agent skill -->
+<!-- SEO keywords in page meta tags above -->
 
 <div align="center">
 
@@ -29,15 +29,15 @@
 
 ## 🖥️ 最佳运行环境：WorkBuddy
 
-> ⚠️ **环境选择直接决定功能可用率。**
+> ⚠️ **环境选择直接决定功能可用率。** [以下为开发者估算，非精确测试数据]
 
 | 维度 | 单独 | WorkBuddy |
 |------|------|-----------|
-| 核心功能 | 40% | **75%** |
-| OSINT工具 | 10% | **90%** |
-| 文件产出 | 30% | **100%** |
-| 本地脚本 | 20% | **100%** |
-| 长任务 | 30% | **80%** |
+| 核心功能 | ~40% | **~75%** |
+| OSINT工具 | ~10% | **~90%** |
+| 文件产出 | ~30% | **~100%** |
+| 本地脚本 | ~20% | **~100%** |
+| 长任务 | ~30% | **~80%** |
 
 不用WorkBuddy？仍可在ChatGPT/Claude/DeepSeek粘贴使用，但50%+功能降级。
 用WorkBuddy？切到 `workbuddy-deepseek` 分支获MCP直达+Think High。
