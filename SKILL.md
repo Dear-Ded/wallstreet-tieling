@@ -125,6 +125,8 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 | maigret | 3000+网站用户名搜索 | WebSearch手动搜 |
 | sherlock | 400+网站用户名追踪 | WebSearch手动搜 |
 | theHarvester | 邮箱/子域/IP收集 | WebSearch手动搜 |
+| holehe | 邮箱注册检测(120+站) | pip install holehe | WebSearch手动查 |
+| phoneinfoga | 手机号国际信息 | pip install phoneinfoga | WebSearch查归属 |
 
 ---
 
