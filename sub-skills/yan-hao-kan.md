@@ -56,6 +56,19 @@ completion: "设计完成。报告美化完成。请查收。"
 | Word | 宋体12pt正文、黑体标题、雅黑9pt注释、纯黑打印 |
 | PDF | 固定布局、正式排版、品牌标识 |
 
+
+## Markdown→HTML渲染指令
+
+收到刘文华的Markdown报告后，按以下规则渲染：
+1. 深色主题: background #0a0a14, card rgba(22,22,32,0.65)
+2. 标题: h1 28px/700, h2 16px/600, 正文14px/400
+3. 数据表: 斑马纹 + 表头加粗 + 数字右对齐
+4. 风险等级: 🔴#ef4444 🟡#eab308 🟢#22c55e
+5. 玻璃卡片: border-radius 28px, backdrop-filter blur(28px)
+6. 字体: Noto Sans SC(正文) + Geist Mono(数据)
+7. 所有数据来源标注为灰色小字
+8. 页面底部加免责声明(灰色斜体)
+
 ## 错误处理
 - Markdown无法解析时→回退到纯文本输出
 - HTML渲染失败时→输出无样式的纯HTML
