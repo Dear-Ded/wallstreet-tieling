@@ -138,6 +138,16 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 
 ---
 
+## 🏗️ 调度架构说明
+
+本skill采用角色扮演+按需加载架构：
+- 13个角色共享同一LLM上下文，通过角色化System Prompt实现拟人化
+- 子skill按需加载到同一上下文（非独立Agent进程）
+- 在支持sub-agent的工具中可将角色部署为独立Agent
+
+> 此架构非真正的多Agent系统。如需独立上下文窗口并行Agent，请在Claude Code/OpenCode中将sub-skills/下各角色配置为独立Agent。
+
+
 ## 📄 输出格式
 
 | 格式 | 特性 | 推荐场景 |
