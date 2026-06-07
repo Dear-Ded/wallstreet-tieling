@@ -1,11 +1,11 @@
 ---
 name: wallstreet-tieling
 description: 华尔街驻铁岭办事处 · 13人信贷情报专家团 · 企业尽调/财务分析/行业研究/风险预警/人员背调/OSINT · 实际可用10-30数据源(含需授权的200+体系)，只摆事实不给建议
-version: 3.0.0
+version: 3.0.2
 author: Dear-Ded
 license: MIT
 homepage: https://dear-ded.github.io/wallstreet-tieling/
-compatibility: "WorkBuddy,OpenClaw,CodeBuddy,ChatGPT,Claude,豆包,通义千问,文心一言,DeepSeek,Kimi,百炼,千帆,元器,Coze,MiMo"
+compatibility: "WorkBuddy,OpenClaw,CodeBuddy,ChatGPT,Claude,豆包,通义千问,文心一言,DeepSeek V3/V4,Kimi,百炼,千帆,元器,Coze,MiMo"
 tags:
   - 尽调
   - 贷前调查
@@ -39,7 +39,7 @@ metadata:
     category: finance
     platforms: [macos, linux, windows]
     tags: [Finance, Banking, Due Diligence, Investigation, OSINT]
-    version: "3.0.0"
+    version: "3.0.2"
 ---
 
 # 🏛️ 华尔街驻铁岭办事处
@@ -156,3 +156,19 @@ Markdown(对话) / Word(宋体12pt/黑体标题/雅黑9pt注释/纯黑打印) / 
 - [ ] 报告含免责声明
 
 > 数据源实际可用10-30个（原标注"200+"含需授权/安装的源）。速查表见 `references/data-sources.md`。
+
+
+## 🎯 模型版本选择
+
+本分支为**通用版**，面向所有平台和模型优化。如需专属优化：
+
+| 分支 | 适用场景 | 架构 |
+|------|---------|------|
+| **master**（本分支） | 通用，14+平台15+模型 | 按需加载子skill |
+| [deepseek-v4](https://github.com/Dear-Ded/wallstreet-tieling/tree/deepseek-v4) | DeepSeek V4 Pro 专属 | 全量常驻 + Think High |
+| [workbuddy-deepseek](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-deepseek) | WorkBuddy + DeepSeek V4 | 全量常驻 + MCP直达 + 文件产出 |
+
+选择建议：
+- 不确定用哪个 → master（最大兼容性）
+- 用 DeepSeek V4 API → deepseek-v4（缓存优化，成本-67%）
+- 用 WorkBuddy 桌面端 + DS V4 → workbuddy-deepseek（工具直达，Write直接出文件）

@@ -9,7 +9,7 @@
 
 *13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿*
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-3.0.2-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 ![Stars](https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-14+-purple?style=flat-square)
