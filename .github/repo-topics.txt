@@ -1,6 +1,6 @@
 # Copy these topics to GitHub repo settings → Topics:
+# (20 max — current count: 19)
 ai-agent
-agent-skill
 due-diligence
 financial-analysis
 risk-assessment
@@ -10,7 +10,12 @@ kyc
 credit-intelligence
 workbuddy
 deepseek
-multi-agent
-skill
 corporate-investigation
 chinese
+prompt-engineering
+aml
+fintech
+credit-risk
+claude
+open-source
+loan

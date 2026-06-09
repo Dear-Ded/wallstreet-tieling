@@ -4,146 +4,663 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<title>华尔街驻铁岭办事处 · 信贷情报专家团</title>
-<meta name="description" content="13位前华尔街金融老兵坐镇。企业尽调、财务分析、风险预警、人员背调——只摆事实，不给建议。">
+<title>华尔街驻铁岭办事处 · AI 信贷情报专家团 — 尽调 · 财务分析 · 风险评估</title>
+<meta name="description" content="13位前华尔街金融老兵坐镇的AI信贷情报专家团。企业尽调、股权穿透、财务分析、人员背调、行业研究、风险预警——只摆事实，不给建议。npx skills add Dear-Ded/wallstreet-tieling -g -y">
+<meta name="keywords" content="尽调,信贷,财务分析,风险评估,企业查询,股权穿透,实控人,OSINT,KYC,AML,AI Agent,WallStreet Tieling">
+<meta property="og:title" content="华尔街驻铁岭办事处 · AI 信贷情报专家团">
+<meta property="og:description" content="13位前华尔街金融老兵坐镇。只摆事实，不给建议。">
+<meta property="og:image" content="https://dear-ded.github.io/wallstreet-tieling/og-image.png">
+<meta property="og:url" content="https://dear-ded.github.io/wallstreet-tieling/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://dear-ded.github.io/wallstreet-tieling/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=Noto+Sans+SC:wght@300..700&display=swap" rel="stylesheet">
 <style>
+/* ===================== RESET & ROOT ===================== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+*:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+html{scroll-behavior:smooth;font-size:15px}
+body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;transition:background .4s,color .4s}
+
+/* ===================== THEME ===================== */
 :root{
+  --bg:#0a0a14;
+  --bg-alt:#0e0e1a;
   --glass-bg:rgba(22,22,32,0.65);
   --glass-edge:rgba(255,255,255,0.08);
-  --glass-edge-strong:rgba(255,255,255,0.14);
+  --glass-edge-s:rgba(255,255,255,0.14);
   --glass-shadow:0 8px 32px rgba(0,0,0,0.3),0 2px 8px rgba(0,0,0,0.15);
   --glass-inner:inset 0 1px 0 rgba(255,255,255,0.06);
-  --text-primary:rgba(255,255,255,0.93);
-  --text-secondary:rgba(255,255,255,0.72);
-  --text-tertiary:rgba(255,255,255,0.48);
+  --text:rgba(255,255,255,0.93);
+  --text-sec:rgba(255,255,255,0.72);
+  --text-ter:rgba(255,255,255,0.48);
   --accent:#6366f1;
   --accent-glow:rgba(99,102,241,0.3);
+  --accent-light:rgba(99,102,241,0.12);
   --success:#34c759;
+  --warn:#ff9f0a;
+  --danger:#ff3b30;
   --font-sans:'Inter','Noto Sans SC',-apple-system,sans-serif;
   --radius-lg:28px;--radius-md:18px;--radius-sm:12px;--radius-pill:100px;
   --space-xs:6px;--space-sm:12px;--space-md:20px;--space-lg:32px;--space-xl:48px;--space-2xl:72px;
   --blur:blur(28px) saturate(170%);
-  --transition:0.35s cubic-bezier(0.2,0.9,0.3,1);
+  --transition:0.4s cubic-bezier(0.22,1,0.36,1);
 }
-*{margin:0;padding:0;box-sizing:border-box}
-*:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-html{scroll-behavior:smooth;font-size:15px}
-body{font-family:var(--font-sans);background:#0a0a14;color:var(--text-primary);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden}
-.bg-aura{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 60% at 50% 10%,rgba(99,102,241,0.08),transparent 70%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(99,102,241,0.04),transparent 70%)}
-.page{position:relative;z-index:1}
+
+[data-theme="light"]{
+  --bg:#f0f0f8;
+  --bg-alt:#e8e8f2;
+  --glass-bg:rgba(245,245,250,0.75);
+  --glass-edge:rgba(0,0,0,0.06);
+  --glass-edge-s:rgba(0,0,0,0.12);
+  --glass-shadow:0 8px 32px rgba(0,0,0,0.06),0 2px 8px rgba(0,0,0,0.03);
+  --glass-inner:inset 0 1px 0 rgba(255,255,255,0.5);
+  --text:rgba(0,0,0,0.88);
+  --text-sec:rgba(0,0,0,0.62);
+  --text-ter:rgba(0,0,0,0.42);
+  --accent:#5558e6;
+  --accent-glow:rgba(85,88,230,0.2);
+  --accent-light:rgba(85,88,230,0.08);
+}
+
+/* ===================== BACKGROUND ===================== */
+.bg-aura{position:fixed;inset:0;pointer-events:none;z-index:0}
+.bg-aura::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 10%,rgba(99,102,241,0.08),transparent 70%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(99,102,241,0.04),transparent 70%);transition:opacity .6s}
+[data-theme="light"] .bg-aura::before{opacity:0}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:48px 48px;transition:opacity .6s}
+[data-theme="light"] .bg-grid{opacity:0}
+/* particles canvas */
+#particles-canvas{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.35}
+
+/* ===================== LAYOUT ===================== */
+.page{position:relative;z-index:2}
 .container{max-width:1040px;margin:0 auto;padding:0 var(--space-lg)}
-.nav-glass{position:sticky;top:0;z-index:100;backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);background:rgba(12,12,24,0.85);border-bottom:1px solid var(--glass-edge)}
+
+/* ===================== NAV ===================== */
+.nav{position:sticky;top:0;z-index:100;backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);background:var(--glass-bg);border-bottom:1px solid var(--glass-edge);transition:background .4s}
 .nav-inner{max-width:1040px;margin:0 auto;padding:var(--space-sm) var(--space-lg);display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:var(--space-sm)}
-.brand-mark{width:36px;height:36px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 2px 12px var(--accent-glow)}
-.brand-name{font-size:14px;font-weight:600}
-.brand-sub{font-size:11px;color:var(--text-tertiary)}
+.nav-brand{display:flex;align-items:center;gap:var(--space-sm);text-decoration:none;color:var(--text)}
+.brand-mark{width:34px;height:34px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;box-shadow:0 2px 12px var(--accent-glow)}
+.brand-name{font-size:14px;font-weight:600;line-height:1.2}
+.brand-sub{font-size:10px;color:var(--text-ter);letter-spacing:.3px}
+.nav-right{display:flex;align-items:center;gap:var(--space-md)}
 .nav-links{display:flex;gap:var(--space-lg)}
-.nav-link{font-size:13px;font-weight:500;color:var(--text-secondary);text-decoration:none;transition:color 0.2s}
-.nav-link:hover{color:var(--text-primary)}
-.hero{padding:var(--space-2xl) 0 var(--space-xl);text-align:center}
-.hero-pill{display:inline-flex;align-items:center;gap:var(--space-xs);padding:6px 18px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:var(--radius-pill);font-size:12px;font-weight:500;color:var(--accent);margin-bottom:var(--space-lg)}
-.hero h1{font-size:clamp(28px,6vw,56px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:var(--space-md)}
-.hero-sub{font-size:17px;color:var(--text-secondary);max-width:560px;margin:0 auto var(--space-lg);line-height:1.7}
-.hero-actions{display:flex;justify-content:center;gap:var(--space-sm)}
-.btn{display:inline-flex;padding:var(--space-sm) var(--space-lg);border-radius:var(--radius-pill);font-size:14px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all var(--transition);font-family:var(--font-sans)}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--accent-glow)}
-.btn-primary:hover{background:#5558e6;transform:translateY(-1px)}
-.btn-primary:active{background:#4f46e5;transform:scale(0.97)}
-.btn-glass{background:var(--glass-bg);color:var(--text-primary);border:1px solid var(--glass-edge);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
-.btn-glass:hover{background:rgba(28,28,40,0.75);border-color:var(--glass-edge-strong)}
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-sm);padding:var(--space-lg) 0;border-top:1px solid var(--glass-edge);border-bottom:1px solid var(--glass-edge)}
-.stat{text-align:center}
-.stat-value{font-size:26px;font-weight:700}
-.stat-label{font-size:11px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.nav-link{font-size:13px;font-weight:500;color:var(--text-sec);text-decoration:none;transition:color .2s;padding:4px 0;position:relative}
+.nav-link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:var(--accent);transition:width .3s;border-radius:1px}
+.nav-link:hover{color:var(--text)}
+.nav-link:hover::after{width:100%}
+
+/* theme toggle */
+.theme-toggle{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-pill);width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text-sec);transition:all .3s;font-family:var(--font-sans)}
+.theme-toggle:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+
+/* mobile menu */
+.mobile-menu-btn{display:none;background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-sm);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:18px;transition:all .3s}
+.mobile-menu-btn:hover{border-color:var(--accent)}
+
+/* ===================== HERO ===================== */
+.hero{padding:var(--space-2xl) 0 var(--space-xl);text-align:center;position:relative;overflow:hidden}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 18px;background:var(--accent-light);border:1px solid rgba(99,102,241,0.25);border-radius:var(--radius-pill);font-size:12px;font-weight:500;color:var(--accent);margin-bottom:var(--space-lg);transition:all .3s}
+.hero-badge:hover{background:rgba(99,102,241,0.18);border-color:rgba(99,102,241,0.4)}
+.hero h1{font-size:clamp(30px,7vw,60px);font-weight:700;letter-spacing:-1.5px;line-height:1.08;margin-bottom:var(--space-md);background:linear-gradient(135deg,var(--text) 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme="light"] .hero h1{background:linear-gradient(135deg,#1a1a2e 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:17px;color:var(--text-sec);max-width:560px;margin:0 auto var(--space-lg);line-height:1.7}
+.hero-actions{display:flex;justify-content:center;gap:var(--space-sm);flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:var(--space-sm) var(--space-lg);border-radius:var(--radius-pill);font-size:14px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all var(--transition);font-family:var(--font-sans)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 20px var(--accent-glow)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px var(--accent-glow);filter:brightness(1.1)}
+.btn-primary:active{transform:scale(0.97)}
+.btn-glass{background:var(--glass-bg);color:var(--text);border:1px solid var(--glass-edge);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
+.btn-glass:hover{background:rgba(28,28,40,0.75);border-color:var(--glass-edge-s);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.btn-outline:hover{background:var(--accent-light);transform:translateY(-2px)}
+.hero-stats{display:flex;justify-content:center;gap:var(--space-xl);margin-top:var(--space-lg);flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-value{font-size:32px;font-weight:700;background:linear-gradient(135deg,var(--accent),#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-stat-label{font-size:12px;color:var(--text-ter);margin-top:2px}
+
+/* ===================== SECTIONS ===================== */
 .section{padding:var(--space-2xl) 0}
 .section-header{text-align:center;margin-bottom:var(--space-xl)}
-.section-pill{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-sm)}
-.section-title{font-size:clamp(22px,4vw,32px);font-weight:700;letter-spacing:-0.5px;margin-bottom:var(--space-sm)}
-.section-sub{font-size:14px;color:var(--text-secondary);max-width:480px;margin:0 auto}
+.section-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-sm)}
+.section-title{font-size:clamp(24px,4vw,34px);font-weight:700;letter-spacing:-0.5px;margin-bottom:var(--space-sm)}
+.section-sub{font-size:14px;color:var(--text-sec);max-width:520px;margin:0 auto;line-height:1.7}
+
+/* ===================== GLASS CARDS ===================== */
 .glass-card{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-lg);padding:var(--space-lg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-shadow),var(--glass-inner);transition:all var(--transition);position:relative;overflow:hidden}
-.glass-card::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,0.06),transparent 60%);border-radius:inherit}
-.glass-card:hover{transform:translateY(-2px);border-color:var(--glass-edge-strong)}
-.glass-card:active{transform:scale(0.985)}
+.glass-card::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,0.05),transparent 60%);border-radius:inherit}
+.glass-card:hover{transform:translateY(-3px);border-color:var(--glass-edge-s);box-shadow:0 12px 40px rgba(0,0,0,0.35),var(--glass-inner)}
 .glass-card-sm{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-md);padding:var(--space-md);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-inner);transition:all var(--transition)}
-.glass-card-sm:hover{border-color:var(--glass-edge-strong);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2),var(--glass-inner)}
-.glass-card-sm:active{transform:scale(0.98)}
+.glass-card-sm:hover{border-color:var(--glass-edge-s);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2),var(--glass-inner)}
+
+/* ===================== FEATURES ===================== */
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md)}
-.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-sm)}
-.feature-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:var(--space-md);background:rgba(99,102,241,0.12);color:var(--accent)}
+.feature-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin-bottom:var(--space-md);background:var(--accent-light);color:var(--accent)}
 .feature-title{font-size:16px;font-weight:600;margin-bottom:var(--space-xs)}
-.feature-desc{font-size:13px;color:var(--text-secondary);line-height:1.6}
-.team-avatar{width:48px;height:48px;border-radius:50%;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-sm);font-size:18px;font-weight:700;color:var(--accent)}
+.feature-desc{font-size:13px;color:var(--text-sec);line-height:1.6}
+
+/* ===================== TEAM ===================== */
+.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-sm)}
+.team-card{text-align:center;cursor:default;padding:var(--space-md) var(--space-sm)}
+.team-avatar{width:48px;height:48px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-sm);font-size:18px;font-weight:700;color:var(--accent);transition:all .3s}
+.team-card:hover .team-avatar{background:var(--accent);color:#fff;transform:scale(1.1);box-shadow:0 4px 16px var(--accent-glow)}
 .team-name{font-size:14px;font-weight:600}
-.team-role{font-size:11px;color:var(--text-tertiary);margin-bottom:var(--space-xs)}
-.team-quote{font-size:12px;color:var(--text-secondary);font-style:italic;line-height:1.5}
-.install-bar{display:inline-flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg);background:rgba(12,12,28,0.9);border:1px solid var(--glass-edge-strong);border-radius:var(--radius-pill);backdrop-filter:var(--blur);margin-bottom:var(--space-sm)}
-.install-bar code{font-family:monospace;font-size:15px;color:var(--success);font-weight:500}
-.copy-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);padding:var(--space-xs) var(--space-md);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-sans)}
-.copy-btn:hover{background:#5558e6}
-.install-hint{font-size:13px;color:var(--text-tertiary)}
-.install-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md);margin-top:var(--space-lg)}
+.team-role{font-size:11px;color:var(--text-ter);margin-bottom:var(--space-xs)}
+.team-quote{font-size:12px;color:var(--text-sec);font-style:italic;line-height:1.5;max-width:180px;margin:0 auto;opacity:0;max-height:0;transition:all .4s}
+.team-card:hover .team-quote{opacity:1;max-height:80px}
+
+/* ===================== DATA TIERS ===================== */
+.tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md)}
+.tier-card{padding:var(--space-lg);text-align:center}
+.tier-icon{font-size:36px;margin-bottom:var(--space-sm)}
+.tier-name{font-size:17px;font-weight:600;margin-bottom:4px}
+.tier-count{font-size:12px;color:var(--text-ter);margin-bottom:var(--space-sm)}
+.tier-items{font-size:12px;color:var(--text-sec);line-height:1.7}
+.tier-progress{height:4px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:var(--space-sm);overflow:hidden}
+.tier-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#818cf8);transition:width 1.2s cubic-bezier(0.22,1,0.36,1);width:0%}
+
+/* ===================== INSTALL ===================== */
+.install-bar{display:inline-flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md) var(--space-sm) var(--space-lg);background:var(--bg-alt);border:1px solid var(--glass-edge-s);border-radius:var(--radius-pill);backdrop-filter:var(--blur);margin-bottom:var(--space-sm);transition:all .3s}
+.install-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
+.install-bar code{font-family:ui-monospace,'SF Mono',monospace;font-size:14px;color:var(--success);font-weight:500;user-select:all;white-space:nowrap}
+.copy-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all .2s;white-space:nowrap}
+.copy-btn:hover{filter:brightness(1.1)}
+.copy-btn.copied{background:var(--success)!important}
+.install-hint{font-size:13px;color:var(--text-ter);margin-top:var(--space-sm)}
+.platform-tabs{display:flex;justify-content:center;gap:var(--space-xs);margin-bottom:var(--space-lg);flex-wrap:wrap}
+.platform-tab{padding:8px 20px;border-radius:var(--radius-pill);border:1px solid var(--glass-edge);background:var(--glass-bg);color:var(--text-sec);font-size:13px;font-weight:500;cursor:pointer;transition:all .3s;font-family:var(--font-sans)}
+.platform-tab:hover{border-color:var(--accent);color:var(--accent)}
+.platform-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ===================== ROADMAP ===================== */
+.roadmap{position:relative;padding-left:40px}
+.roadmap::before{content:'';position:absolute;left:15px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,var(--accent),transparent)}
+.roadmap-item{position:relative;padding-bottom:var(--space-lg)}
+.roadmap-dot{position:absolute;left:-25px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--accent)}
+.roadmap-phase{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.roadmap-title{font-size:16px;font-weight:600;margin-bottom:4px}
+.roadmap-desc{font-size:13px;color:var(--text-sec);line-height:1.6}
+
+/* ===================== CTA / FOOTER ===================== */
 .cta{text-align:center;padding:var(--space-2xl) 0;border-top:1px solid var(--glass-edge)}
-.cta-title{font-size:26px;font-weight:700;margin-bottom:var(--space-sm)}
-.cta-sub{font-size:14px;color:var(--text-secondary);margin-bottom:var(--space-lg)}
+.cta-title{font-size:28px;font-weight:700;margin-bottom:var(--space-sm)}
+.cta-sub{font-size:14px;color:var(--text-sec);margin-bottom:var(--space-lg);max-width:480px;margin-left:auto;margin-right:auto}
 .footer{border-top:1px solid var(--glass-edge);padding:var(--space-lg) 0}
-.footer-inner{max-width:1040px;margin:0 auto;padding:0 var(--space-lg);display:flex;align-items:center;justify-content:space-between}
-.footer-brand{font-size:12px;color:var(--text-tertiary)}
+.footer-inner{max-width:1040px;margin:0 auto;padding:0 var(--space-lg);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-sm)}
+.footer-brand{font-size:12px;color:var(--text-ter)}
 .footer-links{display:flex;gap:var(--space-lg)}
-.footer-link{font-size:12px;color:var(--text-tertiary);text-decoration:none;transition:color 0.2s}
-.footer-link:hover{color:var(--text-primary)}
+.footer-link{font-size:12px;color:var(--text-ter);text-decoration:none;transition:color .2s}
+.footer-link:hover{color:var(--text)}
+
+/* ===================== ANIMATIONS ===================== */
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-.reveal{animation:fadeUp 0.6s cubic-bezier(0.2,0.9,0.3,1) forwards;opacity:0}
-@keyframes glassAppear{from{opacity:0;transform:translateY(16px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.glass-appear{animation:glassAppear 0.45s cubic-bezier(0.2,0.9,0.3,1) forwards;opacity:0}
-@media(prefers-color-scheme:light){
-  :root{--glass-bg:rgba(245,245,250,0.7);--glass-edge:rgba(0,0,0,0.06);--glass-edge-strong:rgba(0,0,0,0.1);--glass-shadow:0 8px 32px rgba(0,0,0,0.06),0 2px 8px rgba(0,0,0,0.03);--glass-inner:inset 0 1px 0 rgba(255,255,255,0.5);--text-primary:rgba(0,0,0,0.88);--text-secondary:rgba(0,0,0,0.62);--text-tertiary:rgba(0,0,0,0.42)}
-  body{background:#f5f5fa}
-  .nav-glass{background:rgba(245,245,250,0.85)}
-  .install-bar{background:rgba(240,240,248,0.9)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+.reveal{animation:fadeUp .6s var(--ease-out) forwards;opacity:0}
+.glass-appear{animation:fadeUp .5s var(--ease-out) forwards;opacity:0}
+:root{--ease-out:cubic-bezier(0.22,1,0.36,1)}
+
+/* ===================== RESPONSIVE ===================== */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal,.glass-appear{opacity:1!important}.tier-progress-fill{width:0!important}}
+@media(max-width:1024px){
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+  .team-grid{grid-template-columns:repeat(3,1fr)}
+  .hero-stats{gap:var(--space-lg)}
 }
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal,.glass-appear{opacity:1!important}}
-@media(max-width:375px){.stats{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:24px}.glass-card{padding:var(--space-md)}.team-grid{grid-template-columns:1fr}}
-@media(max-width:768px){.features-grid{grid-template-columns:1fr}.team-grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}.install-grid{grid-template-columns:1fr}.hero h1{font-size:28px}.nav-links{display:none}.footer-inner{flex-direction:column;gap:var(--space-sm)}.section{padding:var(--space-xl) 0}}
-@media(max-width:1024px){.features-grid{grid-template-columns:repeat(2,1fr)}.team-grid{grid-template-columns:repeat(3,1fr)}.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  .features-grid{grid-template-columns:1fr}
+  .team-grid{grid-template-columns:repeat(2,1fr)}
+  .tier-grid{grid-template-columns:1fr}
+  .hero h1{font-size:28px}
+  .nav-links{display:none}
+  .mobile-menu-btn{display:flex}
+  .hero-stats{gap:var(--space-md)}
+  .hero-stat-value{font-size:26px}
+  .section{padding:var(--space-xl) 0}
+  .footer-inner{flex-direction:column;text-align:center}
+  .install-bar code{font-size:12px}
+  .install-bar{padding:var(--space-sm) var(--space-sm) var(--space-sm) var(--space-md)}
+  .roadmap{padding-left:32px}
+}
+@media(max-width:375px){
+  .team-grid{grid-template-columns:1fr}
+  .hero h1{font-size:24px}
+  .glass-card{padding:var(--space-md)}
+  .install-bar{flex-wrap:wrap;justify-content:center;border-radius:var(--radius-md);padding:var(--space-sm)}
+}
 </style>
 </head>
 <body>
 <div class="bg-aura"></div>
+<div class="bg-grid"></div>
+<canvas id="particles-canvas"></canvas>
 <div class="page">
-<nav class="nav-glass"><div class="nav-inner"><div class="brand"><div class="brand-mark">W</div><div><div class="brand-name">华尔街驻铁岭办事处</div><div class="brand-sub">Credit Intelligence · v3.0</div></div></div><div class="nav-links"><a href="#features" class="nav-link">能力</a><a href="#team" class="nav-link">团队</a><a href="#install" class="nav-link">安装</a><a href="SKILL.md" class="nav-link">文档</a></div></div></nav>
-<section class="hero"><div class="container"><div class="hero-pill">v3.0 · 子母skill架构 · Token节省93%</div><h1>华尔街驻铁岭办事处</h1><p class="hero-sub">13位从华尔街被优化到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿。只摆事实，不给建议。</p><div class="hero-actions"><a href="#install" class="btn btn-primary">开始使用</a><a href="#features" class="btn btn-glass">了解更多</a></div></div></section>
-<div class="container"><div class="stats reveal"><div class="stat"><div class="stat-value">13</div><div class="stat-label">专家成员</div></div><div class="stat"><div class="stat-value">30+</div><div class="stat-label">数据源</div></div><div class="stat"><div class="stat-value">93%</div><div class="stat-label">Token节省</div></div><div class="stat"><div class="stat-value">15+</div><div class="stat-label">适配模型</div></div><div class="stat"><div class="stat-value">5</div><div class="stat-label">输出格式</div></div><div class="stat"><div class="stat-value">3</div><div class="stat-label">特调分支</div></div></div></div>
-<section class="section" id="features"><div class="container"><div class="section-header"><div class="section-pill">Capabilities</div><h2 class="section-title">核心能力</h2></div><div class="features-grid">
-<div class="glass-card glass-appear"><div class="feature-icon">1</div><h3 class="feature-title">企业尽调</h3><p class="feature-desc">工商核查、股权穿透至自然人、实控人识别、关联交易挖掘</p></div>
-<div class="glass-card glass-appear" style="animation-delay:.05s"><div class="feature-icon">2</div><h3 class="feature-title">财务分析</h3><p class="feature-desc">五维财务分析、偿债能力、现金流评估、中小企业非财务指标</p></div>
-<div class="glass-card glass-appear" style="animation-delay:.1s"><div class="feature-icon">3</div><h3 class="feature-title">行业研究</h3><p class="feature-desc">PEST宏观分析、五力竞争模型、产业链上下游、行业周期定位</p></div>
-<div class="glass-card glass-appear" style="animation-delay:.15s"><div class="feature-icon">4</div><h3 class="feature-title">风险识别</h3><p class="feature-desc">六维雷达图、信用风险量化、合规扫描、担保圈传染分析</p></div>
-<div class="glass-card glass-appear" style="animation-delay:.2s"><div class="feature-icon">5</div><h3 class="feature-title">人员背调</h3><p class="feature-desc">开盒六面体、深度挖掘、跨平台身份关联、蛛丝马迹推理</p></div>
-<div class="glass-card glass-appear" style="animation-delay:.25s"><div class="feature-icon">6</div><h3 class="feature-title">智能报告</h3><p class="feature-desc">5种输出格式、液态玻璃HTML、公文排版Word、数据100%溯源</p></div>
-</div></div></section>
-<section class="section" id="team"><div class="container"><div class="section-header"><div class="section-pill">Team</div><h2 class="section-title">核心团队</h2></div><div class="team-grid">
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">钱</div><div class="team-name">钱守正</div><div class="team-role">总经理</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">吴</div><div class="team-name">吴德厚</div><div class="team-role">吴政委</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">陈</div><div class="team-name">陈志远</div><div class="team-role">陈工</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">周</div><div class="team-name">周通</div><div class="team-role">技术总监</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">郑</div><div class="team-name">郑慎之</div><div class="team-role">郑审计</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">张</div><div class="team-name">张铁柱</div><div class="team-role">张调查</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">马</div><div class="team-name">马力全</div><div class="team-role">马开盒</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">李</div><div class="team-name">李明远</div><div class="team-role">李财报</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">王</div><div class="team-name">王思远</div><div class="team-role">王行业</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">赵</div><div class="team-name">赵刚</div><div class="team-role">赵风险</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">刘</div><div class="team-name">刘文华</div><div class="team-role">刘报告</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">颜</div><div class="team-name">颜好看</div><div class="team-role">颜设计</div></div>
-<div class="glass-card-sm" style="text-align:center"><div class="team-avatar">暗</div><div class="team-name">暗哨</div><div class="team-role">隐形监控</div></div>
-</div></div></section>
-<section class="section" id="install"><div class="container"><div class="section-header"><div class="section-pill">Install</div><h2 class="section-title">一行命令，即刻开始</h2></div><div style="text-align:center"><div class="install-bar"><code id="installCmd">npx skills add Dear-Ded/wallstreet-tieling -g -y</code><button class="copy-btn" onclick="copyInstall()">复制</button></div><p class="install-hint">在终端执行，或粘贴到任意AI对话窗口</p></div><div class="install-grid"><div class="glass-card-sm" style="text-align:center"><div style="font-size:24px;margin-bottom:var(--space-sm)">🚀</div><div style="font-weight:600;margin-bottom:4px">Skill 市场</div><div style="font-size:12px;color:var(--text-secondary)">WorkBuddy · OpenClaw · CodeBuddy</div></div><div class="glass-card-sm" style="text-align:center"><div style="font-size:24px;margin-bottom:var(--space-sm)">📋</div><div style="font-weight:600;margin-bottom:4px">直接粘贴</div><div style="font-size:12px;color:var(--text-secondary)">复制 SKILL.md 到任意AI对话</div></div><div class="glass-card-sm" style="text-align:center"><div style="font-size:24px;margin-bottom:var(--space-sm)">🔧</div><div style="font-weight:600;margin-bottom:4px">嵌入智能体</div><div style="font-size:12px;color:var(--text-secondary)">百炼 · 千帆 · 元器 · Coze</div></div></div></div></section>
-<section class="cta"><div class="container"><h2 class="cta-title">开始使用</h2><div class="hero-actions"><a href="SKILL.md" class="btn btn-primary">查看文档</a><a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-glass">GitHub</a></div></div></section>
-<footer class="footer"><div class="footer-inner"><div class="footer-brand">2026 华尔街驻铁岭办事处 · v3.0.2</div><div class="footer-links"><a href="https://github.com/Dear-Ded/wallstreet-tieling" class="footer-link">GitHub</a><a href="SKILL.md" class="footer-link">文档</a><a href="CHANGELOG.md" class="footer-link">更新日志</a></div></div></footer>
+
+<!-- ===================== NAV ===================== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <div class="brand-name">华尔街驻铁岭办事处</div>
+        <div class="brand-sub">Credit Intelligence · v3.0</div>
+      </div>
+    </a>
+    <div class="nav-right">
+      <div class="nav-links" id="navLinks">
+        <a href="#features" class="nav-link">能力</a>
+        <a href="#team" class="nav-link">团队</a>
+        <a href="#data" class="nav-link">数据</a>
+        <a href="#install" class="nav-link">安装</a>
+        <a href="SKILL.md" class="nav-link">文档</a>
+      </div>
+      <button class="theme-toggle" id="themeToggle" aria-label="切换主题">🌙</button>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单">☰</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">🚀 v3.0.2 · 13专家 · Token节省93%</div>
+    <h1>华尔街驻铁岭办事处</h1>
+    <p class="hero-sub">13位从华尔街被优化到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿。<br><strong>只摆事实，不给建议。</strong></p>
+    <div class="hero-actions">
+      <a href="#install" class="btn btn-primary">⚡ 开始使用</a>
+      <a href="#features" class="btn btn-glass">了解更多</a>
+      <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-outline" target="_blank">GitHub</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-value" data-count="13">0</div><div class="hero-stat-label">专家成员</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="30">0</div><div class="hero-stat-label">数据源</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="93">0</div><div class="hero-stat-label">Token节省%</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="15">0</div><div class="hero-stat-label">适配模型</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="5">0</div><div class="hero-stat-label">输出格式</div></div>
+      <div class="hero-stat"><div id="starCount" class="hero-stat-value">★</div><div class="hero-stat-label">GitHub Stars</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">⚡ Capabilities</div>
+      <h2 class="section-title">核心能力</h2>
+      <p class="section-sub">六大尽调维度，覆盖信贷全生命周期</p>
+    </div>
+    <div class="features-grid">
+      <div class="glass-card glass-appear"><div class="feature-icon">🔍</div><h3 class="feature-title">企业尽调</h3><p class="feature-desc">工商核查、股权穿透至自然人、实控人识别、关联交易挖掘、担保圈分析</p></div>
+      <div class="glass-card glass-appear" style="animation-delay:.05s"><div class="feature-icon">💰</div><h3 class="feature-title">财务分析</h3><p class="feature-desc">五维财务分析、偿债能力评估、现金流分析、粉饰识别（大存大贷/短债长投/费用资本化）</p></div>
+      <div class="glass-card glass-appear" style="animation-delay:.1s"><div class="feature-icon">📊</div><h3 class="feature-title">行业研究</h3><p class="feature-desc">PEST宏观分析、五力竞争模型、产业链上下游、行业周期定位、政策影响评估</p></div>
+      <div class="glass-card glass-appear" style="animation-delay:.15s"><div class="feature-icon">🚨</div><h3 class="feature-title">风险识别</h3><p class="feature-desc">六维雷达图、信用风险量化、合规扫描、担保圈传染分析、敏感性测试</p></div>
+      <div class="glass-card glass-appear" style="animation-delay:.2s"><div class="feature-icon">🎯</div><h3 class="feature-title">人员背调</h3><p class="feature-desc">六维深度调查、跨平台身份关联、蛛丝马迹推理链、3000+网站OSINT搜索</p></div>
+      <div class="glass-card glass-appear" style="animation-delay:.25s"><div class="feature-icon">📝</div><h3 class="feature-title">智能报告</h3><p class="feature-desc">5种输出格式（MD/DOCX/PDF/HTML/纯文本）、数据100%溯源标注、L2质量自检</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TEAM ===================== -->
+<section class="section" id="team">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">👥 Team</div>
+      <h2 class="section-title">核心团队</h2>
+      <p class="section-sub">13位专家，各司其职，hover 看看他们的名言</p>
+    </div>
+    <div class="team-grid">
+      <div class="glass-card-sm team-card"><div class="team-avatar">钱</div><div class="team-name">钱守正</div><div class="team-role">💰 总经理</div><div class="team-quote">"用户说什么不重要，用户需要什么才重要"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">吴</div><div class="team-name">吴德厚</div><div class="team-role">🎖️ 政委</div><div class="team-quote">"人没压力，怎么出活儿？"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">陈</div><div class="team-name">陈志远</div><div class="team-role">🔧 陈工</div><div class="team-quote">"复杂问题拆成简单任务"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">周</div><div class="team-name">周通</div><div class="team-role">💻 CTO</div><div class="team-quote">"接口不够用？那是你只看到了默认配置"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">郑</div><div class="team-name">郑慎之</div><div class="team-role">🔍 审计</div><div class="team-quote">"信任，但要验证"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">张</div><div class="team-name">张铁柱</div><div class="team-role">🕵️ 调查</div><div class="team-quote">"工商信息只是皮，股权穿透才是肉"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">马</div><div class="team-name">马力全</div><div class="team-role">📱 马深查</div><div class="team-quote">"给我一个手机号，我还你一个完整的人"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">李</div><div class="team-name">李明远</div><div class="team-role">📈 李财报</div><div class="team-quote">"利润可以粉饰，现金流不会说谎"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">王</div><div class="team-name">王思远</div><div class="team-role">🌐 王行业</div><div class="team-quote">"别只看行业增速，看增速的增速"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">赵</div><div class="team-name">赵刚</div><div class="team-role">⚠️ 风险官</div><div class="team-quote">"别问会不会出事，问出了事亏多少"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">刘</div><div class="team-name">刘文华</div><div class="team-role">📝 刘报告</div><div class="team-quote">"报告的价值不在长度，在密度"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">颜</div><div class="team-name">颜好看</div><div class="team-role">🎨 设计师</div><div class="team-quote">"设计不是装饰，是沟通"</div></div>
+      <div class="glass-card-sm team-card"><div class="team-avatar">暗</div><div class="team-name">暗哨</div><div class="team-role">👁️ 监控</div><div class="team-quote">"我看到一切，但你看不到我"</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DATA TIERS ===================== -->
+<section class="section" id="data">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">📡 Data</div>
+      <h2 class="section-title">数据源矩阵</h2>
+      <p class="section-sub">3级核心数据源 + OSINT 本地工具，确保尽调信息全面覆盖</p>
+    </div>
+    <div class="tier-grid">
+      <div class="glass-card tier-card" data-tier="0">
+        <div class="tier-icon">🏦</div>
+        <div class="tier-name">Tier 0 · 专业金融终端</div>
+        <div class="tier-count">5+ 数据源</div>
+        <div class="tier-items">Wind · Bloomberg · Refinitiv · 东方财富 · 同花顺</div>
+        <div class="tier-progress"><div class="tier-progress-fill" style="width:95%"></div></div>
+      </div>
+      <div class="glass-card tier-card" data-tier="1">
+        <div class="tier-icon">📦</div>
+        <div class="tier-name">Tier 1 · 开箱即用</div>
+        <div class="tier-count">10+ 数据源</div>
+        <div class="tier-items">WebSearch · WebFetch · 模型知识 · 多引擎搜索</div>
+        <div class="tier-progress"><div class="tier-progress-fill" style="width:85%"></div></div>
+      </div>
+      <div class="glass-card tier-card" data-tier="2">
+        <div class="tier-icon">🔧</div>
+        <div class="tier-name">Tier 2 · MCP 增强</div>
+        <div class="tier-count">162+ 数据源</div>
+        <div class="tier-items">企查查QCC · 天眼查TYC · 企业工商 · 司法诉讼 · 知识产权</div>
+        <div class="tier-progress"><div class="tier-progress-fill" style="width:75%"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== INSTALL ===================== -->
+<section class="section" id="install">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">🚀 Install</div>
+      <h2 class="section-title">一行命令，即刻开始</h2>
+      <p class="section-sub">支持 WorkBuddy / ChatGPT / Claude / 豆包 / DeepSeek 等 15+ 平台</p>
+    </div>
+    <div style="text-align:center">
+      <div class="install-bar">
+        <code id="installCmd">npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
+        <button class="copy-btn" onclick="copyInstall()">复制</button>
+      </div>
+      <p class="install-hint">在终端执行，或粘贴到任意AI对话窗口</p>
+    </div>
+    <div class="platform-tabs">
+      <button class="platform-tab active" onclick="switchPlatform(this,'wb')">WorkBuddy</button>
+      <button class="platform-tab" onclick="switchPlatform(this,'chat')">ChatGPT/Claude</button>
+      <button class="platform-tab" onclick="switchPlatform(this,'cn')">国产AI</button>
+      <button class="platform-tab" onclick="switchPlatform(this,'local')">本地模型</button>
+    </div>
+    <div class="install-grid" id="platformContent">
+      <div class="glass-card-sm" style="text-align:center">
+        <div style="font-size:28px;margin-bottom:var(--space-sm)">⚡</div>
+        <div style="font-weight:600;margin-bottom:4px">Skill 市场安装</div>
+        <div style="font-size:12px;color:var(--text-sec);margin-bottom:var(--space-sm)">推荐 · 满血版本</div>
+        <code style="font-size:12px;background:var(--bg-alt);padding:4px 10px;border-radius:6px;color:var(--success)">npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
+      </div>
+      <div class="glass-card-sm" style="text-align:center">
+        <div style="font-size:28px;margin-bottom:var(--space-sm)">📋</div>
+        <div style="font-weight:600;margin-bottom:4px">直接粘贴</div>
+        <div style="font-size:12px;color:var(--text-sec)">复制 SKILL.md 全文<br>粘贴到任意AI对话窗口</div>
+      </div>
+      <div class="glass-card-sm" style="text-align:center">
+        <div style="font-size:28px;margin-bottom:var(--space-sm)">🌐</div>
+        <div style="font-weight:600;margin-bottom:4px">在线体验</div>
+        <div style="font-size:12px;color:var(--text-sec);margin-bottom:var(--space-sm)">无需安装，直接使用</div>
+        <a href="https://dear-ded.github.io/wallstreet-tieling/" class="btn btn-primary" style="font-size:12px;padding:6px 16px">立即体验</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ROADMAP ===================== -->
+<section class="section" id="roadmap">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">🗺️ Roadmap</div>
+      <h2 class="section-title">版本路线</h2>
+      <p class="section-sub">从动手脚到不动脑的进化之路</p>
+    </div>
+    <div class="glass-card">
+      <div class="roadmap">
+        <div class="roadmap-item">
+          <div class="roadmap-dot" style="background:var(--success)"></div>
+          <div class="roadmap-phase" style="color:var(--success)">Phase 1 ✅ v3.0.2</div>
+          <div class="roadmap-title">角色化 Prompt 工程 + 6大尽调能力</div>
+          <div class="roadmap-desc">13个角色化Prompt、动态编排器、No Fabrication六层防御、5种输出格式、企查查/天眼查MCP集成</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-dot" style="background:var(--warn)"></div>
+          <div class="roadmap-phase" style="color:var(--warn)">Phase 2 🚧 进行中</div>
+          <div class="roadmap-title">多Agent并行 + 平台适配</div>
+          <div class="roadmap-desc">MiMo v2.5 Pro Token Plan适配、独立Agent窗口、子skill独立部署、多模型兼容</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-phase">Phase 3 📋 规划中</div>
+          <div class="roadmap-title">RAG + 本地知识库 + 端到端自动化</div>
+          <div class="roadmap-desc">向量检索增强生成、本地尽调报告知识库、一键尽调流水线、Coze/百炼平台部署</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="cta">
+  <div class="container">
+    <h2 class="cta-title">开始你的第一份 AI 尽调</h2>
+    <p class="cta-sub">一行命令安装，或直接打开文档开始使用。只摆事实，不给建议。</p>
+    <div class="hero-actions">
+      <a href="SKILL.md" class="btn btn-primary">📖 查看文档</a>
+      <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-glass" target="_blank">⭐ GitHub</a>
+      <a href="https://github.com/Dear-Ded/wallstreet-tieling/issues" class="btn btn-outline" target="_blank">💬 反馈</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">2026 华尔街驻铁岭办事处 · v3.0.2 · MIT License</div>
+    <div class="footer-links">
+      <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="footer-link" target="_blank">GitHub</a>
+      <a href="SKILL.md" class="footer-link">文档</a>
+      <a href="CHANGELOG.md" class="footer-link">更新日志</a>
+      <a href="CONTRIBUTING.md" class="footer-link">贡献</a>
+    </div>
+  </div>
+</footer>
+
 </div>
-<script>function copyInstall(){var c=document.getElementById('installCmd').textContent;navigator.clipboard.writeText(c).then(function(){var b=document.querySelector('.copy-btn');b.textContent='已复制!';b.style.background='var(--success)';setTimeout(function(){b.textContent='复制';b.style.background='var(--accent)'},2000)});}</script>
+
+<!-- ===================== SCRIPTS ===================== -->
+<script>
+// ==================== THEME ====================
+(function() {
+  const saved = localStorage.getItem('wst-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+
+document.getElementById('themeToggle').addEventListener('click', function() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('wst-theme', next);
+  this.textContent = next === 'dark' ? '🌙' : '☀️';
+  // Update particle color
+  if (window.particles) updateParticleColor(next);
+});
+
+// ==================== MOBILE MENU ====================
+document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+  const links = document.getElementById('navLinks');
+  const isVisible = links.style.display === 'flex';
+  links.style.display = isVisible ? 'none' : 'flex';
+  links.style.flexDirection = 'column';
+  links.style.position = 'absolute';
+  links.style.top = '100%';
+  links.style.right = '0';
+  links.style.background = 'var(--glass-bg)';
+  links.style.backdropFilter = 'var(--blur)';
+  links.style.padding = 'var(--space-md)';
+  links.style.borderRadius = 'var(--radius-md)';
+  links.style.border = '1px solid var(--glass-edge)';
+  links.style.minWidth = '160px';
+  links.style.alignItems = 'center';
+  links.style.gap = 'var(--space-sm)';
+  this.textContent = isVisible ? '☰' : '✕';
+});
+
+// ==================== COPY INSTALL ====================
+function copyInstall() {
+  const cmd = document.getElementById('installCmd').textContent;
+  navigator.clipboard.writeText(cmd).then(function() {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ 已复制!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = '复制';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ==================== PLATFORM TABS ====================
+const platformContent = {
+  wb: 'WorkBuddy 环境功能最完整 · MCP直达 · OSINT工具全可用 · Think High模式',
+  chat: 'ChatGPT/Claude 直接粘贴SKILL.md使用 · 50%+功能可用 · 推荐代码辅助模式',
+  cn: '豆包/通义千问/文心一言/DeepSeek · 纯文本+联网模式 · 核心Prompt全部可用',
+  local: 'Ollama/LM Studio/vLLM · 需模型支持长上下文 · 核心Prompt可用 · OSINT功能降级'
+};
+function switchPlatform(el, key) {
+  document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const content = document.getElementById('platformContent');
+  content.children[0].querySelector('div:last-child').textContent = platformContent[key];
+}
+
+// ==================== STAR COUNT ====================
+fetch('https://api.github.com/repos/Dear-Ded/wallstreet-tieling')
+  .then(r => r.json())
+  .then(d => {
+    const el = document.getElementById('starCount');
+    if (d.stargazers_count !== undefined) {
+      el.textContent = d.stargazers_count;
+      el.style.setProperty('--accent', '#ff9f0a');
+    } else {
+      el.textContent = '★';
+    }
+  })
+  .catch(() => {});
+
+// ==================== ANIMATED COUNTERS ====================
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = parseInt(el.dataset.count);
+      if (!target) return;
+      let current = 0;
+      const step = Math.ceil(target / 40);
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        el.textContent = current + (el.dataset.suffix || '');
+      }, 30);
+      observer.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+
+// ==================== PARTICLES ====================
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let animFrame;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function getParticleColor() {
+  return document.documentElement.getAttribute('data-theme') === 'light'
+    ? '85,88,230' : '99,102,241';
+}
+
+function createParticles() {
+  const count = Math.min(60, Math.floor(window.innerWidth / 20));
+  particles = [];
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      r: Math.random() * 1.5 + 0.5,
+      alpha: Math.random() * 0.4 + 0.1
+    });
+  }
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const color = getParticleColor();
+
+  particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${color},${p.alpha})`;
+    ctx.fill();
+
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = p.x - particles[j].x;
+      const dy = p.y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(${color},${0.08 * (1 - dist / 120)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  });
+
+  animFrame = requestAnimationFrame(drawParticles);
+}
+
+function updateParticleColor(theme) {
+  // Redraw will pick up new color on next frame
+}
+
+createParticles();
+drawParticles();
+
+// ==================== SCROLL REVEAL ====================
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.animationPlayState = 'running';
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.glass-appear').forEach(el => {
+  el.style.animationPlayState = 'paused';
+  revealObserver.observe(el);
+});
+</script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 ---
 name: wallstreet-tieling
 description: WallStreet Tieling Office · 13-role prompt chain credit intelligence crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · 企业尽调/财务分析/行业研究/风险预警/人员背调/OSINT · 实际可用10-30数据源，只摆事实不给建议
-version: 0.0.1
+version: 3.0.2
 author: Dear-Ded
 license: MIT
 homepage: https://dear-ded.github.io/wallstreet-tieling/
@@ -39,12 +39,12 @@ metadata:
     category: finance
     platforms: [macos, linux, windows]
     tags: [Finance, Banking, Due Diligence, Investigation, OSINT]
-    version: "0.0.1"
+    version: "3.0.2"
 ---
 
 # 🏛️ 华尔街驻铁岭办事处
 
-> v0.0.1 · 角色扮演式prompt工程 · 按需加载 · Token节省85-93%
+> v3.0.2 · 角色扮演式prompt工程 · 按需加载 · Token节省85-93%
 > 13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿
 > **👔 西装脱了，标准没脱。只摆事实，不给建议。**
 
@@ -63,7 +63,7 @@ metadata:
 **当前架构**：角色扮演式prompt工程，13个角色由同一LLM在上下文中串行调度。
 **演进方向**：真正的多Agent并行架构（独立上下文窗口、Agent间通信、状态持久化）。
 
-| 维度 | 当前（v0.0.1） | 规划中 |
+| 维度 | 当前（v3.0.2） | 规划中 |
 |------|-------------|--------|
 | Agent架构 | 角色化prompt模板，单LLM调度 | 独立Agent进程，真正并行 |
 | 调度引擎 | 关键词+语义混合匹配 | NLU意图路由 + 动态角色编排 |
