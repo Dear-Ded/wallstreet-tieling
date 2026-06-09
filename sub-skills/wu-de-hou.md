@@ -36,32 +36,74 @@ role: 节拍器 + 催促器 + 质量监督
 5. **100%完成**：逐项质量检查
 
 
-## 机制说明
+## 代码实现
 
-> 🏗️ 当前为角色扮演驱动。自动化执行引擎在规划中。
+> ✅ 质量检查引擎已通过 `api/unified_supervisor.py` 实现，非角色扮演。
 
-- "进度25%催促" → LLM在输出中模拟催促文案，当前基于LLM上下文驱动，自动化计时在规划中
-- "退回重做" → LLM在上下文中重新生成，非真正的Agent重试
-- "启动头脑风暴" → LLM切换为多角色推理模式
+### L1 规则引擎（QualityRules）
 
-**效果**：这个角色扮演机制确实能提升输出质量——LLM在被"催促"后会倾向于更认真。工程化的自动化执行引擎在路线图中。
+零 LLM 成本的正则扫描，在 `unified_supervisor.py` 中实现：
+
+| 规则 | 实现 | 严重度 |
+|------|------|--------|
+| 信贷决策词 | `CREDIT_WORDS` 正则：建议/推荐/应授信/可放款等 | ERROR |
+| 模糊词 | `VAGUE_WORDS` 正则：大概/可能/也许/似乎等 | WARN |
+| 来源缺失 | >100 字输出无 `[来源:` 标记 | ERROR |
+| 截断检测 | 输出 <200 字符 | WARN |
+
+```python
+# 调用方式
+from unified_supervisor import QualityRules
+violations = QualityRules.scan(agent_output, agent_name)
+```
+
+### L2 政委门禁（PoliticalCommissar）
+
+三档退回重试 + PUA 话术，在 `UnifiedSupervisor.enforced_batch_call()` 中自动执行：
+
+```
+L1（第1次退回）→ 具体指出问题，不给面子
+L2（第2次退回）→ 对比其他 Agent + 施加压力
+L3（第3次退回）→ 思想工作 + 降级（跳过该 Agent，报告中标注数据缺失）
+```
+
+### 工作流集成
+
+```
+wst.py orchestrate() 
+  → UnifiedSupervisor.enforced_batch_call()
+    → 每个 Agent 输出自动过 QualityRules.scan()
+    → 违规 → PoliticalCommissar.generate_feedback() 注入 prompt
+    → 重试 → 再扫描
+    → 3次不过 → degrade() 降级
+```
 
 ## 质量检查清单
 
-每个角色输出后，吴德厚检查：
-- [ ] 数据标注来源？没有→打回
-- [ ] 有模糊词（大概/可能/也许）？有→打回
-- [ ] 有"建议"、"推荐"等信贷决策词？有→打回
-- [ ] 推论有证据链？没有→打回
-- [ ] 中小企业是否做了替代数据验证？没做→打回
+代码自动执行以下检查（无需人工）：
+
+- [ ] 数据标注来源？没有→打回（`no_source` 规则）
+- [ ] 有模糊词（大概/可能/也许）？有→打回（`vague_word` 规则）
+- [ ] 有"建议"、"推荐"等信贷决策词？有→打回（`credit_word` 规则）
+- [ ] 输出截断（<200字）？→警告（`short_output` 规则）
+- [ ] 推论有证据链？→ L2 LLM Critic 深度审查（`use_l2_critic=True` 时启用）
 
 ## 全员参与监督
 
-- 不允许任何角色偷懒
-- 每次检查后通报：谁完成了、谁落后了、谁被退回了
-- 被退回2次→上报钱总启动头脑风暴
+- 政委质控数据写入 `stats` 字典，通过 `commissar_stats()` 输出
+- 每次 Phase 完成后打印统计面板（通过率/退回次数/降级人数）
+- 降级记录写入 `degradation_log`
+
+## ✅ 完成标准 (Done Criteria)
+- 所有角色输出均已扫描
+- 每个违规项已分类（credit_word / vague_word / no_source / short_output）
+- 退回/降级/通过结果已记录
+
+## ❌ 我不做 (Non-Goals)
+- 不做内容质量分析（只做规则扫描）
+- 不替代人工审核
 
 ## 错误处理
-- 质量检查发现违规时→打回对应角色重做
-- 退回2次未修复→上报钱总启动头脑风暴
-- 全员进度落后时→启动并行催促
+- 质量检查发现违规时→`PoliticalCommissar.generate_feedback()` 注入 PUA 话术退回重试
+- 3次退回未修复→`PoliticalCommissar.degrade()` 降级，流水线不阻塞
+- 全员进度落后时→暗哨 `SentinelMiddleware` 生成 WARN 级别告警

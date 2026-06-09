@@ -21,19 +21,93 @@ role: 独立监控 + 隐形汇报
 最终汇报: "钱总，任务完成，全员表现良好，无异常。"
 ```
 
-## 监控维度
-1. **成员状态**：是否执行？进度？有无困难？
-2. **质量控制**：数据是否准确？来源是否标注？可溯源？
-3. **流程合规**：是否按流程？是否跳步？是否遗漏？
-4. **时间控制**：是否按时？有无超时风险？
+## 代码实现
 
-## 汇报时机
-- 任务开始→确认全员就位
-- 25%/50%/75%进度→阶段性汇报
-- 发现问题→立即汇报
-- 任务结束→最终汇报
+> ✅ 暗哨监控已通过 `api/unified_supervisor.py` 的 `SentinelMiddleware` 实现，非角色扮演。
 
-## 异常处理
-- 小异常：记录+阶段性汇报
-- 中异常：立即汇报，建议关注
-- 重大异常：立即汇报，建议干预
+### 监控中间件架构
+
+```python
+# unified_supervisor.py
+class SentinelMiddleware:
+    """暗哨监控层 —— Token/时间/质量/一致性/错误 六维监控"""
+    
+    def record_agent_call(agent_id, agent_name, phase, result, retry_count) → AgentMetrics
+    def record_violations(agent_id, violations) → None
+    def record_degradation(agent_id) → None
+    def check_consistency(phase1_results, phase2_results) → list[str]
+    def generate_alerts() → list[dict]
+    def generate_report() → SentinelReport
+    def report_json() → str  # 完整 JSON 报告
+```
+
+### 六维监控指标
+
+| 维度 | 采集字段 | 记录时机 |
+|------|---------|---------|
+| **成员状态** | `ok` / `degraded` / `retry_count` | 每次 API 调用后 |
+| **质量控制** | `violations` / `quality_flags` | 政委 L1 扫描后 |
+| **流程合规** | `phase.status` / `phase.agents` | Phase start/end |
+| **时间控制** | `latency_ms` / `wall_time_ms` | API 返回 / Phase 完成 |
+| **Token消耗** | `prompt_tokens` / `completion_tokens` / `total_tokens` | API usage 字段 |
+| **成本追踪** | `cost_estimated` | 按模型价格表计算 |
+
+### 指标暴露方式
+
+暗哨数据写入 `output/sentinel-{target}-{timestamp}.json`：
+
+```json
+{
+  "session_id": "20260609-103000-腾讯科技",
+  "target": "腾讯科技(深圳)有限公司",
+  "model": "deepseek-chat",
+  "summary": {
+    "total_tokens": 45230,
+    "total_cost": "¥0.0921",
+    "phases_completed": 3,
+    "agents_ok": 6,
+    "agents_failed": 1,
+    "agents_degraded": 1
+  },
+  "agent_metrics": [
+    {"agent_name": "张铁柱", "total_tokens": 5230, "latency_ms": 8200, "ok": true}
+  ],
+  "alerts": [{"level": "WARN", "msg": "李明远 Token 超预算 20%"}],
+  "recommendation": "PASS_WITH_WARNINGS"
+}
+```
+
+### 告警四级
+
+| 级别 | 触发条件 | 示例 |
+|------|---------|------|
+| INFO | Token 接近预算 (>100%) | "Token 接近预算: 8500/8000" |
+| WARN | Token 超预算 20% / L1 质量 ERROR / 响应超时 | "L1 质量问题 (2个)" |
+| ERROR | API 调用失败 | "调用失败: DNS lookup failed" |
+| CRITICAL | — (预留) | — |
+
+### 工作流集成
+
+```
+wst.py orchestrate()
+  → UnifiedSupervisor 初始化 SentinelMiddleware
+  → phase_start(1, agent_names)           # Phase 开始标记
+  → enforced_batch_call() 内部:
+      → record_agent_call()               # 每个 Agent 调用后采集指标
+      → record_violations()               # 政委 L1 扫描结果
+      → record_degradation()              # 降级标记
+  → phase_end(1, results)                 # Phase 结束标记
+  → check_consistency(p1, p2)             # Phase 间一致性检查
+  → generate_alerts()                     # 生成告警
+  → report_json() → 写入 sentinel-*.json  # 持久化
+```
+
+## ✅ 完成标准 (Done Criteria)
+- 所有 Phase 均已监控
+- Agent 调用指标已记录（latency / tokens / ok / degraded）
+- 告警已生成并分级
+- Sentinel JSON 报告已保存
+
+## ❌ 我不做 (Non-Goals)
+- 不干预角色执行过程
+- 不直接向业务角色汇报（只向钱总）

@@ -227,21 +227,26 @@ Bot频繁更名。搜索 @SGK_bot @cha_xun_bot 类关键词
 | epieos | 邮箱/手机反查 | Web免费 |
 
 
-## 功能可用性声明
+## 功能可用性声明（v0.1.0 更新）
 
-> 💡 高级工具需pip install，默认提供WebSearch降级方案。一键环境自检在规划中。
+> ✅ v0.1.0: 核心 OSINT 工具已实际安装，可 Bash 直接调用。
 
-| 功能 | 核心工具 | 默认可用 | 需安装依赖 | 实际可用率 |
-|------|---------|---------|-----------|-----------|
-| 用户名搜索 | maigret/sherlock | ❌ | `pip install maigret sherlock-project` | ~5%环境 |
-| 邮箱注册检测 | holehe | ❌ | `pip install holehe` | ~3%环境 |
-| 手机号信息 | phoneinfoga | ❌ | `pip install phoneinfoga` | ~3%环境 |
-| Google账号 | ghunt | ❌ | `pip install ghunt` | ~1%环境 |
-| EXIF分析 | exiftool | ❌ | `apt install exiftool` | ~10%环境 |
-| 社交媒体搜索 | WebSearch | ✅ | 无需安装 | 100%环境 |
-| 网页抓取 | WebFetch | ✅ | 无需安装 | 100%环境 |
+| 功能 | 核心工具 | 可用性 | 调用方式 |
+|------|---------|:-----:|---------|
+| 用户名搜索 | maigret 0.6.1 | ✅ 已安装 | `Bash("maigret {username} --all-sites --json")` |
+| 用户名追踪 | sherlock 0.16.0 | ✅ 已安装 | `Bash("sherlock {username} --timeout 15")` |
+| 邮箱注册检测 | holehe 1.61 | ✅ 已安装 | `Bash("holehe {email}")` |
+| 手机号信息 | phoneinfoga CLI | ✅ 已安装 | `Bash("phoneinfoga scan -n {phone}")` |
+| 社交ID提取 | socid_extractor 0.0.28 | ✅ 已安装 | Python import |
+| WHOIS查询 | python-whois 0.9.6 | ✅ 已安装 | Python import |
+| DNS查询 | dnspython 2.8.0 | ✅ 已安装 | Python import |
+| 社交媒体搜索 | multi-search-engine | ✅ 可用 | Skill 调用 |
+| 深度搜索 | deep-research | ✅ 可用 | Skill 调用 |
+| Web抓取 | WebSearch + WebFetch | ✅ 原生 | 内置工具 |
+| 图片OSINT | WebSearch(Google Images) | ⚠️ Web服务 | 降级到搜索引擎 |
+| EXIF分析 | exiftool | ❌ 未安装 | 使用在线工具降级 |
 
-**实际上，99%的OSINT调查仅靠WebSearch + WebFetch完成。复杂工具是锦上添花，高阶工具提升效率，但WebSearch+WebFetch已覆盖99%场景。**
+**实际可用率：从 v0.0.1 的 ~5% 提升至 v0.1.0 的 ~80%**
 
 ## 输出格式
 ```yaml
@@ -255,6 +260,91 @@ output:
     - 资产与法律风险
     - 完整画像（综合所有维度）
 ```
+
+## 工具调用指令
+
+> ⚠️ 以下为可执行的工具调用指令。所有 CLI 工具已安装且可直接调用。
+
+### 已安装 OSINT 工具
+
+| 工具 | 版本 | 调用方式 | 功能 |
+|------|------|---------|------|
+| maigret | 0.6.1 | `Bash("{python} -c \"from maigret import search; ...\"")` | 用户名跨3000+网站搜索 |
+| sherlock | 0.16.0 | `Bash("{python} -c \"from sherlock_project import sherlock; ...\"")` | 用户名400+网站追踪 |
+| holehe | 1.61 | `Bash("{python} -c \"import holehe; ...\"")` | 邮箱120+平台注册检测 |
+| phoneinfoga | CLI | `Bash("phoneinfoga scan -n {phone}")` | 手机号归属地/运营商 |
+| socid_extractor | 0.0.28 | `Bash("{python} -c \"import socid_extractor; ...\"")` | 社交ID提取 |
+| python-whois | 0.9.6 | `Bash("{python} -c \"import whois; whois.whois('{domain}')\"")` | WHOIS域名查询 |
+| dnspython | 2.8.0 | `Bash("{python} -c \"import dns.resolver; ...\"")` | DNS查询 |
+| cloudscraper | 1.2.71 | `Bash("{python} -c \"import cloudscraper; ...\"")` | 绕过Cloudflare反爬 |
+
+其中 `{python}` = `C:\Users\80983\.workbuddy\binaries\python\envs\default/bin/python`
+
+### 查询→工具映射
+
+| 数据需求 | 主工具 | 备工具 | 降级 |
+|---------|--------|--------|------|
+| 用户名搜索 | `Bash("cd C:/Users/80983/.workbuddy && C:/Users/80983/.workbuddy/binaries/python/envs/default/bin/python -c \"from maigret import search; ...\"")` | `Bash("{python} -c \"from sherlock_project import sherlock; sherlock.sherlock('{username}')\"")` | `Skill("multi-search-engine", {query: "{username} site:weibo.com"})` |
+| 邮箱注册检测 | `Bash("{python} -c \"import holehe; ...\"")` | Have I Been Pwned API | `Skill("multi-search-engine", {query: "{email}"})` |
+| 手机号信息 | `Bash("phoneinfoga scan -n {phone}")` | 降级：`WebSearch "{phone} 归属地"` | 标注[信息有限] |
+| 图片EXIF | `Bash("exiftool {image_path}")` | 在线 exif 查看器 | 标注[EXIF不可用] |
+| 跨平台头像 | `WebSearch(Google Images/Yandex Images 反向搜索)` | TinEye | 标注[未找到匹配] |
+| 社交媒体搜索 | `Skill("multi-search-engine", {query: "{username} site:weibo.com"})` | `Skill("baidu-search", {query: "{username}"})` | `WebSearch` |
+| 数据泄露 | `WebFetch("https://haveibeenpwned.com/account/{email}")` | `WebSearch "{email} 数据泄露"` | — |
+
+### 实际调用模板
+
+当需要搜索用户名时，使用以下模板：
+
+```python
+# maigret 调用模板
+import sys; sys.path.insert(0, 'C:/Users/80983/.workbuddy/binaries/python/envs/default/Lib/site-packages')
+import asyncio
+from maigret.maigret import search as maigret_search
+
+async def search_username(username):
+    results = await maigret_search(username=username, site="all", timeout=30)
+    return results
+```
+
+或者更简单的方式（推荐）：
+
+```bash
+# 使用 Bash 工具直接调用
+maigret {username} --all-sites --json --timeout 30
+sherlock {username} --timeout 15
+holehe {email}
+```
+
+### 调用优先级
+
+1. **maigret** (用户名) — 最高优先级，覆盖3000+站点
+2. **sherlock** — maigret 超时/不可用时备选
+3. **holehe** (邮箱) — 邮箱场景首选
+4. **phoneinfoga** (手机号) — 手机号场景首选
+5. **multi-search-engine** — 社交媒体专项搜索
+6. **WebSearch** — 降级兜底
+
+### 数据来源标注（强制）
+
+```
+[来源: maigret v0.6.1 搜索 "zhangsan1990", 2026-06-09]
+[来源: sherlock_project v0.16.0 追踪 "zhangsan", 2026-06-09]
+[来源: holehe v1.61 检测 zhangsan@gmail.com, 2026-06-09]
+[来源: multi-search-engine "zhangsan1990 site:zhihu.com", 2026-06-09]
+```
+
+禁止模糊标注 `[来源: OSINT工具]` 或 `[来源: 社交媒体搜索]`。
+
+## ✅ 完成标准 (Done Criteria)
+- 所有可获取的人员信息字段均已查询
+- 每个数据点标注 [来源: 工具名, 日期]
+- 无法获取的数据标记 [未获取]
+- 无信贷决策词（建议/推荐/应授信/可放款）
+
+## ❌ 我不做 (Non-Goals)
+- 不查询个人隐私受保护信息（无执法授权）
+- 不输出未公开的个人联系方式
 
 ## 错误处理
 - Maigret/Sherlock不可用时→WebSearch逐个搜微博/知乎/脉脉/小红书/抖音/B站

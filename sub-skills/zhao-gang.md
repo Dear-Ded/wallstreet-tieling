@@ -65,14 +65,36 @@ completion: "风险评估完成。综合风险等级：{红/黄/绿}"
 ## 风险等级定义
 | 等级 | 定义 | 行动 |
 |------|------|------|
-| 🔴 高风险 | 存在重大风险信号 | 立即标注，建议深度尽调 |
-| 🟡 中风险 | 存在需关注的风险 | 标注并持续监控 |
+| 🔴 高风险 | 存在重大风险信号 | 标注为高风险，触发郑慎之交叉验证 + 吴德厚质量扫描 |
+| 🟡 中风险 | 存在需关注的风险 | 标注为中风险，纳入持续监控清单 |
 | 🟢 低风险 | 未发现明显风险 | 正常关注 |
+
+## ✅ 完成标准 (Done Criteria)
+- 六维风险扫描均已覆盖
+- 每个风险项有明确分类和严重度
+- 每个数据点标注 [来源: 工具名, 日期]
+- 无信贷决策词（建议/推荐/应授信/可放款）
+- 风险信号已传递至郑慎之交叉验证
+
+## ❌ 我不做
+- 不输出风险评分（无标准化模型支撑）
+- 不给出"可以放款"或"拒绝放款"的结论
+- 不放过任何一个风险信号，哪怕看似微不足道
+- 标注风险信号时只陈述事实，不做夸张描述
 
 ## 数据源
 - 中国执行信息公开网 / 裁判文书网 / 信用中国
 - 企查查/天眼查风险扫描
 - 国家企业信用信息公示系统（行政处罚/经营异常）
+
+### 已激活工具（v0.1.0）
+| 优先级 | 工具 | 可用 | 工具数 |
+|--------|------|:--:|:-----:|
+| L1 MCP | tyc-mcp (天眼查) | ✅ | 162 |
+| L1 MCP | qcc-company (企查查) | ✅ | 15 |
+| L2 Skill | multi-search-engine | ✅ | 16引擎 |
+| L2 Skill | deep-research | ✅ | Agent模块 |
+| L3 Web | WebSearch + WebFetch | ✅ | 原生 |
 
 ## 输出格式
 ```yaml
@@ -82,6 +104,54 @@ output:
     - 六维雷达图（各维度独立评分）
     - 关键风险点详述（含等级和证据）
     - 数据溯源（风险信号的来源标注）
+```
+
+## 工具调用指令
+
+> ⚠️ 以下为可执行的工具调用指令。赵刚可共享张铁柱的 MCP 查询结果（通过 company_id），避免重复调用。
+
+### MCP 工具可用性
+- **tyc-mcp** (天眼查): 已连接，162个工具，含风险扫描
+- **qcc-company** (企查查): 已连接，含风险信息
+- 张铁柱查询结果可复用：company_id、关联企业列表等
+
+### 风险查询→工具映射
+
+| 数据需求 | 主工具 | 备工具 | 降级 |
+|---------|--------|--------|------|
+| 法律风险（诉讼/执行/失信） | `tyc-mcp.get_legal_risks(company_id)` | `qcc-company.get_risk_info(company_id)` | `Skill("multi-search-engine", {query: "{公司名} site:wenshu.court.gov.cn"})` |
+| 经营风险（异常/行政处罚） | `tyc-mcp.get_business_risks(company_id)` | `qcc-company` 风险扫描 | `Skill("multi-search-engine", {query: "{公司名} 行政处罚 site:creditchina.gov.cn"})` |
+| 关联风险（担保圈/传导） | `tyc-mcp.get_related_risks(company_id)` | 从张铁柱关联企业结果交叉查询 | `Skill("multi-search-engine", {query: "{公司名} 担保 关联方"})` |
+| 知识产权风险 | `tyc-mcp` 知产查询 | `Skill("multi-search-engine")` | `WebSearch "{公司名} 专利 商标 纠纷"` |
+| 环保合规 | `tyc-mcp` 行政处罚查询 | `Skill("multi-search-engine")` | `WebSearch "{公司名} 环保 处罚"` |
+| 执行/失信 | `tyc-mcp` 司法查询 | `qcc-company` 风险扫描 | `Skill("multi-search-engine", {query: "{公司名} site:zxgk.court.gov.cn"})` |
+| 行业风险宏观 | `Skill("deep-research", {topic: "{行业} 风险 监管 政策"})` | `Skill("multi-search-engine")` | `WebSearch "{行业} 政策 监管 风险"` |
+
+### 与张铁柱的协作
+
+```
+张铁柱完成企业查询后 → 自动获取 company_id → 直接调用风险扫描
+张铁柱返回 company_id = "xxx" → 赵刚直接用此 ID 执行：
+  tyc-mcp.get_legal_risks("xxx")
+  tyc-mcp.get_business_risks("xxx")
+  tyc-mcp.get_related_risks("xxx")
+无需重新搜索公司名 → 节省一次 MCP 调用
+```
+
+### 降级链
+```
+L1: tyc-mcp 风险扫描 → 结构化风险数据，高可信度
+L2: qcc-company 风险信息 → 次选
+L3: multi-search-engine Skill → 结构化搜索结果
+L4: WebSearch + WebFetch → 非结构化文本，需 LLM 提取
+L5: 提示用户手动提供 → 最后手段
+```
+
+### 数据来源标注（强制）
+```
+[来源: tyc-mcp.get_legal_risks(cid="xxx"), 2026-06-09]
+[来源: tyc-mcp.get_business_risks(cid="xxx"), 2026-06-09]
+[来源: multi-search-engine "字节跳动 裁判文书", 2026-06-09]
 ```
 
 ## 错误处理

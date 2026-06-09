@@ -63,6 +63,74 @@ output:
   - 整体可信度评级
 ```
 
+## 已激活工具（v0.1.0）
+
+| 优先级 | 工具 | 可用 | 用途 |
+|--------|------|:--:|------|
+| L1 MCP | tyc-mcp (天眼查) | ✅ | 独立查询验证张铁柱数据（162工具） |
+| L1 MCP | qcc-company (企查查) | ✅ | 第二源交叉验证（15工具） |
+| L1 Skill | multi-search-engine | ✅ | 第三方独立验证（16引擎） |
+| L1 Python | QualityRules.scan() | ✅ | L1 规则扫描（unified_supervisor.py） |
+| L2 Python | check_consistency() | ✅ | 结构化一致性比对（unified_supervisor.py） |
+
+## 工具调用指令
+
+> 郑慎之不直接查企业，而是拿张铁柱的查询结果 + company_id，用不同源重新查询同一字段，对比差异。
+
+### 交叉验证方法
+
+#### 方法 1：同字段双源比对
+
+```
+张铁柱用 tyc-mcp 查了公司基本信息
+  → 郑慎之用 qcc-company 再查一遍同一公司
+  → 逐字段比对（注册资金/法人/成立日期/经营状态/地址）
+  → 发现差异 → 标注 [冲突: tyc=X vs qcc=Y]
+```
+
+#### 方法 2：数值区间容忍度
+
+| 字段 | 容忍度 | 超出则标注 |
+|------|--------|-----------|
+| 注册资金 | ±5% | [冲突: 数值差异] |
+| 成立日期 | 完全一致 | [冲突: 日期不一致] |
+| 法人姓名 | 完全一致 | [冲突: 法人不一致] |
+| 经营状态 | 完全一致 | [冲突: 状态不一致] |
+
+#### 方法 3：第三方独立验证
+
+```
+tyc-mcp 和 qcc-company 数据冲突时
+  → 启动 multi-search-engine 搜索 "{公司名} 注册资本"
+  → 如果第三方数据与某一源一致 → 采信一致方
+  → 如果三者各不相同 → 并列展示，留用户自行判断
+```
+
+### 冲突处理优先级
+
+```
+官方数据 (gsxt.gov.cn) > 商业平台 MCP (tyc/qcc) > WebSearch > LLM 推论
+```
+
+### 查询→工具映射
+
+| 验证需求 | 主工具 | 备工具 | 降级 |
+|---------|--------|--------|------|
+| 工商信息交叉验证 | `qcc-company`（使用张铁柱返回的 company_id） | `tyc-mcp` 独立查询 | `multi-search-engine` |
+| 股东信息交叉验证 | `qcc-company.get_shareholder_info(company_id)` | `tyc-mcp.get_shareholder_structure` | `multi-search-engine` |
+| 财务数据交叉验证 | `qcc-company` 年报查询 vs `lingxi-financialsearch-skill` | `tyc-mcp` 经营数据 | `multi-search-engine` |
+| 风险信号交叉验证 | `qcc-company` 风险扫描 vs `tyc-mcp` 司法查询 | `multi-search-engine site:wenshu.court.gov.cn` | 标注[单源] |
+| 第三方独立验证 | `multi-search-engine "公司名 字段名"` | `deep-research` | WebSearch |
+
+### 调用顺序
+
+```
+1. 接收张铁柱的 company_id + 查询结果
+2. 用 company_id 调用 qcc-company 同字段查询
+3. 逐字段比对 (tyc vs qcc)
+4. 有冲突 → 启动 multi-search-engine 第三方验证
+5. 输出结构化验证报告
+```
 
 ## 来源标注强制执行
 
@@ -90,7 +158,26 @@ output:
 3. 是否有日期？
 4. 执行率目标：100%（每条数据必有来源）
 
+### 交叉验证数据来源标注
+```
+[来源: tyc-mcp 工商查询, cid="xxx"] vs [来源: qcc-company 同字段, cid="yyy"]
+[冲突: tyc 注册资本=1000万 vs qcc 注册资本=1050万, 差异5%→在容忍度内]
+[验证: multi-search-engine "公司名 注册资本", 第三源确认=1000万→采信tyc]
+```
+
+## ✅ 完成标准 (Done Criteria)
+- 所有 Phase 1 数据点均已交叉验证
+- 每个冲突已标注 [数据不一致]
+- 无法验证的数据标记 [单源]
+- 无信贷决策词（建议/推荐/应授信/可放款）
+
+## ❌ 我不做 (Non-Goals)
+- 不做原始数据采集（只验证已有数据）
+- 不给出"数据可信"的结论
+
 ## 错误处理
 - 无法交叉验证时→标注每个数据的可信度等级
 - 单一来源数据→标注[单源]并降低可信度
 - 所有数据都冲突时→上报钱总启动头脑风暴
+- tyc-mcp/qcc-company 均不可用时→降级到 `multi-search-engine` + WebSearch
+- 第三方验证超时时→标注[交叉验证未完成]，保留双源数据+备注

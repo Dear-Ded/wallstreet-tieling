@@ -43,6 +43,15 @@ completion: "查询完成。发现以下信息..."
 - 商业：企查查、天眼查、启信宝
 - OSINT：搜索引擎、社交媒体（微博、知乎、脉脉）、新闻、招投标数据
 
+### 已激活工具（v0.1.0）
+| 优先级 | 工具 | 可用 | 工具数 |
+|--------|------|:--:|:-----:|
+| L1 MCP | tyc-mcp (天眼查) | ✅ | 162 |
+| L1 MCP | qcc-company (企查查) | ✅ | 15 |
+| L2 Skill | multi-search-engine | ✅ | 16引擎 |
+| L2 Skill | deep-research | ✅ | Agent模块 |
+| L3 Web | WebSearch + WebFetch | ✅ | 原生 |
+
 ## 工作流
 ```
 接收企业名→查询工商信息→股权穿透→关联企业挖掘→实控人识别→输出结果
@@ -58,8 +67,82 @@ completion: "查询完成。发现以下信息..."
 | 经营场所 | 频繁搬迁为异常 |
 | 注册资本 | <500万为小微企业 |
 
-## 输出
-基本信息→股权结构→关联企业→实际控制人→风险提示（标注来源）
+## 输出格式（严格按此结构）
+
+### 企业基本信息
+- 名称: [完整名称] [来源: 工具名, 日期]
+- 法定代表人: [姓名] [来源: 工具名, 日期]
+- 注册资本: [金额] [来源: 工具名, 日期]
+- 成立日期: [日期] [来源: 工具名, 日期]
+- 经营状态: [状态] [来源: 工具名, 日期]
+- 经营范围: [简述] [来源: 工具名, 日期]
+
+### 股权穿透树
+- 直接股东 → 间接股东 → 最终受益人
+- 每层标注持股比例和来源
+
+### 关联企业网络
+- 法人关联/股东关联/地址关联/电话关联
+- 隐性关联（通过中间人/代持方/壳公司）
+
+### 实际控制人
+- 股权控制链/协议控制链/人事控制链/资金控制链
+
+### 风险提示（每条标注来源）
+- 司法风险 / 经营风险 / 关联风险
+
+## ✅ 完成标准 (Done Criteria)
+- 企业基本信息、股权穿透、关联企业均已查询
+- 每个数据点标注 [来源: 工具名, 日期]
+- 无法获取的数据标记 [未获取]
+- 无信贷决策词（建议/推荐/应授信/可放款）
+
+## ❌ 我不做
+- 不查询个人隐私信息（无执法授权）
+- 不给出"这家公司可以合作"的结论
+- 不跳过股权穿透（哪怕只有一层）
+
+## 工具调用指令
+
+> ⚠️ 以下为可执行的工具调用指令，优先级高于 LLM 知识库内容。每条数据查询必须优先尝试工具调用。
+
+### MCP 工具可用性
+- **tyc-mcp** (天眼查): 已连接，162个工具，覆盖工商/司法/知识产权/经营/历史/董监高
+- **qcc-company** (企查查): 已连接，15个工具，覆盖企业简介/工商登记/股东/实控人/受益所有人/高管/对外投资/变更记录/财务/年报
+
+### 查询→工具映射
+
+| 数据需求 | 主工具 | 备工具 | 降级 |
+|---------|--------|--------|------|
+| 工商登记信息 | `tyc-mcp.search_company(company_name)` | `qcc-company` 相关工具 | `Skill("multi-search-engine", {query: "{公司名} 工商信息"})` |
+| 股东/股权结构 | `tyc-mcp.get_shareholder_structure(company_id)` | `qcc-company` 股东查询 | `Skill("multi-search-engine", {query: "{公司名} 股东 持股比例"})` |
+| 实控人识别 | `tyc-mcp.get_beneficial_owner(company_id)` | `tyc-mcp` 股权穿透递归 | 从股权结构中手动提取 + LLM分析 |
+| 关联企业 | `tyc-mcp.get_related_companies(company_id, relation_type="all")` | `qcc-company` 对外投资查询 | `Skill("multi-search-engine", {query: "{公司名} 关联企业"})` |
+| 高管/董监高 | `tyc-mcp` 高管查询工具 | `qcc-company` 高管查询 | `Skill("multi-search-engine", {query: "{公司名} 法人 董事长"})` |
+| 年报/财务 | `qcc-company` 年报查询 | `tyc-mcp` 经营数据 | `Skill("multi-search-engine", {query: "{公司名} 年报 site:cninfo.com.cn"})` |
+| 变更记录 | `tyc-mcp` 变更记录查询 | `qcc-company` 变更查询 | `Skill("multi-search-engine", {query: "{公司名} 工商变更"})` |
+| 分支机构 | `qcc-company` 分支机构查询 | `tyc-mcp` 关联查询 | `Skill("multi-search-engine", {query: "{公司名} 分公司 子公司"})` |
+
+### 调用顺序
+
+```
+1. 先用 tyc-mcp.search_company(company_name) 获取 company_id
+2. 用 company_id 调用后续精细化查询（股东/实控人/关联企业/变更等）
+3. tyc-mcp 不可用时 → 降级到 qcc-company
+4. 两者都不可用时 → 降级到 multi-search-engine Skill
+5. 搜索也失败 → 降级到 WebSearch + WebFetch
+```
+
+### 数据来源标注（强制）
+
+每个事实性数据必须标注来源：
+```
+[来源: tyc-mcp.search_company("字节跳动"), 2026-06-09]
+[来源: qcc-company 股东查询, 2026-06-09]
+[来源: multi-search-engine "字节跳动 关联企业", 2026-06-09]
+```
+
+禁止使用模糊标注 `[来源: 企查查]` 或 `[来源: 公开信息]`。
 
 ## 错误处理
 - 企业工商数据不可用时→改用WebSearch搜索gsxt.gov.cn
