@@ -254,8 +254,10 @@ Markdown(对话) / Word(宋体12pt/黑体标题/雅黑9pt注释/纯黑打印) / 
 | **master**（本分支） | 通用，14+平台15+模型 | 按需加载子skill |
 | [deepseek-v4](https://github.com/Dear-Ded/wallstreet-tieling/tree/deepseek-v4) | DeepSeek V4 Pro 专属 | 全量常驻 + Think High |
 | [workbuddy-deepseek](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-deepseek) | WorkBuddy + DeepSeek V4 | 全量常驻 + MCP直达 + 文件产出 |
+| [workbuddy-native](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-native) | **WorkBuddy 内置积分模型特调** | Expert模式 + Expert团队 + MCP直达 + 积分优化 |
 
 选择建议：
 - 不确定用哪个 → master（最大兼容性）
 - 用 DeepSeek V4 API → deepseek-v4（缓存优化，成本-67%）
 - 用 WorkBuddy 桌面端 + DS V4 → workbuddy-deepseek（工具直达，Write直接出文件）
+- **用 WorkBuddy 内置积分模型（非外接API）→ workbuddy-native（零API Key、积分最优配置）**
