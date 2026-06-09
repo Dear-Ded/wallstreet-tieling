@@ -461,17 +461,20 @@ wallstreet-tieling/
 │   ├── ma-li-quan.md           # 人员背调 · OSINT
 │   └── ... (共13个)
 ├── deploy/
-│   ├── mcp-server.json             # MCP 服务器配置（6工具 JSON Schema）
-│   ├── multi-platform-guide.md     # 8形态部署指南
-│   ├── workbuddy-expert-config.md  # Expert/ExpertTeam 配置
-│   ├── workbuddy-models-guide.md   # 30+内置积分模型选择
-│   └── workbuddy-workflow.md       # 工作流分步指南
-├── docs/
-│   └── architecture-review.md      # 第三方独立架构评审（7维评分）
+│   ├── Dockerfile                 # 生产级容器镜像（Python 3.11-slim）
+│   ├── mcp-server.json            # MCP 服务器配置（6工具 JSON Schema）
+│   ├── multi-platform-guide.md    # 8形态部署指南
+│   ├── clawhub.json               # ClawHub 市场配置
+│   ├── openclaw.json              # OpenClaw 市场配置
+│   ├── workbuddy-expert-config.md # Expert/ExpertTeam 配置
+│   ├── workbuddy-models-guide.md  # 30+内置积分模型选择
+│   └── workbuddy-workflow.md      # 工作流分步指南（workbuddy-native）
 ├── demo/
 │   ├── demo-output.md              # 实际生成报告样例（华为技术有限公司）
 │   ├── report-demo-v3.html         # 交互式HTML报告 v3
 │   └── report-demo-v4.html         # 交互式HTML报告 v4
+├── docs/
+│   └── architecture-review.md      # 第三方独立架构评审
 ├── tests/
 │   └── regression.json             # 回归测试（10个用例）
 ├── references/
@@ -479,13 +482,7 @@ wallstreet-tieling/
 │   ├── data-sources.md             # 6层数据源清单
 │   ├── data-protocol.md            # 结构化数据协议
 │   └── sub-skill-template.md       # 子技能创建模板
-├── deploy/
-│   ├── Dockerfile                 # 生产级容器镜像（Python 3.11-slim）
-│   ├── mcp-server.json            # MCP 服务器配置（6工具 JSON Schema）
-│   ├── multi-platform-guide.md    # 8形态部署指南
-│   ├── clawhub.json               # ClawHub 市场配置
-│   └── openclaw.json              # OpenClaw 市场配置
-├── index.html                  # GitHub Pages 在线体验页（667行）
+├── index.html                  # GitHub Pages 在线体验页
 ├── package.json                # npm 包配置（40+关键词SEO）
 └── LICENSE                     # MIT 许可
 ```
