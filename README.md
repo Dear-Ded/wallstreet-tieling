@@ -16,7 +16,7 @@
 [![Platform](https://img.shields.io/badge/platform-14+-purple?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Models](https://img.shields.io/badge/models-15+-orange?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Data Sources](https://img.shields.io/badge/data_sources-30+-success?style=flat-square&labelColor=1a1a2e)](references/data-sources.md)
-[![LLM](https://img.shields.io/badge/LLM-DeepSeek_V4_Pro_%7C_MiMo_v2.5-8A2BE2?style=flat-square&labelColor=1a1a2e)](SKILL.md)
+[![LLM](https://img.shields.io/badge/LLM-DeepSeek_%7C_MiMo_%7C_Claude_%7C_OpenAI_%7C_GLM_%7C_Kimi_%7C_%2B9-8A2BE2?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 
 </div>
 
