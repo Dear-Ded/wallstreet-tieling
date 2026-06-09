@@ -7,3 +7,5 @@ Thumbs.db
 __pycache__/
 *.pyc
 output/
+deliverables/
+docs/

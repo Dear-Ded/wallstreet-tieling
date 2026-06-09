@@ -55,7 +55,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 ```
 
 > 💡 或者直接复制 SKILL.md 全文粘贴到任意AI对话窗口 → 立刻激活  
-> 📦 **Docker**: `docker run -p 8080:8080 -e OPENAI_API_KEY=sk-xxx dearded/wallstreet-tieling`  
+> 📦 **Docker**: `docker run -p 8080:8080 -e DEEPSEEK_API_KEY=sk-xxx dearded/wallstreet-tieling`  (构建: `docker build -f deploy/Dockerfile -t dearded/wallstreet-tieling .`)
 > 🔌 **npm CLI**: `npx wallstreet-tieling --copy` · **REST API**: `python api/server.py`
 
 ---
@@ -367,7 +367,8 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 ### 方式二：🐳 Docker 容器
 
 ```bash
-docker run -p 8080:8080 -e OPENAI_API_KEY=sk-xxx dearded/wallstreet-tieling
+docker build -f deploy/Dockerfile -t dearded/wallstreet-tieling .
+docker run -p 8080:8080 -e DEEPSEEK_API_KEY=sk-xxx dearded/wallstreet-tieling
 ```
 
 ### 方式三：📦 npm CLI 命令行
@@ -478,7 +479,12 @@ wallstreet-tieling/
 │   ├── data-sources.md             # 6层数据源清单
 │   ├── data-protocol.md            # 结构化数据协议
 │   └── sub-skill-template.md       # 子技能创建模板
-├── Dockerfile                  # 生产级容器镜像（Python 3.11-slim）
+├── deploy/
+│   ├── Dockerfile                 # 生产级容器镜像（Python 3.11-slim）
+│   ├── mcp-server.json            # MCP 服务器配置（6工具 JSON Schema）
+│   ├── multi-platform-guide.md    # 8形态部署指南
+│   ├── clawhub.json               # ClawHub 市场配置
+│   └── openclaw.json              # OpenClaw 市场配置
 ├── index.html                  # GitHub Pages 在线体验页（667行）
 ├── package.json                # npm 包配置（40+关键词SEO）
 └── LICENSE                     # MIT 许可

@@ -10,15 +10,14 @@
   "files": [
     "SKILL.md",
     "README.md",
+    "LICENSE",
+    "index.html",
     "bin/",
     "lib/",
     "api/",
     "deploy/",
     "references/",
-    "sub-skills/",
-    "Dockerfile",
-    "index.html",
-    "LICENSE"
+    "sub-skills/"
   ],
   "exports": {
     ".": "./SKILL.md",
@@ -34,8 +33,8 @@
     "start": "node bin/cli.js",
     "mcp": "node lib/mcp-server.js",
     "api": "python api/server.py",
-    "docker:build": "docker build -t dearded/wallstreet-tieling .",
-    "docker:run": "docker run -p 8080:8080 -e OPENAI_API_KEY dearded/wallstreet-tieling"
+    "docker:build": "docker build -t dearded/wallstreet-tieling -f deploy/Dockerfile .",
+    "docker:run": "docker run -p 8080:8080 -e DEEPSEEK_API_KEY dearded/wallstreet-tieling"
   },
   "keywords": [
     "credit-intelligence",
