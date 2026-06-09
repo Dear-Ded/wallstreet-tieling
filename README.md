@@ -101,7 +101,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 | 📊 **行业研究** | PEST宏观分析、五力竞争模型、产业链上下游、行业周期定位 | 王思远 |
 | 🚨 **风险识别** | 六维雷达图、信用风险量化、合规扫描、担保圈传染分析 | 赵刚 |
 | 🎯 **人员背调** | 六维深度调查、跨平台身份关联、蛛丝马迹推理链 | 马力全 |
-| 🕵️ **全网情报** | OSINT开源情报、200+数据源、公开API动态发现、Web智能抓取 | 周通 |
+| 🕵️ **全网情报** | OSINT开源情报、10-30实际可用数据源、公开API动态发现、Web智能抓取 | 周通 |
 | ✅ **交叉验证** | 数据一致性校验、多源比对、编造检测、No Fabrication 六层防御 | 郑慎之 |
 | 📝 **报告生成** | 5种输出格式、数据100%溯源标注、L2质量评分 | 刘文华 + 颜好看 |
 
@@ -114,7 +114,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 | **Tier 0** | 🏦 专业金融终端 | Wind · Bloomberg · Refinitiv | 5+ |
 | **Tier 1** | 📦 开箱即用 | WebSearch · WebFetch · 模型知识 | 10+ |
 | **Tier 2** | 🔧 MCP增强 | 企查查QCC · 天眼查TYC | 162+ |
-| **Tier 3** | 🌐 全网猎取 | 周通动态发现：公开API · 网页抓取 | 100+ |
+| **Tier 3** | 🌐 全网猎取 | 周通动态发现：公开API · 网页抓取 | 按需 |
 | **OSINT** | 🕵️ 本地工具 | maigret · holehe · sherlock | 3 |
 
 ---
