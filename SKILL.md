@@ -1,11 +1,11 @@
 ---
 name: wallstreet-tieling
-description: WallStreet Tieling Office · 13-role prompt chain credit intelligence crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · 企业尽调/财务分析/行业研究/风险预警/人员背调/OSINT · 实际可用10-30数据源，只摆事实不给建议
-version: 3.2.0
+description: WallStreet Tieling Office · 13-role concurrent AI crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · platform-agnostic v4.0.0 engine
+version: 4.0.0
 author: Dear-Ded
 license: MIT
 homepage: https://dear-ded.github.io/wallstreet-tieling/
-compatibility: "WorkBuddy,OpenClaw,CodeBuddy,ChatGPT,Claude,豆包,通义千问,文心一言,DeepSeek V3/V4,Kimi,百炼,千帆,元器,Coze,MiMo"
+compatibility: "WorkBuddy,OpenClaw,CodeBuddy,ChatGPT,Claude,豆包,通义千问,文心一言,DeepSeek V3/V4,Kimi,百炼,千帆,元器,Coze,MiMo,Dify,CrewAI"
 tags:
   - 尽调
   - 贷前调查
@@ -203,25 +203,10 @@ Markdown(对话) / Word(宋体12pt/黑体标题/雅黑9pt注释/纯黑打印) / 
 
 ## 🎯 模型版本选择
 
-本分支为**v4.0 引擎核心** — 平台无关、模型无关的纯编排引擎。适配器另行维护：
+本分支为**v4.0.0 引擎核心** — 平台无关、模型无关的纯编排引擎。
 
-| 分支 | 适用场景 | 架构 |
-|------|---------|------|
-| **master**（本分支） | **v4.0 引擎核心** + WorkBuddy 适配器 | core/ + adapters/workbuddy.py |
-| [deepseek-v4](https://github.com/Dear-Ded/wallstreet-tieling/tree/deepseek-v4) | DeepSeek V4 Pro 专属 | v3.x 全量常驻 + Think High |
-| [workbuddy-deepseek](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-deepseek) | WorkBuddy + DeepSeek V4 | v3.x 全量常驻 + MCP直达 |
-| [workbuddy-native](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-native) | WorkBuddy 内置积分模型 | v3.x Expert + MCP直达 |
+```
+npx skills add Dear-Ded/wallstreet-tieling -g -y
+```
 
-**v4.0 新增适配器**（通过 PR 贡献）:
-| 平台 | 适配器文件 | 状态 |
-|------|-----------|:--:|
-| WorkBuddy | `adapters/workbuddy.py` | ✅ |
-| CLI 独立运行 | `adapters/cli.py` | ✅ |
-| Dify | `adapters/dify.py` | 🚧 模板 |
-| Coze | `adapters/coze.py` | 🚧 模板 |
-| CrewAI | `adapters/crewai.py` | 🚧 模板 |
-
-选择建议：
-- 不确定用哪个 → master（最大兼容性 + 最新引擎）
-- 需要 v3.x 稳定版 → deepseek-v4 / workbuddy-native
-- 贡献新平台适配器 → Fork master，提交 `adapters/{platform}.py`
+> 架构详情见 [ARCHITECTURE.md](ARCHITECTURE.md) | 迁移指南见 [MIGRATION.md](MIGRATION.md)

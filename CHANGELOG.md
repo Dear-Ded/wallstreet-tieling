@@ -4,6 +4,34 @@
 
 ---
 
+## v4.0.0 (2026-06-10) — 平台无关引擎
+
+### 新增
+- **core/ 引擎核心**: 零平台依赖的纯编排引擎
+- **core/interfaces.py**: LLMProvider / ToolProvider / OutputProvider 抽象
+- **core/roles.py**: 13 角色职权体系 (report_to/domain/decisions/must_not)
+- **core/session_bus.py**: 结构化 Phase 间情报传递
+- **core/engine.py**: 3-Phase + Phase 1.5 团队会议 + 条件分支
+- **core/deep_graph.py**: 多跳关联图 ≤8跳, 环检测
+- **core/query_cache.py**: 查询缓存
+- **core/org_memory.py**: 五层本地组织记忆
+- **adapters/**: WB / CLI 适配器 + 贡献模板
+- **MIGRATION.md**: v3.2.0 → v4.0.0 迁移指南
+- **ARCHITECTURE.md**: 架构文档
+- **402 测试** (was 376)
+
+### 变动
+- SKILL.md: 版本 → 4.0.0, 分支表更新
+
+### 保留
+- api/: v3.2.0 层完全向后兼容
+- sub-skills/: 14 角色提示词不变
+- 13 人格档案: api/personality.py 不变
+
+---
+
+## v3.2.0 (2026-06-10) — 工程全面审查
+
 ## v3.2.0 — CI/CD 强化 + 测试基建 + Bug 修复 (Unreleased, 2026-06)
 
 **测试覆盖跃升 · CI/CD 流水线增强 · L1/L2 质量控制修复 · 单元测试全覆盖**

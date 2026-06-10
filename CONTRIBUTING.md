@@ -2,6 +2,22 @@
 
 首先，感谢你愿意为这个项目添砖加瓦 🙌
 
+## 🎯 贡献平台适配器 (v4.0.0+)
+
+想让 wallstreet-tieling 跑在你的平台上？只需要实现三个接口：
+
+```python
+from core.interfaces import LLMProvider, ToolProvider, OutputProvider, PlatformAdapter
+
+class MyPlatformLLM(LLMProvider):      # 你的平台怎么调模型
+class MyPlatformTools(ToolProvider):    # 你的平台有什么工具
+class MyPlatformOutput(OutputProvider): # 你的平台怎么存文件
+
+adapter = PlatformAdapter(MyPlatformLLM(), MyPlatformTools(), MyPlatformOutput())
+```
+
+详见 `adapters/README.md` 和 `ARCHITECTURE.md`。
+
 ## 🐛 报告问题
 
 - **Issues**: 在 [GitHub Issues](https://github.com/Dear-Ded/wallstreet-tieling/issues) 提交
