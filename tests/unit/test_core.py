@@ -16,6 +16,7 @@ from core.session_bus import SessionBus, Fact, RiskSignal, Contradiction
 from core.roles import AUTHORITIES, RoleAuthority
 from core.deep_graph import DeepGraph, Entity, EntityType, RelationType
 from core.query_cache import QueryCache
+from core.org_memory import OrgMemory
 
 
 # ═══════════════════════════════════════════════════════════
@@ -204,3 +205,54 @@ class TestQueryCache:
         assert call_count == 1
         assert c.stats["hits"] == 1
         assert c.stats["misses"] == 1
+
+
+# ═══════════════════════════════════════════════════════════
+#  OrgMemory
+# ═══════════════════════════════════════════════════════════
+
+class TestOrgMemory:
+    def test_record_and_retrieve(self):
+        m = OrgMemory()
+        inv = m.record({
+            "target": "test-company",
+            "mode": "standard",
+            "bus_summary": {"facts_count": 3},
+            "branches_triggered": [],
+            "roles_activated": ["zhang-tie-zhu"],
+            "commissar_stats": {},
+            "metrics": [],
+        })
+        assert inv["target"] == "test-company"
+        recent = m.get_recent(5)
+        assert len(recent) >= 1
+
+    def test_agent_stats(self):
+        m = OrgMemory()
+        m.record({
+            "target": "t1", "mode": "standard",
+            "bus_summary": {}, "branches_triggered": [],
+            "roles_activated": ["zhang-tie-zhu"],
+            "commissar_stats": {},
+            "metrics": [
+                {"agent": "zhang-tie-zhu", "ok": True, "tok": 100, "phase": "phase1"},
+                {"agent": "zhang-tie-zhu", "ok": True, "tok": 200, "phase": "phase1"},
+            ],
+        })
+        stats = m.get_agent_stats("zhang-tie-zhu")
+        assert stats is not None
+        assert stats["total_tasks"] >= 2
+
+    def test_build_injection_empty(self):
+        m = OrgMemory()
+        injection = m.build_injection()
+        assert isinstance(injection, str)
+
+    def test_reset(self):
+        m = OrgMemory()
+        m.record({"target": "t1", "mode": "standard", "bus_summary": {},
+                   "branches_triggered": [], "roles_activated": [],
+                   "commissar_stats": {}, "metrics": []})
+        m.reset()
+        recent = m.get_recent(10)
+        assert len(recent) == 0
