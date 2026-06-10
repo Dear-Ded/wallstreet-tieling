@@ -1,153 +1,122 @@
 # 更新日志
 
-## v3.0.2 — 文档补全 (2026-06-09)
-**GStack三专家综合审计 · README + Landing Page 全面翻新**
-
-### README.md 补全（42/100 → 90+/100）
-- 新增「🛡️ 防杜撰体系：六层纵深防御」章节（替代简化9条铁律）
-- 新增「✅ 质量保障体系：三道防线」章节（L1正则+L2评分+L3政委PUA）
-- 新增「🎛️ 动态编排引擎」章节（3阶段流水线 + 6模式 + 6条件分支）
-- 新增「🌐 部署形态：一套代码八种形态」章节
-- 新增「💰 成本控制」章节（模式Token预算 + 多模型价格表 + 节省率）
-- 新增「🔌 REST API 服务」章节（4端点 + curl示例）
-- 新增「🌿 多分支优化策略」章节（4分支 + git checkout指南）
-- 修复数字: OSINT工具 3→5, MCP连接器 2→5, 平台兼容性 8→14+（等级制）
-- 新增3个Badge: 防杜撰6层防御 / L1+L2双检 / Token节省85-93%
-- 链接现有资产: Demo报告、架构评审、LIMITATIONS.md、回归测试
-- 项目架构树扩充至完整目录
-
-### index.html 翻新（在线体验页）
-- Hero统计面板: 新增「6层防杜撰」「8种部署形态」
-- 能力卡片重写: 前三张改为防杜撰体系/质量门禁/动态编排（核心差异化竞争力）
-- 数据源矩阵: 3级 → 5级完整展示（新增免费官方/OSINT工具/商业免费层）
-- 安装方式: 3种 → 6种（新增Docker/npm CLI/REST API标签页）
-- Roadmap更新: 反映v3.0.2实际工程能力
-- Footer新增DEPENDENCIES.md链接
-
-### 新增文件
-- **DEPENDENCIES.md**: 环境依赖完整披露（10大分类，必要性分级 🔴🟠🟡🟢）
-  - LLM API层（DeepSeek/OpenAI/MiMo）、MCP连接器层（5个）、Python运行时层
-  - Node.js层、OSINT工具层（5工具+降级链）、部署环境层、外部免费API层
-  - 按4种部署形态分别列出依赖清单 + 快速安装脚本 + 验证命令
-
-### 仓库清理
-- .gitignore 新增 `__pycache__/` `*.pyc` `output/`
+> 版本号遵循语义化版本：MAJOR.MINOR.PATCH
 
 ---
 
-**子母skill架构重构 · Token节省79-93%**
+## v3.0.2 — 文档补全 + 工程优化 (2026-06-09)
+
+**GStack 三专家综合审计 · README 全面重写 · 项目管理规范化**
+
+### 工程优化
+- GStack 三专家综合审计（产品评审员/安全官/调查员）
+- README.md 全面重写（42/100 → 90+/100），新增 7 个章节
+- 防杜撰六层防御体系独立成章
+- 质量保障三道防线（L1 正则 + L2 评分 + L3 政委 PUA）
+- 动态编排引擎（3 阶段流水线 + 6 模式 + 6 条件分支）
+- 部署形态 8 种（Skill 粘贴/MCP/Docker/REST API/npm CLI/Custom GPT/Claude/国产 Bot）
+- 成本控制（模式 Token 预算 + 多模型价格表 + 节省率）
+- REST API 服务（4 端点 + curl 示例）
+- 多分支优化策略（4 分支 + git checkout 指南）
+- 数字修正：OSINT 3→5、MCP 2→5、平台 8→14+
+- 3 个新 Badge：防杜撰 6 层防御 / L1+L2 双检 / Token 节省 85-93%
+
+### 新建文件
+- DEPENDENCIES.md（10 大分类 · 四级必要性披露）
+- CODE_OF_CONDUCT.md（贡献者公约 v2.1）
+- SECURITY.md（漏洞报告流程 + 已知限制）
+- .github/ISSUE_TEMPLATE/（3 个模板）
+- .github/PULL_REQUEST_TEMPLATE.md
+
+### 重写文件
+- LIMITATIONS.md（基于 v3.0.2 实际能力重写）
+- index.html（Hero · 能力 · 数据源 · 安装 · Roadmap 全面翻新）
+
+### 仓库管理
+- 根目录清理：Dockerfile/clawhub.json/openclaw.json → deploy/
+- .gitignore 补全：`__pycache__/` `*.pyc` `output/` `deliverables/` `docs/`
+- 分支清理：删除 china/expert/productivity/mimo-batch
+- ROADMAP.md 版本号修正 v1.0.0-beta.1 → v3.0.2
+
+### 版本统一
+- SKILL.md / package.json / clawhub.json / mcp-server.json / server.py / regression.json 全文件版本号统一为 3.0.2
+
+---
+
+## v3.0.1 — 子 skill 业务逻辑补全 (2026-06-07)
+
+- 钱守正：完整调度决策树（1469B→2700B，+84%）
+- 陈志远：任务 DAG + 4 场景拆解方案（1190B→2377B，+100%）
+- 吴德厚：PUA 触发时机 + 质量检查清单
+- 周通：环境检测流程 + 数据获取步骤
+- 刘文华：报告合并流程 + 完整 MD 模板
+- data-sources.md：21KB→1.8KB 实用速查表（瘦身92%）
+- SKILL.md：新增输出质量检查点（交付前强制执行）
+- 数据源数字修正：200+→实际可用 10-30
+
+---
+
+## v3.0.0 — 子母 skill 架构重构 (2026-06-07)
+
+**Token 节省 79-93%**
 
 ### 架构变更
-- 主SKILL.md从125KB缩减到4.5KB (97%缩减)
-- 13个角色拆分为独立sub-skills/子skill文件
-- 采用渐进式披露：主SKILL只含调度表+铁律，子skill按需加载
-- 参考Claude Code四层架构(ObjectSkill拦截→编排器→Sub-Agent→模型)
+- 主 SKILL.md 从 125KB 缩减到 4.5KB（97%缩减）
+- 13 个角色拆分为独立 sub-skills/ 子 skill 文件
+- 渐进式披露：主 SKILL 只含调度表+铁律，子 skill 按需加载
 
-### Token效率
-- 简单查询(主+3子skill): ~3,149 tokens — 节省93%
-- 标准尽调(主+10子skill): ~6,496 tokens — 节省85%
-- 深度尽调(全13子skill): ~8,928 tokens — 节省79%
+### Token 效率
+- 简单查询（主+3 子 skill）：~3,149 tokens — 节省 93%
+- 标准尽调（主+10 子 skill）：~6,496 tokens — 节省 85%
+- 深度尽调（全 13 子 skill）：~8,928 tokens — 节省 79%
 
 ### 新增
-- 标准YAML frontmatter (兼容6大工具)
-- 小米MiMo模型适配 (mimo-v2.5/pro/flash)
-- 陈志远(陈工)任务拆解子skill
-- CHANGELOG.md版本管理
+- 标准 YAML frontmatter（兼容 6 大工具）
+- 小米 MiMo 模型适配（mimo-v2.5/pro/flash）
+- 陈志远（陈工）任务拆解子 skill
+- CHANGELOG.md 版本管理
 
 ### 清理
-- 删除空agents/和personality/目录
-- 删除4个陈旧references/文件
-- 旧版备份为SKILL-v2.6-legacy.md
+- 删除空 agents/ 和 personality/ 目录
+- 删除 4 个陈旧 references/ 文件
 
 ---
 
 ## v2.6.0 (2026-06-06)
-**问题上报机制 · 头脑风暴机制**
 
-- 问题上报机制：简单/中等/复杂三级
-- 头脑风暴机制：7步会议流程
+- 问题上报机制（简单/中等/复杂三级）
+- 头脑风暴机制（7 步会议流程）
 - 拟人化交互示例
 
----
-
 ## v2.5.0 (2026-06-06)
-**调度架构设计**
 
-- CrewAI风格调度架构
+- CrewAI 风格调度架构
 - 三种模式：流水线/层次化/并行
-- 并行执行规则(最大5并行，超时5分钟，重试3次)
-- 状态管理机制
-
----
+- 并行执行规则（最大 5 并行，超时 5 分钟，重试 3 次）
 
 ## v2.4.0 (2026-06-06)
-**子母Skill架构实装 · 小米MiMo适配**
 
-- 13个agents/子skill文件创建
-- 小米MiMo模型适配(mimo-v2.5/pro/flash)
-
----
+- 13 个 agents/ 子 skill 文件创建
+- 小米 MiMo 模型适配
 
 ## v2.3.0 (2026-06-06)
-**信息搜集能力增强**
 
-- OSINT工具依赖配置
-- 依赖检测/提示/降级方案
+- OSINT 工具依赖配置 + 依赖检测/提示/降级方案
 - 蛛丝马迹推理框架
 
----
-
 ## v2.2.0 (2026-06-06)
-**中小企业尽调能力增强**
 
-- 企业类型识别(小微企业/初创企业)
-- 中小企业独有指标
-- 行业特殊指标(餐饮/零售/贸易)
-- 中小企业风险信号
-
----
+- 中小企业尽调能力：企业类型识别 + 独有指标 + 行业特殊指标（餐饮/零售/贸易）
 
 ## v2.1.0 (2026-06-06)
-**新增视觉展示角色(颜好看)**
 
-- 颜好看(颜设计)角色：前Apple设计团队成员
+- 颜好看（颜设计）角色：前 Apple 设计团队成员
 - 设计系统：颜色/字体/间距/圆角
-- 团队13人
-
----
 
 ## v2.0.1 (2026-06-05)
-- 智能推导引擎
-- OSINT数据源矩阵
-- 质量控制机制
-- 冲突数据展示
 
----
+- 智能推导引擎 + OSINT 数据源矩阵 + 质量控制机制 + 冲突数据展示
 
 ## v1.0.0
-- 初始版本
-- 12人团队协作
-- 五层数据源矩阵
 
-## v3.0.1 (2026-06-07)
-**第二轮修复：子skill业务逻辑补全**
-
-- 钱守正：完整调度决策树(1469B→2700B,+84%)
-- 陈志远：任务DAG+4场景拆解方案(1190B→2377B,+100%)
-- 吴德厚：PUA触发时机+质量检查清单(退回2次→头脑风暴)
-- 周通：环境检测流程+数据获取步骤
-- 刘文华：报告合并流程+完整MD模板
-- data-sources.md：21KB→1.8KB实用速查表(瘦身92%)
-- SKILL.md：新增输出质量检查点(交付前强制执行)
-- 数据源数字修正：200+→实际可用10-30
-- README：调度架构边界说明
-
-## v3.0.2 (2026-06-07)
-**第三轮修复：工程质量补全**
-
-- 归档：SKILL-v2.6-legacy.md→.archive/
-- 统一数据源数字(frontmatter/badge/正文/data-sources四个位置)
-- 提取公共模板：references/sub-skill-template.md
-- 13个子skill添加错误处理章节
-- 创建tests/regression.json回归用例
-- CHANGELOG粒度细化到子skill级别
+- 初始版本：12 人团队协作 + 五层数据源矩阵

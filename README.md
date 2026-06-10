@@ -9,9 +9,11 @@
 
 **13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿**
 
-[![Version](https://img.shields.io/badge/version-3.0.2-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling)
+[![Version](https://img.shields.io/badge/version-3.0.2-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/Dear-Ded/wallstreet-tieling/validate.yml?style=flat-square&labelColor=1a1a2e&label=CI)](https://github.com/Dear-Ded/wallstreet-tieling/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&labelColor=1a1a2e)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=flat-square&labelColor=1a1a2e&color=gold)](https://github.com/Dear-Ded/wallstreet-tieling/stargazers)
+[![Platform](https://img.shields.io/badge/platform-14+-purple?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Platform](https://img.shields.io/badge/platform-14+-purple?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Models](https://img.shields.io/badge/models-15+-orange?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Data Sources](https://img.shields.io/badge/data_sources-30+-success?style=flat-square&labelColor=1a1a2e)](references/data-sources.md)
