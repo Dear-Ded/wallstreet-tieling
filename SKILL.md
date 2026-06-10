@@ -203,17 +203,25 @@ Markdown(对话) / Word(宋体12pt/黑体标题/雅黑9pt注释/纯黑打印) / 
 
 ## 🎯 模型版本选择
 
-本分支为**通用版**，面向所有平台和模型优化。如需专属优化：
+本分支为**v4.0 引擎核心** — 平台无关、模型无关的纯编排引擎。适配器另行维护：
 
 | 分支 | 适用场景 | 架构 |
 |------|---------|------|
-| **master**（本分支） | 通用，14+平台15+模型 | 按需加载子skill |
-| [deepseek-v4](https://github.com/Dear-Ded/wallstreet-tieling/tree/deepseek-v4) | DeepSeek V4 Pro 专属 | 全量常驻 + Think High |
-| [workbuddy-deepseek](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-deepseek) | WorkBuddy + DeepSeek V4 | 全量常驻 + MCP直达 + 文件产出 |
-| [workbuddy-native](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-native) | **WorkBuddy 内置积分模型特调** | Expert模式 + Expert团队 + MCP直达 + 积分优化 |
+| **master**（本分支） | **v4.0 引擎核心** + WorkBuddy 适配器 | core/ + adapters/workbuddy.py |
+| [deepseek-v4](https://github.com/Dear-Ded/wallstreet-tieling/tree/deepseek-v4) | DeepSeek V4 Pro 专属 | v3.x 全量常驻 + Think High |
+| [workbuddy-deepseek](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-deepseek) | WorkBuddy + DeepSeek V4 | v3.x 全量常驻 + MCP直达 |
+| [workbuddy-native](https://github.com/Dear-Ded/wallstreet-tieling/tree/workbuddy-native) | WorkBuddy 内置积分模型 | v3.x Expert + MCP直达 |
+
+**v4.0 新增适配器**（通过 PR 贡献）:
+| 平台 | 适配器文件 | 状态 |
+|------|-----------|:--:|
+| WorkBuddy | `adapters/workbuddy.py` | ✅ |
+| CLI 独立运行 | `adapters/cli.py` | ✅ |
+| Dify | `adapters/dify.py` | 🚧 模板 |
+| Coze | `adapters/coze.py` | 🚧 模板 |
+| CrewAI | `adapters/crewai.py` | 🚧 模板 |
 
 选择建议：
-- 不确定用哪个 → master（最大兼容性）
-- 用 DeepSeek V4 API → deepseek-v4（缓存优化，成本-67%）
-- 用 WorkBuddy 桌面端 + DS V4 → workbuddy-deepseek（工具直达，Write直接出文件）
-- **用 WorkBuddy 内置积分模型（非外接API）→ workbuddy-native（零API Key、积分最优配置）**
+- 不确定用哪个 → master（最大兼容性 + 最新引擎）
+- 需要 v3.x 稳定版 → deepseek-v4 / workbuddy-native
+- 贡献新平台适配器 → Fork master，提交 `adapters/{platform}.py`
