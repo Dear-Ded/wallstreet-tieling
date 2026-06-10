@@ -26,3 +26,13 @@ jobs:
       - name: Check tests exist
         run: |
           test -f tests/regression.json && echo "Tests OK" || echo "Missing tests"
+      - name: Python syntax check
+        run: |
+          python -m compileall api/ tests/
+      - name: Python lint (flake8)
+        run: |
+          python -m flake8 api/ tests/ --select=E,F --max-line-length=120
+      - name: Markdown lint
+        run: |
+          npm install -g markdownlint-cli
+          markdownlint '**/*.md' --ignore node_modules
