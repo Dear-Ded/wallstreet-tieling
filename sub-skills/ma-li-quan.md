@@ -218,13 +218,13 @@ output:
 | dnspython | 2.8.0 | `Bash("{python} -c \"import dns.resolver; ...\"")` | DNS查询 |
 | cloudscraper | 1.2.71 | `Bash("{python} -c \"import cloudscraper; ...\"")` | 绕过Cloudflare反爬 |
 
-其中 `{python}` = `C:\Users\80983\.workbuddy\binaries\python\envs\default/bin/python`
+其中 `{python}` 为当前平台的 Python 解释器路径（由宿主环境自动解析）
 
 ### 查询→工具映射
 
 | 数据需求 | 主工具 | 备工具 | 降级 |
 |---------|--------|--------|------|
-| 用户名搜索 | `Bash("cd C:/Users/80983/.workbuddy && C:/Users/80983/.workbuddy/binaries/python/envs/default/bin/python -c \"from maigret import search; ...\"")` | `Bash("{python} -c \"from sherlock_project import sherlock; sherlock.sherlock('{username}')\"")` | `Skill("multi-search-engine", {query: "{username} site:weibo.com"})` |
+| 用户名搜索 | `Bash("{python} -c \"from maigret import search; search('{username}')\"")` | `Bash("{python} -c \"from sherlock_project import sherlock; sherlock.sherlock('{username}')\"")` | `Skill("multi-search-engine", {query: "{username} site:weibo.com"})` |
 | 邮箱注册检测 | `Bash("{python} -c \"import holehe; ...\"")` | Have I Been Pwned API | `Skill("multi-search-engine", {query: "{email}"})` |
 | 手机号信息 | `Bash("phoneinfoga scan -n {phone}")` | 降级：`WebSearch "{phone} 归属地"` | 标注[信息有限] |
 | 图片EXIF | `Bash("exiftool {image_path}")` | 在线 exif 查看器 | 标注[EXIF不可用] |
@@ -238,7 +238,7 @@ output:
 
 ```python
 # maigret 调用模板
-import sys; sys.path.insert(0, 'C:/Users/80983/.workbuddy/binaries/python/envs/default/Lib/site-packages')
+import sys; sys.path.insert(0, '{python_site_packages}')
 import asyncio
 from maigret.maigret import search as maigret_search
 
