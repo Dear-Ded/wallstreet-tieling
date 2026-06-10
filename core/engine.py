@@ -18,6 +18,7 @@ from .rules import (
     ALL_USER_TEMPLATES, MODE_TEMPLATES,
     CONDITIONAL_BRANCH_RULES, SIGNAL_PRIORITY,
 )
+from .session_bus import SessionBus, Fact, RiskSignal, Contradiction, UnverifiedClaim
 
 # v3.2.0 api/ 层兼容 — 仅 import agent/quality 数据结构，不 import 平台相关代码
 from api.agent import DueDiligenceAgent, AgentState, AgentMemory
@@ -92,19 +93,32 @@ class Engine:
     # ── 主流程 ──
 
     async def run(self) -> dict:
-        """完整尽调流程: P1 → 信号检测 → P2 → P3"""
+        """完整尽调流程: P1 → Bus提取 → 信号检测 → 会议 → P2 → P3"""
+        bus = SessionBus(self.target)
+
         # Phase 1: 并行调查
         p1 = await self._execute_phase("phase1", self.template.get("phase1", []))
+        self._extract_to_bus(p1, bus)
 
         # 条件分支信号检测
         if self.template.get("conditional_branches") and p1:
             self._detect_and_branch(p1)
 
-        # Phase 2: 验证
-        p2 = await self._execute_phase("phase2", self.template.get("phase2", []))
+        # Phase 1.5: 团队会议
+        if self.template.get("meeting") and bus.contradictions:
+            transcript = await self._team_meeting(bus)
+            bus.meeting_transcript = transcript
 
-        # Phase 3: 输出
-        p3 = await self._execute_phase("phase3", self.template.get("phase3", []))
+        # Phase 2: 验证 (收到结构化简报)
+        verify_brief = bus.build_verify_brief()
+        p2 = await self._execute_phase("phase2", self.template.get("phase2", []),
+                                       extra_context=verify_brief)
+        self._update_bus_verified(p2, bus)
+
+        # Phase 3: 输出 (收到最终情报)
+        report_brief = bus.build_report_brief()
+        p3 = await self._execute_phase("phase3", self.template.get("phase3", []),
+                                       extra_context=report_brief)
 
         report = await self._assemble_report(p3 + p2 + p1)
         return {
@@ -113,12 +127,16 @@ class Engine:
             "branches_triggered": self.branches_triggered,
             "metrics": self._all_metrics,
             "commissar_stats": self._commissar_stats,
+            "bus_summary": bus.to_dict(),
         }
 
     # ── Phase 执行 ──
 
-    async def _execute_phase(self, phase: str, role_ids: list[str]) -> list[dict]:
-        """真并发执行一个 Phase 的所有角色"""
+    async def _execute_phase(self, phase: str, role_ids: list[str],
+                             extra_context: dict | None = None) -> list[dict]:
+        """真并发执行一个 Phase 的所有角色
+        extra_context: Bus 提取的结构化情报，注入到 user prompt
+        """
         if not role_ids:
             return []
         agents = [self.registry.ensure_agent(rid, self.target) for rid in role_ids]
@@ -139,7 +157,7 @@ class Engine:
                 try:
                     resp = await self.adapter.llm.chat(
                         system_prompt=system_prompt,
-                        user_prompt=self._build_user_prompt(agent),
+                        user_prompt=self._build_user_prompt(agent, extra_context),
                         model=self.model, agent_name=agent.name,
                     )
                 except Exception as e:
@@ -251,6 +269,122 @@ class Engine:
                     print(f"  🔀 条件分支: {sig['desc']} — {new_agent.name}加入")
                     self.branches_triggered.append(sig)
 
+    # ── SessionBus 操作 ──
+
+    def _extract_to_bus(self, p1_results: list[dict], bus: SessionBus) -> None:
+        """Phase 1 原始输出 → SessionBus 结构化提取"""
+        all_text = " ".join(r.get("text", "") for r in p1_results if r.get("ok"))
+        if not all_text:
+            return
+
+        # 简单提取: 关键词匹配 → 结构化。后续可改为 LLM 提取。
+        import re as _re
+
+        # 注册资本
+        m = _re.search(r'注册资本[：:]\s*([\d.,]+)\s*万', all_text)
+        if m:
+            bus.add_fact("注册资本", f"{m.group(1)}万", "张铁柱")
+
+        # 实控人
+        m = _re.search(r'实际控制人[：:为是]\s*(\S{2,10})', all_text)
+        if m:
+            bus.add_fact("实控人", m.group(1), "张铁柱")
+
+        # 失信记录
+        if "失信" in all_text:
+            bus.add_signal("失信记录", "HIGH", "赵刚",
+                          detail=all_text[all_text.find("失信"):all_text.find("失信")+80])
+
+        # 大存大贷
+        if "大存大贷" in all_text or "存贷双高" in all_text:
+            bus.add_signal("大存大贷", "HIGH", "李明远")
+
+        # 矛盾检测: 同一 key 的不同值
+        key_values: dict[str, list[tuple[str, str]]] = {}
+        for f in bus.facts:
+            key_values.setdefault(f.key, []).append((f.value, f.source))
+        for key, vals in key_values.items():
+            if len(vals) >= 2 and len(set(v for v, _ in vals)) > 1:
+                bus.add_contradiction(key, vals[0][0], vals[1][0],
+                                      [s for _, s in vals[:2]])
+
+        # 待验证声明
+        if "市场份额" in all_text or "估值" in all_text:
+            bus.unverified_claims.append(
+                UnverifiedClaim(claim="市场份额或估值估算", basis="行业估算",
+                               source="王思远"))
+
+    def _update_bus_verified(self, p2_results: list[dict], bus: SessionBus) -> None:
+        """Phase 2 验证结果 → 更新 Bus"""
+        all_text = " ".join(r.get("text", "") for r in p2_results if r.get("ok"))
+        if not all_text:
+            return
+        # 标记所有事实为已验证
+        for f in bus.facts:
+            bus.update_fact(f.key, verified=True, verifier="郑慎之")
+
+    # ── 团队会议 ──
+
+    async def _team_meeting(self, bus: SessionBus) -> list[str]:
+        """Phase 1.5: 钱守正主持, 三轮议事"""
+        agenda = bus.build_meeting_agenda()
+        if not agenda:
+            return ["[钱守正] 本轮无争议项，跳过会议。"]
+
+        transcript: list[str] = []
+        chair_id = "qian-shou-zheng"
+
+        for item in agenda[:5]:  # 最多 5 项议程
+            # 主持人开场
+            opening = await self.adapter.llm.chat(
+                system_prompt=f"你是钱守正，华尔街驻铁岭办事处总经理。主持团队会议。简洁、务实、不废话。当前调查对象: {self.target}。",
+                user_prompt=f"议题: {item.get('detail', item.get('item', ''))}。简短介绍，抛给相关人员。",
+                agent_name="钱守正",
+            )
+            transcript.append(f"[钱守正] {opening.text[:300]}")
+
+            # 相关角色轮流发言 (仅第一个矛盾角色)
+            agents = item.get("agents", [])
+            if agents:
+                a = agents[0]
+                agent = self.registry.get(a)
+                if agent:
+                    context = "\n".join(transcript[-3:])
+                    resp = await self.adapter.llm.chat(
+                        system_prompt=f"你是{agent.name}。在团队会议中轮到你了。简洁回应。",
+                        user_prompt=f"会议记录:\n{context}\n\n对'{item.get('item','')}'发表意见。",
+                        agent_name=agent.name,
+                    )
+                    transcript.append(f"[{agent.name}] {resp.text[:200]}")
+
+                if len(agents) >= 2:
+                    b = agents[1]
+                    agent2 = self.registry.get(b)
+                    if agent2:
+                        context = "\n".join(transcript[-3:])
+                        resp2 = await self.adapter.llm.chat(
+                            system_prompt=f"你是{agent2.name}。简短回应对方的观点。",
+                            user_prompt=f"会议记录:\n{context}\n\n你的回应:",
+                            agent_name=agent2.name,
+                        )
+                        transcript.append(f"[{agent2.name}] {resp2.text[:200]}")
+
+            # 主持人裁决
+            if item["type"] == "contradiction":
+                bus.resolve_contradiction(
+                    item["item"], f"会议裁决: {transcript[-1][:100]}", resolver="钱守正"
+                )
+
+        # 会议总结
+        closing = await self.adapter.llm.chat(
+            system_prompt="你是钱守正。会议总结。30字以内。",
+            user_prompt=f"会议记录:\n" + "\n".join(transcript[-5:]),
+            agent_name="钱守正",
+        )
+        transcript.append(f"[钱守正·总结] {closing.text[:100]}")
+
+        return transcript
+
     # ── 辅助 ──
 
     def _load_prompt(self, phase: str, agent_id: str) -> str:
@@ -268,10 +402,15 @@ class Engine:
 
         return NO_FABRICATION_RULE
 
-    def _build_user_prompt(self, agent: DueDiligenceAgent) -> str:
+    def _build_user_prompt(self, agent: DueDiligenceAgent,
+                           extra: dict | None = None) -> str:
         template_fn = ALL_USER_TEMPLATES.get(agent.agent_id)
         text = template_fn(self.target) if template_fn else \
                f"对「{self.target}」执行尽调分析。按铁律要求输出。"
+
+        # 注入 Bus 提取的结构化情报
+        if extra:
+            text = f"{text}\n\n# 前序阶段情报\n{json.dumps(extra, ensure_ascii=False, indent=2)}"
 
         if agent.memory.key_findings:
             findings = "\n".join(f"- {f}" for f in agent.memory.key_findings[-5:])
