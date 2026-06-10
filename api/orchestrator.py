@@ -153,44 +153,58 @@ ALL_USER_TEMPLATES = {
     **PHASE1_USER_TEMPLATES, **PHASE2_USER_TEMPLATES, **PHASE3_USER_TEMPLATES,
 }
 
-# ── 条件分支规则 ──
-CONDITIONAL_BRANCH_RULES = {
-    "controller_anomaly": {
-        "signal_keywords": ["实控人不一致", "代持", "影子控制", "实际控制人不明",
-                           "法人与实控人不一致", "隐名股东"],
-        "append_role": "ma-li-quan",
-        "desc": "实控人异常 → 追加马力全深度背调",
-    },
-    "large_deposit_loan": {
-        "signal_keywords": ["大存大贷", "存贷双高", "存贷双高现象", "高存高贷",
-                           "货币资金占比过高", "有息负债同时高企"],
-        "append_role": "zhao-gang",
-        "desc": "大存大贷 → 追加赵刚深度风险扫描",
-    },
-    "many_related": {
-        "signal_keywords": ["关联企业超过10家", "关联方众多", "大量关联",
-                           "疑似壳公司", "关联交易频繁"],
-        "append_role": "zhao-gang",
-        "desc": "大量关联企业 → 追加赵刚担保圈分析",
-    },
-    "cashflow_quality": {
-        "signal_keywords": ["经营现金流/净利润低于50%", "现金流质量差",
-                           "经营现金流为负", "现金流覆盖不足"],
-        "append_role": "zheng-shen-zhi",
-        "desc": "现金流质量差 → 追加郑慎之财务专项检查",
-    },
-    "dishonest_record": {
-        "signal_keywords": ["失信被执行人", "被执行人", "限制高消费",
-                           "列入失信名单", "失信记录"],
-        "append_role": "zhang-tie-zhu",
-        "desc": "失信记录 → 追加张铁柱重新核实工商状态",
-    },
-    "registration_mismatch": {
-        "signal_keywords": ["注册资金与经营不匹配", "注册资本异常", "注册资本变更异常"],
-        "append_role": "zheng-shen-zhi",
-        "desc": "注册异常 → 追加郑慎之工商数据专项验证",
-    },
-}
+# ── 条件分支规则 (加载自 references/conditional-branch-rules.json) ──
+
+def _load_branch_rules() -> dict:
+    """加载条件分支规则，JSON 文件优先，回退到内联默认值"""
+    import json as _json
+    rules_path = Path(__file__).resolve().parent.parent / "references" / "conditional-branch-rules.json"
+    if rules_path.exists():
+        try:
+            data = _json.loads(rules_path.read_text(encoding="utf-8"))
+            return data.get("rules", {})
+        except Exception:
+            pass
+    # 回退内联默认值（与 JSON 文件同步）
+    return {
+        "controller_anomaly": {
+            "signal_keywords": ["实控人不一致", "代持", "影子控制", "实际控制人不明",
+                               "法人与实控人不一致", "隐名股东"],
+            "append_role": "ma-li-quan",
+            "desc": "实控人异常 → 追加马力全深度背调",
+        },
+        "large_deposit_loan": {
+            "signal_keywords": ["大存大贷", "存贷双高", "存贷双高现象", "高存高贷",
+                               "货币资金占比过高", "有息负债同时高企"],
+            "append_role": "zhao-gang",
+            "desc": "大存大贷 → 追加赵刚深度风险扫描",
+        },
+        "many_related": {
+            "signal_keywords": ["关联企业超过10家", "关联方众多", "大量关联",
+                               "疑似壳公司", "关联交易频繁"],
+            "append_role": "zhao-gang",
+            "desc": "大量关联企业 → 追加赵刚担保圈分析",
+        },
+        "cashflow_quality": {
+            "signal_keywords": ["经营现金流/净利润低于50%", "现金流质量差",
+                               "经营现金流为负", "现金流覆盖不足"],
+            "append_role": "zheng-shen-zhi",
+            "desc": "现金流质量差 → 追加郑慎之财务专项检查",
+        },
+        "dishonest_record": {
+            "signal_keywords": ["失信被执行人", "被执行人", "限制高消费",
+                               "列入失信名单", "失信记录"],
+            "append_role": "zhang-tie-zhu",
+            "desc": "失信记录 → 追加张铁柱重新核实工商状态",
+        },
+        "registration_mismatch": {
+            "signal_keywords": ["注册资金与经营不匹配", "注册资本异常", "注册资本变更异常"],
+            "append_role": "zheng-shen-zhi",
+            "desc": "注册异常 → 追加郑慎之工商数据专项验证",
+        },
+    }
+
+CONDITIONAL_BRANCH_RULES = _load_branch_rules()
 
 
 # ══════════════════════════════════════════════════════════

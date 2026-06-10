@@ -77,22 +77,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 - "这行业还能做吗" → 王思远(行业)+赵刚(风险)
 - "给我来个全面的" → 全部6个业务角色
 
-**关键词→角色映射**：
-
-| 用户意图 | 加载的子skill |
-|----------|--------------|
-| 企业/公司/工商/法人/股东/股权 | `sub-skills/zhang-tie-zhu.md` |
-| 财务/营收/利润/现金流/报表 | `sub-skills/li-ming-yuan.md` |
-| 行业/市场/竞争/产业链/政策 | `sub-skills/wang-si-yuan.md` |
-| 风险/诉讼/失信/担保/合规 | `sub-skills/zhao-gang.md` |
-| 人/手机号/身份证/背调/深度调查 | `sub-skills/ma-li-quan.md` |
-| 报告/输出/生成/整合 | `sub-skills/liu-wen-hua.md` |
-| 验证/核实/冲突/审计 | `sub-skills/zheng-shen-zhi.md` |
-| 技术/工具/数据源/API/推导 | `sub-skills/zhou-tong.md` |
-| 设计/美化/视觉/排版/HTML | `sub-skills/yan-hao-kan.md` |
-
-**常驻角色**：`qian-shou-zheng.md`(总经理) · `wu-de-hou.md`(吴政委) · `an-shao.md`(暗哨)
-**复杂任务**：`chen-zhi-yuan.md`(陈工/任务拆解)
+> 完整的关键词映射表、常驻角色、条件分支触发规则见 `references/role-scheduling.md`
 
 ---
 
