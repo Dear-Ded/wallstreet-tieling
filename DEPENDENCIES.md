@@ -1,7 +1,7 @@
-# 环境依赖完整披露
+﻿# 环境依赖完整披露
 
 **最后更新**: 2026-06-09  
-**适用版本**: v3.2.0
+**适用版本**: v0.5.0
 
 本文档列出 wallstreet-tieling 项目的所有运行时依赖，按类别分级标注必要性和缺失后的功能降级影响。
 
@@ -139,7 +139,7 @@ docker build -t wallstreet-tieling .
 | 项目 | 说明 |
 |:-----|:-----|
 | **包名** | `wallstreet-tieling` |
-| **当前版本** | 3.0.2 |
+| **当前版本** | v0.5.0 |
 | **入口** | `SKILL.md`（主入口）、`bin/cli.js`（CLI）、`lib/mcp-server.js`（MCP） |
 | **安装** | `npx skills add Dear-Ded/wallstreet-tieling -g -y` |
 

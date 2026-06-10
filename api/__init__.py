@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v3.2.0 — API 包
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0 — API 包
 
 公共 API 导出：
   - Orchestrator / run_due_diligence — 编排入口

@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v3.2.0 — Agent 基类与状态管理
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0 — Agent 基类与状态管理
 真并发 Agent 架构：每个 Agent 拥有独立状态、对话历史、情感追踪、内部独白能力。
 """
 from __future__ import annotations

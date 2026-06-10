@@ -1,6 +1,6 @@
-# 技术边界、已知限制与演进方向
+﻿# 技术边界、已知限制与演进方向
 
-> v3.2.0 · 诚实披露技术局限，明确规划方向。
+> v0.5.0 · 诚实披露技术局限，明确规划方向。
 
 ---
 
@@ -8,15 +8,15 @@
 
 这些是当前架构设计的内生局限，短期内不计划根本性改变。
 
-### 1. 同上下文角色扮演（v3.2.0 已改善）
+### 1. 同上下文角色扮演（v0.5.0 已改善）
 
-> ⚠️ **v3.1.0 起已部分解决**：引入真并发 Agent 架构（DueDiligenceAgent 独立状态/记忆/情感/消息通信），不再是单一 LLM 实例角色扮演。但 Agent 间通过结构化消息通信，非完整的多进程独立推理。
+> ⚠️ **v0.5.0 起已部分解决**：引入真并发 Agent 架构（DueDiligenceAgent 独立状态/记忆/情感/消息通信），不再是单一 LLM 实例角色扮演。但 Agent 间通过结构化消息通信，非完整的多进程独立推理。
 
 | 表现 | 原因 | 当前状态 |
 |:-----|:-----|:---------|
-| Agent 可并发独立调用 LLM | asyncio.gather 并行调度 | ✅ v3.1.0 已实现 |
-| Agent 拥有独立状态/记忆/情感 | DueDiligenceAgent 独立实例 | ✅ v3.1.0 已实现 |
-| Agent 间结构化消息通信 | AgentMessage + AgentRegistry 路由 | ✅ v3.1.0 已实现 |
+| Agent 可并发独立调用 LLM | asyncio.gather 并行调度 | ✅ v0.5.0 已实现 |
+| Agent 拥有独立状态/记忆/情感 | DueDiligenceAgent 独立实例 | ✅ v0.5.0 已实现 |
+| Agent 间结构化消息通信 | AgentMessage + AgentRegistry 路由 | ✅ v0.5.0 已实现 |
 | 独立进程/线程推理 | 非完整 CrewAI/LangGraph 架构 | 🔮 未来规划 |
 
 **规划方向**：Phase 2/3 — 引入独立Agent进程（CrewAI/LangGraph方案调研中）
@@ -124,9 +124,9 @@ MCP连接器仅在WorkBuddy/OpenClaw/CodeBuddy平台可用。其他平台强制�
 
 ---
 
-## 前版本限制（v3.0.2 已解决）
+## 前版本限制（v0.5.0 已解决）
 
-| 限制 | v3.0.0-3.0.1状态 | v3.0.2状态 |
+| 限制 | v0.5.0-v0.5.0状态 | v0.5.0状态 |
 |:-----|:----------------|:----------|
 | 无日志和可观测性 | ❌ 黑盒运行 | ✅ SentinelMiddleware + JSON报告 |
 | 错误处理纯Prompt | ❌ 仅指令 | ✅ 3层try/except链 + 重试 + 降级 |
@@ -134,7 +134,7 @@ MCP连接器仅在WorkBuddy/OpenClaw/CodeBuddy平台可用。其他平台强制�
 | 调度规则硬编码 | ❌ Prompty硬编码 | ✅ MODE_TEMPLATES + CONDITIONAL_BRANCH_RULES 结构化 |
 | 子skill加载无缓存 | ⚠️ 依赖模型 | ✅ 单会话内缓存（不再重复加载已加载的子skill） |
 | 质量检查自动化率低 | ❌ 30% | ✅ L1正则扫描零成本 + L2深度验证评分0-100 |
-| 版本号不统一 | ❌ SKILL.md 0.0.1 ≠ package.json 3.0.2 | ✅ 全文件统一 3.0.2 |
+| 版本号不统一 | ❌ SKILL.md 0.0.1 ≠ package.json v0.5.0 | ✅ 全文件统一 v0.5.0 |
 
 ---
 
@@ -142,8 +142,8 @@ MCP连接器仅在WorkBuddy/OpenClaw/CodeBuddy平台可用。其他平台强制�
 
 | 阶段 | 目标 | 当前状态 |
 |:-----|:-----|:--------|
-| Phase 1 | 角色化Prompt工程 + 6大尽调能力 + 工程化质量保障 + 8种部署形态 | ✅ **v3.0.2 已完成** |
-| Phase 2 | 多Agent并行 + 平台深度适配 → 真并发Agent (v3.1.0) + 测试工程化 (v3.2.0) | ✅ **v3.2.0 当前版本** |
+| Phase 1 | 角色化Prompt工程 + 6大尽调能力 + 工程化质量保障 + 8种部署形态 | ✅ **v0.5.0 已完成** |
+| Phase 2 | 多Agent并行 + 平台深度适配 → 真并发Agent (v0.5.0) + 测试工程化 (v0.5.0) | ✅ **v0.5.0 当前版本** |
 | Phase 3 | RAG + 本地知识库 + 端到端一键尽调流水线 | 📋 规划中 |
 
 > 完整路线图见 [`ROADMAP.md`](https://github.com/Dear-Ded/wallstreet-tieling-dev/blob/main/ROADMAP.md)（私仓）

@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
-"""华尔街驻铁岭办事处 API Server v3.2.0
+﻿#!/usr/bin/env python3
+"""华尔街驻铁岭办事处 API Server v0.5.0
 一键启动: python api/server.py
 Docker: docker run -p 8080:8080 wallstreet-tieling
 
-v3.1.0 变更: 路由到 wst 编排引擎（统一质量门禁），移除独立 LLM 路径。
+v0.5.0 变更: 路由到 wst 编排引擎（统一质量门禁），移除独立 LLM 路径。
 """
 import importlib
 import asyncio
@@ -97,7 +97,7 @@ def log_response(response):
 def index():
     return jsonify({
         "name": "华尔街驻铁岭办事处",
-        "version": "3.2.0",
+        "version": "v0.5.0",
         "description": "银行信贷情报专家团 API · 真并发Agent架构",
         "endpoints": {
             "POST /api/analyze": "执行尽调分析 (通过编排引擎)",
@@ -115,7 +115,7 @@ def health():
     return jsonify({
         "status": "ok" if has_key else "missing_api_key",
         "model": config.DEFAULT_MODEL,
-        "version": "3.2.0",
+        "version": "v0.5.0",
         "time": time.time(),
     })
 
@@ -134,7 +134,7 @@ def get_skill():
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
-    """v3.2.0: 路由到 wst 编排引擎（完整 3-Phase + 质量门禁）"""
+    """v0.5.0: 路由到 wst 编排引擎（完整 3-Phase + 质量门禁）"""
     data = request.get_json() or {}
     target = data.get("company", data.get("message", data.get("name", "")))
     if not target:
@@ -198,7 +198,7 @@ def docs():
 
 if __name__ == "__main__":
     print(f"""
-🏛️  华尔街驻铁岭办事处 API Server v3.2.0
+🏛️  华尔街驻铁岭办事处 API Server v0.5.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 端口: {PORT}
 绑定: {BIND_HOST}

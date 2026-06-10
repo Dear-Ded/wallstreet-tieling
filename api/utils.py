@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v3.2.0 工具函数"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0 工具函数"""
 from __future__ import annotations
 
 import re

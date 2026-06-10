@@ -1,12 +1,12 @@
-# wallstreet-tieling v3.2.0 → v4.0.0 迁移指南
+﻿# wallstreet-tieling 旧版 → v0.5.0 迁移指南
 
 ## TL;DR
 
-v4.0.0 将编排引擎与平台解耦。`api/orchestrator.py` 仍可用（向后兼容），但新代码应使用 `core/engine.py`。
+v0.5.0 将编排引擎与平台解耦。`api/orchestrator.py` 仍可用（向后兼容），但新代码应使用 `core/engine.py`。
 
 ## 代码变更
 
-### 旧方式 (v3.2.0)
+### 旧方式
 ```python
 from api.orchestrator import Orchestrator
 import api.config as config
@@ -16,7 +16,7 @@ orch = Orchestrator(target="ABC公司", mode="standard")
 result = await orch.orchestrate()
 ```
 
-### 新方式 (v4.0.0)
+### 新方式 (v0.5.0)
 ```python
 from core.engine import Engine
 from adapters.workbuddy import create_adapter
@@ -33,7 +33,7 @@ python adapters/cli.py "ABC公司" standard
 
 ## 新增能力
 
-| 能力 | v3.2.0 | v4.0.0 |
+| 能力 | 旧版 | v0.5.0 |
 |------|:--:|:--:|
 | 平台适配器 | ❌ | ✅ WB / CLI / Dify / Coze |
 | SessionBus 情报传递 | ❌ 散装文本 | ✅ 结构化 JSON |

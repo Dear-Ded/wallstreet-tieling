@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""华尔街驻铁岭办事处 — CLI 入口 v3.2.0
+﻿#!/usr/bin/env python3
+"""华尔街驻铁岭办事处 — CLI 入口 v0.5.0
 真并发 Agent 架构 · 拟人化角色 · No Fabrication 六层防御
 
 用法:
@@ -28,7 +28,7 @@ logger = logging.getLogger("wst")
 
 def main():
     parser = argparse.ArgumentParser(
-        description="华尔街驻铁岭办事处 · 多Agent尽调编排器 v3.2.0",
+        description="华尔街驻铁岭办事处 · 多Agent尽调编排器 v0.5.0",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:

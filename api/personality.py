@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v3.2.0 — 13 角色拟人化人格档案
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0 — 13 角色拟人化人格档案
 每个角色的性格、口头禅、同事关系、情绪模式——赋予'活人感'。
 """
 from __future__ import annotations

@@ -4,7 +4,7 @@
 
 ---
 
-## v4.0.0 (2026-06-10) — 平台无关引擎
+## v0.5.0 (2026-06-10) — 平台无关引擎
 
 ### 新增
 - **core/ 引擎核心**: 零平台依赖的纯编排引擎
@@ -16,7 +16,7 @@
 - **core/query_cache.py**: 查询缓存
 - **core/org_memory.py**: 五层本地组织记忆
 - **adapters/**: WB / CLI 适配器 + 贡献模板
-- **MIGRATION.md**: v3.2.0 → v4.0.0 迁移指南
+- **MIGRATION.md**: previous → v0.5.0 迁移指南
 - **ARCHITECTURE.md**: 架构文档
 - **402 测试** (was 376)
 

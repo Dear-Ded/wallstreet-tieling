@@ -1,4 +1,4 @@
-# wallstreet-tieling v3.2.0
+﻿# wallstreet-tieling v0.5.0
 # 生成: 2026-06-10 · 工程审查 P0 修复
 
 # ── 运行时依赖 ──

@@ -1,4 +1,4 @@
-"""wallstreet-tieling v3.2.0 — pytest 共享 fixtures 和配置
+﻿"""wallstreet-tieling v0.5.0 — pytest 共享 fixtures 和配置
 
 提供跨测试模块的共用 fixtures、mock 基础设施和 pytest-asyncio 配置。
 """

@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v3.2.0 — 真并发 Agent 编排器
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0 — 真并发 Agent 编排器
 核心升级：
 1. 每个 Agent 独立状态 + 记忆 + 情感追踪
 2. Agent 间结构化消息通信（不再是 prev_context 字符串拼贴）
@@ -212,7 +212,7 @@ CONDITIONAL_BRANCH_RULES = _load_branch_rules()
 # ══════════════════════════════════════════════════════════
 
 class Orchestrator:
-    """v3.2.0 真并发 Agent 编排器（含熔断器 + 指数退避）"""
+    """v0.5.0 真并发 Agent 编排器（含熔断器 + 指数退避）"""
 
     # ── 熔断器配置 ──
     _CB_FAIL_THRESHOLD = 5      # 连续失败 N 次触发熔断
@@ -451,7 +451,7 @@ class Orchestrator:
 
         # ── 团队开工──
         print(f"\n{'='*60}")
-        print(f"  华尔街驻铁岭办事处 · v3.2.0")
+        print(f"  华尔街驻铁岭办事处 · v0.5.0")
         print(f"  目标: {self.target}  |  模式: {self.mode}")
         print(f"  激活: {', '.join(all_roles)}")
         print(f"{'='*60}\n")

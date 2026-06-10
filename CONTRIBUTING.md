@@ -1,8 +1,8 @@
-# Contributing to WallStreet Tieling Office
+﻿# Contributing to WallStreet Tieling Office
 
 首先，感谢你愿意为这个项目添砖加瓦 🙌
 
-## 🎯 贡献平台适配器 (v4.0.0+)
+## 🎯 贡献平台适配器 (v0.5.0+)
 
 想让 wallstreet-tieling 跑在你的平台上？只需要实现三个接口：
 

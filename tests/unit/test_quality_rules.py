@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""QualityRules 纯函数单元测试 — wallstreet-tieling v3.2.0
+﻿#!/usr/bin/env python3
+"""QualityRules 纯函数单元测试 — wallstreet-tieling v0.5.0
 
 测试基石：全部零依赖、零 Mock、纯函数。
 覆盖：信贷决策词 / 模糊词 / 来源缺失 / 截断检测 / 编造检测 / L2 评分引擎

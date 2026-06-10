@@ -1,4 +1,4 @@
-<!-- GitHub搜索优化 -->
+﻿<!-- GitHub搜索优化 -->
 # 🏛️ WallStreet Tieling Office — AI Credit Intelligence Agent Team
 **A 13-role AI due diligence pipeline: enterprise investigation, financial analysis, risk assessment, KYC/KYB/AML/OSINT.**
 `npx skills add Dear-Ded/wallstreet-tieling -g -y`
@@ -9,7 +9,7 @@
 
 **13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿**
 
-[![Version](https://img.shields.io/badge/version-3.2.0-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling/releases)
+[![Version](https://img.shields.io/badge/version-v0.5.0-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/Dear-Ded/wallstreet-tieling/validate.yml?style=flat-square&labelColor=1a1a2e&label=CI)](https://github.com/Dear-Ded/wallstreet-tieling/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&labelColor=1a1a2e)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=flat-square&labelColor=1a1a2e&color=gold)](https://github.com/Dear-Ded/wallstreet-tieling/stargazers)

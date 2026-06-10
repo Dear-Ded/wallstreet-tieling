@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """wallstreet-tieling v4.0 — 平台无关编排引擎
 纯编排逻辑。不调 aiohttp、不读环境变量、不引用 MCP/Skill 工具名。
 一切外部交互走 PlatformAdapter 的三个接口。
@@ -20,7 +20,7 @@ from .rules import (
 )
 from .session_bus import SessionBus, Fact, RiskSignal, Contradiction, UnverifiedClaim
 
-# v3.2.0 api/ 层兼容 — 仅 import agent/quality 数据结构，不 import 平台相关代码
+# v0.5.0 api/ 层兼容 — 仅 import agent/quality 数据结构，不 import 平台相关代码
 from api.agent import DueDiligenceAgent, AgentState, AgentMemory
 from api.agent_registry import AgentRegistry
 from api.personality import get_personality, get_receptionist_greeting

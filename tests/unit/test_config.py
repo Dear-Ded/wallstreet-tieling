@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""Config 单元测试 — wallstreet-tieling v3.2.0
+﻿#!/usr/bin/env python3
+"""Config 单元测试 — wallstreet-tieling v0.5.0
 
 覆盖：路径常量 / API 配置 / 角色映射 / 模式模板 / 定价 / get_api_key / reload_config
 """

@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""Utils 单元测试 — wallstreet-tieling v3.2.0
+﻿#!/usr/bin/env python3
+"""Utils 单元测试 — wallstreet-tieling v0.5.0
 
 覆盖：slug / load_skill / load_system_prompt / extract_numbers_with_unit / extract_company_ids
 """
@@ -193,7 +193,7 @@ class TestExtractNumbersWithUnit:
         assert any("123.45" in r for r in result)
 
     def test_extract_single_digit(self):
-        r"""v3.2.0: 个位数也会被提取（修复 #21 遗漏"5亿"等表达）"""
+        r"""v0.5.0: 个位数也会被提取（修复 #21 遗漏"5亿"等表达）"""
         result = extract_numbers_with_unit("营收5亿增长50%")
         # 个位数现在也被匹配（正则改为 \d+ 而非 \d{2,}）
         assert "5" in result

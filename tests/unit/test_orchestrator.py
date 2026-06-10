@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""Orchestrator 单元测试 — wallstreet-tieling v3.2.0
+﻿#!/usr/bin/env python3
+"""Orchestrator 单元测试 — wallstreet-tieling v0.5.0
 
 覆盖：_commissar_check / _generate_pua_feedback / _extract_signals /
        _build_context / _check_consistency / 初始化 / 模式选择

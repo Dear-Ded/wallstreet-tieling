@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""Personality 单元测试 — wallstreet-tieling v3.2.0
+﻿#!/usr/bin/env python3
+"""Personality 单元测试 — wallstreet-tieling v0.5.0
 
 覆盖：get_personality / get_all_agent_ids / get_receptionist_greeting / PERSONALITIES 结构完整性
 """

@@ -1,6 +1,6 @@
-# 角色调度表
+﻿# 角色调度表
 
-> wallstreet-tieling v3.2.0 — 关键词匹配 + LLM 语义理解的混合调度机制
+> wallstreet-tieling v0.5.0 — 关键词匹配 + LLM 语义理解的混合调度机制
 
 ## 触发词
 
