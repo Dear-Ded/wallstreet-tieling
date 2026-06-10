@@ -136,7 +136,7 @@ class TestCommissarCheck:
             "注册资本1000万元[来源: tyc-mcp, 参数: company_name='测试科技', "
             "时间: 2026-06-10]。公司经营正常，财务稳健。"
             "营收500亿[来源: Bloomberg, 2026]。"
-        ) * 3  # Make it long enough
+        ) * 7  # >500 chars for truncation check
         passed, violations = base_orch._commissar_check(sample_agent, text, 0)
         assert passed is True
         assert violations == []
@@ -197,7 +197,7 @@ class TestCommissarCheck:
 
     def test_commissar_stats_on_fabrication(self, base_orch, sample_agent):
         """编造信号检测 — L1 通过但 L2 发现匿名源"""
-        # Must be ≥200 chars to avoid short_output L1 violation
+        # Must be ≥500 chars to avoid short_output L1 violation
         # Must have source annotations to avoid no_source L1 violation
         # Must NOT have credit words or vague words
         # But MUST have anonymous source indicators for L2 fabrication detection
@@ -206,7 +206,7 @@ class TestCommissarCheck:
             "市场分析显示行业前景广阔[来源: 行业报告, 2026]。"
             "业内人士认为公司有望取得更大发展[来源: 行业报告, 2026]。"
             "据悉该领域增长潜力巨大。"
-        ) * 6  # Make it long enough (>200 chars)
+        ) * 8  # Make it long enough (>500 chars)
         passed, violations = base_orch._commissar_check(sample_agent, text, 0)
         assert passed is False
         fab_violations = [v for v in violations if v.rule == "fabrication_risk"]

@@ -120,8 +120,8 @@ def analyze():
 
     # 异步调用编排引擎
     try:
-        concurrency = int(data.get("concurrency", 5))
-        max_retries = int(data.get("max_retries", 3))
+        concurrency = min(int(data.get("concurrency", 5)), 20)   # P0 硬上限
+        max_retries = min(int(data.get("max_retries", 3)), 5)    # P0 硬上限
     except (ValueError, TypeError):
         concurrency = 5
         max_retries = 3

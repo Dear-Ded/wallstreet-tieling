@@ -164,7 +164,7 @@ class TestTruncation:
         assert trunc[0].severity == "WARN"
 
     def test_normal_output_no_truncation(self):
-        text = ("这是正常长度的尽调输出。" * 20)  # >200 chars
+        text = ("这是正常长度的尽调输出。" * 45)  # >500 chars (12*45=540)
         v = QualityRules.scan(text, "test")
         trunc = [x for x in v if x.rule == "short_output"]
         assert len(trunc) == 0
@@ -260,7 +260,7 @@ class TestValidateDdOutput:
     def test_source_coverage_ratio_checked(self):
         """来源覆盖率低 → 问题标记"""
         text = ("营收500亿，利润50亿，市值1000亿，员工20000人，"
-                "资产3000亿。营收600亿，利润60亿。" * 6)  # >200 chars, many numbers
+                "资产3000亿。营收600亿，利润60亿。" * 12)  # >500 chars, many numbers
         result = QualityRules.validate_dd_output(text, "test")
         issues = result.get("issues", [])
         has_coverage = any("来源覆盖率" in i for i in issues)

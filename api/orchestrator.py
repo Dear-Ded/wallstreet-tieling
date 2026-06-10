@@ -212,7 +212,11 @@ CONDITIONAL_BRANCH_RULES = _load_branch_rules()
 # ══════════════════════════════════════════════════════════
 
 class Orchestrator:
-    """v3.2.0 真并发 Agent 编排器"""
+    """v3.2.0 真并发 Agent 编排器（含熔断器 + 指数退避）"""
+
+    # ── 熔断器配置 ──
+    _CB_FAIL_THRESHOLD = 5      # 连续失败 N 次触发熔断
+    _CB_COOLDOWN_SEC = 30.0     # 冷却时间（秒）
 
     def __init__(self, target: str, model: str | None = None,
                  mode: str = "standard", concurrency: int = 5,
@@ -230,6 +234,42 @@ class Orchestrator:
         self._session_start = time.monotonic()
         self._all_metrics: list[dict] = []
         self._commissar_stats: dict[str, dict] = {}
+
+        # ── 熔断器状态 ──
+        self._cb_failures: int = 0           # 连续失败计数
+        self._cb_open_since: float = 0.0     # 熔断打开时间戳
+        self._cb_half_open: bool = False     # 半开探测中
+        self._cb_tripped: bool = False       # 熔断是否触发过（用于日志）
+
+    # ── 熔断器 ──
+    def _cb_check(self) -> tuple[bool, str]:
+        """检查熔断器状态。返回 (是否放行, 原因)"""
+        if self._cb_failures < self._CB_FAIL_THRESHOLD:
+            return True, ""
+        # 超过阈值，检查冷却
+        elapsed = time.monotonic() - self._cb_open_since
+        if elapsed < self._CB_COOLDOWN_SEC:
+            return False, f"熔断 {self._CB_FAIL_THRESHOLD} 连败, 冷却 {self._CB_COOLDOWN_SEC - elapsed:.0f}s"
+        # 冷却完毕，进入半开状态
+        if not self._cb_half_open:
+            self._cb_half_open = True
+            if not self._cb_tripped:
+                self._cb_tripped = True
+                logger.warning("熔断器打开：%d 次连续失败，进入冷却", self._cb_failures)
+        return True, "半开探测"
+
+    def _cb_record(self, success: bool) -> None:
+        """记录 API 调用结果，更新熔断器状态"""
+        if success:
+            self._cb_failures = 0
+            if self._cb_half_open:
+                logger.info("熔断器恢复：半开探测成功")
+            self._cb_half_open = False
+        else:
+            self._cb_failures += 1
+            if self._cb_failures >= self._CB_FAIL_THRESHOLD:
+                self._cb_open_since = time.monotonic()
+                self._cb_half_open = False
 
     # ── API 调用 ──
     def _build_system_message(self, agent: DueDiligenceAgent, system_prompt: str) -> str:
@@ -267,7 +307,13 @@ class Orchestrator:
                         agent: DueDiligenceAgent,
                         config_dict: dict,
                         system_prompt: str) -> dict:
-        """单次 LLM API 调用"""
+        """单次 LLM API 调用（含熔断器检查）"""
+        # 熔断器检查
+        go, reason = self._cb_check()
+        if not go:
+            return {"ok": False, "text": "", "ms": 0, "tok": 0,
+                    "usage": {}, "err": f"circuit_open: {reason}"}
+
         if not config.API_KEY:
             raise RuntimeError("API_KEY not configured. Set DEEPSEEK_API_KEY or OPENAI_API_KEY.")
 
@@ -290,6 +336,7 @@ class Orchestrator:
         }
         url = f"{config.API_BASE.rstrip('/')}/chat/completions"
 
+        result: dict = {"ok": False, "text": "", "ms": 0, "tok": 0, "usage": {}, "err": ""}
         try:
             async with sem:
                 async with session.post(
@@ -299,26 +346,31 @@ class Orchestrator:
                     elapsed = (time.monotonic() - t0) * 1000
                     if resp.status != 200:
                         await resp.text()  # consume body
-                        return {
+                        result = {
                             "ok": False, "text": "", "ms": int(elapsed), "tok": 0,
                             "usage": {}, "err": f"HTTP {resp.status}",
                         }
-                    data = await resp.json()
-                    choice = data.get("choices", [{}])[0]
-                    text = choice.get("message", {}).get("content", "")
-                    usage = data.get("usage", {})
-                    return {
-                        "ok": True, "text": text, "ms": int(elapsed),
-                        "tok": usage.get("total_tokens", 0), "usage": usage, "err": "",
-                    }
+                    else:
+                        data = await resp.json()
+                        choice = data.get("choices", [{}])[0]
+                        text = choice.get("message", {}).get("content", "")
+                        usage = data.get("usage", {})
+                        result = {
+                            "ok": True, "text": text, "ms": int(elapsed),
+                            "tok": usage.get("total_tokens", 0), "usage": usage, "err": "",
+                        }
         except asyncio.TimeoutError:
             elapsed = (time.monotonic() - t0) * 1000
-            return {"ok": False, "text": "", "ms": int(elapsed), "tok": 0,
+            result = {"ok": False, "text": "", "ms": int(elapsed), "tok": 0,
                     "usage": {}, "err": "timeout"}
         except Exception as e:
             elapsed = (time.monotonic() - t0) * 1000
-            return {"ok": False, "text": "", "ms": int(elapsed), "tok": 0,
+            result = {"ok": False, "text": "", "ms": int(elapsed), "tok": 0,
                     "usage": {}, "err": f"{type(e).__name__}: {e}"}
+
+        # 记录熔断器状态
+        self._cb_record(result.get("ok", False))
+        return result
 
     # ── 政委门禁 ──
     def _commissar_check(self, agent: DueDiligenceAgent, text: str,
@@ -542,6 +594,7 @@ class Orchestrator:
                 if not result.get("ok"):
                     agent.emotion.update(success=False)
                     if attempt < 1:
+                        await asyncio.sleep(2 ** (attempt + 1))  # 指数退避: 2s, 4s, 8s...
                         continue
                     result["rid"] = agent.agent_id
                     result["name"] = agent.name
@@ -555,7 +608,7 @@ class Orchestrator:
 
                 if passed:
                     agent.emotion.update(success=True, discovery=len(text) > 800)
-                    agent.memory.key_findings.append(f"[Phase {phase}] {text[:200]}")
+                    agent.memory.add_finding(f"[Phase {phase}] {text[:200]}")
                     result["rid"] = agent.agent_id
                     result["name"] = agent.name
                     result["quality_flags"] = []
@@ -567,6 +620,7 @@ class Orchestrator:
                 if attempt < self.max_retries:
                     feedback = self._generate_pua_feedback(agent, violations, attempt + 1)
                     config_dict["user_prompt"] += feedback
+                    await asyncio.sleep(2 ** (attempt + 1))  # 指数退避
                 else:
                     agent.state = AgentState.DEGRADED
                     result["rid"] = agent.agent_id

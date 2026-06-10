@@ -53,11 +53,20 @@ class PersonalityProfile:
 
 @dataclass
 class AgentMemory:
-    """Agent 记忆 — 独立上下文窗口"""
+    """Agent 记忆 — 独立上下文窗口
+    key_findings 有硬性上限防止长时间编排 OOM（H1 修复）
+    """
     conversation_history: list[dict] = field(default_factory=list)
     key_findings: list[str] = field(default_factory=list)
     questions_raised: list[str] = field(default_factory=list)
     notes_to_self: list[str] = field(default_factory=list)  # 内部备忘
+    _max_findings: int = 20  # 硬上限，自动裁剪旧记录
+
+    def add_finding(self, finding: str) -> None:
+        """添加发现，自动裁剪超出 max_findings 的旧记录"""
+        self.key_findings.append(finding)
+        if len(self.key_findings) > self._max_findings:
+            self.key_findings = self.key_findings[-self._max_findings:]
 
 
 @dataclass

@@ -97,8 +97,8 @@ class QualityRules:
                 severity="ERROR",
             ))
 
-        # 4. 截断检测
-        if len(text) < 200:
+        # 4. 截断检测（阈值 500 字符，应对标准尽调报告长度 ~8000+ 字符）
+        if len(text) < 500:
             violations.append(Violation(
                 rule="short_output",
                 field="full_text",
