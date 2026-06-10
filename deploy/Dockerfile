@@ -1,8 +1,8 @@
-FROM python:3.11-slim@sha256:latest
+FROM python:3.11-slim
 
 # 元数据
 LABEL org.opencontainers.image.title="wallstreet-tieling"
-LABEL org.opencontainers.image.description="华尔街驻铁岭办事处 · 13-Agent 尽调系统 v3.1.0"
+LABEL org.opencontainers.image.description="华尔街驻铁岭办事处 · 13-Agent 尽调系统 v3.2.0"
 LABEL org.opencontainers.image.version="3.2.0"
 
 WORKDIR /app
