@@ -1,7 +1,7 @@
 ---
 name: wallstreet-tieling
 description: WallStreet Tieling Office · 13-role prompt chain credit intelligence crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · 企业尽调/财务分析/行业研究/风险预警/人员背调/OSINT · 实际可用10-30数据源，只摆事实不给建议
-version: 3.0.2
+version: 3.1.0
 author: Dear-Ded
 license: MIT
 homepage: https://dear-ded.github.io/wallstreet-tieling/

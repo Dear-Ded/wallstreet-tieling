@@ -221,7 +221,7 @@ L3: 均不可用 → 降级为 WebSearch + WebFetch
 
 ### 形态A：粘贴模式（最小依赖）
 
-**零依赖**。复制 `SKILL.md` 粘贴到任意AI对话窗口即可。所有13位专家角色、6层防杜撰、9条铁律均包含在SKILL.md中。
+**零依赖**。复制 `SKILL.md` 粘贴到任意AI对话窗口即可。所有13位专家角色、6层防杜撰、10条铁律均包含在SKILL.md中。
 
 **局限**：无MCP连接器（企业数据需手动提供）、无动态编排器（需手动选择角色）、无自动化报告生成。
 
@@ -263,7 +263,7 @@ L3: 均不可用 → 降级为 WebSearch + WebFetch
 | **Expert 模式** | 加载单个专家子技能 |
 | **Expert Team 模式** | 加载完整13人专家团 |
 
-> 配置指南: `deploy/workbuddy-expert-config.md` · `deploy/workbuddy-models-guide.md`
+> 配置指南: `SKILL.md` · `deploy/multi-platform-guide.md`
 
 ### 其他平台降级说明
 

@@ -80,9 +80,8 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 2. Project Name: 华尔街驻铁岭办事处
 3. Custom Instructions 中粘贴 `SKILL.md` 核心章节（铁律+战法+SOP）
 4. Project Knowledge 中上传：
-   - `references/data-sources.md`
-   - `references/people-investigation.md`
-   - `references/anomaly-detection.md`
+   - `references/data-sources.md`（数据源速查表）
+   - `references/compatibility.md`（兼容性矩阵）
 
 ---
 

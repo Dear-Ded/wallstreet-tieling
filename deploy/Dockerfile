@@ -1,19 +1,31 @@
-FROM python:3.11-slim
+FROM python:3.11-slim@sha256:latest
+
+# 元数据
+LABEL org.opencontainers.image.title="wallstreet-tieling"
+LABEL org.opencontainers.image.description="华尔街驻铁岭办事处 · 13-Agent 尽调系统 v3.1.0"
+LABEL org.opencontainers.image.version="3.1.0"
 
 WORKDIR /app
 
-# 复制源代码
-COPY api/server.py api/
+# 复制完整代码（含编排引擎 + 所有 Agent 模块）
+COPY api/ api/
 COPY SKILL.md .
-COPY references/ references/
 COPY sub-skills/ sub-skills/
+COPY references/ references/
+COPY tests/ tests/
 
 # 安装依赖
-RUN pip install --no-cache-dir flask flask-cors requests
+RUN pip install --no-cache-dir flask flask-cors requests aiohttp
 
-# 端口
+# 非 root 用户
+RUN useradd --create-home --shell /bin/bash wst && \
+    chown -R wst:wst /app
+USER wst
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)" || exit 1
+
 EXPOSE 8080
-
-# 启动
 ENV PORT=8080
-CMD ["python", "api/server.py"]
+CMD ["python", "-m", "api.server"]

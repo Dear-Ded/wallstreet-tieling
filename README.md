@@ -1,6 +1,6 @@
 <!-- GitHub搜索优化 -->
 # 🏛️ WallStreet Tieling Office — AI Credit Intelligence Agent Team
-**A 13-member AI agent crew for banking due diligence, financial analysis, risk assessment, KYC/KYB/AML/OSINT.**
+**A 13-role AI due diligence pipeline: enterprise investigation, financial analysis, risk assessment, KYC/KYB/AML/OSINT.**
 `npx skills add Dear-Ded/wallstreet-tieling -g -y`
 
 <div align="center">
@@ -9,11 +9,10 @@
 
 **13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿**
 
-[![Version](https://img.shields.io/badge/version-3.0.2-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling/releases)
+[![Version](https://img.shields.io/badge/version-3.1.0-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/Dear-Ded/wallstreet-tieling/validate.yml?style=flat-square&labelColor=1a1a2e&label=CI)](https://github.com/Dear-Ded/wallstreet-tieling/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&labelColor=1a1a2e)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=flat-square&labelColor=1a1a2e&color=gold)](https://github.com/Dear-Ded/wallstreet-tieling/stargazers)
-[![Platform](https://img.shields.io/badge/platform-14+-purple?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Platform](https://img.shields.io/badge/platform-14+-purple?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Models](https://img.shields.io/badge/models-15+-orange?style=flat-square&labelColor=1a1a2e)](references/compatibility.md)
 [![Data Sources](https://img.shields.io/badge/data_sources-30+-success?style=flat-square&labelColor=1a1a2e)](references/data-sources.md)
@@ -340,7 +339,7 @@ git checkout workbuddy-deepseek # DeepSeek V4 + MCP直连
 git checkout deepseek-v4        # Think High模式深度优化
 ```
 
-> 各分支部署文档: `deploy/workbuddy-expert-config.md` · `deploy/workbuddy-models-guide.md` · `deploy/workbuddy-workflow.md`
+> 各分支部署文档: `deploy/Dockerfile` · `deploy/multi-platform-guide.md` · `deploy/openclaw.json`
 
 ---
 
@@ -406,7 +405,7 @@ python api/server.py
 
 ---
 
-## ⚖️ 铁律（9条）
+## ⚖️ 铁律（10条）
 
 | # | 规则 | 约束等级 |
 |:--|:-----|:--------|
@@ -467,10 +466,7 @@ wallstreet-tieling/
 │   ├── mcp-server.json            # MCP 服务器配置（6工具 JSON Schema）
 │   ├── multi-platform-guide.md    # 8形态部署指南
 │   ├── clawhub.json               # ClawHub 市场配置
-│   ├── openclaw.json              # OpenClaw 市场配置
-│   ├── workbuddy-expert-config.md # Expert/ExpertTeam 配置
-│   ├── workbuddy-models-guide.md  # 30+内置积分模型选择
-│   └── workbuddy-workflow.md      # 工作流分步指南（workbuddy-native）
+│   └── openclaw.json              # OpenClaw 市场配置
 ├── demo/
 │   ├── demo-output.md              # 实际生成报告样例（华为技术有限公司）
 │   ├── report-demo-v3.html         # 交互式HTML报告 v3

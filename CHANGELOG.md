@@ -4,6 +4,42 @@
 
 ---
 
+## v3.1.0 — 真并发Agent架构 + 拟人化升级 (2026-06-10)
+
+**五维度全面审计驱动 · 安全红线清零 · 真并发Agent · 13角色人格化**
+
+### 🏗️ 架构重构
+- **真并发 Agent 系统**：从单LLM多调用升级为独立Agent实例（DueDiligenceAgent）
+  — 每个Agent拥有独立状态/记忆/情感追踪/内部独白/消息通信
+- **Agent 注册中心**（AgentRegistry）：13角色生命周期管理、通信路由、团队状态快照
+- **AgentMessage 结构化消息**：替代 prev_context 字符串拼贴，支持点对点/广播/闲聊
+- **统一编排引擎入口**：server.py 和 wst.py 走同一 Orchestrator，消除架构孤岛
+
+### 🎭 拟人化人格系统
+- **13角色人格档案**（PersonalityProfile）：背景故事/性格特征/口头禅/同事关系
+- **情感状态追踪**（EmotionalState）：信心/挫败/兴奋动态变化，6种情绪模式
+- **团队互动**：开工问候/同事闲聊/吐槽/互相评价/内部独白——赋予"活人感"
+- **政委 PUA 保留**：三级退回话术 + 降级不阻塞流水线
+
+### 🛡️ 安全修复
+- **server.py**：移除运行时 `os.system(pip install)` 安全漏洞
+- **API Key**：统一 DEEPSEEK_API_KEY / OPENAI_API_KEY 双回退逻辑
+- **VAGUE_WORDS**：从 VAGUE_WORDS_TERMS 列表动态构建正则（单一来源，修复双轨不同步）
+
+### ⚙️ 工程优化
+- **新增模块**：config.py / utils.py / agent.py / personality.py / agent_registry.py / quality_rules.py / orchestrator.py
+- **Python 包结构**：`api/__init__.py`，模块间 package-relative imports
+- **Logging**：引入 logging 模块替代 print()，请求日志中间件
+- **Dockerfile**：打包完整编排引擎 + HEALTHCHECK + 非 root 用户
+- **配置中心**：统一配置入口，支持环境变量热更新
+
+### 📄 文档修复
+- 清理 ma-li-quan.md ~100行重复内容
+- 版本号 SKILL.md / README / CHANGELOG / DEPENDENCIES 统一为 v3.1.0
+- 项目管理中枢规范化（sprints/ / decisions/ / sessions/ 目录）
+
+---
+
 ## v3.0.2 — 文档补全 + 工程优化 (2026-06-09)
 
 **GStack 三专家综合审计 · README 全面重写 · 项目管理规范化**

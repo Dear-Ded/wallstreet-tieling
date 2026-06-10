@@ -1,163 +1,147 @@
 #!/usr/bin/env python3
-"""华尔街驻铁岭办事处 API Server
+"""华尔街驻铁岭办事处 API Server v3.1.0
 一键启动: python api/server.py
 Docker: docker run -p 8080:8080 wallstreet-tieling
-"""
 
+v3.1.0 变更: 路由到 wst 编排引擎（统一质量门禁），移除独立 LLM 路径。
+"""
+import importlib
+import logging
 import os
 import sys
+import time
 from pathlib import Path
 
-# -- 检查依赖 --
-try:
-    from flask import Flask, request, jsonify, Response
-    from flask_cors import CORS
-except ImportError:
-    print("安装依赖中...")
-    os.system(f"{sys.executable} -m pip install flask flask-cors requests -q")
-    from flask import Flask, request, jsonify, Response
-    from flask_cors import CORS
+# ── 日志配置 ──
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+logger = logging.getLogger("wst.server")
 
+# ── 依赖检查 ──
+MISSING_DEPS = []
+for mod_name in ["flask", "flask_cors"]:
+    try:
+        importlib.import_module(mod_name)
+    except ImportError:
+        MISSING_DEPS.append(mod_name)
+
+if MISSING_DEPS:
+    print("=" * 60)
+    print("  缺少依赖，请手动安装：")
+    print(f"  pip install {' '.join(MISSING_DEPS)}")
+    print("=" * 60)
+    sys.exit(1)
+
+from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
 import requests as http_requests
-import json
-import time
 
-# -- 加载 SKILL.md --
-skill_path = Path(__file__).parent.parent / "SKILL.md"
-with open(skill_path, "r", encoding="utf-8") as f:
-    SKILL_CONTENT = f.read()
+# ── 配置 ──
+from . import config
 
-# -- 配置 --
+config.reload_config()
+
 app = Flask(__name__)
 CORS(app)
-
-# API Key 从环境变量读取
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-MODEL = os.environ.get("WALLSTREET_MODEL", "gpt-4o-mini")
-API_KEY_ENV = os.environ.get("WALLSTREET_API_KEY_ENV", "OPENAI_API_KEY")
-if API_KEY_ENV != "OPENAI_API_KEY":
-    OPENAI_API_KEY = os.environ.get(API_KEY_ENV, os.environ.get("OPENAI_API_KEY", ""))
 PORT = int(os.environ.get("PORT", 8080))
 
 
-def build_system_prompt(task_type: str, **kwargs) -> str:
-    """构建完整的 System Prompt"""
-    task_prompts = {
-        "due_diligence": f"你正在执行企业尽调任务。目标企业: {kwargs.get('company', '未指定')}。深度: {kwargs.get('depth', 'standard')}。",
-        "people": f"你正在执行人员背景调查。目标: {kwargs.get('name', '未指定')}。",
-        "financial": f"你正在执行财务分析。目标企业: {kwargs.get('company', '未指定')}。",
-        "anti_nominee": f"你正在执行反代持穿透。目标企业: {kwargs.get('company', '未指定')}。",
-    }
-    task_header = task_prompts.get(task_type, f"任务类型: {task_type}")
-    return f"{SKILL_CONTENT}\n\n---\n{task_header}\n开始执行。"
+# ── 请求日志中间件 ──
+@app.before_request
+def log_request():
+    logger.info("%s %s from %s", request.method, request.path,
+                request.remote_addr)
 
 
-def call_llm(system_prompt: str, user_message: str, stream: bool = False) -> dict | str:
-    """调用 LLM API"""
-    if not OPENAI_API_KEY:
-        return {"error": "未配置 API Key", "hint": "设置环境变量 OPENAI_API_KEY"}
-
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": MODEL,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message},
-        ],
-        "temperature": 0.3,
-        "stream": stream,
-    }
-
-    resp = http_requests.post(
-        f"{OPENAI_BASE_URL}/chat/completions",
-        headers=headers,
-        json=payload,
-        timeout=300,
-        stream=stream,
-    )
-
-    if stream:
-        return resp  # 返回原始响应对象用于流式输出
-    return resp.json()
+@app.after_request
+def log_response(response):
+    logger.info("%s %s → %d", request.method, request.path,
+                response.status_code)
+    return response
 
 
-# -- API 路由 --
+# ── API 路由 ──
 
 @app.route("/")
 def index():
     return jsonify({
         "name": "华尔街驻铁岭办事处",
-        "version": "3.0.2",
-        "description": "银行信贷情报专家团 API",
+        "version": "3.1.0",
+        "description": "银行信贷情报专家团 API · 真并发Agent架构",
         "endpoints": {
-            "POST /api/analyze": "执行分析任务",
+            "POST /api/analyze": "执行尽调分析 (通过编排引擎)",
             "GET /api/health": "健康检查",
             "GET /api/skill": "获取完整SKILL.md",
             "GET /api/docs": "API文档",
         },
-        "setup": "设置 OPENAI_API_KEY 环境变量后启动",
+        "setup": "设置 DEEPSEEK_API_KEY 环境变量后启动",
     })
 
 
 @app.route("/api/health")
 def health():
+    has_key = bool(config.get_api_key())
     return jsonify({
-        "status": "ok" if OPENAI_API_KEY else "missing_api_key",
-        "model": MODEL,
+        "status": "ok" if has_key else "missing_api_key",
+        "model": config.DEFAULT_MODEL,
+        "version": "3.1.0",
         "time": time.time(),
     })
 
 
 @app.route("/api/skill")
 def get_skill():
+    skill_path = config.SKILL_DIR / "SKILL.md"
+    if not skill_path.exists():
+        return jsonify({"error": "SKILL.md not found"}), 404
     fmt = request.args.get("format", "text")
+    content = skill_path.read_text(encoding="utf-8")
     if fmt == "json":
-        return jsonify({"skill": SKILL_CONTENT, "length": len(SKILL_CONTENT)})
-    return Response(SKILL_CONTENT, mimetype="text/markdown; charset=utf-8")
+        return jsonify({"skill": content, "length": len(content)})
+    return Response(content, mimetype="text/markdown; charset=utf-8")
 
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
+    """v3.1.0: 路由到 wst 编排引擎（完整 3-Phase + 质量门禁）"""
     data = request.get_json() or {}
-    task_type = data.get("type", "due_diligence")
-    user_message = data.get("message", data.get("company", data.get("name", "")))
-    stream = data.get("stream", False)
+    target = data.get("company", data.get("message", data.get("name", "")))
+    if not target:
+        return jsonify({"error": "缺少 company/message/name 参数"}), 400
 
-    if not user_message:
-        return jsonify({"error": "缺少 message/company/name 参数"}), 400
+    mode = data.get("depth", data.get("mode", "standard"))
+    if mode not in config.MODE_TEMPLATES:
+        mode = "standard"
 
-    system_prompt = build_system_prompt(task_type, **data)
-    result = call_llm(system_prompt, user_message, stream=stream)
+    # 异步调用编排引擎
+    import asyncio
+    from .orchestrator import Orchestrator
 
-    if isinstance(result, dict) and "error" in result:
-        return jsonify(result), 500
-
-    if stream:
-        def generate():
-            for line in result.iter_lines():
-                if line:
-                    yield line.decode("utf-8") + "\n"
-        return Response(generate(), mimetype="text/event-stream")
-
-    # 非流式：提取回复文本
-    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-    return jsonify({
-        "task_type": task_type,
-        "result": content,
-        "model": MODEL,
-        "usage": result.get("usage", {}),
-    })
-
-
-@app.route("/api/analyze/stream", methods=["POST"])
-def analyze_stream():
-    data = request.get_json() or {}
-    data["stream"] = True
-    return analyze()
+    try:
+        orch = Orchestrator(
+            target=target,
+            model=data.get("model"),
+            mode=mode,
+            concurrency=int(data.get("concurrency", 5)),
+            max_retries=int(data.get("max_retries", 3)),
+        )
+        result = asyncio.run(orch.orchestrate())
+        return jsonify({
+            "task_type": "due_diligence",
+            "report": result["report"],
+            "model": orch.model,
+            "mode": mode,
+            "roles_activated": result["roles_activated"],
+            "branches_triggered": result["branches_triggered"],
+        })
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logger.exception("Orchestration failed")
+        return jsonify({"error": f"编排失败: {e}"}), 500
 
 
 @app.route("/api/docs")
@@ -166,29 +150,26 @@ def docs():
         "quickstart": {
             "curl": """curl -X POST http://localhost:8080/api/analyze \\
   -H "Content-Type: application/json" \\
-  -d '{"type":"due_diligence","company":"ABC公司","depth":"standard"}'""",
-            "python": """import requests
-r = requests.post("http://localhost:8080/api/analyze", json={
-    "type": "due_diligence",
-    "company": "ABC公司",
-    "depth": "standard"
-})
-print(r.json()["result"])""",
+  -d '{"company":"ABC公司","depth":"standard"}'""",
         },
-        "types": ["due_diligence", "people", "financial", "anti_nominee"],
-        "formats": ["json", "stream"],
+        "types": ["due_diligence"],
+        "modes": list(config.MODE_TEMPLATES.keys()),
+        "formats": ["json"],
     })
 
 
 if __name__ == "__main__":
     print(f"""
-🏛️  华尔街驻铁岭办事处 API Server
+🏛️  华尔街驻铁岭办事处 API Server v3.1.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-端  口: {PORT}
-模  型: {MODEL}
-API Key: {'已配置 ✅' if OPENAI_API_KEY else '未配置 ⚠️'}
+端口: {PORT}
+模型: {config.DEFAULT_MODEL}
+API Key: {'已配置 ✅' if config.get_api_key() else '未配置 ⚠️'}
 
-终端测试:
+测试:
   curl http://localhost:{PORT}/api/health
+  curl -X POST http://localhost:{PORT}/api/analyze \\
+    -H "Content-Type: application/json" \\
+    -d '{{"company":"ABC公司","depth":"standard"}}'
 """)
     app.run(host="0.0.0.0", port=PORT, debug=False)
