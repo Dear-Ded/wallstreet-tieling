@@ -320,7 +320,7 @@ class Orchestrator:
                     "attempts": attempt + 1, "degraded": False,
                 }
                 return True, []
-            elif validation["stats"]["fabrication_indicators"] > 0 and attempt < 1:
+            elif validation["stats"]["fabrication_indicators"] > 0:
                 violations = [Violation(
                     rule="fabrication_risk", field="full_text",
                     detail=f"L2 校验发现 {validation['stats']['fabrication_indicators']} 个编造信号",
