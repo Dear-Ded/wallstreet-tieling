@@ -50,6 +50,32 @@ CORS_ORIGINS = os.environ.get("WALLSTREET_CORS_ORIGINS", "http://localhost:3000,
 CORS(app, origins=[o.strip() for o in CORS_ORIGINS.split(",") if o.strip()])
 PORT = int(os.environ.get("PORT", 8080))
 
+# ── API 认证 (P0 修复) ──
+# 安全策略: 未配置 token → 强制 127.0.0.1; 已配置 → 0.0.0.0 + Bearer auth
+AUTH_TOKEN = os.environ.get("WALLSTREET_AUTH_TOKEN", "")
+BIND_HOST = "0.0.0.0" if AUTH_TOKEN else "127.0.0.1"
+
+# 无需认证的公开端点
+_PUBLIC_PATHS = {"/", "/api/docs", "/api/health"}
+
+
+@app.before_request
+def check_auth():
+    # 公开端点放行
+    if request.path in _PUBLIC_PATHS or request.path.startswith("/api/health"):
+        return
+    # 未配置 token → 不拦截（此时已强制绑定 127.0.0.1）
+    if not AUTH_TOKEN:
+        return
+    # Bearer token 校验
+    auth = request.headers.get("Authorization", "")
+    if auth != f"Bearer {AUTH_TOKEN}":
+        return jsonify({"error": "unauthorized", "hint": "设置 Authorization: Bearer <token>"}), 401
+
+
+# ── 请求体大小限制 (P1) ──
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB
+
 
 # ── 请求日志中间件 ──
 @app.before_request
@@ -149,7 +175,8 @@ def analyze():
             "branches_triggered": result["branches_triggered"],
         })
     except RuntimeError as e:
-        return jsonify({"error": str(e)}), 500
+        logger.exception("Orchestration failed: %s", e)
+        return jsonify({"error": "编排失败，请检查日志获取详情"}), 500
     except Exception as e:
         logger.exception("Orchestration failed")
         return jsonify({"error": "编排失败，请检查日志获取详情"}), 500
@@ -174,13 +201,14 @@ if __name__ == "__main__":
 🏛️  华尔街驻铁岭办事处 API Server v3.2.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 端口: {PORT}
+绑定: {BIND_HOST}
 模型: {config.DEFAULT_MODEL}
 API Key: {'已配置 ✅' if config.get_api_key() else '未配置 ⚠️'}
+认证: {'Bearer Token ✅' if AUTH_TOKEN else '仅本机 (127.0.0.1) 🔒'}
 
 测试:
-  curl http://localhost:{PORT}/api/health
-  curl -X POST http://localhost:{PORT}/api/analyze \\
-    -H "Content-Type: application/json" \\
-    -d '{{"company":"ABC公司","depth":"standard"}}'
-""")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+  curl http://localhost:{PORT}/api/health""")
+    if AUTH_TOKEN:
+        print(f'  curl -H "Authorization: Bearer $WALLSTREET_AUTH_TOKEN" ...')
+    print()
+    app.run(host=BIND_HOST, port=PORT, debug=False)
