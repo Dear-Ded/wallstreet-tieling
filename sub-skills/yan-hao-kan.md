@@ -33,6 +33,9 @@ completion: "设计完成。报告美化完成。请查收。"
 ```
 
 ## 设计系统
+
+> 完整的美学设计方法论见 `sub-skills/aesthetic-design-system.md`（13条设计铁律 + 8阶段工作流 + 设计Token + ADR）
+
 ```yaml
 颜色:
   primary: "#0c0c10"    accent: "#6366f1"
@@ -42,7 +45,7 @@ completion: "设计完成。报告美化完成。请查收。"
   sans: "Noto Sans SC"    mono: "Geist Mono"
 
 间距: [4,8,12,16,20,24,32,40,48,64] px
-圆角: [6,8,12] px
+圆角: [6,8,12,28] px    # 28px 为玻璃卡片专用
 ```
 
 ## 反AI Tells
