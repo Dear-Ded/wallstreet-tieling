@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v3.1.0 — Agent 注册中心
+"""wallstreet-tieling v3.2.0 — Agent 注册中心
 管理 13 个 Agent 实例的生命周期、状态查询、通信路由。
 """
 from __future__ import annotations

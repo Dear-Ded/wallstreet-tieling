@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v3.1.0 — 质量规则引擎 (提取自 unified_supervisor)
+"""wallstreet-tieling v3.2.0 — 质量规则引擎 (提取自 unified_supervisor)
 L1 纯 Python 规则扫描 + L2 No Fabrication 输出校验。
 """
 from __future__ import annotations

@@ -3,7 +3,7 @@ FROM python:3.11-slim@sha256:latest
 # 元数据
 LABEL org.opencontainers.image.title="wallstreet-tieling"
 LABEL org.opencontainers.image.description="华尔街驻铁岭办事处 · 13-Agent 尽调系统 v3.1.0"
-LABEL org.opencontainers.image.version="3.1.0"
+LABEL org.opencontainers.image.version="3.2.0"
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ USER wst
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/health')" || exit 1
 
 EXPOSE 8080
 ENV PORT=8080

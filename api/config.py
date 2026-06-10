@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v3.1.0 统一配置中心
+"""wallstreet-tieling v3.2.0 统一配置中心
 所有模块共享的配置入口，支持环境变量覆盖和热更新。
 """
 from __future__ import annotations
@@ -7,12 +7,36 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
+import logging
+
+_logger = logging.getLogger("wst.config")
+
+
+def _safe_int(env: str, default: int) -> int:
+    try:
+        return int(os.environ.get(env, str(default)))
+    except (ValueError, TypeError):
+        _logger.warning("Invalid int for %s, using default %d", env, default)
+        return default
+
+
+def _safe_float(env: str, default: float) -> float:
+    try:
+        return float(os.environ.get(env, str(default)))
+    except (ValueError, TypeError):
+        _logger.warning("Invalid float for %s, using default %.1f", env, default)
+        return default
 
 # ── 路径 ──
 SKILL_DIR = Path(__file__).resolve().parent.parent
 SUB_SKILLS_DIR = SKILL_DIR / "sub-skills"
 OUTPUT_DIR = SKILL_DIR / "output"
-OUTPUT_DIR.mkdir(exist_ok=True)
+
+
+def ensure_output_dir() -> Path:
+    """创建输出目录（延迟创建，避免 import 副作用）"""
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    return OUTPUT_DIR
 
 # ── API 配置 ──
 API_KEY = os.environ.get("DEEPSEEK_API_KEY", os.environ.get("OPENAI_API_KEY", ""))
@@ -21,10 +45,10 @@ API_BASE = os.environ.get(
     os.environ.get("OPENAI_BASE_URL", "https://api.deepseek.com/v1"),
 )
 DEFAULT_MODEL = os.environ.get("WALLSTREET_MODEL", "deepseek-chat")
-DEFAULT_CONCURRENCY = int(os.environ.get("WALLSTREET_CONCURRENCY", "5"))
-MAX_TOKENS = int(os.environ.get("WALLSTREET_MAX_TOKENS", "8192"))
-TEMPERATURE = float(os.environ.get("WALLSTREET_TEMPERATURE", "0.3"))
-API_TIMEOUT_SECONDS = int(os.environ.get("WALLSTREET_TIMEOUT", "300"))
+DEFAULT_CONCURRENCY = _safe_int("WALLSTREET_CONCURRENCY", 5)
+MAX_TOKENS = _safe_int("WALLSTREET_MAX_TOKENS", 8192)
+TEMPERATURE = _safe_float("WALLSTREET_TEMPERATURE", 0.3)
+API_TIMEOUT_SECONDS = _safe_int("WALLSTREET_TIMEOUT", 300)
 
 # ── Agent 预算 ──
 AGENT_BUDGET_TOKENS = 8000
@@ -53,6 +77,7 @@ ROLE_FILE_MAP: dict[str, str] = {
     "an-shao": "an-shao.md",
 }
 
+# 角色中文名映射（供 CLI 帮助文本和日志显示使用）
 ROLE_NAME_MAP: dict[str, str] = {
     "zhang-tie-zhu": "张铁柱",
     "li-ming-yuan": "李明远",
@@ -143,7 +168,7 @@ def reload_config():
         os.environ.get("OPENAI_BASE_URL", "https://api.deepseek.com/v1"),
     )
     DEFAULT_MODEL = os.environ.get("WALLSTREET_MODEL", "deepseek-chat")
-    DEFAULT_CONCURRENCY = int(os.environ.get("WALLSTREET_CONCURRENCY", "5"))
-    MAX_TOKENS = int(os.environ.get("WALLSTREET_MAX_TOKENS", "8192"))
-    TEMPERATURE = float(os.environ.get("WALLSTREET_TEMPERATURE", "0.3"))
-    API_TIMEOUT_SECONDS = int(os.environ.get("WALLSTREET_TIMEOUT", "300"))
+    DEFAULT_CONCURRENCY = _safe_int("WALLSTREET_CONCURRENCY", 5)
+    MAX_TOKENS = _safe_int("WALLSTREET_MAX_TOKENS", 8192)
+    TEMPERATURE = _safe_float("WALLSTREET_TEMPERATURE", 0.3)
+    API_TIMEOUT_SECONDS = _safe_int("WALLSTREET_TIMEOUT", 300)

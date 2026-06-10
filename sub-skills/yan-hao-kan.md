@@ -61,6 +61,9 @@ completion: "设计完成。报告美化完成。请查收。"
 
 
 ### 已激活工具（v0.1.0）
+
+> 🔄 **平台降级**：如当前平台无此 MCP/Skill，请使用 WebSearch + WebFetch 替代。
+
 | 工具 | 可用 | 功能 |
 |------|:--:|------|
 | mermaid-diagrams Skill | ✅ | 流程图/架构图/时序图 |

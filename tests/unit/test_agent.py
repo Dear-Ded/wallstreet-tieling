@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agent 单元测试 — wallstreet-tieling v3.1.0
+"""Agent 单元测试 — wallstreet-tieling v3.2.0
 
 覆盖：Agent 创建 / inner_monologue / AgentMessage / EmotionalState / 消息系统 / casual_remark
 零 LLM 依赖，纯函数测试。

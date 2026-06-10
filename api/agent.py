@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v3.1.0 — Agent 基类与状态管理
+"""wallstreet-tieling v3.2.0 — Agent 基类与状态管理
 真并发 Agent 架构：每个 Agent 拥有独立状态、对话历史、情感追踪、内部独白能力。
 """
 from __future__ import annotations
 
 import time
 import enum
+import random
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -199,7 +200,6 @@ class DueDiligenceAgent:
         else:
             phrases = ["嗯，正常推进。", "数据还行。", "继续往下看。"]
 
-        import random
         phrase = random.choice(phrases)
 
         if context:
@@ -256,12 +256,13 @@ class DueDiligenceAgent:
     def process_inbox(self) -> list[AgentMessage]:
         """处理收件箱，返回回复消息列表"""
         replies = []
-        for msg in self.inbox:
+        messages = self.inbox.copy()
+        self.inbox.clear()
+        for msg in messages:
             if msg.to_agent == self.agent_id:
                 reply = self._handle_message(msg)
                 if reply:
                     replies.append(reply)
-        self.inbox.clear()
         return replies
 
     def _handle_message(self, msg: AgentMessage) -> Optional[AgentMessage]:
@@ -274,7 +275,6 @@ class DueDiligenceAgent:
             )
         if msg.msg_type == "gossip":
             # 八卦消息，随机回复
-            import random
             if random.random() < 0.6:
                 return self.send_message(
                     msg.from_agent, "gossip",
@@ -320,7 +320,6 @@ class DueDiligenceAgent:
             ],
         }
 
-        import random
         pool = remarks.get(self.emotion.mood, remarks[Mood.NEUTRAL])
         return random.choice(pool)
 

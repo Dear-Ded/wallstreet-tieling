@@ -57,7 +57,7 @@ python api/wst.py --mode standard --target "测试企业" --dry-run
 - **编造禁令**: 绝不编造数据/数字/日期/人名，不确定时标注 `[未获取]`
 
 ### Python 规范
-- Python 3.10+，类型注解可选但推荐
+- Python 3.11+，使用 `from __future__ import annotations` 和 dataclass
 - 异常处理链完整，不吞异常
 - 路径操作使用 `os.path.realpath` + `commonpath` 防穿越
 - 外部输入调用 `sanitize_target()` 过滤

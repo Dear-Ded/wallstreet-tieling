@@ -1,6 +1,6 @@
 # 技术边界、已知限制与演进方向
 
-> v3.0.2 · 诚实披露技术局限，明确规划方向。
+> v3.2.0 · 诚实披露技术局限，明确规划方向。
 
 ---
 
@@ -8,15 +8,16 @@
 
 这些是当前架构设计的内生局限，短期内不计划根本性改变。
 
-### 1. 同上下文角色扮演（非多Agent）
+### 1. 同上下文角色扮演（v3.2.0 已改善）
 
-当前所有13个角色共享同一LLM上下文，通过System Prompt切换身份。这不是真正的多Agent系统。
+> ⚠️ **v3.1.0 起已部分解决**：引入真并发 Agent 架构（DueDiligenceAgent 独立状态/记忆/情感/消息通信），不再是单一 LLM 实例角色扮演。但 Agent 间通过结构化消息通信，非完整的多进程独立推理。
 
-| 表现 | 原因 | 缓解方案 |
+| 表现 | 原因 | 当前状态 |
 |:-----|:-----|:---------|
-| 所有角色由同一个LLM实例执行 | SKILL.md + 子skill按需注入同一上下文 | 子skill按需加载节省Token；13角色分属3 Phase，单Phase最多6人 |
-| 无法同时并行独立推理 | 不是独立Agent进程 | 编排器内async并行调用LLM API已完成（Phase 1 6人同时出结果） |
-| 跨Phase数据通过结构化提取传递 | 无Agent间共享内存 | `extract_structured_data()` 在Phase间提取注册资金/日期/法人传入下一Phase |
+| Agent 可并发独立调用 LLM | asyncio.gather 并行调度 | ✅ v3.1.0 已实现 |
+| Agent 拥有独立状态/记忆/情感 | DueDiligenceAgent 独立实例 | ✅ v3.1.0 已实现 |
+| Agent 间结构化消息通信 | AgentMessage + AgentRegistry 路由 | ✅ v3.1.0 已实现 |
+| 独立进程/线程推理 | 非完整 CrewAI/LangGraph 架构 | 🔮 未来规划 |
 
 **规划方向**：Phase 2/3 — 引入独立Agent进程（CrewAI/LangGraph方案调研中）
 
@@ -141,8 +142,8 @@ MCP连接器仅在WorkBuddy/OpenClaw/CodeBuddy平台可用。其他平台强制�
 
 | 阶段 | 目标 | 当前状态 |
 |:-----|:-----|:--------|
-| Phase 1 | 角色化Prompt工程 + 6大尽调能力 + 工程化质量保障 + 8种部署形态 | ✅ **v3.0.2 当前版本** |
-| Phase 2 | 多Agent并行 + 平台深度适配（DeepSeek V4 Pro常量Think High / MiMo Token Plan） | 🚧 进行中 |
+| Phase 1 | 角色化Prompt工程 + 6大尽调能力 + 工程化质量保障 + 8种部署形态 | ✅ **v3.0.2 已完成** |
+| Phase 2 | 多Agent并行 + 平台深度适配 → 真并发Agent (v3.1.0) + 测试工程化 (v3.2.0) | ✅ **v3.2.0 当前版本** |
 | Phase 3 | RAG + 本地知识库 + 端到端一键尽调流水线 | 📋 规划中 |
 
 > 完整路线图见 [`ROADMAP.md`](https://github.com/Dear-Ded/wallstreet-tieling-dev/blob/main/ROADMAP.md)（私仓）

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AgentRegistry 单元测试 — wallstreet-tieling v3.1.0
+"""AgentRegistry 单元测试 — wallstreet-tieling v3.2.0
 
 覆盖：生命周期 / CRUD / 通信路由 / 状态快照 / 聊天记录 / 清理
 纯 mock 测试，不依赖真实 personality / skill 文件。

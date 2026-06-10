@@ -74,6 +74,8 @@ fallback: "切换到 Plan {letter}：{alternative}。"
 
 当 Skill 目录（`~/.workbuddy/skills/`）中存在以下搜索/检索类 Skill 时，周通应自动将其注册到工具链：
 
+> 🔄 **平台降级**：如当前平台无此 MCP/Skill，请使用 WebSearch + WebFetch 替代。
+
 | Skill 名称 | 发现方式 | 自动注册的触发条件 | 分配给角色 |
 |-----------|---------|------------------|-----------|
 | qcc-company | MCP 连接器扫描 | MCP 工具列表含 qcc-company | 张铁柱、赵刚 |
@@ -226,6 +228,8 @@ fallback: "切换到 Plan {letter}：{alternative}。"
 ### 三、工具调用模板注册表
 
 预定义每个工具的精确调用格式，各角色可直接引用：
+
+> 🔄 **平台降级**：如当前平台无此 MCP/Skill，请使用 WebSearch + WebFetch 替代。
 
 ```yaml
 工具模板注册表:

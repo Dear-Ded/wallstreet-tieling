@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v3.1.0 工具函数"""
+"""wallstreet-tieling v3.2.0 工具函数"""
 from __future__ import annotations
 
 import re
@@ -20,7 +20,12 @@ def slug(s: str, max_len: int = 40) -> str:
 
 def load_skill(filename: str) -> str:
     """加载 sub-skill markdown 文件"""
-    path = config.SUB_SKILLS_DIR / filename
+    # 防止路径穿越攻击
+    safe_name = Path(filename).name
+    if safe_name != filename or ".." in filename:
+        logger.warning("Blocked path traversal attempt: %s", filename)
+        return f"# {filename.replace('.md', '')}\n角色定义加载被阻止（路径穿越检测）。"
+    path = config.SUB_SKILLS_DIR / safe_name
     if path.exists():
         return path.read_text(encoding="utf-8")
     logger.warning("sub-skill not found: %s, using fallback", filename)
@@ -36,8 +41,8 @@ def load_system_prompt() -> str:
 
 
 def extract_numbers_with_unit(text: str) -> list[str]:
-    """提取带单位的数字"""
-    return re.findall(r'(?<!\d)(\d{2,}(?:\.\d+)?)\s*(?:亿|万|千|百|元|%|％)', text)
+    """提取带单位的数字（含个位数如'5亿'）"""
+    return re.findall(r'(?<!\d)(\d+(?:\.\d+)?)\s*(?:亿|万|千|百|元|%|％)', text)
 
 
 def extract_company_ids(text: str) -> list[dict]:

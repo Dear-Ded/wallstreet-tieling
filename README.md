@@ -9,7 +9,7 @@
 
 **13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿**
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling/releases)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue?style=flat-square&labelColor=1a1a2e)](https://github.com/Dear-Ded/wallstreet-tieling/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/Dear-Ded/wallstreet-tieling/validate.yml?style=flat-square&labelColor=1a1a2e&label=CI)](https://github.com/Dear-Ded/wallstreet-tieling/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&labelColor=1a1a2e)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=flat-square&labelColor=1a1a2e&color=gold)](https://github.com/Dear-Ded/wallstreet-tieling/stargazers)
@@ -275,10 +275,11 @@ python api/server.py
 
 | 端点 | 方法 | 说明 |
 |:-----|:-----|:-----|
-| `/api/analyze` | POST | 同步尽调分析 |
-| `/api/analyze?stream=1` | POST | 流式尽调分析 |
+| `/` | GET | 服务器根路由，返回欢迎页面 |
 | `/api/health` | GET | 健康检查 |
-| `/api/skill` | GET | 获取SKILL.md |
+| `/api/skill` | GET | 获取 SKILL.md |
+| `/api/analyze` | POST | 尽调分析（3-Phase 编排） |
+| `/api/docs` | GET | API 文档（实验性） |
 
 ```bash
 curl -X POST http://localhost:8080/api/analyze \
@@ -418,6 +419,7 @@ python api/server.py
 | 7 | 🔧 工具属性：不判断合规合法性 | P1 |
 | 8 | 🔍 能查到的都要查到，不留死角 | P1 |
 | 9 | ⚖️ 权威数据源优先，参考信息标注展示 | P1 |
+| 10 | ✅ **多渠道降级**：L1工具→L2降级→L3兜底，逐级尝试 | P1 |
 
 > 全量 No Fabrication 六层防御体系见 [`api/wst.py`](api/wst.py) 中 `NO_FABRICATION_RULE` 常量（64行）
 
@@ -450,7 +452,7 @@ wallstreet-tieling/
 ├── api/
 │   ├── wst.py                  # 动态编排器（1003行）: 3-Phase编排、6模式、6条件分支
 │   ├── unified_supervisor.py   # 统一监督（999行）: L1+L2质量扫描、政委引擎、哨兵监控
-│   └── server.py               # Flask REST API（194行）: 4个端点 + 流式支持
+│   └── server.py               # Flask REST API（约180行）: 5个端点
 ├── bin/
 │   └── cli.js                  # npm CLI（83行）: --copy/--brief/--mcp
 ├── lib/
@@ -505,7 +507,7 @@ wallstreet-tieling/
 
 ## 📄 许可 & 作者
 
-[MIT License](LICENSE) · 作者：**爹** · [GitHub](https://github.com/Dear-Ded/wallstreet-tieling) · derrickdad@foxmail.com
+[MIT License](LICENSE) · 作者：**Dear-Ded** · [GitHub](https://github.com/Dear-Ded/wallstreet-tieling) · derrickdad@foxmail.com
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Dear-Ded/wallstreet-tieling&type=Date)](https://star-history.com/#Dear-Ded/wallstreet-tieling&Date)
 

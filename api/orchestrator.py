@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v3.1.0 — 真并发 Agent 编排器
+"""wallstreet-tieling v3.2.0 — 真并发 Agent 编排器
 核心升级：
 1. 每个 Agent 独立状态 + 记忆 + 情感追踪
 2. Agent 间结构化消息通信（不再是 prev_context 字符串拼贴）
@@ -21,7 +21,7 @@ from typing import Any
 import aiohttp
 
 from . import config
-from .utils import slug, load_system_prompt, extract_company_ids
+from .utils import slug, load_system_prompt
 from .agent import DueDiligenceAgent, AgentState, Mood, AgentMessage
 from .agent_registry import AgentRegistry
 from .personality import get_personality, get_receptionist_greeting
@@ -198,7 +198,7 @@ CONDITIONAL_BRANCH_RULES = {
 # ══════════════════════════════════════════════════════════
 
 class Orchestrator:
-    """v3.1.0 真并发 Agent 编排器"""
+    """v3.2.0 真并发 Agent 编排器"""
 
     def __init__(self, target: str, model: str | None = None,
                  mode: str = "standard", concurrency: int = 5,
@@ -284,10 +284,10 @@ class Orchestrator:
                 ) as resp:
                     elapsed = (time.monotonic() - t0) * 1000
                     if resp.status != 200:
-                        body = await resp.text()
+                        await resp.text()  # consume body
                         return {
                             "ok": False, "text": "", "ms": int(elapsed), "tok": 0,
-                            "usage": {}, "err": f"HTTP {resp.status}: {body[:200]}",
+                            "usage": {}, "err": f"HTTP {resp.status}",
                         }
                     data = await resp.json()
                     choice = data.get("choices", [{}])[0]
@@ -325,6 +325,15 @@ class Orchestrator:
                     rule="fabrication_risk", field="full_text",
                     detail=f"L2 校验发现 {validation['stats']['fabrication_indicators']} 个编造信号",
                     severity="ERROR",
+                )]
+            else:
+                # L2 不通过但 fabrication_indicators==0（来源覆盖率低/模糊词过多等）
+                # 生成通用违规项避免空列表导致无意义重试
+                issues_summary = "; ".join(validation.get("issues", [])[:3]) or "L2 校验不通过"
+                violations = [Violation(
+                    rule="quality_issue", field="full_text",
+                    detail=f"L2 校验不通过 (得分 {validation['score']:.0f}): {issues_summary}",
+                    severity="WARN",
                 )]
         return False, violations
 
@@ -376,7 +385,7 @@ class Orchestrator:
 
         # ── 团队开工──
         print(f"\n{'='*60}")
-        print(f"  华尔街驻铁岭办事处 · v3.1.0")
+        print(f"  华尔街驻铁岭办事处 · v3.2.0")
         print(f"  目标: {self.target}  |  模式: {self.mode}")
         print(f"  激活: {', '.join(all_roles)}")
         print(f"{'='*60}\n")
@@ -481,7 +490,7 @@ class Orchestrator:
             "mode": self.mode,
             "roles_activated": all_roles,
             "branches_triggered": self.branches_triggered,
-            "agent_status": {aid: a.snapshot() for aid, a in self.registry._agents.items()},
+            "agent_status": {a.agent_id: a.snapshot() for a in self.registry.get_all()},
             "team_chat": self.registry.team_chat_snapshot(20),
         }
 
@@ -504,8 +513,7 @@ class Orchestrator:
 
             for attempt in range(self.max_retries + 1):
                 try:
-                    async with sem:
-                        result = await self._api_call(session, sem, agent, config_dict, system_prompt)
+                    result = await self._api_call(session, sem, agent, config_dict, system_prompt)
                 except Exception as e:
                     result = {"ok": False, "text": "", "ms": 0, "tok": 0, "err": str(e)}
 
@@ -631,10 +639,21 @@ class Orchestrator:
     def _assemble_report(self, p3: list[dict], p1: list[dict],
                          p2: list[dict]) -> str:
         report_text = ""
-        for r in p3:
-            if r.get("ok") and r.get("text"):
-                report_text = r["text"]
+        # 按报告优先级选择：刘文华（内容）> 颜好看（排版）
+        report_priority = ["liu-wen-hua", "yan-hao-kan"]
+        for rid in report_priority:
+            for r in p3:
+                if r.get("ok") and r.get("text") and r.get("rid") == rid:
+                    report_text = r["text"]
+                    break
+            if report_text:
                 break
+        if not report_text:
+            # 回退到任意有效 p3 输出
+            for r in p3:
+                if r.get("ok") and r.get("text"):
+                    report_text = r["text"]
+                    break
         if not report_text:
             report_text = self._fallback_report(p1, p2)
 

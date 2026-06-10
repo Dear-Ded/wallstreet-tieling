@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""华尔街驻铁岭办事处 API Server v3.1.0
+"""华尔街驻铁岭办事处 API Server v3.2.0
 一键启动: python api/server.py
 Docker: docker run -p 8080:8080 wallstreet-tieling
 
 v3.1.0 变更: 路由到 wst 编排引擎（统一质量门禁），移除独立 LLM 路径。
 """
 import importlib
+import asyncio
 import logging
 import os
 import sys
@@ -37,15 +38,16 @@ if MISSING_DEPS:
 
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
-import requests as http_requests
 
 # ── 配置 ──
 from . import config
+from .orchestrator import Orchestrator
 
 config.reload_config()
 
 app = Flask(__name__)
-CORS(app)
+CORS_ORIGINS = os.environ.get("WALLSTREET_CORS_ORIGINS", "http://localhost:3000,http://localhost:8080")
+CORS(app, origins=[o.strip() for o in CORS_ORIGINS.split(",") if o.strip()])
 PORT = int(os.environ.get("PORT", 8080))
 
 
@@ -69,7 +71,7 @@ def log_response(response):
 def index():
     return jsonify({
         "name": "华尔街驻铁岭办事处",
-        "version": "3.1.0",
+        "version": "3.2.0",
         "description": "银行信贷情报专家团 API · 真并发Agent架构",
         "endpoints": {
             "POST /api/analyze": "执行尽调分析 (通过编排引擎)",
@@ -87,7 +89,7 @@ def health():
     return jsonify({
         "status": "ok" if has_key else "missing_api_key",
         "model": config.DEFAULT_MODEL,
-        "version": "3.1.0",
+        "version": "3.2.0",
         "time": time.time(),
     })
 
@@ -106,7 +108,7 @@ def get_skill():
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
-    """v3.1.0: 路由到 wst 编排引擎（完整 3-Phase + 质量门禁）"""
+    """v3.2.0: 路由到 wst 编排引擎（完整 3-Phase + 质量门禁）"""
     data = request.get_json() or {}
     target = data.get("company", data.get("message", data.get("name", "")))
     if not target:
@@ -117,18 +119,27 @@ def analyze():
         mode = "standard"
 
     # 异步调用编排引擎
-    import asyncio
-    from .orchestrator import Orchestrator
+    try:
+        concurrency = int(data.get("concurrency", 5))
+        max_retries = int(data.get("max_retries", 3))
+    except (ValueError, TypeError):
+        concurrency = 5
+        max_retries = 3
 
     try:
         orch = Orchestrator(
             target=target,
             model=data.get("model"),
             mode=mode,
-            concurrency=int(data.get("concurrency", 5)),
-            max_retries=int(data.get("max_retries", 3)),
+            concurrency=concurrency,
+            max_retries=max_retries,
         )
-        result = asyncio.run(orch.orchestrate())
+        # 使用 new_event_loop 避免 "Event loop is already running" 在 WSGI 多线程环境下的冲突
+        loop = asyncio.new_event_loop()
+        try:
+            result = loop.run_until_complete(orch.orchestrate())
+        finally:
+            loop.close()
         return jsonify({
             "task_type": "due_diligence",
             "report": result["report"],
@@ -141,7 +152,7 @@ def analyze():
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         logger.exception("Orchestration failed")
-        return jsonify({"error": f"编排失败: {e}"}), 500
+        return jsonify({"error": "编排失败，请检查日志获取详情"}), 500
 
 
 @app.route("/api/docs")
@@ -160,7 +171,7 @@ def docs():
 
 if __name__ == "__main__":
     print(f"""
-🏛️  华尔街驻铁岭办事处 API Server v3.1.0
+🏛️  华尔街驻铁岭办事处 API Server v3.2.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 端口: {PORT}
 模型: {config.DEFAULT_MODEL}

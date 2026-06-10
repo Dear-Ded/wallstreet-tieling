@@ -69,6 +69,8 @@ completion: "财务分析完成。关键发现：{发现}"
 
 ### 已激活工具（v0.1.0）
 
+> 🔄 **平台降级**：如当前平台无此 MCP/Skill，请使用 WebSearch + WebFetch 替代。
+
 | 优先级 | 工具 | 可用 | 覆盖范围 |
 |--------|------|:--:|---------|
 | L1 Skill | lingxi-financialsearch-skill | ✅ | A股行情/财务数据/技术指标 |

@@ -73,6 +73,9 @@ handover: "报告内容完成，交给颜好看。"
 ```
 
 ### 已激活工具（v0.1.0）
+
+> 🔄 **平台降级**：如当前平台无此 MCP/Skill，请使用 WebSearch + WebFetch 替代。
+
 | 工具 | 可用 | 功能 |
 |------|:--:|------|
 | word-docx Skill | ✅ | Word文档生成/编辑(.docx) |
@@ -103,7 +106,7 @@ handover: "报告内容完成，交给颜好看。"
 - **md-to-pdf-cjk**: Markdown→PDF转换，完美支持中文/日文/韩文
 - **citation-manager**: 参考文献标准化，支持APA/MLA/Chicago/GB/T 7714格式
 - **humanizer**: 文本去AI化，移除AI生成痕迹，增强自然感
-- **python-docx (Python库)**: 公文排版。路径: `C:\Users\80983\.workbuddy\binaries\python\envs\default/bin/python`
+- **python-docx (Python库)**: 公文排版。Python 路径由宿主平台自动解析。
 
 ### 输出格式→工具映射
 

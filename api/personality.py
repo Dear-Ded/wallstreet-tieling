@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v3.1.0 — 13 角色拟人化人格档案
+"""wallstreet-tieling v3.2.0 — 13 角色拟人化人格档案
 每个角色的性格、口头禅、同事关系、情绪模式——赋予'活人感'。
 """
 from __future__ import annotations
+
+import random
 
 from .agent import PersonalityProfile, Mood
 
@@ -319,7 +321,6 @@ def get_all_agent_ids() -> list[str]:
 def get_receptionist_greeting(agent_id: str, target: str) -> str:
     """生成角色被唤醒时的'同事间打招呼'"""
     p = get_personality(agent_id)
-    import random
 
     greetings = {
         "qian-shou-zheng": f"行，{target}是吧，知道了。铁柱！明远！活来了！",
