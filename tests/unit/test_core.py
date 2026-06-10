@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""tests for v4.0 core — interfaces, roles, session_bus, deep_graph"""
+﻿#!/usr/bin/env python3
+"""tests for v0.5.0"""
 from __future__ import annotations
 
 import sys

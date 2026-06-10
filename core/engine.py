@@ -1,8 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 平台无关编排引擎
-纯编排逻辑。不调 aiohttp、不读环境变量、不引用 MCP/Skill 工具名。
-一切外部交互走 PlatformAdapter 的三个接口。
-"""
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 import asyncio
@@ -34,10 +31,7 @@ logger = logging.getLogger("wst.engine")
 # ═══════════════════════════════════════════════════════════
 
 class Engine:
-    """v4.0 平台无关编排引擎
-
-    adapter = PlatformAdapter(llm=..., tools=..., output=...)
-    engine = Engine(target="ABC公司", adapter=adapter, mode="standard")
+    """v0.5.0"ABC公司", adapter=adapter, mode="standard")
     result = await engine.run()
     """
 

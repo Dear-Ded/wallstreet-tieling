@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 查询缓存
-Phase 1 内同一 (target, query_type) 只查一次，消除重复 API 调用。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 import hashlib

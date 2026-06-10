@@ -1,4 +1,4 @@
-# 更新日志
+﻿# 更新日志
 
 > 版本号遵循语义化版本：MAJOR.MINOR.PATCH
 
@@ -24,15 +24,15 @@
 - SKILL.md: 版本 → 4.0.0, 分支表更新
 
 ### 保留
-- api/: v3.2.0 层完全向后兼容
+- api/: v0.5.0 层完全向后兼容
 - sub-skills/: 14 角色提示词不变
 - 13 人格档案: api/personality.py 不变
 
 ---
 
-## v3.2.0 (2026-06-10) — 工程全面审查
+## v0.5.0 (2026-06-10) — 工程全面审查
 
-## v3.2.0 — CI/CD 强化 + 测试基建 + Bug 修复 (Unreleased, 2026-06)
+## v0.5.0 — CI/CD 强化 + 测试基建 + Bug 修复 (Unreleased, 2026-06)
 
 **测试覆盖跃升 · CI/CD 流水线增强 · L1/L2 质量控制修复 · 单元测试全覆盖**
 
@@ -55,7 +55,7 @@
 
 ---
 
-## v3.1.0 — 真并发Agent架构 + 拟人化升级 (2026-06-10)
+## v0.5.0 — 真并发Agent架构 + 拟人化升级 (2026-06-10)
 
 **五维度全面审计驱动 · 安全红线清零 · 真并发Agent · 13角色人格化**
 
@@ -86,12 +86,12 @@
 
 ### 📄 文档修复
 - 清理 ma-li-quan.md ~100行重复内容
-- 版本号 SKILL.md / README / CHANGELOG / DEPENDENCIES 统一为 v3.1.0
+- 版本号 SKILL.md / README / CHANGELOG / DEPENDENCIES 统一为 v0.5.0
 - 项目管理中枢规范化（sprints/ / decisions/ / sessions/ 目录）
 
 ---
 
-## v3.0.2 — 文档补全 + 工程优化 (2026-06-09)
+## v0.5.0 — 文档补全 + 工程优化 (2026-06-09)
 
 **GStack 三专家综合审计 · README 全面重写 · 项目管理规范化**
 
@@ -116,21 +116,21 @@
 - .github/PULL_REQUEST_TEMPLATE.md
 
 ### 重写文件
-- LIMITATIONS.md（基于 v3.0.2 实际能力重写）
+- LIMITATIONS.md（基于 v0.5.0 实际能力重写）
 - index.html（Hero · 能力 · 数据源 · 安装 · Roadmap 全面翻新）
 
 ### 仓库管理
 - 根目录清理：Dockerfile/clawhub.json/openclaw.json → deploy/
 - .gitignore 补全：`__pycache__/` `*.pyc` `output/` `deliverables/` `docs/`
 - 分支清理：删除 china/expert/productivity/mimo-batch
-- ROADMAP.md 版本号修正 v1.0.0-beta.1 → v3.0.2
+- ROADMAP.md 版本号修正 v1.0.0-beta.1 → v0.5.0
 
 ### 版本统一
 - SKILL.md / package.json / clawhub.json / mcp-server.json / server.py / regression.json 全文件版本号统一为 3.0.2
 
 ---
 
-## v3.0.1 — 子 skill 业务逻辑补全 (2026-06-07)
+## v0.5.0 — 子 skill 业务逻辑补全 (2026-06-07)
 
 - 钱守正：完整调度决策树（1469B→2700B，+84%）
 - 陈志远：任务 DAG + 4 场景拆解方案（1190B→2377B，+100%）
@@ -143,7 +143,7 @@
 
 ---
 
-## v3.0.0 — 子母 skill 架构重构 (2026-06-07)
+## v0.5.0 — 子母 skill 架构重构 (2026-06-07)
 
 **Token 节省 79-93%**
 

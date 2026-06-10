@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 深度关联图引擎
-多跳图遍历 (BFS+DFS, ≤8跳, ≤10节点/层), 环检测, 关联路径还原。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

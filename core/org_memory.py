@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 组织记忆系统
-五层本地存储: investigations/patterns/agents/chemistry/tools
-全本地，零上传，用户可随时删除重置。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 import json

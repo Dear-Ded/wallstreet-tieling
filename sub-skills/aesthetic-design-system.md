@@ -1,4 +1,4 @@
-# 美学设计系统 (Aesthetic Design System)
+﻿# 美学设计系统 (Aesthetic Design System)
 
 > v1.0.0 | 2026-06-10
 > 基于 CodeBuddy frontend-design-pro / ui-ux-designer / ui-ux-pro-max 等插件的方法论精华，
@@ -217,13 +217,7 @@ Primary(CTA/品牌) → Background(页面) → Surface(卡片)
 
 ## 四、wallstreet-tieling 设计 Token
 
-> 颜好看 v3.1.0 设计系统
-
-### 色彩
-
-```yaml
-# 尽调报告专用调色板
-报告背景: "#0a0a14"        # 深色主题底色
+> 颜好看 v0.5.0"#0a0a14"        # 深色主题底色
 卡片背景: "rgba(22,22,32,0.65)"  # 玻璃卡片
 强调色:   "#6366f1"        # CTA/图表高亮
 数据绿:   "#22c55e"        # 正面数据/通过

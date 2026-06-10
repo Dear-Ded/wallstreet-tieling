@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — SessionBus 情报总线
-Phase 间结构化情报传递。替代 v3.x 的散装文本拼接。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 import json

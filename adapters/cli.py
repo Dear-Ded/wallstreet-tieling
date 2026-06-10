@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — CLI 独立适配器
-不需要 WorkBuddy — 纯命令行运行，直接调 HTTP API。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 import asyncio
@@ -62,7 +60,7 @@ async def run_cli(company: str, *, mode: str = "standard", model: str | None = N
     engine = Engine(target=company, adapter=adapter, mode=mode, model=model)
 
     print(f"\n{'='*60}")
-    print(f"  华尔街驻铁岭办事处 v4.0 — {company}")
+    print(f"  华尔街驻铁岭办事处 v0.5.0")
     print(f"  模式: {mode} | 模型: {adapter.llm.default_model}")
     print(f"{'='*60}\n")
 

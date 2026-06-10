@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 跨源身份关联 + 时序分析 + 间接社交 + 反爬工具箱
-Placeholder stubs for S5 deep investigation engine.
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 # ── Identity Resolution ──

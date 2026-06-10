@@ -1,7 +1,4 @@
-"""wallstreet-tieling v4.0 — 通用适配器占位
-Dify / Coze / CrewAI 等平台适配器模板。
-用户贡献适配器时参考此模板。
-"""
+﻿"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 # ── 平台适配器开发指南 ──

@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 引擎规则与模板
-从 api/orchestrator.py 迁移，切断 engine 对 api/ 的依赖。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 from pathlib import Path

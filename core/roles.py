@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 13 角色职权体系
-每个角色的定义包含两部分:
-1. 人格（PersonalityProfile）— 性格/口头禅/人设，不可变
-2. 职权（RoleAuthority）— 汇报线/管辖域/可调资源/禁止行为，v4.0 新增
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — WorkBuddy 平台适配器
-WorkBuddy 环境: 内置模型 + MCP 工具 + Skill 工具 + 本地输出。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 import os

@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-"""wallstreet-tieling v4.0 — 平台无关能力接口
-引擎核心通过这三个抽象接口与外部世界交互，不依赖任何具体平台。
-"""
+﻿#!/usr/bin/env python3
+"""wallstreet-tieling v0.5.0"""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
