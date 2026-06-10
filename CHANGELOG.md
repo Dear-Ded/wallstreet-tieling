@@ -6,11 +6,10 @@
 
 ## v3.2.0 — CI/CD 强化 + 测试基建 + Bug 修复 (Unreleased, 2026-06)
 
-**测试覆盖跃升 · CI/CD 流水线增强 · L1/L2 质量控制修复 · 单元测试补全中**
+**测试覆盖跃升 · CI/CD 流水线增强 · L1/L2 质量控制修复 · 单元测试全覆盖**
 
 ### 🧪 测试基建
-- **测试从 36 → 152+**（4.2x 增长）：test_agent.py（63 tests）+ test_orchestrator.py（53 tests）+ test_quality_rules.py（36 tests）
-- 正在补全 AgentRegistry / Config / Personality / Utils 的单元测试
+- **测试从 36 → 376**（新增 340 tests，10.4x 增长）：test_agent.py（63）+ test_orchestrator.py（53）+ test_quality_rules.py（32）+ test_registry.py（31）+ test_config.py（29）+ test_personality.py（158）+ test_utils.py（30）
 
 ### 🔧 CI/CD 增强
 - 新增 Python syntax check（`python -m py_compile`）
@@ -19,8 +18,8 @@
 
 ### 🐛 Bug 修复
 - **L1 short_output 阻断 L2 fabrication_risk 检测**：当 L1 正则因输出过短跳过时，不再将 `passed=True` 写入 results，确保 L2 `FabricationDetector` 正常触发
-- **EmotionalState 浮点精度**：`float` → `Decimal`，消除衰减计算累计误差（修复中）
-- **EmotionalState 衰减顺序**：调整 decay → amplify 执行顺序，避免新事件激励被衰减覆盖（修复中）
+- **EmotionalState 浮点精度**：`float` → `Decimal`，消除衰减计算累计误差（commit 842d66b）
+- **EmotionalState 衰减顺序**：调整 decay → amplify 执行顺序，避免新事件激励被衰减覆盖（commit 842d66b）
 
 ### 🏗️ 架构微调
 - QualityRules 模块化拆分，支持独立单测
