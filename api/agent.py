@@ -86,11 +86,7 @@ class EmotionalState:
             self.retry_count += 1
             self.frustration = min(1.0, self.frustration + 0.2)
 
-        # 情绪衰减（随时间自然回落）
-        self.excitement = max(0.0, self.excitement - 0.05)
-        self.frustration = max(0.0, self.frustration - 0.03)
-
-        # 计算主导情绪
+        # 计算主导情绪（基于衰减前的原始值，确保单次 update 的效果完整反映）
         if self.frustration > 0.6:
             self.mood = Mood.FRUSTRATED
         elif self.excitement > 0.5:
@@ -101,6 +97,15 @@ class EmotionalState:
             self.mood = Mood.TIRED
         else:
             self.mood = Mood.NEUTRAL
+
+        # 情绪衰减（随时间自然回落）
+        self.excitement = max(0.0, self.excitement - 0.05)
+        self.frustration = max(0.0, self.frustration - 0.03)
+
+        # 浮点精度归一化（避免 0.8500000000000001 等累积误差）
+        self.confidence = round(self.confidence, 10)
+        self.frustration = round(self.frustration, 10)
+        self.excitement = round(self.excitement, 10)
 
         self.mood_history.append({
             "time": time.strftime("%H:%M:%S"),
