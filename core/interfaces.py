@@ -108,3 +108,16 @@ class OutputProvider(ABC):
     def write(self, content: str, filename: str, subdir: str = "") -> Path:
         """写入内容到文件系统，返回路径"""
         ...
+
+
+# ═══════════════════════════════════════════════════════════
+#  平台适配器（组合三个接口）
+# ═══════════════════════════════════════════════════════════
+
+class PlatformAdapter:
+    """适配器 — 组合 LLM + Tool + Output 三个接口"""
+
+    def __init__(self, llm: LLMProvider, tools: ToolProvider, output: OutputProvider):
+        self.llm = llm
+        self.tools = tools
+        self.output = output

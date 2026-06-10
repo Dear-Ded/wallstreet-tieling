@@ -94,7 +94,8 @@ class StandaloneOutput(OutputProvider):
 
 async def run_cli(company: str, *, mode: str = "standard", model: str | None = None):
     """CLI 一键尽调入口"""
-    from core.engine import Engine, PlatformAdapter
+    from core.engine import Engine
+    from core.interfaces import PlatformAdapter
 
     llm = StandaloneLLM(model=model)
     output = StandaloneOutput()
