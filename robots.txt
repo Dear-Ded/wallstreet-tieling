@@ -1,3 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /output/
+Disallow: /deliverables/
+
 Sitemap: https://dear-ded.github.io/wallstreet-tieling/sitemap.xml
+
+# Crawl-delay for polite scraping
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 3
+
+User-agent: Googlebot
+Allow: /

@@ -1,11 +1,14 @@
-﻿# wallstreet-tieling v0.5.0
-# 生成: 2026-06-10 · 工程审查 P0 修复
-
-# ── 运行时依赖 ──
-flask>=3.1,<4.0
-Flask-Cors>=4.0,<6.0
-aiohttp>=3.9,<4.0
-requests>=2.31,<3.0
-
-# ── 测试依赖 ──
-pytest>=8.0,<10.0
+# wallstreet-tieling v1.0
+# 华尔街驻铁岭办事处 · 13人真并发AI尽调Agent
+# 尽调有魂，数据不胡诌
+#
+# 本项目为核心编排引擎 + 13个角色prompt + 多平台适配器
+# 以粘贴 SKILL.md 到AI对话为主要使用方式，无强制pip依赖
+#
+# ── API服务模式依赖 ──
+aiohttp>=3.9,<4.0        # 异步LLM API调用（orchestrator.py）
+#
+# ── 开发/测试依赖（可选） ──
+pytest>=8.0,<10.0        # 单元测试框架
+#
+# 完整依赖说明见 DEPENDENCIES.md

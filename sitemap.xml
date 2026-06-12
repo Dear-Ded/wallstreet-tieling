@@ -1,9 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- 品牌主页 -->
   <url>
     <loc>https://dear-ded.github.io/wallstreet-tieling/</loc>
-    <lastmod>2026-06-03</lastmod>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Demo 报告 v4 -->
+  <url>
+    <loc>https://dear-ded.github.io/wallstreet-tieling/demo/report-demo-v4.html</loc>
+    <lastmod>2026-06-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Demo 报告 v3 -->
+  <url>
+    <loc>https://dear-ded.github.io/wallstreet-tieling/demo/report-demo-v3.html</loc>
+    <lastmod>2026-06-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
 </urlset>
