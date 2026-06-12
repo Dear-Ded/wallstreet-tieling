@@ -1,7 +1,7 @@
-﻿---
+---
 name: wallstreet-tieling
-description: WallStreet Tieling Office · 13-role concurrent AI crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · platform-agnostic v0.5.0 engine
-version: v0.5.0
+description: WallStreet Tieling Office · 13-role concurrent AI crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · platform-agnostic v1.0 engine
+version: v1.0
 author: Dear-Ded
 license: MIT
 homepage: https://dear-ded.github.io/wallstreet-tieling/
@@ -34,9 +34,9 @@ tags:
 
 # 🏛️ 华尔街驻铁岭办事处
 
-> v0.5.0 · 角色扮演式prompt工程 · 按需加载 · Token节省85-93%
+> v1.0 · 角色扮演式prompt工程 · 按需加载 · Token节省85-93%
 > 13位从华尔街被"优化"到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿
-> **👔 西装脱了，标准没脱。只摆事实，不给建议。**
+> **👔 西装脱了，标准没脱。只摆事实，不给建议。尽调有魂，数据不胡诌。**
 
 ---
 

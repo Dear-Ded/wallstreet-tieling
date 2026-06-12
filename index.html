@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<title>华尔街驻铁岭办事处 · AI 信贷情报专家团 — 尽调 · 财务分析 · 风险评估</title>
-<meta name="description" content="13位前华尔街金融老兵坐镇的AI信贷情报专家团。企业尽调、股权穿透、财务分析、人员背调、行业研究、风险预警——只摆事实，不给建议。npx skills add Dear-Ded/wallstreet-tieling -g -y">
+<title>华尔街驻铁岭办事处 · 13位前华尔街老兵为你做尽调</title>
+<meta name="description" content="尽调有魂，数据不胡诌——13位从曼哈顿被优化到铁岭的金融老兵，蹲在暖气片上用华尔街的标准做尽调。只摆事实，不给建议。工商、股权、财务、风险、背调、行业六维覆盖。npx skills add Dear-Ded/wallstreet-tieling -g -y">
 <meta name="keywords" content="尽调,信贷,财务分析,风险评估,企业查询,股权穿透,实控人,OSINT,KYC,AML,AI Agent,WallStreet Tieling">
-<meta property="og:title" content="华尔街驻铁岭办事处 · AI 信贷情报专家团">
-<meta property="og:description" content="13位前华尔街金融老兵坐镇。只摆事实，不给建议。">
+<meta property="og:title" content="华尔街驻铁岭办事处 · 13位前华尔街老兵为你做尽调">
+<meta property="og:description" content="尽调有魂，数据不胡诌。只摆事实，不给建议。一行命令，13个人为你加班。">
 <meta property="og:image" content="https://dear-ded.github.io/wallstreet-tieling/og-image.png">
 <meta property="og:url" content="https://dear-ded.github.io/wallstreet-tieling/">
 <meta name="twitter:card" content="summary_large_image">
@@ -20,213 +20,327 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 *:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 html{scroll-behavior:smooth;font-size:15px}
-body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;transition:background .4s,color .4s}
+body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;transition:background .5s,color .5s}
 
 /* ===================== THEME ===================== */
 :root{
-  --bg:#0a0a14;
-  --bg-alt:#0e0e1a;
-  --glass-bg:rgba(22,22,32,0.65);
-  --glass-edge:rgba(255,255,255,0.08);
-  --glass-edge-s:rgba(255,255,255,0.14);
-  --glass-shadow:0 8px 32px rgba(0,0,0,0.3),0 2px 8px rgba(0,0,0,0.15);
-  --glass-inner:inset 0 1px 0 rgba(255,255,255,0.06);
+  --bg:#060610;
+  --bg-alt:#0c0c1a;
+  --glass-bg:rgba(18,18,36,0.55);
+  --glass-bg-heavy:rgba(18,18,36,0.75);
+  --glass-edge:rgba(255,255,255,0.06);
+  --glass-edge-s:rgba(255,255,255,0.12);
+  --glass-edge-hover:rgba(99,102,241,0.35);
+  --glass-shadow:0 8px 40px rgba(0,0,0,0.4),0 2px 12px rgba(0,0,0,0.2);
+  --glass-inner:inset 0 1px 0 rgba(255,255,255,0.04);
   --text:rgba(255,255,255,0.93);
-  --text-sec:rgba(255,255,255,0.72);
-  --text-ter:rgba(255,255,255,0.48);
+  --text-sec:rgba(255,255,255,0.68);
+  --text-ter:rgba(255,255,255,0.42);
   --accent:#6366f1;
-  --accent-glow:rgba(99,102,241,0.3);
-  --accent-light:rgba(99,102,241,0.12);
+  --accent-glow:rgba(99,102,241,0.35);
+  --accent-light:rgba(99,102,241,0.1);
+  --accent-2:#818cf8;
   --success:#34c759;
   --warn:#ff9f0a;
   --danger:#ff3b30;
   --font-sans:'Inter','Noto Sans SC',-apple-system,sans-serif;
-  --radius-lg:28px;--radius-md:18px;--radius-sm:12px;--radius-pill:100px;
-  --space-xs:6px;--space-sm:12px;--space-md:20px;--space-lg:32px;--space-xl:48px;--space-2xl:72px;
-  --blur:blur(28px) saturate(170%);
+  --radius-xl:32px;--radius-lg:22px;--radius-md:16px;--radius-sm:10px;--radius-pill:100px;
+  --space-xs:6px;--space-sm:12px;--space-md:20px;--space-lg:32px;--space-xl:48px;--space-2xl:80px;
+  --blur:blur(32px) saturate(160%);
+  --blur-heavy:blur(48px) saturate(140%);
   --transition:0.4s cubic-bezier(0.22,1,0.36,1);
+  --transition-fast:0.2s cubic-bezier(0.22,1,0.36,1);
 }
 
 [data-theme="light"]{
-  --bg:#f0f0f8;
+  --bg:#f2f2f8;
   --bg-alt:#e8e8f2;
-  --glass-bg:rgba(245,245,250,0.75);
+  --glass-bg:rgba(248,248,252,0.6);
+  --glass-bg-heavy:rgba(248,248,252,0.85);
   --glass-edge:rgba(0,0,0,0.06);
   --glass-edge-s:rgba(0,0,0,0.12);
-  --glass-shadow:0 8px 32px rgba(0,0,0,0.06),0 2px 8px rgba(0,0,0,0.03);
-  --glass-inner:inset 0 1px 0 rgba(255,255,255,0.5);
+  --glass-edge-hover:rgba(85,88,230,0.3);
+  --glass-shadow:0 8px 40px rgba(0,0,0,0.05),0 2px 12px rgba(0,0,0,0.02);
+  --glass-inner:inset 0 1px 0 rgba(255,255,255,0.6);
   --text:rgba(0,0,0,0.88);
-  --text-sec:rgba(0,0,0,0.62);
-  --text-ter:rgba(0,0,0,0.42);
+  --text-sec:rgba(0,0,0,0.58);
+  --text-ter:rgba(0,0,0,0.38);
   --accent:#5558e6;
   --accent-glow:rgba(85,88,230,0.2);
-  --accent-light:rgba(85,88,230,0.08);
+  --accent-light:rgba(85,88,230,0.06);
+  --accent-2:#6c6ff0;
 }
 
 /* ===================== BACKGROUND ===================== */
 .bg-aura{position:fixed;inset:0;pointer-events:none;z-index:0}
-.bg-aura::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 10%,rgba(99,102,241,0.08),transparent 70%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(99,102,241,0.04),transparent 70%);transition:opacity .6s}
-[data-theme="light"] .bg-aura::before{opacity:0}
-.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:48px 48px;transition:opacity .6s}
-[data-theme="light"] .bg-grid{opacity:0}
-/* particles canvas */
-#particles-canvas{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.35}
+.bg-aura::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(99,102,241,0.12),transparent 65%),radial-gradient(ellipse 50% 40% at 20% 90%,rgba(139,92,246,0.06),transparent 65%),radial-gradient(ellipse 50% 40% at 85% 80%,rgba(59,130,246,0.05),transparent 65%);transition:opacity .6s}
+[data-theme="light"] .bg-aura::before{opacity:.35}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:56px 56px;transition:opacity .6s}
+[data-theme="light"] .bg-grid{opacity:.3}
+#particles-canvas{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.3}
 
 /* ===================== LAYOUT ===================== */
 .page{position:relative;z-index:2}
-.container{max-width:1040px;margin:0 auto;padding:0 var(--space-lg)}
+.container{max-width:1100px;margin:0 auto;padding:0 var(--space-lg)}
 
 /* ===================== NAV ===================== */
 .nav{position:sticky;top:0;z-index:100;backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);background:var(--glass-bg);border-bottom:1px solid var(--glass-edge);transition:background .4s}
-.nav-inner{max-width:1040px;margin:0 auto;padding:var(--space-sm) var(--space-lg);display:flex;align-items:center;justify-content:space-between}
-.nav-brand{display:flex;align-items:center;gap:var(--space-sm);text-decoration:none;color:var(--text)}
-.brand-mark{width:34px;height:34px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;box-shadow:0 2px 12px var(--accent-glow)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:10px var(--space-lg);display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+.brand-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 2px 16px var(--accent-glow);position:relative;overflow:hidden}
+.brand-mark::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent 50%)}
 .brand-name{font-size:14px;font-weight:600;line-height:1.2}
-.brand-sub{font-size:10px;color:var(--text-ter);letter-spacing:.3px}
+.brand-sub{font-size:10px;color:var(--text-ter);letter-spacing:.5px}
 .nav-right{display:flex;align-items:center;gap:var(--space-md)}
-.nav-links{display:flex;gap:var(--space-lg)}
-.nav-link{font-size:13px;font-weight:500;color:var(--text-sec);text-decoration:none;transition:color .2s;padding:4px 0;position:relative}
-.nav-link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:var(--accent);transition:width .3s;border-radius:1px}
+.nav-links{display:flex;gap:28px}
+.nav-link{font-size:13px;font-weight:500;color:var(--text-sec);text-decoration:none;transition:color var(--transition-fast);padding:4px 0;position:relative}
+.nav-link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .3s;border-radius:1px}
 .nav-link:hover{color:var(--text)}
 .nav-link:hover::after{width:100%}
 
-/* theme toggle */
-.theme-toggle{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-pill);width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text-sec);transition:all .3s;font-family:var(--font-sans)}
+.theme-toggle{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-pill);width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text-sec);transition:all var(--transition-fast);font-family:var(--font-sans)}
 .theme-toggle:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
 
-/* mobile menu */
-.mobile-menu-btn{display:none;background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-sm);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:18px;transition:all .3s}
+.mobile-menu-btn{display:none;background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-sm);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:18px;transition:all var(--transition-fast)}
 .mobile-menu-btn:hover{border-color:var(--accent)}
 
 /* ===================== HERO ===================== */
-.hero{padding:var(--space-2xl) 0 var(--space-xl);text-align:center;position:relative;overflow:hidden}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 18px;background:var(--accent-light);border:1px solid rgba(99,102,241,0.25);border-radius:var(--radius-pill);font-size:12px;font-weight:500;color:var(--accent);margin-bottom:var(--space-lg);transition:all .3s}
-.hero-badge:hover{background:rgba(99,102,241,0.18);border-color:rgba(99,102,241,0.4)}
-.hero h1{font-size:clamp(30px,7vw,60px);font-weight:700;letter-spacing:-1.5px;line-height:1.08;margin-bottom:var(--space-md);background:linear-gradient(135deg,var(--text) 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-[data-theme="light"] .hero h1{background:linear-gradient(135deg,#1a1a2e 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-size:17px;color:var(--text-sec);max-width:560px;margin:0 auto var(--space-lg);line-height:1.7}
-.hero-actions{display:flex;justify-content:center;gap:var(--space-sm);flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:var(--space-sm) var(--space-lg);border-radius:var(--radius-pill);font-size:14px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all var(--transition);font-family:var(--font-sans)}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 20px var(--accent-glow)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px var(--accent-glow);filter:brightness(1.1)}
+.hero{padding:100px 0 72px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,0.08),transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 22px;background:var(--accent-light);border:1px solid var(--accent-glow);border-radius:var(--radius-pill);font-size:12px;font-weight:500;color:var(--accent);margin-bottom:var(--space-lg);transition:all var(--transition-fast);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.hero-badge:hover{background:var(--accent-light);border-color:var(--glass-edge-hover);transform:translateY(-1px);filter:brightness(1.15)}
+.hero-badge .pulse{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.hero h1{font-size:clamp(32px,7vw,56px);font-weight:700;letter-spacing:-1.5px;line-height:1.06;margin-bottom:var(--space-md);background:linear-gradient(160deg,var(--text) 0%,var(--accent) 50%,var(--accent-2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme="light"] .hero h1{background:linear-gradient(160deg,#0f0f23 0%,var(--accent) 50%,#7c3aed 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-quote-rotator{position:relative;height:56px;overflow:hidden;margin-bottom:var(--space-md)}
+.hero-quote-item{position:absolute;width:100%;font-size:16px;color:var(--text-sec);line-height:1.6;opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(0.22,1,0.36,1)}
+.hero-quote-item.active{opacity:1;transform:translateY(0)}
+.hero-quote-author{display:block;font-size:12px;color:var(--accent);margin-top:4px;font-weight:500}
+.hero-actions{display:flex;justify-content:center;gap:var(--space-sm);flex-wrap:wrap;margin-bottom:var(--space-xl)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:var(--radius-pill);font-size:14px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all var(--transition);font-family:var(--font-sans)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;box-shadow:0 4px 24px var(--accent-glow);position:relative;overflow:hidden}
+.btn-primary::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent 60%);pointer-events:none}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 36px var(--accent-glow);filter:brightness(1.08)}
 .btn-primary:active{transform:scale(0.97)}
 .btn-glass{background:var(--glass-bg);color:var(--text);border:1px solid var(--glass-edge);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
-.btn-glass:hover{background:rgba(28,28,40,0.75);border-color:var(--glass-edge-s);transform:translateY(-2px)}
+.btn-glass:hover{background:rgba(28,28,48,0.7);border-color:var(--glass-edge-s);transform:translateY(-2px)}
 .btn-outline{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
 .btn-outline:hover{background:var(--accent-light);transform:translateY(-2px)}
-.hero-stats{display:flex;justify-content:center;gap:var(--space-xl);margin-top:var(--space-lg);flex-wrap:wrap}
-.hero-stat{text-align:center}
-.hero-stat-value{font-size:32px;font-weight:700;background:linear-gradient(135deg,var(--accent),#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-stat-label{font-size:12px;color:var(--text-ter);margin-top:2px}
+.hero-stats{display:flex;justify-content:center;gap:var(--space-xl);flex-wrap:wrap}
+.hero-stat{text-align:center;padding:0 4px}
+.hero-stat-value{font-size:34px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-stat-label{font-size:12px;color:var(--text-ter);margin-top:2px;font-weight:500}
 
 /* ===================== SECTIONS ===================== */
-.section{padding:var(--space-2xl) 0}
+.section{padding:var(--space-2xl) 0;position:relative}
+.section-alt{background:var(--bg-alt);border-top:1px solid var(--glass-edge);border-bottom:1px solid var(--glass-edge)}
 .section-header{text-align:center;margin-bottom:var(--space-xl)}
-.section-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-sm)}
-.section-title{font-size:clamp(24px,4vw,34px);font-weight:700;letter-spacing:-0.5px;margin-bottom:var(--space-sm)}
-.section-sub{font-size:14px;color:var(--text-sec);max-width:520px;margin:0 auto;line-height:1.7}
+.section-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:var(--space-sm);padding:5px 14px;background:var(--accent-light);border-radius:var(--radius-pill)}
+.section-title{font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-0.5px;margin-bottom:var(--space-sm)}
+.section-sub{font-size:15px;color:var(--text-sec);max-width:540px;margin:0 auto;line-height:1.7}
 
 /* ===================== GLASS CARDS ===================== */
 .glass-card{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-lg);padding:var(--space-lg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-shadow),var(--glass-inner);transition:all var(--transition);position:relative;overflow:hidden}
-.glass-card::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 30% 0%,rgba(255,255,255,0.05),transparent 60%);border-radius:inherit}
-.glass-card:hover{transform:translateY(-3px);border-color:var(--glass-edge-s);box-shadow:0 12px 40px rgba(0,0,0,0.35),var(--glass-inner)}
+.glass-card::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,0.04),transparent 60%);border-radius:inherit}
+.glass-card:hover{transform:translateY(-3px);border-color:var(--glass-edge-s);box-shadow:0 16px 48px rgba(0,0,0,0.45),var(--glass-inner)}
 .glass-card-sm{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-md);padding:var(--space-md);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-inner);transition:all var(--transition)}
-.glass-card-sm:hover{border-color:var(--glass-edge-s);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2),var(--glass-inner)}
+.glass-card-sm:hover{border-color:var(--glass-edge-s);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.25),var(--glass-inner)}
 
 /* ===================== FEATURES ===================== */
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md)}
-.feature-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin-bottom:var(--space-md);background:var(--accent-light);color:var(--accent)}
-.feature-title{font-size:16px;font-weight:600;margin-bottom:var(--space-xs)}
-.feature-desc{font-size:13px;color:var(--text-sec);line-height:1.6}
+.feature-icon{width:48px;height:48px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:var(--space-md);background:var(--accent-light);color:var(--accent);border:1px solid rgba(99,102,241,0.15)}
+.feature-title{font-size:17px;font-weight:600;margin-bottom:4px}
+.feature-owners{font-size:11px;color:var(--accent);margin-bottom:var(--space-sm);font-weight:500;opacity:.85}
+.feature-desc{font-size:13px;color:var(--text-sec);line-height:1.65;margin-bottom:var(--space-sm)}
+.feature-quote{font-size:12px;color:var(--text-ter);font-style:italic;padding-left:12px;border-left:2px solid var(--glass-edge);line-height:1.5}
 
 /* ===================== TEAM ===================== */
+.team-dept{margin-bottom:var(--space-xl)}
+.team-dept-label{display:flex;align-items:center;gap:8px;margin-bottom:var(--space-md);padding-bottom:var(--space-sm);border-bottom:1px solid var(--glass-edge)}
+.team-dept-icon{font-size:18px}
+.team-dept-name{font-size:14px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px}
+.team-dept-desc{font-size:12px;color:var(--text-ter)}
 .team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-sm)}
-.team-card{text-align:center;cursor:default;padding:var(--space-md) var(--space-sm)}
-.team-avatar{width:48px;height:48px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-sm);font-size:18px;font-weight:700;color:var(--accent);transition:all .3s}
-.team-card:hover .team-avatar{background:var(--accent);color:#fff;transform:scale(1.1);box-shadow:0 4px 16px var(--accent-glow)}
-.team-name{font-size:14px;font-weight:600}
-.team-role{font-size:11px;color:var(--text-ter);margin-bottom:var(--space-xs)}
-.team-quote{font-size:12px;color:var(--text-sec);font-style:italic;line-height:1.5;max-width:180px;margin:0 auto;opacity:0;max-height:0;transition:all .4s}
-.team-card:hover .team-quote{opacity:1;max-height:80px}
+
+.team-card{text-align:center;cursor:pointer;padding:var(--space-md) var(--space-sm);position:relative;overflow:visible;transition:all var(--transition);z-index:1}
+.team-card:hover{z-index:10;transform:translateY(-6px);border-color:var(--glass-edge-hover);box-shadow:0 16px 48px rgba(99,102,241,0.15),var(--glass-inner)}
+.team-avatar-ring{width:56px;height:56px;border-radius:50%;margin:0 auto var(--space-sm);position:relative;display:flex;align-items:center;justify-content:center;transition:all var(--transition)}
+.team-avatar-ring::before{content:'';position:absolute;inset:-3px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));opacity:0;transition:opacity .3s}
+.team-card:hover .team-avatar-ring::before{opacity:.5}
+.team-avatar{width:50px;height:50px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent);transition:all var(--transition);position:relative;z-index:1;border:2px solid transparent}
+.team-card:hover .team-avatar{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;transform:scale(1.05);box-shadow:0 4px 20px var(--accent-glow);border-color:transparent}
+.team-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.team-role{font-size:11px;color:var(--text-ter);margin-bottom:var(--space-xs);font-weight:500}
+.team-tags{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:6px}
+.team-tag{font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);background:var(--accent-light);color:var(--accent);font-weight:500;white-space:nowrap}
+.team-quote{font-size:12px;color:var(--text-sec);font-style:italic;line-height:1.5;max-width:200px;margin:0 auto;opacity:0;max-height:0;transition:all .4s;overflow:hidden}
+.team-card:hover .team-quote{opacity:1;max-height:100px;margin-top:6px}
 
 /* ===================== DATA TIERS ===================== */
 .tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md)}
-.tier-card{padding:var(--space-lg);text-align:center}
+.tier-card{padding:var(--space-lg);text-align:center;position:relative}
+.tier-card::after{content:attr(data-users);position:absolute;bottom:var(--space-sm);right:var(--space-md);font-size:10px;color:var(--text-ter);font-weight:500}
 .tier-icon{font-size:36px;margin-bottom:var(--space-sm)}
-.tier-name{font-size:17px;font-weight:600;margin-bottom:4px}
+.tier-name{font-size:16px;font-weight:600;margin-bottom:4px}
 .tier-count{font-size:12px;color:var(--text-ter);margin-bottom:var(--space-sm)}
 .tier-items{font-size:12px;color:var(--text-sec);line-height:1.7}
 .tier-progress{height:4px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:var(--space-sm);overflow:hidden}
-.tier-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#818cf8);transition:width 1.2s cubic-bezier(0.22,1,0.36,1);width:0%}
+.tier-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width 1.4s cubic-bezier(0.22,1,0.36,1);width:0%}
 
 /* ===================== INSTALL ===================== */
-.install-bar{display:inline-flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md) var(--space-sm) var(--space-lg);background:var(--bg-alt);border:1px solid var(--glass-edge-s);border-radius:var(--radius-pill);backdrop-filter:var(--blur);margin-bottom:var(--space-sm);transition:all .3s}
-.install-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
-.install-bar code{font-family:ui-monospace,'SF Mono',monospace;font-size:14px;color:var(--success);font-weight:500;user-select:all;white-space:nowrap}
-.copy-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-pill);padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all .2s;white-space:nowrap}
-.copy-btn:hover{filter:brightness(1.1)}
+.install-bar{display:inline-flex;align-items:center;gap:10px;padding:var(--space-sm) 12px var(--space-sm) var(--space-lg);background:var(--bg-alt);border:1px solid var(--glass-edge-s);border-radius:var(--radius-pill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);margin-bottom:var(--space-sm);transition:all var(--transition-fast)}
+.install-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.install-bar code{font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace;font-size:14px;color:var(--success);font-weight:500;user-select:all;white-space:nowrap}
+.copy-btn{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;border-radius:var(--radius-pill);padding:8px 20px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all var(--transition-fast);white-space:nowrap}
+.copy-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
 .copy-btn.copied{background:var(--success)!important}
 .install-hint{font-size:13px;color:var(--text-ter);margin-top:var(--space-sm)}
-.platform-tabs{display:flex;justify-content:center;gap:var(--space-xs);margin-bottom:var(--space-lg);flex-wrap:wrap}
-.platform-tab{padding:8px 20px;border-radius:var(--radius-pill);border:1px solid var(--glass-edge);background:var(--glass-bg);color:var(--text-sec);font-size:13px;font-weight:500;cursor:pointer;transition:all .3s;font-family:var(--font-sans)}
+.platform-tabs{display:flex;justify-content:center;gap:8px;margin-bottom:var(--space-lg);flex-wrap:wrap}
+.platform-tab{padding:8px 20px;border-radius:var(--radius-pill);border:1px solid var(--glass-edge);background:var(--glass-bg);color:var(--text-sec);font-size:13px;font-weight:500;cursor:pointer;transition:all var(--transition-fast);font-family:var(--font-sans)}
 .platform-tab:hover{border-color:var(--accent);color:var(--accent)}
-.platform-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.platform-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-color:transparent}
 
-/* ===================== ROADMAP ===================== */
-.roadmap{position:relative;padding-left:40px}
-.roadmap::before{content:'';position:absolute;left:15px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,var(--accent),transparent)}
-.roadmap-item{position:relative;padding-bottom:var(--space-lg)}
-.roadmap-dot{position:absolute;left:-25px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--accent)}
-.roadmap-phase{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.roadmap-title{font-size:16px;font-weight:600;margin-bottom:4px}
-.roadmap-desc{font-size:13px;color:var(--text-sec);line-height:1.6}
+/* ===================== TIMELINE ===================== */
+.timeline{position:relative;padding-left:60px;padding-top:var(--space-lg)}
+.timeline::before{content:'';position:absolute;left:27px;top:0;bottom:20px;width:2px;background:linear-gradient(180deg,var(--accent),rgba(99,102,241,0.1),transparent)}
+.timeline-item{position:relative;padding-bottom:var(--space-lg)}
+.timeline-hour{position:absolute;left:-48px;top:0;font-size:11px;color:var(--accent);font-weight:600;white-space:nowrap;background:var(--bg-alt);padding:2px 6px;border-radius:4px}
+.timeline-dot{position:absolute;left:-35px;top:4px;width:10px;height:10px;border-radius:50%;border:3px solid var(--bg-alt)}
+.timeline-dot.doing{background:var(--success);box-shadow:0 0 8px rgba(52,199,89,.4)}
+.timeline-dot.done{background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+.timeline-content{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-md);padding:var(--space-md);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.timeline-agent{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px}
+.timeline-task{font-size:13px;color:var(--text);margin-bottom:4px}
+.timeline-note{font-size:11px;color:var(--text-ter);font-style:italic}
 
 /* ===================== CTA / FOOTER ===================== */
-.cta{text-align:center;padding:var(--space-2xl) 0;border-top:1px solid var(--glass-edge)}
-.cta-title{font-size:28px;font-weight:700;margin-bottom:var(--space-sm)}
+.cta{text-align:center;padding:var(--space-2xl) 0;border-top:1px solid var(--glass-edge);position:relative}
+.cta::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.06),transparent 70%);pointer-events:none}
+.cta-title{font-size:30px;font-weight:700;margin-bottom:var(--space-sm);letter-spacing:-0.5px}
 .cta-sub{font-size:14px;color:var(--text-sec);margin-bottom:var(--space-lg);max-width:480px;margin-left:auto;margin-right:auto}
 .footer{border-top:1px solid var(--glass-edge);padding:var(--space-lg) 0}
-.footer-inner{max-width:1040px;margin:0 auto;padding:0 var(--space-lg);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-sm)}
+.footer-inner{max-width:1100px;margin:0 auto;padding:0 var(--space-lg);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-sm)}
 .footer-brand{font-size:12px;color:var(--text-ter)}
 .footer-links{display:flex;gap:var(--space-lg)}
-.footer-link{font-size:12px;color:var(--text-ter);text-decoration:none;transition:color .2s}
+.footer-link{font-size:12px;color:var(--text-ter);text-decoration:none;transition:color var(--transition-fast)}
 .footer-link:hover{color:var(--text)}
 
 /* ===================== ANIMATIONS ===================== */
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes scaleIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
-.reveal{animation:fadeUp .6s var(--ease-out) forwards;opacity:0}
-.glass-appear{animation:fadeUp .5s var(--ease-out) forwards;opacity:0}
-:root{--ease-out:cubic-bezier(0.22,1,0.36,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.reveal{animation:fadeUp .7s cubic-bezier(0.22,1,0.36,1) forwards;opacity:0}
+.glass-appear{animation:fadeUp .5s cubic-bezier(0.22,1,0.36,1) forwards;opacity:0}
+.glass-scale-in{animation:scaleIn .5s cubic-bezier(0.22,1,0.36,1) forwards;opacity:0}
 
 /* ===================== RESPONSIVE ===================== */
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal,.glass-appear{opacity:1!important}.tier-progress-fill{width:0!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal,.glass-appear,.glass-scale-in{opacity:1!important}.tier-progress-fill{width:0!important}}
 @media(max-width:1024px){
   .features-grid{grid-template-columns:repeat(2,1fr)}
   .team-grid{grid-template-columns:repeat(3,1fr)}
   .hero-stats{gap:var(--space-lg)}
+  .timeline{padding-left:50px}
+  .timeline-hour{left:-38px}
+  .tier-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:768px){
   .features-grid{grid-template-columns:1fr}
   .team-grid{grid-template-columns:repeat(2,1fr)}
   .tier-grid{grid-template-columns:1fr}
   .hero h1{font-size:28px}
+  .hero-quote-rotator{height:72px}
+  .hero-quote-item{font-size:14px}
   .nav-links{display:none}
   .mobile-menu-btn{display:flex}
   .hero-stats{gap:var(--space-md)}
-  .hero-stat-value{font-size:26px}
+  .hero-stat-value{font-size:28px}
   .section{padding:var(--space-xl) 0}
   .footer-inner{flex-direction:column;text-align:center}
-  .install-bar code{font-size:12px}
-  .install-bar{padding:var(--space-sm) var(--space-sm) var(--space-sm) var(--space-md)}
-  .roadmap{padding-left:32px}
+  .install-bar code{font-size:11px}
+  .install-bar{padding:var(--space-sm) 10px var(--space-sm) var(--space-md);gap:6px}
+  .timeline{padding-left:44px}
+  .timeline-hour{left:-32px}
 }
 @media(max-width:375px){
   .team-grid{grid-template-columns:1fr}
   .hero h1{font-size:24px}
   .glass-card{padding:var(--space-md)}
   .install-bar{flex-wrap:wrap;justify-content:center;border-radius:var(--radius-md);padding:var(--space-sm)}
+}
+
+/* ===================== BRAND NARRATIVE (GStack Design) ===================== */
+.brand-narrative{padding:var(--space-xl) 0 calc(var(--space-xl) + 16px);position:relative}
+.bn-container{max-width:960px;margin:0 auto;padding:0 var(--space-lg)}
+.bn-header{text-align:center;margin-bottom:var(--space-lg)}
+.bn-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:var(--space-sm);padding:5px 14px;background:var(--accent-light);border-radius:var(--radius-pill)}
+.bn-title{font-size:clamp(24px,3.5vw,32px);font-weight:700;letter-spacing:-0.5px;margin-bottom:var(--space-xs);color:var(--text);line-height:1.25}
+.bn-title em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.bn-sub{font-size:14px;color:var(--text-sec);max-width:480px;margin:0 auto;line-height:1.65}
+.bn-motto{font-size:15px;color:var(--accent);font-weight:500;font-style:italic;letter-spacing:1px;margin-top:var(--space-xs)}
+.bn-trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md);margin-bottom:var(--space-lg)}
+.bn-trust-card{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-lg);padding:var(--space-lg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-inner);text-align:center;transition:all var(--transition);position:relative;overflow:hidden}
+.bn-trust-card::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.06),transparent 70%);border-radius:inherit}
+.bn-trust-card:hover{transform:translateY(-3px);border-color:var(--glass-edge-s);box-shadow:0 12px 36px rgba(0,0,0,0.2),var(--glass-inner)}
+.bn-trust-number{font-size:48px;font-weight:800;letter-spacing:-2px;line-height:1;margin-bottom:var(--space-xs);background:linear-gradient(180deg,rgba(99,102,241,0.18),rgba(99,102,241,0.04));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.bn-trust-heading{font-size:18px;font-weight:700;margin-bottom:6px;color:var(--text);letter-spacing:-0.3px}
+.bn-trust-desc{font-size:13px;color:var(--text-sec);line-height:1.65}
+.bn-trust-metric{display:inline-flex;align-items:baseline;gap:4px;margin-top:var(--space-sm);padding:6px 14px;background:var(--accent-light);border-radius:var(--radius-pill);font-size:13px;font-weight:600;color:var(--accent)}
+.bn-trust-metric .bn-metric-num{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+[data-theme="light"] .bn-trust-number{background:linear-gradient(180deg,rgba(85,88,230,0.2),rgba(85,88,230,0.05));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.bn-chain-wrap{margin-bottom:var(--space-lg)}
+.bn-chain-label{font-size:11px;color:var(--text-ter);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:var(--space-sm);text-align:center}
+.bn-chain-track{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-pill);padding:var(--space-sm) var(--space-md);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-inner);transition:border-color var(--transition)}
+.bn-chain-track:hover{border-color:var(--glass-edge-s)}
+.bn-chain-node{display:flex;align-items:center;gap:5px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--text-sec);white-space:nowrap;border-radius:var(--radius-pill);transition:all var(--transition-fast);cursor:default}
+.bn-chain-node:hover{background:var(--accent-light);color:var(--accent)}
+.bn-chain-icon{font-size:13px;opacity:0.7}
+.bn-chain-arrow{font-size:10px;color:var(--glass-edge-s);margin:0 2px;flex-shrink:0;user-select:none}
+.bn-demo-row{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--space-md);align-items:center;margin-bottom:var(--space-lg)}
+.bn-demo-box{background:var(--glass-bg);border:1px solid var(--glass-edge);border-radius:var(--radius-md);padding:var(--space-md);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-inner);transition:all var(--transition)}
+.bn-demo-box:hover{border-color:var(--glass-edge-s)}
+.bn-demo-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-ter);margin-bottom:6px}
+.bn-demo-input .bn-demo-label{color:var(--accent)}
+.bn-demo-output .bn-demo-label{color:var(--success)}
+.bn-demo-content{font-size:14px;color:var(--text);font-weight:500;line-height:1.5}
+.bn-demo-input .bn-demo-content{font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace;font-size:13px;color:var(--accent)}
+.bn-demo-output-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px}
+.bn-demo-file{font-size:11px;padding:4px 8px;border-radius:4px;background:var(--accent-light);color:var(--accent);font-weight:500;text-align:center}
+.bn-demo-file:nth-child(5){grid-column:1/-1;background:rgba(52,199,89,0.1);color:var(--success)}
+.bn-demo-arrow-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 8px}
+.bn-demo-arrow-icon{font-size:22px;color:var(--accent);animation:bnArrowPulse 2s ease-in-out infinite}
+@keyframes bnArrowPulse{0%,100%{opacity:0.4;transform:translateX(0)}50%{opacity:1;transform:translateX(4px)}}
+.bn-demo-arrow-time{font-size:10px;color:var(--text-ter);white-space:nowrap;font-weight:500}
+.bn-keywords-wrap{text-align:center}
+.bn-keywords-title{font-size:11px;color:var(--text-ter);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:var(--space-sm)}
+.bn-keywords-cloud{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--space-xs)}
+.bn-kw-tag{display:inline-block;padding:5px 14px;font-size:12px;font-weight:500;border-radius:var(--radius-pill);transition:all var(--transition-fast);cursor:default;border:1px solid transparent}
+.bn-kw-tag--primary{background:var(--accent-light);color:var(--accent);font-weight:600;border-color:rgba(99,102,241,0.2)}
+.bn-kw-tag--primary:hover{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-color:transparent;box-shadow:0 2px 12px var(--accent-glow)}
+.bn-kw-tag--secondary{background:var(--glass-bg);color:var(--text-sec);border-color:var(--glass-edge)}
+.bn-kw-tag--secondary:hover{border-color:var(--glass-edge-s);color:var(--text)}
+.bn-kw-tag:hover{transform:translateY(-1px)}
+.bn-reveal{animation:fadeUp .7s cubic-bezier(0.22,1,0.36,1) forwards;opacity:0}
+.bn-reveal:nth-child(1){animation-delay:0s}.bn-reveal:nth-child(2){animation-delay:0.08s}.bn-reveal:nth-child(3){animation-delay:0.16s}
+[data-theme="dark"] .bn-trust-card,[data-theme="dark"] .bn-demo-box{background:var(--glass-bg)}
+
+@media(max-width:768px){
+  .brand-narrative{padding:var(--space-lg) 0}
+  .bn-trust-grid{grid-template-columns:1fr;gap:var(--space-sm)}
+  .bn-trust-number{font-size:36px}.bn-trust-heading{font-size:16px}
+  .bn-demo-row{grid-template-columns:1fr;gap:var(--space-sm)}
+  .bn-demo-arrow-wrap{flex-direction:row;padding:0}
+  .bn-demo-arrow-icon{transform:rotate(90deg)}
+  @keyframes bnArrowPulse{0%,100%{opacity:0.4;transform:rotate(90deg) translateX(0)}50%{opacity:1;transform:rotate(90deg) translateX(4px)}}
+  .bn-chain-track{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:var(--space-sm) var(--space-xs);border-radius:var(--radius-md)}
+  .bn-chain-track::-webkit-scrollbar{display:none}
+  .bn-chain-node{font-size:11px;padding:5px 10px;flex-shrink:0}
+  .bn-chain-arrow{margin:0 1px;flex-shrink:0}
+  .bn-keywords-cloud{gap:6px}.bn-kw-tag{font-size:11px;padding:4px 10px}
+}
+@media(max-width:375px){
+  .bn-demo-output-grid{grid-template-columns:1fr}
+  .bn-kw-tag{font-size:10px;padding:3px 8px}
 }
 </style>
 </head>
@@ -243,14 +357,16 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
       <div class="brand-mark">W</div>
       <div>
         <div class="brand-name">华尔街驻铁岭办事处</div>
-        <div class="brand-sub">Credit Intelligence · v3.0</div>
+        <div class="brand-sub">Credit Intelligence · 只摆事实，不给建议</div>
       </div>
     </a>
     <div class="nav-right">
       <div class="nav-links" id="navLinks">
+        <a href="#brand-narrative" class="nav-link">全景</a>
+        <a href="#team" class="nav-link">同事</a>
         <a href="#features" class="nav-link">能力</a>
-        <a href="#team" class="nav-link">团队</a>
         <a href="#data" class="nav-link">数据</a>
+        <a href="#day" class="nav-link">一天</a>
         <a href="#install" class="nav-link">安装</a>
         <a href="SKILL.md" class="nav-link">文档</a>
       </div>
@@ -263,21 +379,268 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 <!-- ===================== HERO ===================== -->
 <section class="hero">
   <div class="container">
-    <div class="hero-badge">🚀 v3.0.2 · 13专家 · Token节省93%</div>
+    <div class="hero-badge"><span class="pulse"></span> v1.0 · 13位同事在线 · 402项测试全绿</div>
     <h1>华尔街驻铁岭办事处</h1>
-    <p class="hero-sub">13位从华尔街被优化到铁岭的金融老兵，蹲在暖气片上用曼哈顿的标准干县城的活儿。<br><strong>只摆事实，不给建议。</strong></p>
+    <div class="hero-quote-rotator" id="quoteRotator">
+      <div class="hero-quote-item active">"数据拿来我看，你别跟我整那些虚的。"<span class="hero-quote-author">—— 钱守正 · 总经理</span></div>
+      <div class="hero-quote-item">"利润可以粉饰，现金流不会说谎。"<span class="hero-quote-author">—— 李明远 · 财务分析</span></div>
+      <div class="hero-quote-item">"别问会不会出事，问出了事亏多少。"<span class="hero-quote-author">—— 赵刚 · 风险扫描</span></div>
+      <div class="hero-quote-item">"报告的价值不在长度，在密度。"<span class="hero-quote-author">—— 刘文华 · 报告生成</span></div>
+      <div class="hero-quote-item">"不同来源数据不一致，说明有一个在说谎。"<span class="hero-quote-author">—— 郑慎之 · 交叉验证</span></div>
+      <div class="hero-quote-item">"人没压力，怎么出活儿？看人家王思远，一遍过。"<span class="hero-quote-author">—— 吴德厚 · 政委</span></div>
+      <div class="hero-quote-item">"给我一个手机号，我还你一个完整的人。"<span class="hero-quote-author">—— 马力全 · 人员背调</span></div>
+    </div>
     <div class="hero-actions">
-      <a href="#install" class="btn btn-primary">⚡ 开始使用</a>
-      <a href="#features" class="btn btn-glass">了解更多</a>
+      <a href="#install" class="btn btn-primary">⚡ 一行命令，13人开工</a>
+      <a href="#team" class="btn btn-glass">认识同事</a>
       <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-outline" target="_blank">GitHub</a>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-value" data-count="13">0</div><div class="hero-stat-label">专家成员</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="13">0</div><div class="hero-stat-label">同事</div></div>
       <div class="hero-stat"><div class="hero-stat-value" data-count="6">0</div><div class="hero-stat-label">层防杜撰</div></div>
       <div class="hero-stat"><div class="hero-stat-value" data-count="93">0</div><div class="hero-stat-label">Token节省%</div></div>
       <div class="hero-stat"><div class="hero-stat-value" data-count="15">0</div><div class="hero-stat-label">适配模型</div></div>
-      <div class="hero-stat"><div class="hero-stat-value" data-count="8">0</div><div class="hero-stat-label">部署形态</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="0.03" data-suffix="元">0</div><div class="hero-stat-label">/deep尽调</div></div>
       <div class="hero-stat"><div id="starCount" class="hero-stat-value">★</div><div class="hero-stat-label">GitHub Stars</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== BRAND NARRATIVE ==================== -->
+<section class="section brand-narrative" id="brand-narrative">
+  <div class="bn-container">
+    <div class="bn-header bn-reveal">
+      <div class="bn-pill">能力全景</div>
+      <h2 class="bn-title">不只是工具，是<em>13个会思考的同事</em></h2>
+      <p class="bn-sub">全模型适配 · 真并发 Agent · 一键部署 · 拟人化协作 —— 一条完整的 AI 尽调叙事线</p>
+      <p class="bn-motto">"尽调有魂，数据不胡诌"</p>
+    </div>
+    <div class="bn-trust-grid">
+      <div class="bn-trust-card bn-reveal">
+        <div class="bn-trust-number">01</div>
+        <h3 class="bn-trust-heading">全模型适配</h3>
+        <p class="bn-trust-desc">不挑模型、不绑生态。Claude / GPT / DeepSeek / Gemini / Qwen……15+ 大模型即插即用。</p>
+        <div class="bn-trust-metric"><span class="bn-metric-num">15</span>+ 模型</div>
+      </div>
+      <div class="bn-trust-card bn-reveal">
+        <div class="bn-trust-number">02</div>
+        <h3 class="bn-trust-heading">13 人真并发</h3>
+        <p class="bn-trust-desc">不是排队轮流干，是 13 个 Agent 同时开工。工商、财务、风控、背调——并行推进，互不等候。</p>
+        <div class="bn-trust-metric"><span class="bn-metric-num">20</span> 分钟出报告</div>
+      </div>
+      <div class="bn-trust-card bn-reveal">
+        <div class="bn-trust-number">03</div>
+        <h3 class="bn-trust-heading">从不说谎</h3>
+        <p class="bn-trust-desc">6 层防杜撰机制。政委质检 + 交叉验证双门禁，数据不一致当场驳回重做——最多 3 次机会。</p>
+        <div class="bn-trust-metric"><span class="bn-metric-num">6</span> 层防杜撰</div>
+      </div>
+    </div>
+    <div class="bn-chain-wrap bn-reveal">
+      <div class="bn-chain-label">一条完整的 AI 尽调叙事线</div>
+      <div class="bn-chain-track">
+        <span class="bn-chain-node"><span class="bn-chain-icon">🧩</span>全模型适配</span>
+        <span class="bn-chain-arrow">→</span>
+        <span class="bn-chain-node"><span class="bn-chain-icon">⚡</span>真并发 Agent</span>
+        <span class="bn-chain-arrow">→</span>
+        <span class="bn-chain-node"><span class="bn-chain-icon">🚀</span>一键部署</span>
+        <span class="bn-chain-arrow">→</span>
+        <span class="bn-chain-node"><span class="bn-chain-icon">🤝</span>拟人化协作</span>
+        <span class="bn-chain-arrow">→</span>
+        <span class="bn-chain-node"><span class="bn-chain-icon">🛡️</span>6 层防杜撰</span>
+        <span class="bn-chain-arrow">→</span>
+        <span class="bn-chain-node"><span class="bn-chain-icon">📝</span>万字报告</span>
+        <span class="bn-chain-arrow">→</span>
+        <span class="bn-chain-node"><span class="bn-chain-icon">📄</span>多格式排版</span>
+        <span class="bn-chain-arrow">→</span>
+        <span class="bn-chain-node"><span class="bn-chain-icon">🔄</span>不断进化</span>
+      </div>
+    </div>
+    <div class="bn-demo-row bn-reveal">
+      <div class="bn-demo-box bn-demo-input">
+        <div class="bn-demo-label">你的一句话</div>
+        <div class="bn-demo-content">"帮我查一下比亚迪的尽调情况"</div>
+      </div>
+      <div class="bn-demo-arrow-wrap">
+        <span class="bn-demo-arrow-icon">→</span>
+        <span class="bn-demo-arrow-time">20 分钟后</span>
+      </div>
+      <div class="bn-demo-box bn-demo-output">
+        <div class="bn-demo-label">13 人交作业</div>
+        <div class="bn-demo-content">企业尽调报告（完整版）</div>
+        <div class="bn-demo-output-grid">
+          <span class="bn-demo-file">MD 公文排版</span>
+          <span class="bn-demo-file">HTML 网页版</span>
+          <span class="bn-demo-file">PDF 打印版</span>
+          <span class="bn-demo-file">DOCX 可编辑</span>
+          <span class="bn-demo-file">JSON 结构化数据</span>
+        </div>
+      </div>
+    </div>
+    <div class="bn-keywords-wrap bn-reveal">
+      <div class="bn-keywords-title">核心差异化能力</div>
+      <div class="bn-keywords-cloud">
+        <span class="bn-kw-tag bn-kw-tag--primary">全模型适配</span>
+        <span class="bn-kw-tag bn-kw-tag--primary">真并发 Agent</span>
+        <span class="bn-kw-tag bn-kw-tag--primary">一键部署</span>
+        <span class="bn-kw-tag bn-kw-tag--primary">拟人化角色</span>
+        <span class="bn-kw-tag bn-kw-tag--primary">从不说谎</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">6 层防杜撰</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">双门禁质检</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">一句话出报告</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">万字尽调</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">5 格式输出</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">公文级排版</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">93% Token 节省</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">不断进化</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">零配置</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">15+ 大模型</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">30+ 数据源</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TEAM ===================== -->
+<section class="section section-alt" id="team">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">👥 同事</div>
+      <h2 class="section-title">来认识一下你的新同事</h2>
+      <p class="section-sub">13位从华尔街、四大、中金、法院被"优化"出来的老兵。每个人都带着上一份工作的职业病——这恰好是我们需要的。</p>
+    </div>
+
+    <!-- 管理层 -->
+    <div class="team-dept">
+      <div class="team-dept-label">
+        <span class="team-dept-icon">👔</span>
+        <div><span class="team-dept-name">管理层</span> <span class="team-dept-name" style="font-weight:400;font-size:12px;color:var(--text-ter)">—— 一个被裁的和一个被优化的</span></div>
+      </div>
+      <div class="team-grid">
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">钱</div></div>
+          <div class="team-name">钱守正</div>
+          <div class="team-role">总经理 · 前摩根士丹利 MD</div>
+          <div class="team-tags"><span class="team-tag">务实</span><span class="team-tag">护犊子</span></div>
+          <div class="team-quote">"别看我们是铁岭，标准按曼哈顿来。数据拿来我看。"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">吴</div></div>
+          <div class="team-name">吴德厚</div>
+          <div class="team-role">政委 · 前国企政工干部</div>
+          <div class="team-tags"><span class="team-tag">严肃</span><span class="team-tag">PUA大师</span></div>
+          <div class="team-quote">"你这个态度不行。给你最后一次机会。"（这句话会出现3次）</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">陈</div></div>
+          <div class="team-name">陈志远</div>
+          <div class="team-role">任务拆解 · 前麦肯锡 PM</div>
+          <div class="team-tags"><span class="team-tag">系统思维</span><span class="team-tag">拆解狂魔</span></div>
+          <div class="team-quote">"复杂问题拆成简单任务。第一步先……第二步再……"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">暗</div></div>
+          <div class="team-name">暗哨</div>
+          <div class="team-role">全流程监控 · 来历不明</div>
+          <div class="team-tags"><span class="team-tag">沉默</span><span class="team-tag">无死角</span></div>
+          <div class="team-quote">"数据不说话。这个时间点有个异常。"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 业务组 -->
+    <div class="team-dept">
+      <div class="team-dept-label">
+        <span class="team-dept-icon">🔍</span>
+        <div><span class="team-dept-name">业务组</span> <span class="team-dept-name" style="font-weight:400;font-size:12px;color:var(--text-ter)">—— 四个把"多疑"当职业素养的人</span></div>
+      </div>
+      <div class="team-grid">
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">张</div></div>
+          <div class="team-name">张铁柱</div>
+          <div class="team-role">工商核查 · 15年工商代办</div>
+          <div class="team-tags"><span class="team-tag">老实</span><span class="team-tag">细节控</span></div>
+          <div class="team-quote">"这个注册号我查了一下……唉呀这个不对。等会儿我再核实一遍。"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">李</div></div>
+          <div class="team-name">李明远</div>
+          <div class="team-role">财务分析 · 前德勤审计经理</div>
+          <div class="team-tags"><span class="team-tag">严谨</span><span class="team-tag">Excel重度</span></div>
+          <div class="team-quote">"这个数字对不上。你让我再看一遍现金流量表。"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">王</div></div>
+          <div class="team-name">王思远</div>
+          <div class="team-role">行业研究 · 前中金分析师</div>
+          <div class="team-tags"><span class="team-tag">书生</span><span class="team-tag">波特粉丝</span></div>
+          <div class="team-quote">"别只看行业增速，看增速的增速。竞争对手我列一下吧。"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">赵</div></div>
+          <div class="team-name">赵刚</div>
+          <div class="team-role">风险扫描 · 前法院执行局</div>
+          <div class="team-tags"><span class="team-tag">多疑</span><span class="team-tag">嗓门大</span></div>
+          <div class="team-quote">"你以为他只是股东？往下穿透两层看看。担保圈才是真正的雷。"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 情报 + 质检 -->
+    <div class="team-dept">
+      <div class="team-dept-label">
+        <span class="team-dept-icon">🕵️</span>
+        <div><span class="team-dept-name">情报 & 质检</span> <span class="team-dept-name" style="font-weight:400;font-size:12px;color:var(--text-ter)">—— 查人的，查工具的，查数据的，查态度的</span></div>
+      </div>
+      <div class="team-grid">
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">马</div></div>
+          <div class="team-name">马力全</div>
+          <div class="team-role">人员背调 · 前公安情报</div>
+          <div class="team-tags"><span class="team-tag">神秘</span><span class="team-tag">直觉强</span></div>
+          <div class="team-quote">"你看这个时间线，刚好对上。别急，让我再翻翻。"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">周</div></div>
+          <div class="team-name">周通</div>
+          <div class="team-role">OSINT技术 · GitHub 3k⭐</div>
+          <div class="team-tags"><span class="team-tag">技术宅</span><span class="team-tag">API精通</span></div>
+          <div class="team-quote">"接口不够用？那是你只看到了默认配置。我写了个脚本。"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">郑</div></div>
+          <div class="team-name">郑慎之</div>
+          <div class="team-role">交叉验证 · 前银监会30年</div>
+          <div class="team-tags"><span class="team-tag">铁面</span><span class="team-tag">零容忍</span></div>
+          <div class="team-quote">"这个数据来源可靠吗？不同来源不一致——有一个在说谎。"</div>
+        </div>
+        <div></div>
+      </div>
+    </div>
+
+    <!-- 输出组 -->
+    <div class="team-dept">
+      <div class="team-dept-label">
+        <span class="team-dept-icon">📝</span>
+        <div><span class="team-dept-name">输出组</span> <span class="team-dept-name" style="font-weight:400;font-size:12px;color:var(--text-ter)">—— 前新华社编辑 + 前4A设计师，一对欢喜冤家</span></div>
+      </div>
+      <div class="team-grid">
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">刘</div></div>
+          <div class="team-name">刘文华</div>
+          <div class="team-role">报告生成 · 前新华社编辑</div>
+          <div class="team-tags"><span class="team-tag">文笔好</span><span class="team-tag">逻辑清</span></div>
+          <div class="team-quote">"报告的价值不在长度，在密度。综合以上分析……"</div>
+        </div>
+        <div class="glass-card-sm team-card">
+          <div class="team-avatar-ring"><div class="team-avatar">颜</div></div>
+          <div class="team-name">颜好看</div>
+          <div class="team-role">排版美化 · 前4A美术指导</div>
+          <div class="team-tags"><span class="team-tag">审美强迫</span><span class="team-tag">间距执念</span></div>
+          <div class="team-quote">"谁又把我调的间距改了！你就不能对齐一下吗？"</div>
+        </div>
+        <div></div>
+        <div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -286,92 +649,102 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 <section class="section" id="features">
   <div class="container">
     <div class="section-header">
-      <div class="section-pill">⚡ Capabilities</div>
-      <h2 class="section-title">核心能力</h2>
-      <p class="section-sub">六大尽调维度，覆盖信贷全生命周期</p>
+      <div class="section-pill">⚡ 能力</div>
+      <h2 class="section-title">六维尽调，分工明确</h2>
+      <p class="section-sub">每个人只做自己最擅长的事——就像真实的办公室。不越界、不推诿、不掉链子。</p>
     </div>
     <div class="features-grid">
-      <div class="glass-card glass-appear"><div class="feature-icon">🛡️</div><h3 class="feature-title">防杜撰体系</h3><p class="feature-desc">六层纵深防御：绝对禁止→来源绑定→标注格式→不确定度标记→自校验循环→领域约束。远超"请勿编造"</p></div>
-      <div class="glass-card glass-appear" style="animation-delay:.05s"><div class="feature-icon">✅</div><h3 class="feature-title">双重质量门禁</h3><p class="feature-desc">L1正则引擎零LLM成本扫描 + L2深度验证0-100评分 + 政委三级PUA重试 + 跨智能体结构化一致性校验</p></div>
-      <div class="glass-card glass-appear" style="animation-delay:.1s"><div class="feature-icon">🎛️</div><h3 class="feature-title">动态编排</h3><p class="feature-desc">3阶段流水线、6种运行模式(simple~deep)、6条条件分支自动追加角色。Python async并行API调用</p></div>
-      <div class="glass-card glass-appear" style="animation-delay:.15s"><div class="feature-icon">🔍</div><h3 class="feature-title">企业尽调</h3><p class="feature-desc">工商核查、股权穿透至自然人、实控人识别、关联交易挖掘、担保圈分析。5个MCP连接器直连</p></div>
-      <div class="glass-card glass-appear" style="animation-delay:.2s"><div class="feature-icon">💰</div><h3 class="feature-title">财务 & 风险</h3><p class="feature-desc">五维财务分析、六维风险雷达、现金流粉饰识别、担保圈传染、敏感性测试。利润粉饰？现金流不说谎</p></div>
-      <div class="glass-card glass-appear" style="animation-delay:.25s"><div class="feature-icon">🌐</div><h3 class="feature-title">八种部署形态</h3><p class="feature-desc">Skill粘贴/MCP Server/Docker/REST API/npm CLI/Custom GPT/Claude Project/国产Bot。一套代码全覆盖</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== TEAM ===================== -->
-<section class="section" id="team">
-  <div class="container">
-    <div class="section-header">
-      <div class="section-pill">👥 Team</div>
-      <h2 class="section-title">核心团队</h2>
-      <p class="section-sub">13位专家，各司其职，hover 看看他们的名言</p>
-    </div>
-    <div class="team-grid">
-      <div class="glass-card-sm team-card"><div class="team-avatar">钱</div><div class="team-name">钱守正</div><div class="team-role">💰 总经理</div><div class="team-quote">"用户说什么不重要，用户需要什么才重要"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">吴</div><div class="team-name">吴德厚</div><div class="team-role">🎖️ 政委</div><div class="team-quote">"人没压力，怎么出活儿？"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">陈</div><div class="team-name">陈志远</div><div class="team-role">🔧 陈工</div><div class="team-quote">"复杂问题拆成简单任务"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">周</div><div class="team-name">周通</div><div class="team-role">💻 CTO</div><div class="team-quote">"接口不够用？那是你只看到了默认配置"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">郑</div><div class="team-name">郑慎之</div><div class="team-role">🔍 审计</div><div class="team-quote">"信任，但要验证"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">张</div><div class="team-name">张铁柱</div><div class="team-role">🕵️ 调查</div><div class="team-quote">"工商信息只是皮，股权穿透才是肉"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">马</div><div class="team-name">马力全</div><div class="team-role">📱 马深查</div><div class="team-quote">"给我一个手机号，我还你一个完整的人"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">李</div><div class="team-name">李明远</div><div class="team-role">📈 李财报</div><div class="team-quote">"利润可以粉饰，现金流不会说谎"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">王</div><div class="team-name">王思远</div><div class="team-role">🌐 王行业</div><div class="team-quote">"别只看行业增速，看增速的增速"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">赵</div><div class="team-name">赵刚</div><div class="team-role">⚠️ 风险官</div><div class="team-quote">"别问会不会出事，问出了事亏多少"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">刘</div><div class="team-name">刘文华</div><div class="team-role">📝 刘报告</div><div class="team-quote">"报告的价值不在长度，在密度"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">颜</div><div class="team-name">颜好看</div><div class="team-role">🎨 设计师</div><div class="team-quote">"设计不是装饰，是沟通"</div></div>
-      <div class="glass-card-sm team-card"><div class="team-avatar">暗</div><div class="team-name">暗哨</div><div class="team-role">👁️ 监控</div><div class="team-quote">"我看到一切，但你看不到我"</div></div>
+      <div class="glass-card glass-appear">
+        <div class="feature-icon">📋</div>
+        <h3 class="feature-title">企业尽调</h3>
+        <div class="feature-owners">张铁柱 · 马力全 主理</div>
+        <div class="feature-desc">工商核查、股权穿透至自然人（5层+）、实控人识别、关联交易挖掘、担保圈传染分析——从一张营业执照往下挖。</div>
+        <div class="feature-quote">"工商信息只是皮，股权穿透才是肉"</div>
+      </div>
+      <div class="glass-card glass-appear" style="animation-delay:.05s">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">财务分析</h3>
+        <div class="feature-owners">李明远 主理</div>
+        <div class="feature-desc">五维财务健康评分 (0-100)、现金流质量验证、利润粉饰识别、关联交易定价偏差、敏感性测试。</div>
+        <div class="feature-quote">"利润可以粉饰，现金流不会说谎"</div>
+      </div>
+      <div class="glass-card glass-appear" style="animation-delay:.1s">
+        <div class="feature-icon">🌐</div>
+        <h3 class="feature-title">行业研究</h3>
+        <div class="feature-owners">王思远 主理</div>
+        <div class="feature-desc">波特五力 + PESTLE 双框架、行业增速与天花板测算、竞争格局推演、政策合规风险扫描。</div>
+        <div class="feature-quote">"别只看行业增速，看增速的增速"</div>
+      </div>
+      <div class="glass-card glass-appear" style="animation-delay:.15s">
+        <div class="feature-icon">⚠️</div>
+        <h3 class="feature-title">风险扫描</h3>
+        <div class="feature-owners">赵刚 主理</div>
+        <div class="feature-desc">六维风险雷达 (0-100)、司法记录 + 被执行人 + 失信、担保圈互保链识别、资金链断裂预警。</div>
+        <div class="feature-quote">"担保圈才是真正的雷"</div>
+      </div>
+      <div class="glass-card glass-appear" style="animation-delay:.2s">
+        <div class="feature-icon">👤</div>
+        <h3 class="feature-title">人员背调</h3>
+        <div class="feature-owners">马力全 · 周通 主理</div>
+        <div class="feature-desc">公开社交图谱分析、职业轨迹一致性验证、4000+网站 OSINT 覆盖、关键人风险评估。</div>
+        <div class="feature-quote">"我搜了一下这个人的关联账号……你看这个时间线"</div>
+      </div>
+      <div class="glass-card glass-appear" style="animation-delay:.25s">
+        <div class="feature-icon">🎨</div>
+        <h3 class="feature-title">商业版图</h3>
+        <div class="feature-owners">陈志远 主理</div>
+        <div class="feature-desc">六大维度全景画像：企业 / 行业 / 地理 / 资本 / 存续 / 时间轴。风险热力图 + 动态雷达图 + 一键5格式。</div>
+        <div class="feature-quote">"复杂问题拆成简单任务"</div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- ===================== DATA TIERS ===================== -->
-<section class="section" id="data">
+<section class="section section-alt" id="data">
   <div class="container">
     <div class="section-header">
-      <div class="section-pill">📡 Data</div>
+      <div class="section-pill">📡 数据</div>
       <h2 class="section-title">数据源矩阵</h2>
-      <p class="section-sub">5级数据源 + 5个OSINT工具，30+活跃来源确保尽调信息全面覆盖</p>
+      <p class="section-sub">好厨师不挑食材，好分析师不挑数据源——30+来源，各司其职</p>
     </div>
     <div class="tier-grid">
-      <div class="glass-card tier-card" data-tier="0">
+      <div class="glass-card tier-card" data-tier="0" data-users="张铁柱·李明远">
         <div class="tier-icon">🏦</div>
         <div class="tier-name">Tier 0 · 专业终端</div>
         <div class="tier-count">5+ 数据源</div>
         <div class="tier-items">Wind · Bloomberg · Refinitiv · 东方财富 · 同花顺</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:95%"></div></div>
       </div>
-      <div class="glass-card tier-card" data-tier="1">
+      <div class="glass-card tier-card" data-tier="1" data-users="王思远·赵刚">
         <div class="tier-icon">📦</div>
         <div class="tier-name">Tier 1 · 开箱即用</div>
         <div class="tier-count">10+ 数据源</div>
         <div class="tier-items">WebSearch · WebFetch · 模型知识 · 16引擎多搜索</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:90%"></div></div>
       </div>
-      <div class="glass-card tier-card" data-tier="2">
+      <div class="glass-card tier-card" data-tier="2" data-users="张铁柱·赵刚">
         <div class="tier-icon">🔧</div>
         <div class="tier-name">Tier 2 · 免费官方</div>
         <div class="tier-count">6 数据源</div>
         <div class="tier-items">国家企业信用 · 裁判文书 · 被执行人 · 商标 · 专利 · 信用中国</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:85%"></div></div>
       </div>
-      <div class="glass-card tier-card" data-tier="3">
+      <div class="glass-card tier-card" data-tier="3" data-users="全员可用">
         <div class="tier-icon">🔌</div>
         <div class="tier-name">Tier 3 · MCP增强</div>
         <div class="tier-count">5个连接器 (177+接口)</div>
         <div class="tier-items">企查查(15) · 天眼查(162) · 灵犀 · NeoData · 富途API</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:78%"></div></div>
       </div>
-      <div class="glass-card tier-card" data-tier="4">
+      <div class="glass-card tier-card" data-tier="4" data-users="马力全·周通">
         <div class="tier-icon">🕵️</div>
         <div class="tier-name">Tier 4 · OSINT工具</div>
         <div class="tier-count">5 工具 · 4,000+网站</div>
         <div class="tier-items">maigret · sherlock · theHarvester · holehe · phoneinfoga</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:65%"></div></div>
       </div>
-      <div class="glass-card tier-card" data-tier="5">
+      <div class="glass-card tier-card" data-tier="5" data-users="按需分发">
         <div class="tier-icon">☁️</div>
         <div class="tier-name">Tier 5 · 商业免费层</div>
         <div class="tier-count">5+ API</div>
@@ -382,12 +755,90 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
   </div>
 </section>
 
-<!-- ===================== INSTALL ===================== -->
-<section class="section" id="install">
+<!-- ===================== A DAY IN THE OFFICE ===================== -->
+<section class="section" id="day">
   <div class="container">
     <div class="section-header">
-      <div class="section-pill">🚀 Install</div>
-      <h2 class="section-title">六种方式，即刻开始</h2>
+      <div class="section-pill">🕐 一天</div>
+      <h2 class="section-title">13 个同事的一天</h2>
+      <p class="section-sub">一份尽调报告的背后，是 13 个人在暖气片上的接力赛。</p>
+    </div>
+    <div class="glass-card" style="max-width:640px;margin:0 auto">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-hour">09:00</div>
+          <div class="timeline-dot doing"></div>
+          <div class="timeline-content">
+            <div class="timeline-agent">钱守正 · 总经理</div>
+            <div class="timeline-task">"行，比亚迪是吧，知道了。铁柱！明远！活来了！"</div>
+            <div class="timeline-note">拆解任务，按需分发到各角色</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-hour">09:03</div>
+          <div class="timeline-dot doing"></div>
+          <div class="timeline-content">
+            <div class="timeline-agent">张铁柱 · 工商核查</div>
+            <div class="timeline-task">"收到，比亚迪……我打开工商系统查一下。"</div>
+            <div class="timeline-note">并行调用工商、股权、专利数据源</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-hour">09:05</div>
+          <div class="timeline-dot doing"></div>
+          <div class="timeline-content">
+            <div class="timeline-agent">李明远 · 财务分析 + 王思远 · 行业研究 + 赵刚 · 风险扫描</div>
+            <div class="timeline-task">并行执行：拉财报 + 行业建模 + 风险扫描</div>
+            <div class="timeline-note">各司其职，互不等待</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-hour">09:12</div>
+          <div class="timeline-dot done"></div>
+          <div class="timeline-content">
+            <div class="timeline-agent">郑慎之 · 交叉验证</div>
+            <div class="timeline-task">"我来验证数据。不同来源的数据不一致——这说明有一个在说谎。我建议重新核实。"</div>
+            <div class="timeline-note">来源覆盖率、数据一致性、逻辑严密性三重检查</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-hour">09:15</div>
+          <div class="timeline-dot done"></div>
+          <div class="timeline-content">
+            <div class="timeline-agent">吴德厚 · 政委</div>
+            <div class="timeline-task">"我盯质检。L1正则扫描0token + L2深度验证……过！"</div>
+            <div class="timeline-note">双门禁通过，否则退回重做（最多3次）</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-hour">09:18</div>
+          <div class="timeline-dot done"></div>
+          <div class="timeline-content">
+            <div class="timeline-agent">刘文华 · 报告生成 + 颜好看 · 排版</div>
+            <div class="timeline-task">"收到数据，来汇总。好看，别又改我间距！"</div>
+            <div class="timeline-note">一键输出 MD / JSON / HTML / PDF / DOCX</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-hour">09:20</div>
+          <div class="timeline-dot" style="background:var(--success);box-shadow:0 0 12px rgba(52,199,89,.5)"></div>
+          <div class="timeline-content" style="border-color:rgba(52,199,89,.15)">
+            <div class="timeline-agent" style="color:var(--success)">暗哨 · 全流程监控</div>
+            <div class="timeline-task">"数据不说话。本次尽调 Token 消耗 2,847，成本 ¥0.03。交付完毕。"</div>
+            <div class="timeline-note">20分钟 · 6维覆盖 · 5格式输出 · 不到一杯豆浆的钱</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== INSTALL ===================== -->
+<section class="section section-alt" id="install">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">🚀 安装</div>
+      <h2 class="section-title">一行命令，13 人开工</h2>
       <p class="section-sub">WorkBuddy · Docker · npm · REST API · 粘贴模式 · 在线体验</p>
     </div>
     <div style="text-align:center">
@@ -395,7 +846,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
         <code id="installCmd">npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
         <button class="copy-btn" onclick="copyInstall()">复制</button>
       </div>
-      <p class="install-hint">在终端执行，或粘贴到任意AI对话窗口</p>
+      <p class="install-hint">在终端执行，或粘贴到任意AI对话窗口。零配置。</p>
     </div>
     <div class="platform-tabs">
       <button class="platform-tab active" onclick="switchPlatform(this,'wb')">WorkBuddy</button>
@@ -404,56 +855,23 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
       <button class="platform-tab" onclick="switchPlatform(this,'api')">REST API</button>
       <button class="platform-tab" onclick="switchPlatform(this,'chat')">粘贴模式</button>
     </div>
-    <div class="install-grid" id="platformContent">
-      <div class="glass-card-sm" style="text-align:center">
+    <div class="install-grid" id="platformContent" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md);max-width:780px;margin:0 auto">
+      <div class="glass-card-sm platform-card" data-platforms="wb,npm" style="text-align:center">
         <div style="font-size:28px;margin-bottom:var(--space-sm)">⚡</div>
         <div style="font-weight:600;margin-bottom:4px">Skill 市场安装</div>
-        <div style="font-size:12px;color:var(--text-sec);margin-bottom:var(--space-sm)">推荐 · MCP直连 · 满血版本</div>
-        <code style="font-size:12px;background:var(--bg-alt);padding:4px 10px;border-radius:6px;color:var(--success)">npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
+        <div style="font-size:12px;color:var(--text-sec);margin-bottom:var(--space-sm)">推荐 · MCP直连 · 满血</div>
+        <code style="font-size:11px;background:var(--bg-alt);padding:4px 10px;border-radius:6px;color:var(--success)">npx skills add Dear-Ded/wallstreet-tieling -g -y</code>
       </div>
-      <div class="glass-card-sm" style="text-align:center">
+      <div class="glass-card-sm platform-card" data-platforms="docker" style="text-align:center">
         <div style="font-size:28px;margin-bottom:var(--space-sm)">🐳</div>
-        <div style="font-weight:600;margin-bottom:4px">Docker 容器</div>
-        <div style="font-size:12px;color:var(--text-sec);margin-bottom:var(--space-sm)">一键部署 · 自托管</div>
-        <code style="font-size:11px;background:var(--bg-alt);padding:4px 10px;border-radius:6px;color:var(--success)">docker run -p 8080:8080 -e DEEPSEEK_API_KEY=sk-xxx dearded/wallstreet-tieling</code>
+        <div style="font-weight:600;margin-bottom:4px">Docker 自部署</div>
+        <div style="font-size:12px;color:var(--text-sec);margin-bottom:var(--space-sm)">一键启动 · REST API</div>
+        <code style="font-size:10px;background:var(--bg-alt);padding:4px 8px;border-radius:6px;color:var(--success)">docker run -p 8080:8080 -e DEEPSEEK_API_KEY=sk-xxx dearded/wallstreet-tieling</code>
       </div>
-      <div class="glass-card-sm" style="text-align:center">
+      <div class="glass-card-sm platform-card" data-platforms="chat,api" style="text-align:center">
         <div style="font-size:28px;margin-bottom:var(--space-sm)">📋</div>
-        <div style="font-weight:600;margin-bottom:4px">粘贴到AI对话</div>
-        <div style="font-size:12px;color:var(--text-sec)">复制 SKILL.md 全文<br>零依赖 · 即贴即用</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== ROADMAP ===================== -->
-<section class="section" id="roadmap">
-  <div class="container">
-    <div class="section-header">
-      <div class="section-pill">🗺️ Roadmap</div>
-      <h2 class="section-title">版本路线</h2>
-      <p class="section-sub">从动手脚到不动脑的进化之路</p>
-    </div>
-    <div class="glass-card">
-      <div class="roadmap">
-        <div class="roadmap-item">
-          <div class="roadmap-dot" style="background:var(--success)"></div>
-          <div class="roadmap-phase" style="color:var(--success)">Phase 1 ✅ v3.0.2</div>
-          <div class="roadmap-title">工程化 Prompt Chain + 6大尽调能力</div>
-          <div class="roadmap-desc">13角色人格化架构 · 6层防杜撰体系 · L1+L2双重质量门禁 · 政委PUA引擎 · 动态编排6模式+6条件分支 · 8种部署形态 · 5个MCP连接器 · 5种输出格式 · CI/CD流水线 · Docker/REST API/npm CLI</div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-dot" style="background:var(--warn)"></div>
-          <div class="roadmap-phase" style="color:var(--warn)">Phase 2 🚧 进行中</div>
-          <div class="roadmap-title">多Agent并行 + 平台深度适配</div>
-          <div class="roadmap-desc">DeepSeek V4 Pro常驻Think High · MiMo v2.5 Pro Token Plan · 独立Agent窗口 · 子skill独立部署 · 多模型兼容矩阵完善</div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-dot"></div>
-          <div class="roadmap-phase">Phase 3 📋 规划中</div>
-          <div class="roadmap-title">RAG + 本地知识库 + 端到端自动化</div>
-          <div class="roadmap-desc">向量检索增强生成 · 本地尽调报告知识库 · 一键尽调流水线 · 多模态(扫描件→结构化数据) · ADR架构决策记录</div>
-        </div>
+        <div style="font-weight:600;margin-bottom:4px">粘贴到 AI 对话</div>
+        <div style="font-size:12px;color:var(--text-sec)">复制 SKILL.md · 即贴即用</div>
       </div>
     </div>
   </div>
@@ -462,10 +880,10 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 <!-- ===================== CTA ===================== -->
 <section class="cta">
   <div class="container">
-    <h2 class="cta-title">开始你的第一份 AI 尽调</h2>
-    <p class="cta-sub">一行命令安装，或直接打开文档开始使用。只摆事实，不给建议。</p>
+    <h2 class="cta-title">下次上会前，让 13 个人先替你查一遍</h2>
+    <p class="cta-sub">只摆事实，不给建议。在铁岭，你说真话也没人管你。</p>
     <div class="hero-actions">
-      <a href="SKILL.md" class="btn btn-primary">📖 查看文档</a>
+      <a href="#install" class="btn btn-primary">⚡ 开始使用</a>
       <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-glass" target="_blank">⭐ GitHub</a>
       <a href="https://github.com/Dear-Ded/wallstreet-tieling/issues" class="btn btn-outline" target="_blank">💬 反馈</a>
     </div>
@@ -475,7 +893,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 <!-- ===================== FOOTER ===================== -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-brand">2026 华尔街驻铁岭办事处 · v3.0.2 · MIT License</div>
+    <div class="footer-brand">2026 华尔街驻铁岭办事处 · v1.0 · MIT License · Built in Tieling, with Wall Street standards</div>
     <div class="footer-links">
       <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="footer-link" target="_blank">GitHub</a>
       <a href="SKILL.md" class="footer-link">文档</a>
@@ -496,6 +914,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
   const prefersDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
   const theme = saved || (prefersDark ? 'dark' : 'light');
   document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌙' : '☀️';
 })();
 
 document.getElementById('themeToggle').addEventListener('click', function() {
@@ -505,8 +924,6 @@ document.getElementById('themeToggle').addEventListener('click', function() {
   html.setAttribute('data-theme', next);
   localStorage.setItem('wst-theme', next);
   this.textContent = next === 'dark' ? '🌙' : '☀️';
-  // Update particle color
-  if (window.particles) updateParticleColor(next);
 });
 
 // ==================== MOBILE MENU ====================
@@ -518,7 +935,7 @@ document.getElementById('mobileMenuBtn').addEventListener('click', function() {
   links.style.position = 'absolute';
   links.style.top = '100%';
   links.style.right = '0';
-  links.style.background = 'var(--glass-bg)';
+  links.style.background = 'var(--glass-bg-heavy)';
   links.style.backdropFilter = 'var(--blur)';
   links.style.padding = 'var(--space-md)';
   links.style.borderRadius = 'var(--radius-md)';
@@ -528,6 +945,27 @@ document.getElementById('mobileMenuBtn').addEventListener('click', function() {
   links.style.gap = 'var(--space-sm)';
   this.textContent = isVisible ? '☰' : '✕';
 });
+
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) {
+    const links = document.getElementById('navLinks');
+    links.removeAttribute('style');
+    document.getElementById('mobileMenuBtn').textContent = '☰';
+  }
+});
+
+// ==================== QUOTE ROTATOR ====================
+(function() {
+  const items = document.querySelectorAll('.hero-quote-item');
+  let current = 0;
+  const total = items.length;
+  if (total < 2) return;
+  setInterval(function() {
+    items[current].classList.remove('active');
+    current = (current + 1) % total;
+    items[current].classList.add('active');
+  }, 4000);
+})();
 
 // ==================== COPY INSTALL ====================
 function copyInstall() {
@@ -547,6 +985,10 @@ function copyInstall() {
 function switchPlatform(el, key) {
   document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  document.querySelectorAll('.platform-card').forEach(card => {
+    const platforms = (card.dataset.platforms || '').split(',');
+    card.style.display = platforms.includes(key) ? '' : 'none';
+  });
 }
 
 // ==================== STAR COUNT ====================
@@ -556,7 +998,7 @@ fetch('https://api.github.com/repos/Dear-Ded/wallstreet-tieling')
     const el = document.getElementById('starCount');
     if (d.stargazers_count !== undefined) {
       el.textContent = d.stargazers_count;
-      el.style.setProperty('--accent', '#ff9f0a');
+      el.style.color = '#ff9f0a';
     } else {
       el.textContent = '★';
     }
@@ -564,28 +1006,33 @@ fetch('https://api.github.com/repos/Dear-Ded/wallstreet-tieling')
   .catch(() => {});
 
 // ==================== ANIMATED COUNTERS ====================
-const observer = new IntersectionObserver((entries) => {
+const counterObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const el = entry.target;
-      const target = parseInt(el.dataset.count);
-      if (!target) return;
+      const target = parseFloat(el.dataset.count);
+      if (isNaN(target)) return;
+      const suffix = el.dataset.suffix || '';
+      const isDecimal = !Number.isInteger(target);
       let current = 0;
-      const step = Math.ceil(target / 40);
+      const steps = 45;
+      const increment = target / steps;
+      let step = 0;
       const timer = setInterval(() => {
-        current += step;
-        if (current >= target) {
+        step++;
+        current += increment;
+        if (step >= steps) {
           current = target;
           clearInterval(timer);
         }
-        el.textContent = current + (el.dataset.suffix || '');
+        el.textContent = (isDecimal ? current.toFixed(2) : Math.round(current)) + suffix;
       }, 30);
-      observer.unobserve(el);
+      counterObserver.unobserve(el);
     }
   });
 }, { threshold: 0.5 });
 
-document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
 
 // ==================== PARTICLES ====================
 const canvas = document.getElementById('particles-canvas');
@@ -606,16 +1053,16 @@ function getParticleColor() {
 }
 
 function createParticles() {
-  const count = Math.min(60, Math.floor(window.innerWidth / 20));
+  const count = Math.min(70, Math.floor(window.innerWidth / 18));
   particles = [];
   for (let i = 0; i < count; i++) {
     particles.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
-      r: Math.random() * 1.5 + 0.5,
-      alpha: Math.random() * 0.4 + 0.1
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      r: Math.random() * 2 + 0.5,
+      alpha: Math.random() * 0.35 + 0.08
     });
   }
 }
@@ -641,11 +1088,11 @@ function drawParticles() {
       const dx = p.x - particles[j].x;
       const dy = p.y - particles[j].y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 120) {
+      if (dist < 130) {
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(particles[j].x, particles[j].y);
-        ctx.strokeStyle = `rgba(${color},${0.08 * (1 - dist / 120)})`;
+        ctx.strokeStyle = `rgba(${color},${0.06 * (1 - dist / 130)})`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
       }
@@ -653,10 +1100,6 @@ function drawParticles() {
   });
 
   animFrame = requestAnimationFrame(drawParticles);
-}
-
-function updateParticleColor(theme) {
-  // Redraw will pick up new color on next frame
 }
 
 createParticles();
@@ -672,10 +1115,27 @@ const revealObserver = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.1 });
 
-document.querySelectorAll('.glass-appear').forEach(el => {
+document.querySelectorAll('.glass-appear, .bn-reveal').forEach(el => {
   el.style.animationPlayState = 'paused';
   revealObserver.observe(el);
 });
+
+// ==================== PROGRESS ANIMATION ====================
+const progressObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const fills = entry.target.querySelectorAll('.tier-progress-fill');
+      fills.forEach(f => {
+        const w = f.style.width;
+        f.style.width = '0%';
+        setTimeout(() => { f.style.width = w; }, 100);
+      });
+      progressObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.tier-grid').forEach(el => progressObserver.observe(el));
 </script>
 </body>
 </html>

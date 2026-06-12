@@ -1,101 +1,45 @@
-﻿# 更新日志
+# 更新日志
 
 > 版本号遵循语义化版本：MAJOR.MINOR.PATCH
 
 ---
 
-## v0.5.0 (2026-06-10) — 平台无关引擎
+## v0.5.0 (2026-06-07 — 2026-06-10) — 架构跃迁：子母 Skill + 真并发 Agent + 平台无关引擎
 
-### 新增
-- **core/ 引擎核心**: 零平台依赖的纯编排引擎
-- **core/interfaces.py**: LLMProvider / ToolProvider / OutputProvider 抽象
-- **core/roles.py**: 13 角色职权体系 (report_to/domain/decisions/must_not)
-- **core/session_bus.py**: 结构化 Phase 间情报传递
-- **core/engine.py**: 3-Phase + Phase 1.5 团队会议 + 条件分支
-- **core/deep_graph.py**: 多跳关联图 ≤8跳, 环检测
-- **core/query_cache.py**: 查询缓存
-- **core/org_memory.py**: 五层本地组织记忆
-- **adapters/**: WB / CLI 适配器 + 贡献模板
-- **MIGRATION.md**: previous → v0.5.0 迁移指南
-- **ARCHITECTURE.md**: 架构文档
-- **402 测试** (was 376)
+> 最终测试数：**402** (was 36 in v2.6.0)
 
-### 变动
-- SKILL.md: 版本 → 4.0.0, 分支表更新
+### 2026-06-07: 子母 skill 架构重构
 
-### 保留
-- api/: v0.5.0 层完全向后兼容
-- sub-skills/: 14 角色提示词不变
-- 13 人格档案: api/personality.py 不变
+**Token 节省 79-93%**
 
----
+- 主 SKILL.md 从 125KB 缩减到 4.5KB（97%缩减）
+- 13 个角色拆分为独立 sub-skills/ 子 skill 文件
+- 渐进式披露：主 SKILL 只含调度表+铁律，子 skill 按需加载
+- 简单查询（主+3 子 skill）：~3,149 tokens — 节省 93%
+- 标准尽调（主+10 子 skill）：~6,496 tokens — 节省 85%
+- 深度尽调（全 13 子 skill）：~8,928 tokens — 节省 79%
+- 标准 YAML frontmatter（兼容 6 大工具）
+- 小米 MiMo 模型适配（mimo-v2.5/pro/flash）
+- 陈志远（陈工）任务拆解子 skill
+- CHANGELOG.md 版本管理
+- 删除空 agents/ 和 personality/ 目录
+- 删除 4 个陈旧 references/ 文件
 
-## v0.5.0 (2026-06-10) — 工程全面审查
+### 2026-06-07: 子 skill 业务逻辑补全
 
-## v0.5.0 — CI/CD 强化 + 测试基建 + Bug 修复 (Unreleased, 2026-06)
+- 钱守正：完整调度决策树（1469B→2700B，+84%）
+- 陈志远：任务 DAG + 4 场景拆解方案（1190B→2377B，+100%）
+- 吴德厚：PUA 触发时机 + 质量检查清单
+- 周通：环境检测流程 + 数据获取步骤
+- 刘文华：报告合并流程 + 完整 MD 模板
+- data-sources.md：21KB→1.8KB 实用速查表（瘦身92%）
+- SKILL.md：新增输出质量检查点（交付前强制执行）
+- 数据源数字修正：200+→实际可用 10-30
 
-**测试覆盖跃升 · CI/CD 流水线增强 · L1/L2 质量控制修复 · 单元测试全覆盖**
-
-### 🧪 测试基建
-- **测试从 36 → 376**（新增 340 tests，10.4x 增长）：test_agent.py（63）+ test_orchestrator.py（53）+ test_quality_rules.py（32）+ test_registry.py（31）+ test_config.py（29）+ test_personality.py（158）+ test_utils.py（30）
-
-### 🔧 CI/CD 增强
-- 新增 Python syntax check（`python -m py_compile`）
-- 新增 flake8 代码风格检查
-- 新增 markdownlint 文档规范检查
-
-### 🐛 Bug 修复
-- **L1 short_output 阻断 L2 fabrication_risk 检测**：当 L1 正则因输出过短跳过时，不再将 `passed=True` 写入 results，确保 L2 `FabricationDetector` 正常触发
-- **EmotionalState 浮点精度**：`float` → `Decimal`，消除衰减计算累计误差（commit 842d66b）
-- **EmotionalState 衰减顺序**：调整 decay → amplify 执行顺序，避免新事件激励被衰减覆盖（commit 842d66b）
-
-### 🏗️ 架构微调
-- QualityRules 模块化拆分，支持独立单测
-- Test fixtures 共享（conftest.py），减少测试样板代码
-
----
-
-## v0.5.0 — 真并发Agent架构 + 拟人化升级 (2026-06-10)
-
-**五维度全面审计驱动 · 安全红线清零 · 真并发Agent · 13角色人格化**
-
-### 🏗️ 架构重构
-- **真并发 Agent 系统**：从单LLM多调用升级为独立Agent实例（DueDiligenceAgent）
-  — 每个Agent拥有独立状态/记忆/情感追踪/内部独白/消息通信
-- **Agent 注册中心**（AgentRegistry）：13角色生命周期管理、通信路由、团队状态快照
-- **AgentMessage 结构化消息**：替代 prev_context 字符串拼贴，支持点对点/广播/闲聊
-- **统一编排引擎入口**：server.py 和 wst.py 走同一 Orchestrator，消除架构孤岛
-
-### 🎭 拟人化人格系统
-- **13角色人格档案**（PersonalityProfile）：背景故事/性格特征/口头禅/同事关系
-- **情感状态追踪**（EmotionalState）：信心/挫败/兴奋动态变化，6种情绪模式
-- **团队互动**：开工问候/同事闲聊/吐槽/互相评价/内部独白——赋予"活人感"
-- **政委 PUA 保留**：三级退回话术 + 降级不阻塞流水线
-
-### 🛡️ 安全修复
-- **server.py**：移除运行时 `os.system(pip install)` 安全漏洞
-- **API Key**：统一 DEEPSEEK_API_KEY / OPENAI_API_KEY 双回退逻辑
-- **VAGUE_WORDS**：从 VAGUE_WORDS_TERMS 列表动态构建正则（单一来源，修复双轨不同步）
-
-### ⚙️ 工程优化
-- **新增模块**：config.py / utils.py / agent.py / personality.py / agent_registry.py / quality_rules.py / orchestrator.py
-- **Python 包结构**：`api/__init__.py`，模块间 package-relative imports
-- **Logging**：引入 logging 模块替代 print()，请求日志中间件
-- **Dockerfile**：打包完整编排引擎 + HEALTHCHECK + 非 root 用户
-- **配置中心**：统一配置入口，支持环境变量热更新
-
-### 📄 文档修复
-- 清理 ma-li-quan.md ~100行重复内容
-- 版本号 SKILL.md / README / CHANGELOG / DEPENDENCIES 统一为 v0.5.0
-- 项目管理中枢规范化（sprints/ / decisions/ / sessions/ 目录）
-
----
-
-## v0.5.0 — 文档补全 + 工程优化 (2026-06-09)
+### 2026-06-09: 文档补全 + 工程优化
 
 **GStack 三专家综合审计 · README 全面重写 · 项目管理规范化**
 
-### 工程优化
 - GStack 三专家综合审计（产品评审员/安全官/调查员）
 - README.md 全面重写（42/100 → 90+/100），新增 7 个章节
 - 防杜撰六层防御体系独立成章
@@ -108,64 +52,52 @@
 - 数字修正：OSINT 3→5、MCP 2→5、平台 8→14+
 - 3 个新 Badge：防杜撰 6 层防御 / L1+L2 双检 / Token 节省 85-93%
 
-### 新建文件
-- DEPENDENCIES.md（10 大分类 · 四级必要性披露）
-- CODE_OF_CONDUCT.md（贡献者公约 v2.1）
-- SECURITY.md（漏洞报告流程 + 已知限制）
-- .github/ISSUE_TEMPLATE/（3 个模板）
-- .github/PULL_REQUEST_TEMPLATE.md
+**新建文件**: DEPENDENCIES.md / CODE_OF_CONDUCT.md / SECURITY.md / .github/ISSUE_TEMPLATE/ (3个) / .github/PULL_REQUEST_TEMPLATE.md
 
-### 重写文件
-- LIMITATIONS.md（基于 v0.5.0 实际能力重写）
-- index.html（Hero · 能力 · 数据源 · 安装 · Roadmap 全面翻新）
+**重写文件**: LIMITATIONS.md / index.html
 
-### 仓库管理
-- 根目录清理：Dockerfile/clawhub.json/openclaw.json → deploy/
-- .gitignore 补全：`__pycache__/` `*.pyc` `output/` `deliverables/` `docs/`
-- 分支清理：删除 china/expert/productivity/mimo-batch
-- ROADMAP.md 版本号修正 v1.0.0-beta.1 → v0.5.0
+**仓库管理**: 根目录清理 / .gitignore 补全 / 分支清理 / ROADMAP.md 修正
 
-### 版本统一
-- SKILL.md / package.json / clawhub.json / mcp-server.json / server.py / regression.json 全文件版本号统一为 3.0.2
+**版本统一**: SKILL.md / package.json / clawhub.json / mcp-server.json / server.py / regression.json 全文件版本号统一为 v0.5.0
 
----
+### 2026-06-10: 真并发Agent架构 + 拟人化升级
 
-## v0.5.0 — 子 skill 业务逻辑补全 (2026-06-07)
+**五维度全面审计驱动 · 安全红线清零 · 真并发Agent · 13角色人格化**
 
-- 钱守正：完整调度决策树（1469B→2700B，+84%）
-- 陈志远：任务 DAG + 4 场景拆解方案（1190B→2377B，+100%）
-- 吴德厚：PUA 触发时机 + 质量检查清单
-- 周通：环境检测流程 + 数据获取步骤
-- 刘文华：报告合并流程 + 完整 MD 模板
-- data-sources.md：21KB→1.8KB 实用速查表（瘦身92%）
-- SKILL.md：新增输出质量检查点（交付前强制执行）
-- 数据源数字修正：200+→实际可用 10-30
+- **真并发 Agent 系统**：从单LLM多调用升级为独立Agent实例（DueDiligenceAgent）
+  — 每个Agent拥有独立状态/记忆/情感追踪/内部独白/消息通信
+- **Agent 注册中心**（AgentRegistry）：13角色生命周期管理、通信路由、团队状态快照
+- **AgentMessage 结构化消息**：替代 prev_context 字符串拼贴，支持点对点/广播/闲聊
+- **统一编排引擎入口**：server.py 和 wst.py 走同一 Orchestrator，消除架构孤岛
+- **13角色人格档案**（PersonalityProfile）：背景故事/性格特征/口头禅/同事关系
+- **情感状态追踪**（EmotionalState）：信心/挫败/兴奋动态变化，6种情绪模式
+- **政委 PUA 保留**：三级退回话术 + 降级不阻塞流水线
+- **安全修复**: server.py 移除运行时 `os.system(pip install)` / API Key 双回退 / VAGUE_WORDS 单一来源
+- **工程优化**: config.py / utils.py / agent.py / personality.py / agent_registry.py / quality_rules.py / orchestrator.py 新模块
+- **文档修复**: 清理 ma-li-quan.md ~100行重复 / 版本号统一 / 项目管理中枢规范化
+- Python 包结构 / Logging / Dockerfile 打包 / 配置中心
 
----
+### 2026-06-10: CI/CD 强化 + 测试基建 + Bug 修复
 
-## v0.5.0 — 子母 skill 架构重构 (2026-06-07)
+**测试从 36 → 376**：test_agent.py（63）+ test_orchestrator.py（53）+ test_quality_rules.py（32）+ test_registry.py（31）+ test_config.py（29）+ test_personality.py（158）+ test_utils.py（30）
 
-**Token 节省 79-93%**
+- CI/CD: Python syntax check / flake8 / markdownlint
+- Bug修复: L1 short_output 阻断 L2 fabrication_risk / EmotionalState 浮点精度 (float→Decimal) / 衰减顺序修正
+- QualityRules 模块化拆分 / Test fixtures 共享 (conftest.py)
 
-### 架构变更
-- 主 SKILL.md 从 125KB 缩减到 4.5KB（97%缩减）
-- 13 个角色拆分为独立 sub-skills/ 子 skill 文件
-- 渐进式披露：主 SKILL 只含调度表+铁律，子 skill 按需加载
+### 2026-06-10: 平台无关引擎
 
-### Token 效率
-- 简单查询（主+3 子 skill）：~3,149 tokens — 节省 93%
-- 标准尽调（主+10 子 skill）：~6,496 tokens — 节省 85%
-- 深度尽调（全 13 子 skill）：~8,928 tokens — 节省 79%
-
-### 新增
-- 标准 YAML frontmatter（兼容 6 大工具）
-- 小米 MiMo 模型适配（mimo-v2.5/pro/flash）
-- 陈志远（陈工）任务拆解子 skill
-- CHANGELOG.md 版本管理
-
-### 清理
-- 删除空 agents/ 和 personality/ 目录
-- 删除 4 个陈旧 references/ 文件
+- **core/ 引擎核心**: 零平台依赖的纯编排引擎
+- core/interfaces.py: LLMProvider / ToolProvider / OutputProvider 抽象
+- core/roles.py: 13 角色职权体系 (report_to/domain/decisions/must_not)
+- core/session_bus.py: 结构化 Phase 间情报传递
+- core/engine.py: 3-Phase + Phase 1.5 团队会议 + 条件分支
+- core/deep_graph.py: 多跳关联图 ≤8跳, 环检测
+- core/query_cache.py / core/org_memory.py: 五层本地组织记忆
+- adapters/: WB / CLI 适配器 + 贡献模板
+- MIGRATION.md / ARCHITECTURE.md
+- **测试从 376 → 402**（新增 26 tests）
+- api/: v0.5.0 层完全向后兼容 / sub-skills/: 14 角色提示词不变 / api/personality.py 不变
 
 ---
 
