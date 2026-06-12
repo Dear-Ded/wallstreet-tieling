@@ -23,6 +23,12 @@
   <a href="https://dear-ded.github.io/wallstreet-tieling/"><img alt="Docs" src="https://img.shields.io/badge/docs-online-6366f1?style=flat-square&labelColor=0a0a14"></a>
 </p>
 
+⭐️ **如果对你有帮助，给个 Star 吧！** → [![Star](https://img.shields.io/github/stars/Dear-Ded/wallstreet-tieling?style=social&label=Star)](https://github.com/Dear-Ded/wallstreet-tieling)
+
+[🌐 在线体验](https://dear-ded.github.io/wallstreet-tieling/) · [📖 完整文档](SKILL.md) · [🔧 环境依赖](DEPENDENCIES.md) · [💬 反馈建议](https://github.com/Dear-Ded/wallstreet-tieling/issues) · [⭐️ Star](https://github.com/Dear-Ded/wallstreet-tieling)
+
+</div>
+
 ---
 
 > **"他们从曼哈顿被优化到铁岭，蹲在暖气片上用华尔街的标准干县城的活儿。只摆事实，不给建议。"**
@@ -376,6 +382,12 @@ curl http://localhost:8080/api/health
 | 📦 npm CLI | Node.js 生态 | `npx wallstreet-tieling "华为"` |
 | 🤖 Custom GPT | ChatGPT 自定义 | [适配指南](adapters/README.md) |
 | 🧩 Claude Project | Anthropic 生态 | [适配指南](adapters/README.md) |
+
+### 方式六：🌐 在线体验
+
+👉 [https://dear-ded.github.io/wallstreet-tieling/](https://dear-ded.github.io/wallstreet-tieling/)
+
+完整的交互式品牌主页，包含能力全景、13 角色展示、20 分钟 Demo 行、安装指南。
 
 ---
 
