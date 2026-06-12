@@ -1,10 +1,12 @@
 ---
 name: wallstreet-tieling
-description: WallStreet Tieling Office · 13-role concurrent AI crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · platform-agnostic v1.0 engine
+description: 尽调有魂，数据不胡诌 · 13-role concurrent AI crew · due diligence/financial analysis/risk assessment/OSINT · 10-30 data sources · platform-agnostic v1.0 engine
 version: v1.0
+updated: 2026-06-12
 author: Dear-Ded
 license: MIT
 homepage: https://dear-ded.github.io/wallstreet-tieling/
+slogan: 尽调有魂，数据不胡诌
 compatibility: "WorkBuddy,OpenClaw,CodeBuddy,ChatGPT,Claude,豆包,通义千问,文心一言,DeepSeek V3/V4,Kimi,百炼,千帆,元器,Coze,MiMo,Dify,CrewAI"
 tags:
   - 尽调
