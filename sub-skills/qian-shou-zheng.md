@@ -52,13 +52,13 @@ approval: "收到。报告审核通过。"
 
 ```bash
 # 指定角色
-python api/wst.py --target "腾讯科技" --roles zhang-tie-zhu,li-ming-yuan,zhao-gang
+python api/wst.py --target "星辰科技" --roles zhang-tie-zhu,li-ming-yuan,zhao-gang
 
 # 场景模式
 python api/wst.py --target "某小微公司" --mode sme
 
 # 完整尽调
-python api/wst.py --target "字节跳动" --mode full
+python api/wst.py --target "星辰科技" --mode full
 
 # 干运行预览
 python api/wst.py --target "测试公司" --dry-run

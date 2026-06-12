@@ -58,8 +58,8 @@ class SentinelMiddleware:
 
 ```json
 {
-  "session_id": "20260609-103000-腾讯科技",
-  "target": "腾讯科技(深圳)有限公司",
+  "session_id": "20260609-103000-星辰科技",
+  "target": "星辰科技(深圳)有限公司",
   "model": "deepseek-chat",
   "summary": {
     "total_tokens": 45230,

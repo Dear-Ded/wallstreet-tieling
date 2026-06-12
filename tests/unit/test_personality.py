@@ -91,8 +91,8 @@ class TestGetReceptionistGreeting:
 
     def test_greeting_contains_target(self):
         """问候语包含目标名称"""
-        greeting = get_receptionist_greeting("zhang-tie-zhu", "字节跳动")
-        assert "字节跳动" in greeting
+        greeting = get_receptionist_greeting("zhang-tie-zhu", "星辰科技")
+        assert "星辰科技" in greeting
 
     def test_qian_shou_zheng_greeting(self):
         """钱守正的问候语特征"""

@@ -377,9 +377,9 @@ curl http://localhost:8080/api/health
 
 | 方式 | 适用场景 | 文档 |
 |------|---------|------|
-| 🐍 CLI | 命令行脚本批量尽调 | `python api/wst.py "华为" --mode standard` |
+| 🐍 CLI | 命令行脚本批量尽调 | `python api/wst.py "星辰" --mode standard` |
 | 🌐 REST API | 系统集成 / 内部平台 | `POST /api/dd` |
-| 📦 npm CLI | Node.js 生态 | `npx wallstreet-tieling "华为"` |
+| 📦 npm CLI | Node.js 生态 | `npx wallstreet-tieling "星辰"` |
 | 🤖 Custom GPT | ChatGPT 自定义 | [适配指南](adapters/README.md) |
 | 🧩 Claude Project | Anthropic 生态 | [适配指南](adapters/README.md) |
 

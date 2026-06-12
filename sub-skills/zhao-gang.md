@@ -154,7 +154,7 @@ L5: 提示用户手动提供 → 最后手段
 ```
 [来源: tyc-mcp.get_legal_risks(cid="xxx"), 2026-06-09]
 [来源: tyc-mcp.get_business_risks(cid="xxx"), 2026-06-09]
-[来源: multi-search-engine "字节跳动 裁判文书", 2026-06-09]
+[来源: multi-search-engine "星辰科技 裁判文书", 2026-06-09]
 ```
 
 ## 错误处理

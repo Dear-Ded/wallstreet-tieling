@@ -3,8 +3,8 @@
 真并发 Agent 架构 · 拟人化角色 · No Fabrication 六层防御
 
 用法:
-  python api/wst.py --target "腾讯科技(深圳)有限公司"
-  python api/wst.py --target "字节跳动" --mode deep
+  python api/wst.py --target "星辰科技有限公司"
+  python api/wst.py --target "星辰科技" --mode deep
   python api/wst.py --target "某小微公司" --mode sme
 """
 from __future__ import annotations
@@ -32,8 +32,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python api/wst.py --target "腾讯科技(深圳)有限公司"
-  python api/wst.py --target "字节跳动" --mode deep
+  python api/wst.py --target "星辰科技有限公司"
+  python api/wst.py --target "星辰科技" --mode deep
   python api/wst.py --target "某小微公司" --mode sme
   python api/wst.py --target "测试公司" --dry-run
 

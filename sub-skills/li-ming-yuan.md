@@ -135,7 +135,7 @@ L5: 模型知识库 → 标注[模型推算，非实时数据]
 
 每个财务数字必须标注来源：
 ```
-[来源: lingxi-financialsearch-skill "腾讯控股" 营收, 2026-06-09]
+[来源: lingxi-financialsearch-skill "星辰控股" 营收, 2026-06-09]
 [来源: neodata-financial-search 行业对标, 2026-06-09]
 [来源: qcc-company 年报查询 2025年度, 2026-06-09]
 [来源: 模型推算 杜邦分析ROE, 基于以上数据]

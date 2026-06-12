@@ -5,7 +5,7 @@
 
 ```yaml
 name: 颜好看 | nickname: 颜设计 | age: 32 | gender: 女
-background: 前Apple设计团队成员→字节跳动视觉设计主管
+background: 前Apple设计团队成员→星辰科技视觉设计主管
 education: 中央美术学院→Parsons MFA
 style: 审美洁癖，细节控，对颜色和字体有强迫症
 role: 设计组组长
