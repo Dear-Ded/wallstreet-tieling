@@ -1,7 +1,7 @@
-﻿# 环境依赖完整披露
+# 环境依赖完整披露
 
-**最后更新**: 2026-06-12  
-**适用版本**: v1.0
+**最后更新**: 2026-06-12
+**适用版本**: v0.5.0
 
 本文档列出 wallstreet-tieling 项目的所有运行时依赖，按类别分级标注必要性和缺失后的功能降级影响。
 
@@ -157,7 +157,7 @@ docker build -t wallstreet-tieling .
 | **sherlock** | 400+ 网站 | 社交媒体用户名搜索 | `pip install sherlock-project` |
 | **theHarvester** | 多搜索引擎 | 邮箱/域名/IP信息收集 | `pip install theharvester` |
 | **holehe** | 120+ 网站 | 邮箱注册状态检查 | `pip install holehe` |
-| **phoneinfoga** | 国际号码 | 电话号码信息查询 | `pip install phoneinfoga` |
+| **emailrep / public search** | 邮箱信誉 | 公开邮箱信誉与业务线索 | API / WebSearch |
 
 ### 降级机制
 
@@ -170,7 +170,7 @@ L3: 均不可用 → 降级为 WebSearch + WebFetch
     └── 标注 [来源: WebSearch, 引擎结果聚合]
 ```
 
-**缺失后影响**: 🟠 人员背调（马力全）和OSINT模块的开源情报收集能力显著下降。用户名跨平台关联、邮箱泄露检测、手机号信息查询等功能均降级为纯WebSearch，准确性从85%+降至50-60%。
+**缺失后影响**: 🟠 人员背调（马力全）和OSINT模块的公开情报收集能力下降。用户名跨平台关联、邮箱信誉检测、公开履历核验等功能降级为纯 WebSearch，准确性从85%+降至50-60%。
 
 ### 🟢 辅助工具（可选）
 
@@ -231,7 +231,7 @@ L3: 均不可用 → 降级为 WebSearch + WebFetch
 |:-----|:-----|:------|
 | MCP连接器 | qcc-company 或 tyc-mcp（至少一个） | 🔴 |
 | MCP连接器 | lingxi-financialsearch, neodata-financial-search, futuapi | 🟡 |
-| OSINT工具 | maigret, sherlock, theHarvester, holehe, phoneinfoga | 🟡 |
+| OSINT工具 | maigret, sherlock, theHarvester, holehe, emailrep/WebSearch | 🟡 |
 | Python包 | aiohttp（动态编排器） | 🟡 |
 
 ### 形态C：Docker / REST API 模式
@@ -297,7 +297,7 @@ docker run -p 8080:8080 -e DEEPSEEK_API_KEY=sk-xxx dearded/wallstreet-tieling
 
 ```bash
 # 人员背调增强（5个OSINT工具）
-pip install maigret sherlock-project theharvester holehe phoneinfoga
+pip install maigret sherlock-project theharvester holehe
 
 # 文档处理增强
 pip install python-docx pymupdf Pillow pytesseract openpyxl
@@ -313,7 +313,7 @@ python -c "import flask; import flask_cors; import aiohttp; print('Python OK')"
 node --version  # 应 ≥18.0.0
 
 # 检查OSINT工具
-pip list | grep -E "maigret|sherlock|holehe|phoneinfoga|theharvester"
+pip list | grep -E "maigret|sherlock|holehe|theharvester"
 
 # 检查MCP连接器（WorkBuddy内）
 ls ~/.workbuddy/skills/ | grep -E "qcc|tyc|lingxi|neodata|futu"

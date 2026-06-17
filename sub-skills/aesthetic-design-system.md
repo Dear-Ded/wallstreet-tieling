@@ -1,8 +1,8 @@
-﻿# 美学设计系统 (Aesthetic Design System)
+# 美学设计系统 (Aesthetic Design System)
 
-> v1.0.0 | 2026-06-10
-> 基于 CodeBuddy frontend-design-pro / ui-ux-designer / ui-ux-pro-max 等插件的方法论精华，
-> 为 wallstreet-tieling 尽调报告输出提供系统的前端 UI 设计指南。
+> v0.5.0 | 2026-06-17
+  基于 CodeBuddy frontend-design-pro / ui-ux-designer / ui-ux-pro-max 等插件的方法论精华，
+  为 wallstreet-tieling 尽调报告输出提供系统的前端 UI 设计指南。
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 二、13 条设计铁律
 
-> 来源：frontend-design-pro/design-wizard/references/design-principles.md
+  来源：frontend-design-pro/design-wizard/references/design-principles.md
 
 ### 1. 视觉层级 (Visual Hierarchy)
 
@@ -64,7 +64,7 @@
 
 ### 5. 邻近 (Proximity)
 
-相关元素靠近，无关元素远离。组间间距 > 组内间距。
+相关元素靠近，无关元素远离。组间间距   组内间距。
 
 ```
 ✅ 正确: 卡片内 3px gap → 卡片间 12px gap → section 间 48px gap
@@ -147,7 +147,7 @@
 
 ## 三、8 阶段设计工作流
 
-> 来源：frontend-design-pro/commands/design.md — "project design" 完整方法论
+  来源：frontend-design-pro/commands/design.md — "project design" 完整方法论
 
 ### Phase 1: 发现 (Discovery) → 5 问定方向
 
@@ -185,8 +185,8 @@ Primary(CTA/品牌) → Background(页面) → Surface(卡片)
 ### Phase 6: 实现 (Implementation) → 生产代码
 
 ```html
-<!DOCTYPE html> → meta viewport → Google Fonts → Tailwind CDN →
-<style>动效+focus状态</style> → <body>语义HTML+skip link → 响应式布局
+<!DOCTYPE html  → meta viewport → Google Fonts → Tailwind CDN →
+<style 动效+focus状态</style  → <body 语义HTML+skip link → 响应式布局
 ```
 
 ### Phase 7: 自查 (Self-Review) → 质量门禁
@@ -217,7 +217,7 @@ Primary(CTA/品牌) → Background(页面) → Surface(卡片)
 
 ## 四、wallstreet-tieling 设计 Token
 
-> 颜好看 v0.5.0"#0a0a14"        # 深色主题底色
+  颜好看 v0.5.0"#0a0a14"        # 深色主题底色
 卡片背景: "rgba(22,22,32,0.65)"  # 玻璃卡片
 强调色:   "#6366f1"        # CTA/图表高亮
 数据绿:   "#22c55e"        # 正面数据/通过
@@ -332,21 +332,21 @@ Wall → 刘文华 Markdown 报告
 ## 八、设计决策记录 (ADR)
 
 ### ADR-001: 深色主题优先
-**决策**: HTML 报告默认深色主题  
-**理由**: 数据密集型报告在深色背景下可读性更高，玻璃卡片效果只在深色下显著  
+**决策**: HTML 报告默认深色主题
+**理由**: 数据密集型报告在深色背景下可读性更高，玻璃卡片效果只在深色下显著
 **权衡**: 打印友好度下降 → Word/PDF 用浅色印刷方案补偿
 
 ### ADR-002: Geist Mono 数据字体
-**决策**: 所有数字/代码/表格使用 Geist Mono 等宽字体  
-**理由**: 等宽字体确保数字列对齐，Geist Mono 在中文场景下视觉和谐  
+**决策**: 所有数字/代码/表格使用 Geist Mono 等宽字体
+**理由**: 等宽字体确保数字列对齐，Geist Mono 在中文场景下视觉和谐
 **权衡**: 需 CDN 加载 → 回退方案: 系统 monospace 栈
 
 ### ADR-003: 玻璃拟态 (Glassmorphism)
-**决策**: 卡片使用 backdrop-filter blur + 半透明背景  
-**理由**: 在数据密集型报告中创建深度感和层次，弱化背景噪音  
+**决策**: 卡片使用 backdrop-filter blur + 半透明背景
+**理由**: 在数据密集型报告中创建深度感和层次，弱化背景噪音
 **权衡**: 旧浏览器不支持 → 降级为纯色背景
 
 ---
 
-> 本文档从 CodeBuddy frontend-design-pro / ui-ux-designer / ui-ux-pro-max / design-systems 等插件方法论中提取精华，
-> 经 wallstreet-tieling 工程保障团队系统化后纳入项目美学设计模块。
+  本文档从 CodeBuddy frontend-design-pro / ui-ux-designer / ui-ux-pro-max / design-systems 等插件方法论中提取精华，
+  经 wallstreet-tieling 工程保障团队系统化后纳入项目美学设计模块。

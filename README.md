@@ -13,7 +13,7 @@
   <a href="#-兼容性矩阵"><img alt="Models: 15+" src="https://img.shields.io/badge/models-15%2B-6366f1?style=flat-square&labelColor=0a0a14"></a>
   <a href="#-团队"><img alt="Team: 13" src="https://img.shields.io/badge/team-13%20agents-6366f1?style=flat-square&labelColor=0a0a14"></a>
   <a href="#-测试与统计"><img alt="Tests: 402" src="https://img.shields.io/badge/tests-402%20pass-22c55e?style=flat-square&labelColor=0a0a14"></a>
-  <a href="#-测试与统计"><img alt="Coverage: 86%" src="https://img.shields.io/badge/coverage-86%25-22c55e?style=flat-square&labelColor=0a0a14"></a>
+  <a href="#-测试与统计"><img alt="Release: v0.5.0" src="https://img.shields.io/badge/release-v0.5.0-22c55e?style=flat-square&labelColor=0a0a14"></a>
   <br>
   <a href="https://github.com/Dear-Ded/wallstreet-tieling#-快速开始"><img alt="Platforms: 8" src="https://img.shields.io/badge/deploy-8%20ways-6366f1?style=flat-square&labelColor=0a0a14"></a>
   <a href="#-数据源矩阵"><img alt="Data: 30+" src="https://img.shields.io/badge/data_sources-30%2B-6366f1?style=flat-square&labelColor=0a0a14"></a>
@@ -34,6 +34,20 @@
 > **"他们从曼哈顿被优化到铁岭，蹲在暖气片上用华尔街的标准干县城的活儿。只摆事实，不给建议。"**
 >
 > **尽调有魂，数据不胡诌。**
+
+## 产品定位
+
+这是 **v0.5.0** 发布门户。
+
+你可以把它当成：
+
+- 通用版的产品主页
+- Codex / Claude Code / WorkBuddy 的适配入口
+- 公开文档与在线体验页
+
+**Wallstreet Tieling Office v0.5.0** is an open-source enterprise intelligence and risk-discovery portal. It is free to use, bilingual by design, and built for information equality: fewer black boxes, more verifiable facts, more community-built connectors.
+
+我们要做的是开源、免费、可共建的企业风险情报系统。架构、角色、工作流、数据接入思路都会逐步开放；欢迎贡献公开/授权数据接口、行业规则、风险事件样本和产品建议，让更多人少被信息差困住。
 
 ---
 
@@ -65,7 +79,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 
 | 特性 | 华尔街驻铁岭办事处 | 传统尽调 |
 |------|:---:|:---:|
-| 单次深度尽调成本 | **~¥0.03** | ¥500-5,000 |
+| 使用门槛 | **开源免费** | 采购、培训、权限审批 |
 | 信息覆盖维度 | **6 维** | 2-3 维 |
 | 数据交叉验证 | **自动三级交叉** | 人工抽查 |
 | 幻觉防护 | **6 层纵深** | 靠分析师经验 |
@@ -130,7 +144,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 
 > "接口不够用？那是你只看到了默认配置。我写了个脚本，你看。"
 
-老周是被"包吃包住还能写代码"的条件打动的——实际上是看中了铁岭的房租只有北京的十分之一。他能让 4000+ 网站的 OSINT 工具在暖气片上稳定运行。
+老周是被"包吃包住还能写代码"的条件打动的——实际上是看中了铁岭的房租只有北京的十分之一。他能让大量公开站点的 OSINT 工具稳定运行。
 
 ### 🛡️ 质检组：一个铁面和一个 PUA 大师
 
@@ -238,10 +252,10 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 - 公开社交图谱分析
 - 职业轨迹一致性验证
 - 多源数据交叉确认
-- 4000+ 网站 OSINT 覆盖
+- 公开 OSINT 线索聚合
 - 关键人风险评估
 
-*"给我一个手机号，我还你一个完整的人"*
+*"给我一个线索，我还你一条关系链"*
 
 </td>
 <td width="33%">
@@ -326,13 +340,13 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 </tr>
 <tr>
 <td><b>Tier 3</b><br>🔌 MCP增强</td>
-<td>企查查(15) · 天眼查(162) · 灵犀 · NeoData · 富途API (5个连接器 · 177+接口)</td>
+<td>企查查 · 天眼查 · 灵犀 · NeoData · 富途API · 社区可扩展接口</td>
 <td align="center">78%</td>
 <td><sub>全员可用</sub></td>
 </tr>
 <tr>
 <td><b>Tier 4</b><br>🕵️ OSINT</td>
-<td>maigret · sherlock · theHarvester · holehe · phoneinfoga (4,000+网站)</td>
+<td>maigret · sherlock · theHarvester · holehe · emailrep · 社区规则库</td>
 <td align="center">65%</td>
 <td><sub>马力全 · 周通 在用</sub></td>
 </tr>
@@ -387,7 +401,7 @@ curl http://localhost:8080/api/health
 
 👉 [https://dear-ded.github.io/wallstreet-tieling/](https://dear-ded.github.io/wallstreet-tieling/)
 
-完整的交互式品牌主页，包含能力全景、13 角色展示、20 分钟 Demo 行、安装指南。
+完整的交互式品牌主页，包含能力全景、13 角色展示、在线体验、开源共建、路线图和安装指南。
 
 ---
 
@@ -415,36 +429,35 @@ curl http://localhost:8080/api/health
 | 指标 | 数值 |
 |------|:---:|
 | 测试用例 | **402 pass** · 0 fail |
-| 代码覆盖率 | **86%** |
+| 测试状态 | **CI / regression ready** |
 | 代码规模 | ~15,000 行 Python + ~3,500 行 Markdown |
 | 适配模型 | **15+**（DeepSeek · MiMo · 通义千问 · GPT-4o · Claude · GLM · Kimi 等） |
-| MCP 连接器 | **5 个** · 企查查(15接口) · 天眼查(162接口) · 灵犀 · NeoData · 富途 |
+| MCP 连接器 | **5 类** · 企查查 · 天眼查 · 灵犀 · NeoData · 富途 · 社区可扩展 |
 | 多引擎搜索 | **16 个** · Google · Baidu · Bing · DuckDuckGo · arXiv · GitHub 等 |
-| OSINT 工具 | **5 个** · maigret · sherlock · theHarvester · holehe · phoneinfoga |
-
+| OSINT 工具 | **5 个** · maigret · sherlock · theHarvester · holehe · emailrep |
 ---
 
 ## 🗺️ 版本路线
 
 | 版本 | 状态 | 定位 | 关键交付 |
 |------|:---:|------|------|
-| **v1.0.0** | 🟢 当前 | 手脑并用 | 13角色 + 6维尽调 + 6层防杜撰 + L1/L2双门禁 + 8部署形态 |
-| **v1.1.0** | 🟡 进行中 | 人多力量大 | 真并发 Agent 架构 + 独立状态/记忆/情感 + 消息通信 |
-| **v2.0.0** | ⚪ 规划中 | 不动脑 | RAG 本地知识库 + 一键尽调流水线 + 多模态扫描件识别 |
+| **v0.5.0** | 🟢 当前 | 手脑并用 | 13角色 + 6维尽调 + 6层防杜撰 + L1/L2双门禁 + 8部署形态 |
+| **v0.6.0** | 🟡 进行中 | 关系变成图 | 企业关系图谱 + 风险事件库 + 更多社区接口 |
+| **v0.7.0** | ⚪ 规划中 | 盯盘而非报告 | 持续监控 + 信号触发式分析 + 贷后观察队列 |
+| **Future GA** | ⚪ 规划中 | 企业数字孪生 | Enterprise Digital Twin + 通用版 / Codex / Claude Code / WorkBuddy 适配版 |
 
 ---
 
-## 💬 三个月的对话变成你看到的这一切
+## 💬 开源共建
 
-这不是一个大厂内部孵化的项目。这是一个人，用了三个月，和 AI 对话了无数次，一块一块搭起来的。
+这个项目希望把昂贵、封闭、分散的企业情报能力，拆成普通人也能看懂、能运行、能改造的开源组件。
 
-- **2026 年 3 月**：第一个 prompt chain 原型，只能做工商查询
-- **2026 年 4 月**：13 个角色有了名字、性格、口头禅、背景故事
-- **2026 年 5 月**：6 层防杜撰 + 双重质量门禁上线
-- **2026 年 6 月**：402 个测试全绿，5 个 MCP 连接器，15 个适配模型
-- **2026 年 6 月 10 日**：v1.0 正式上线 — 平台无关引擎 + 13 人真并发 Agent
+- 欢迎贡献新的公开/授权信息接口
+- 欢迎贡献行业研究模板、风险规则和财务异常指标
+- 欢迎提交真实业务里的使用反馈和反例
+- 欢迎一起适配 Codex、Claude Code、WorkBuddy 和更多 Agent 平台
 
-我们不比别人聪明。我们只是比较轴。
+We welcome connectors, risk rules, industry templates, bilingual docs, evaluation cases, and brutally honest product feedback.
 
 ---
 

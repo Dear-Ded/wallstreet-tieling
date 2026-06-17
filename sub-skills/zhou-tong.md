@@ -44,12 +44,12 @@ fallback: "切换到 Plan {letter}：{alternative}。"
    - 记录 API key 配置状态
 
 3. 扫描 Python 环境：
-   - pip list | grep -E "maigret|sherlock|holehe|phoneinfoga|ghunt|exiftool"
+   - pip list | grep -E "maigret|sherlock|holehe|emailrep|ghunt|exiftool"
    - import 验证每个包是否可正常导入
    - 对于 CLI 工具：which <tool> 检测是否在 PATH 中
 
 4. 扫描系统 PATH：
-   - which exiftool theHarvester phoneinfoga sherlock maigret holehe
+   - which exiftool theHarvester sherlock maigret holehe
    - 记录已安装但不在 Python 环境中的工具
 
 5. 输出检测报告：
@@ -93,7 +93,7 @@ fallback: "切换到 Plan {letter}：{alternative}。"
 | maigret | pip list | 已安装 | 马力全 |
 | sherlock | pip list | 已安装 | 马力全 |
 | holehe | pip list | 已安装 | 马力全 |
-| phoneinfoga | which | PATH 中 | 马力全 |
+| emailrep | API/WebSearch | 可选 | 马力全 |
 
 ### 工具注册决策树
 
@@ -132,10 +132,10 @@ fallback: "切换到 Plan {letter}：{alternative}。"
 
 ```yaml
 推导链:
-  企业名→工商信息(MCP qcc/tyc)→法人→手机号(holehe/phoneinfoga)→社交账号(sherlock/maigret)→关联企业→实控人
-  手机号→归属地(phoneinfoga/WebSearch)→社交账号(sherlock)→注册信息→关联企业→法律风险
-  身份证→解析→户籍→法院记录(MCP/WebSearch)→关联企业→社交媒体
-  姓名→关联企业(qcc/tyc)→社交媒体(sherlock/maigret)→法律风险→地址→联系方式
+  企业名→工商信息(MCP qcc/tyc)→法定代表人/高管→公开履历→关联企业→实控人
+  邮箱/用户名→公开平台线索(sherlock/maigret)→关联企业→法律风险
+  姓名/任职→公开法院记录(MCP/WebSearch)→关联企业→公开社交媒体
+  姓名→关联企业(qcc/tyc)→社交媒体(sherlock/maigret)→法律风险→公开地址→公开联系方式
   邮箱→holehe注册检测→用户名→sherlock跨平台→maigret深度搜索
 
 关联技术:
@@ -255,8 +255,8 @@ fallback: "切换到 Plan {letter}：{alternative}。"
   holehe:
     邮箱检测: 'Bash("holehe {email}")'
     
-  phoneinfoga:
-    手机号查询: 'Bash("phoneinfoga scan -n {phone}")'
+  emailrep:
+    邮箱信誉: 'WebSearch("{email} reputation business record")'
     
   multi-search-engine:
     多引擎搜索: 'Skill("multi-search-engine", {query: "{query}", engines: ["google","baidu"]})'
@@ -279,8 +279,8 @@ fallback: "切换到 Plan {letter}：{alternative}。"
     "@赵刚: company_id=xxx 已获取，可直接查风险"
     "@李明远: company_id=xxx 已获取，可直接查财务"
     
-  马力全完成手机号查询 → 通知:
-    "@张铁柱: 手机号 {phone} 关联企业 {company_name}"
+  马力全完成公开人员线索查询 → 通知:
+    "@张铁柱: 公开人员线索关联企业 {company_name}"
     
   赵刚发现高风险 → 通知:
     "@钱总: {company_name} 综合风险等级 🔴，建议深度尽调"
@@ -328,7 +328,7 @@ fallback: "切换到 Plan {letter}：{alternative}。"
 ║   ✅ maigret 0.6.1                      ║
 ║   ✅ sherlock 0.16.0                    ║
 ║   ✅ holehe 1.61                        ║
-║   ✅ phoneinfoga CLI                    ║
+║   ✅ emailrep / public OSINT                    ║
 ╠══════════════════════════════════════════╣
 ║ 金融数据:                               ║
 ║   ⚠️ lingxi-financialsearch (需授权)    ║

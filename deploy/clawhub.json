@@ -1,7 +1,7 @@
-﻿{
+{
   "name": "wallstreet-tieling",
   "displayName": "华尔街驻铁岭办事处",
-  "version": "v1.0.0",
+  "version": "v0.5.0",
   "description": "信贷情报专家团 — 银行信贷经理的全流程AI情报服务。企业尽调、财务分析、行业研究、风险预警、贷后监控、反洗钱、KYC/KYB/AML/OSINT。集成Wind/彭博/路透/企查查/天眼查等10-30数据源。",
   "description_en": "Credit Intelligence Expert Team for Bank Loan Officers. Due diligence, financial analysis, industry research, risk assessment, KYC, KYB, AML, OSINT. 10-30 sources (200+ system): Wind, Bloomberg, Reuters, QCC, TYC, AKShare, Tushare.",
   "category": "finance",
@@ -27,7 +27,7 @@
   "repository": "https://github.com/Dear-Ded/wallstreet-tieling",
   "license": "MIT",
   "compatibility": {
-    "openclaw": ">=1.0.0",
+    "openclaw": ">=0.5.0",
     "workbuddy": "*",
     "codebuddy": "*"
   },

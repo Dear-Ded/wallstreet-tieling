@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """wallstreet-tieling v0.5.0 统一配置中心
 所有模块共享的配置入口，支持环境变量覆盖和热更新。
 """
@@ -31,6 +31,7 @@ def _safe_float(env: str, default: float) -> float:
 SKILL_DIR = Path(__file__).resolve().parent.parent
 SUB_SKILLS_DIR = SKILL_DIR / "sub-skills"
 OUTPUT_DIR = SKILL_DIR / "output"
+OUTPUT_DIR.mkdir(exist_ok=True)
 
 
 def ensure_output_dir() -> Path:

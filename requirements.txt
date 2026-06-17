@@ -1,9 +1,9 @@
-# wallstreet-tieling v1.0
-# 华尔街驻铁岭办事处 · 13人真并发AI尽调Agent
+# wallstreet-tieling v0.5.0
+# 华尔街驻铁岭办事处 · 13人企业风险情报专家团
 # 尽调有魂，数据不胡诌
 #
-# 本项目为核心编排引擎 + 13个角色prompt + 多平台适配器
-# 以粘贴 SKILL.md 到AI对话为主要使用方式，无强制pip依赖
+# 本项目为核心编排引擎 + 13个角色 prompt + 多平台适配器
+# 以粘贴 SKILL.md 到 AI 对话为主要使用方式，无强制 pip 依赖
 #
 # ── API服务模式依赖 ──
 aiohttp>=3.9,<4.0        # 异步LLM API调用（orchestrator.py）

@@ -1,7 +1,7 @@
 {
   "name": "wallstreet-tieling",
-  "version": "1.0.0",
-  "description": "WallStreet Tieling Office · 13-agent concurrent AI crew | platform-agnostic v1.0 | due diligence/OSINT/risk assessment/people investigation",
+  "version": "0.5.0",
+  "description": "WallStreet Tieling Office · 13-agent concurrent AI crew | platform-agnostic v0.5.0 | due diligence/OSINT/risk assessment/people investigation",
   "main": "SKILL.md",
   "bin": {
     "wallstreet-tieling": "./bin/cli.js",

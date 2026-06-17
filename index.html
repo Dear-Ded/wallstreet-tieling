@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
-<title>华尔街驻铁岭办事处 · 13位前华尔街老兵为你做尽调</title>
-<meta name="description" content="尽调有魂，数据不胡诌——13位从曼哈顿被优化到铁岭的金融老兵，蹲在暖气片上用华尔街的标准做尽调。只摆事实，不给建议。工商、股权、财务、风险、背调、行业六维覆盖。npx skills add Dear-Ded/wallstreet-tieling -g -y">
+<title>华尔街驻铁岭办事处 · Enterprise Intelligence for Everyone</title>
+<meta name="description" content="开源免费的企业风险情报系统。尽调有魂，数据不胡诌——13位从曼哈顿被优化到铁岭的金融老兵，用公开与授权数据做企业尽调、财务分析、风险发现和持续监控。Open-source enterprise intelligence for information equality.">
 <meta name="keywords" content="尽调,信贷,财务分析,风险评估,企业查询,股权穿透,实控人,OSINT,KYC,AML,AI Agent,WallStreet Tieling">
-<meta property="og:title" content="华尔街驻铁岭办事处 · 13位前华尔街老兵为你做尽调">
-<meta property="og:description" content="尽调有魂，数据不胡诌。只摆事实，不给建议。一行命令，13个人为你加班。">
+<meta property="og:title" content="华尔街驻铁岭办事处 · Enterprise Intelligence for Everyone">
+<meta property="og:description" content="开源、免费、全球可用。13个人格化 Agent，把企业尽调从信息差里拽出来。">
 <meta property="og:image" content="https://dear-ded.github.io/wallstreet-tieling/og-image.png">
 <meta property="og:url" content="https://dear-ded.github.io/wallstreet-tieling/">
 <meta name="twitter:card" content="summary_large_image">
@@ -19,7 +19,7 @@
 /* ===================== RESET & ROOT ===================== */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 *:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-html{scroll-behavior:smooth;font-size:15px}
+html{scroll-behavior:smooth;font-size:15px;overflow-x:hidden}
 body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;transition:background .5s,color .5s}
 
 /* ===================== THEME ===================== */
@@ -80,7 +80,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 #particles-canvas{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.3}
 
 /* ===================== LAYOUT ===================== */
-.page{position:relative;z-index:2}
+.page{position:relative;z-index:2;max-width:100%;overflow-x:hidden}
 .container{max-width:1100px;margin:0 auto;padding:0 var(--space-lg)}
 
 /* ===================== NAV ===================== */
@@ -215,7 +215,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 .timeline-note{font-size:11px;color:var(--text-ter);font-style:italic}
 
 /* ===================== CTA / FOOTER ===================== */
-.cta{text-align:center;padding:var(--space-2xl) 0;border-top:1px solid var(--glass-edge);position:relative}
+.cta{text-align:center;padding:var(--space-2xl) 0;border-top:1px solid var(--glass-edge);position:relative;overflow:hidden}
 .cta::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.06),transparent 70%);pointer-events:none}
 .cta-title{font-size:30px;font-weight:700;margin-bottom:var(--space-sm);letter-spacing:-0.5px}
 .cta-sub{font-size:14px;color:var(--text-sec);margin-bottom:var(--space-lg);max-width:480px;margin-left:auto;margin-right:auto}
@@ -257,8 +257,9 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
   .hero-stat-value{font-size:28px}
   .section{padding:var(--space-xl) 0}
   .footer-inner{flex-direction:column;text-align:center}
-  .install-bar code{font-size:11px}
-  .install-bar{padding:var(--space-sm) 10px var(--space-sm) var(--space-md);gap:6px}
+  .install-bar{padding:var(--space-sm);gap:8px;max-width:100%;border-radius:var(--radius-md)}
+  .install-bar code{font-size:11px;white-space:normal;overflow-wrap:anywhere;word-break:break-word;text-align:left}
+  .install-grid{grid-template-columns:1fr!important;width:100%;max-width:100%!important}
   .timeline{padding-left:44px}
   .timeline-hour{left:-32px}
 }
@@ -324,6 +325,72 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 .bn-reveal:nth-child(1){animation-delay:0s}.bn-reveal:nth-child(2){animation-delay:0.08s}.bn-reveal:nth-child(3){animation-delay:0.16s}
 [data-theme="dark"] .bn-trust-card,[data-theme="dark"] .bn-demo-box{background:var(--glass-bg)}
 
+/* ===================== LIVE EXPERIENCE ===================== */
+.experience-shell{position:relative;max-width:980px;margin:0 auto;border:1px solid var(--glass-edge-s);border-radius:28px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.022));box-shadow:0 24px 80px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.12);overflow:hidden;backdrop-filter:blur(34px) saturate(150%);-webkit-backdrop-filter:blur(34px) saturate(150%)}
+.experience-shell::before{content:'';position:absolute;inset:0;background:radial-gradient(420px 260px at 18% 0%,rgba(129,140,248,.18),transparent 65%),radial-gradient(360px 280px at 92% 18%,rgba(20,184,166,.10),transparent 64%);pointer-events:none}
+.experience-topbar{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid var(--glass-edge);background:rgba(8,8,18,.24)}
+.experience-dots{display:flex;gap:7px}
+.experience-dot{width:9px;height:9px;border-radius:50%;background:var(--glass-edge-s)}
+.experience-dot:nth-child(1){background:#ff5f57}.experience-dot:nth-child(2){background:#ffbd2e}.experience-dot:nth-child(3){background:#28c840}
+.experience-version{font-size:12px;color:var(--text-ter);font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace}
+.experience-body{position:relative;display:grid;grid-template-columns:minmax(0,1.02fr) minmax(320px,.98fr);gap:0}
+.experience-left{padding:24px;border-right:1px solid var(--glass-edge)}
+.experience-right{padding:24px;background:rgba(255,255,255,.025)}
+.experience-label{font-size:11px;color:var(--text-ter);letter-spacing:1.3px;text-transform:uppercase;margin-bottom:10px}
+.experience-input{width:100%;min-height:112px;resize:vertical;border:1px solid var(--glass-edge-s);border-radius:18px;background:rgba(0,0,0,.18);color:var(--text);font:500 15px/1.7 var(--font-sans);padding:16px;outline:none;transition:all var(--transition-fast)}
+.experience-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-light)}
+.experience-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 18px}
+.experience-select{appearance:none;border:1px solid var(--glass-edge);border-radius:999px;background:rgba(255,255,255,.045);color:var(--text-sec);font:600 12px var(--font-sans);padding:10px 34px 10px 14px;background-image:linear-gradient(45deg,transparent 50%,var(--text-ter) 50%),linear-gradient(135deg,var(--text-ter) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.experience-run{border:0;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font:700 13px var(--font-sans);padding:11px 18px;cursor:pointer;box-shadow:0 10px 26px var(--accent-glow);transition:transform var(--transition-fast),filter var(--transition-fast)}
+.experience-run:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.experience-hint{font-size:12px;color:var(--text-ter);line-height:1.65}
+.signal-stack{display:grid;gap:10px;margin-top:20px}
+.signal-row{display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--glass-edge);border-radius:14px;background:rgba(255,255,255,.035)}
+.signal-name{font-size:12px;color:var(--text-sec)}
+.signal-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
+.signal-fill{height:100%;width:var(--w);border-radius:inherit;background:linear-gradient(90deg,var(--accent),#14b8a6)}
+.signal-score{font:700 12px ui-monospace,'SF Mono','JetBrains Mono',monospace;color:var(--text)}
+.profile-card{border:1px solid var(--glass-edge-s);border-radius:22px;padding:18px;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.profile-title{font-size:19px;font-weight:700;letter-spacing:-.2px}
+.profile-status{font-size:11px;color:var(--success);border:1px solid rgba(52,199,89,.25);border-radius:999px;padding:5px 10px;background:rgba(52,199,89,.08);white-space:nowrap}
+.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.profile-metric{padding:12px;border-radius:14px;background:rgba(0,0,0,.15);border:1px solid var(--glass-edge)}
+.profile-metric b{display:block;font-size:20px;line-height:1;margin-bottom:6px}
+.profile-metric span{font-size:11px;color:var(--text-ter)}
+.finding-list{display:grid;gap:9px}
+.finding{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--glass-edge)}
+.finding-mark{width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--warn);box-shadow:0 0 14px rgba(255,159,10,.25);flex:0 0 auto}
+.finding:nth-child(2) .finding-mark{background:var(--accent);box-shadow:0 0 14px var(--accent-glow)}
+.finding:nth-child(3) .finding-mark{background:#14b8a6;box-shadow:0 0 14px rgba(20,184,166,.25)}
+.finding-title{font-size:13px;font-weight:650;color:var(--text)}
+.finding-copy{font-size:12px;color:var(--text-sec);line-height:1.55;margin-top:2px}
+.experience-footnote{margin-top:14px;font-size:11px;color:var(--text-ter);line-height:1.6}
+[data-theme="light"] .experience-shell{background:rgba(255,255,255,.66);box-shadow:0 24px 80px rgba(26,31,58,.12),inset 0 1px 0 rgba(255,255,255,.75)}
+[data-theme="light"] .experience-topbar{background:rgba(255,255,255,.45)}
+[data-theme="light"] .experience-input,[data-theme="light"] .profile-metric{background:rgba(255,255,255,.62)}
+
+/* ===================== OPEN SOURCE / ROADMAP ===================== */
+.mission-band{position:relative;overflow:hidden}
+.mission-band::before{content:'';position:absolute;inset:0;background:linear-gradient(120deg,rgba(99,102,241,.08),transparent 34%,rgba(20,184,166,.07));pointer-events:none}
+.mission-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.72fr);gap:var(--space-lg);align-items:stretch}
+.mission-copy{position:relative;padding:var(--space-xl);border:1px solid var(--glass-edge-s);border-radius:28px;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.024));box-shadow:var(--glass-shadow),var(--glass-inner);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
+.mission-kicker{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:var(--space-sm)}
+.mission-title{font-size:clamp(26px,4vw,42px);line-height:1.12;letter-spacing:-.6px;margin-bottom:var(--space-md)}
+.mission-text{color:var(--text-sec);font-size:15px;line-height:1.85;max-width:680px}
+.mission-text strong{color:var(--text)}
+.mission-principles{display:grid;gap:12px}
+.principle-card{padding:18px;border:1px solid var(--glass-edge);border-radius:18px;background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-inner)}
+.principle-label{font-size:11px;color:var(--text-ter);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.principle-card b{display:block;font-size:16px;margin-bottom:4px}
+.principle-card span{font-size:12px;color:var(--text-sec);line-height:1.6}
+.roadmap-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-sm)}
+.roadmap-card{padding:18px;border:1px solid var(--glass-edge);border-radius:18px;background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--glass-inner)}
+.roadmap-state{display:inline-flex;margin-bottom:12px;padding:4px 10px;border-radius:999px;background:rgba(255,159,10,.1);border:1px solid rgba(255,159,10,.22);color:var(--warn);font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.roadmap-card h3{font-size:15px;line-height:1.35;margin-bottom:8px}
+.roadmap-card p{font-size:12px;color:var(--text-sec);line-height:1.65}
+.roadmap-card:nth-child(1) .roadmap-state{background:rgba(52,199,89,.1);border-color:rgba(52,199,89,.25);color:var(--success)}
+
 @media(max-width:768px){
   .brand-narrative{padding:var(--space-lg) 0}
   .bn-trust-grid{grid-template-columns:1fr;gap:var(--space-sm)}
@@ -332,11 +399,19 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
   .bn-demo-arrow-wrap{flex-direction:row;padding:0}
   .bn-demo-arrow-icon{transform:rotate(90deg)}
   @keyframes bnArrowPulse{0%,100%{opacity:0.4;transform:rotate(90deg) translateX(0)}50%{opacity:1;transform:rotate(90deg) translateX(4px)}}
-  .bn-chain-track{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:var(--space-sm) var(--space-xs);border-radius:var(--radius-md)}
+  .bn-chain-wrap{overflow:hidden}
+  .bn-chain-track{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:var(--space-sm) var(--space-xs);border-radius:var(--radius-md);max-width:100%;contain:paint}
   .bn-chain-track::-webkit-scrollbar{display:none}
   .bn-chain-node{font-size:11px;padding:5px 10px;flex-shrink:0}
   .bn-chain-arrow{margin:0 1px;flex-shrink:0}
   .bn-keywords-cloud{gap:6px}.bn-kw-tag{font-size:11px;padding:4px 10px}
+  .experience-body{grid-template-columns:1fr}
+  .experience-left{border-right:0;border-bottom:1px solid var(--glass-edge)}
+  .profile-grid{grid-template-columns:1fr}
+  .signal-row{grid-template-columns:78px 1fr auto}
+  .mission-grid{grid-template-columns:1fr}
+  .mission-copy{padding:var(--space-lg)}
+  .roadmap-grid{grid-template-columns:1fr}
 }
 @media(max-width:375px){
   .bn-demo-output-grid{grid-template-columns:1fr}
@@ -363,10 +438,12 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
     <div class="nav-right">
       <div class="nav-links" id="navLinks">
         <a href="#brand-narrative" class="nav-link">全景</a>
+        <a href="#experience" class="nav-link">体验</a>
+        <a href="#mission" class="nav-link">开源</a>
         <a href="#team" class="nav-link">同事</a>
         <a href="#features" class="nav-link">能力</a>
         <a href="#data" class="nav-link">数据</a>
-        <a href="#day" class="nav-link">一天</a>
+        <a href="#roadmap" class="nav-link">路线</a>
         <a href="#install" class="nav-link">安装</a>
         <a href="SKILL.md" class="nav-link">文档</a>
       </div>
@@ -379,28 +456,27 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 <!-- ===================== HERO ===================== -->
 <section class="hero">
   <div class="container">
-    <div class="hero-badge"><span class="pulse"></span> v1.0 · 13位同事在线 · 402项测试全绿</div>
+    <div class="hero-badge"><span class="pulse"></span> v0.5.0 · 13位同事在线 · Open source · Free for everyone</div>
     <h1>华尔街驻铁岭办事处</h1>
     <div class="hero-quote-rotator" id="quoteRotator">
-      <div class="hero-quote-item active">"数据拿来我看，你别跟我整那些虚的。"<span class="hero-quote-author">—— 钱守正 · 总经理</span></div>
-      <div class="hero-quote-item">"利润可以粉饰，现金流不会说谎。"<span class="hero-quote-author">—— 李明远 · 财务分析</span></div>
-      <div class="hero-quote-item">"别问会不会出事，问出了事亏多少。"<span class="hero-quote-author">—— 赵刚 · 风险扫描</span></div>
-      <div class="hero-quote-item">"报告的价值不在长度，在密度。"<span class="hero-quote-author">—— 刘文华 · 报告生成</span></div>
-      <div class="hero-quote-item">"不同来源数据不一致，说明有一个在说谎。"<span class="hero-quote-author">—— 郑慎之 · 交叉验证</span></div>
-      <div class="hero-quote-item">"人没压力，怎么出活儿？看人家王思远，一遍过。"<span class="hero-quote-author">—— 吴德厚 · 政委</span></div>
-      <div class="hero-quote-item">"给我一个手机号，我还你一个完整的人。"<span class="hero-quote-author">—— 马力全 · 人员背调</span></div>
+      <div class="hero-quote-item active">"给我一个线索，我还你一条关系链。"<span class="hero-quote-author">—— 马力全 · 人员背调 / People Investigation</span></div>
+      <div class="hero-quote-item">"利润可以粉饰，现金流不会说谎。"<span class="hero-quote-author">—— 李明远 · 财务分析 / Financial Intelligence</span></div>
+      <div class="hero-quote-item">"别问会不会出事，问出了事亏多少。"<span class="hero-quote-author">—— 赵刚 · 风险扫描 / Risk Discovery</span></div>
+      <div class="hero-quote-item">"报告的价值不在长度，在密度。"<span class="hero-quote-author">—— 刘文华 · 报告生成 / Report Craft</span></div>
+      <div class="hero-quote-item">"不同来源数据不一致，说明有一个在说谎。"<span class="hero-quote-author">—— 郑慎之 · 交叉验证 / Cross-check</span></div>
+      <div class="hero-quote-item">"把信息差掀开，大家才能一起看见。"<span class="hero-quote-author">—— 暗哨 · Community / Open Access</span></div>
     </div>
     <div class="hero-actions">
-      <a href="#install" class="btn btn-primary">⚡ 一行命令，13人开工</a>
-      <a href="#team" class="btn btn-glass">认识同事</a>
+      <a href="#experience" class="btn btn-primary">⚡ 在线体验</a>
+      <a href="#mission" class="btn btn-glass">开源与共建</a>
       <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="btn btn-outline" target="_blank">GitHub</a>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-value" data-count="13">0</div><div class="hero-stat-label">同事</div></div>
-      <div class="hero-stat"><div class="hero-stat-value" data-count="6">0</div><div class="hero-stat-label">层防杜撰</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="13">0</div><div class="hero-stat-label">同事 / Agents</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="6">0</div><div class="hero-stat-label">层防杜撰 / Checks</div></div>
       <div class="hero-stat"><div class="hero-stat-value" data-count="93">0</div><div class="hero-stat-label">Token节省%</div></div>
-      <div class="hero-stat"><div class="hero-stat-value" data-count="15">0</div><div class="hero-stat-label">适配模型</div></div>
-      <div class="hero-stat"><div class="hero-stat-value" data-count="0.03" data-suffix="元">0</div><div class="hero-stat-label">/deep尽调</div></div>
+      <div class="hero-stat"><div class="hero-stat-value" data-count="15">0</div><div class="hero-stat-label">适配模型 / Models</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">Free</div><div class="hero-stat-label">开源免费</div></div>
       <div class="hero-stat"><div id="starCount" class="hero-stat-value">★</div><div class="hero-stat-label">GitHub Stars</div></div>
     </div>
   </div>
@@ -410,10 +486,10 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 <section class="section brand-narrative" id="brand-narrative">
   <div class="bn-container">
     <div class="bn-header bn-reveal">
-      <div class="bn-pill">能力全景</div>
+      <div class="bn-pill">Intelligence Stack</div>
       <h2 class="bn-title">不只是工具，是<em>13个会思考的同事</em></h2>
-      <p class="bn-sub">全模型适配 · 真并发 Agent · 一键部署 · 拟人化协作 —— 一条完整的 AI 尽调叙事线</p>
-      <p class="bn-motto">"尽调有魂，数据不胡诌"</p>
+      <p class="bn-sub">Open-source · Free · Bilingual · Built for information equality. 真并发 Agent、一句话尽调、深度风险发现、持续监控，一条完整的企业情报叙事线。</p>
+      <p class="bn-motto">"尽调有魂，数据不胡诌 / Evidence over noise"</p>
     </div>
     <div class="bn-trust-grid">
       <div class="bn-trust-card bn-reveal">
@@ -426,7 +502,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
         <div class="bn-trust-number">02</div>
         <h3 class="bn-trust-heading">13 人真并发</h3>
         <p class="bn-trust-desc">不是排队轮流干，是 13 个 Agent 同时开工。工商、财务、风控、背调——并行推进，互不等候。</p>
-        <div class="bn-trust-metric"><span class="bn-metric-num">20</span> 分钟出报告</div>
+        <div class="bn-trust-metric"><span class="bn-metric-num">1</span> 句话起跑</div>
       </div>
       <div class="bn-trust-card bn-reveal">
         <div class="bn-trust-number">03</div>
@@ -455,24 +531,73 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
         <span class="bn-chain-node"><span class="bn-chain-icon">🔄</span>不断进化</span>
       </div>
     </div>
-    <div class="bn-demo-row bn-reveal">
-      <div class="bn-demo-box bn-demo-input">
-        <div class="bn-demo-label">你的一句话</div>
-        <div class="bn-demo-content">"帮我查一下远航控股的尽调情况"</div>
+    <div class="experience-shell bn-reveal" id="experience">
+      <div class="experience-topbar">
+        <div class="experience-dots"><span class="experience-dot"></span><span class="experience-dot"></span><span class="experience-dot"></span></div>
+        <div class="experience-version">Live Experience · v0.5.0 · Chinese / English</div>
       </div>
-      <div class="bn-demo-arrow-wrap">
-        <span class="bn-demo-arrow-icon">→</span>
-        <span class="bn-demo-arrow-time">20 分钟后</span>
-      </div>
-      <div class="bn-demo-box bn-demo-output">
-        <div class="bn-demo-label">13 人交作业</div>
-        <div class="bn-demo-content">企业尽调报告（完整版）</div>
-        <div class="bn-demo-output-grid">
-          <span class="bn-demo-file">MD 公文排版</span>
-          <span class="bn-demo-file">HTML 网页版</span>
-          <span class="bn-demo-file">PDF 打印版</span>
-          <span class="bn-demo-file">DOCX 可编辑</span>
-          <span class="bn-demo-file">JSON 结构化数据</span>
+      <div class="experience-body">
+        <div class="experience-left">
+          <div class="experience-label">在线体验 / Live Experience</div>
+          <textarea class="experience-input" id="experienceInput">帮我看一下远航控股：实控人、财务质量、风险事件、关联关系和行业压力。</textarea>
+          <div class="experience-controls">
+            <select class="experience-select" id="experienceMode">
+              <option value="quick">quick / 一句话尽调</option>
+              <option value="standard" selected>standard / 标准</option>
+              <option value="deep">deep / 深度</option>
+              <option value="monitor">monitor / 持续监控</option>
+            </select>
+            <button class="experience-run" id="experienceRun" type="button">Generate profile</button>
+          </div>
+          <div class="experience-hint" id="experienceHint">输入一个企业名，先别急着写报告，让 13 个人先吵一架。Type a company name and let the team argue before the report exists.</div>
+        </div>
+        <div class="experience-right">
+          <div class="profile-card" id="profileCard">
+            <div class="profile-head">
+              <div>
+                <div class="profile-title" id="profileTitle">远航控股 · Risk Profile</div>
+                <div class="experience-label" style="margin:6px 0 0">Public sources · Authorized sources · Community extensible</div>
+              </div>
+              <div class="profile-status" id="profileStatus">STANDARD MODE</div>
+            </div>
+            <div class="profile-grid">
+              <div class="profile-metric"><b id="metricOne">06</b><span>signals in scope</span></div>
+              <div class="profile-metric"><b id="metricTwo">03</b><span>evidence gaps</span></div>
+              <div class="profile-metric"><b id="metricThree">12</b><span>relationships mapped</span></div>
+            </div>
+            <div class="signal-stack" id="signalStack">
+              <div class="signal-row" style="--w:82%">
+                <div class="signal-name">Ownership</div>
+                <div class="signal-bar"><div class="signal-fill"></div></div>
+                <div class="signal-score">82%</div>
+              </div>
+              <div class="signal-row" style="--w:74%">
+                <div class="signal-name">Finance</div>
+                <div class="signal-bar"><div class="signal-fill"></div></div>
+                <div class="signal-score">74%</div>
+              </div>
+              <div class="signal-row" style="--w:68%">
+                <div class="signal-name">Risk</div>
+                <div class="signal-bar"><div class="signal-fill"></div></div>
+                <div class="signal-score">68%</div>
+              </div>
+            </div>
+            <div class="finding-list" id="findingList">
+              <div class="finding">
+                <div class="finding-mark"></div>
+                <div><div class="finding-title">实控人穿透待确认</div><div class="finding-copy">公开工商与关联网络显示多个链条交叉，建议进入关系图谱追踪。</div></div>
+              </div>
+              <div class="finding">
+                <div class="finding-mark"></div>
+                <div><div class="finding-title">利润与现金流需要交叉核对</div><div class="finding-copy">财务波动方向并不完全一致，适合继续做现金流质量检查。</div></div>
+              </div>
+              <div class="finding">
+                <div class="finding-mark"></div>
+                <div><div class="finding-title">进入持续监控队列</div><div class="finding-copy">舆情、司法、行政和新关联方信号可自动挂入后续监控。</div></div>
+              </div>
+            </div>
+            <div class="experience-footnote">Under development / 正在开发：企业关系图谱 · 风险事件数据库 · 持续监控 · 信号触发式分析 · Enterprise Digital Twin</div>
+          </div>
         </div>
       </div>
     </div>
@@ -495,6 +620,40 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
         <span class="bn-kw-tag bn-kw-tag--secondary">零配置</span>
         <span class="bn-kw-tag bn-kw-tag--secondary">15+ 大模型</span>
         <span class="bn-kw-tag bn-kw-tag--secondary">30+ 数据源</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">开源免费</span>
+        <span class="bn-kw-tag bn-kw-tag--secondary">信息平权</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== OPEN SOURCE MISSION ===================== -->
+<section class="section section-alt mission-band" id="mission">
+  <div class="container">
+    <div class="mission-grid">
+      <div class="mission-copy">
+        <div class="mission-kicker">Open Source · Information Equality</div>
+        <h2 class="mission-title">我们要做的不是卖黑箱，是把信息差拆开给所有人看。</h2>
+        <p class="mission-text">
+          华尔街驻铁岭办事处是一个<strong>开源、免费、可扩展</strong>的企业风险情报项目。架构、角色、工作流、接口适配思路都会持续开放；任何人都可以提交数据源、连接器、行业经验、风控规则和更好的产品建议。We build in public because enterprise intelligence should not be locked behind expensive terminals.
+        </p>
+      </div>
+      <div class="mission-principles">
+        <div class="principle-card">
+          <div class="principle-label">01 / Free</div>
+          <b>免费可用</b>
+          <span>一行命令接入，一句话触发尽调，让小团队也能拥有像样的风险研究工具。</span>
+        </div>
+        <div class="principle-card">
+          <div class="principle-label">02 / Open</div>
+          <b>架构开源</b>
+          <span>角色体系、质量门禁、数据接入层和适配器持续公开，欢迎拆、改、补、喷。</span>
+        </div>
+        <div class="principle-card">
+          <div class="principle-label">03 / Extensible</div>
+          <b>接口共建</b>
+          <span>欢迎贡献公开、授权、合规的数据接口，让更多人少踩坑，少被信息差割。</span>
+        </div>
       </div>
     </div>
   </div>
@@ -686,7 +845,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
         <div class="feature-icon">👤</div>
         <h3 class="feature-title">人员背调</h3>
         <div class="feature-owners">马力全 · 周通 主理</div>
-        <div class="feature-desc">公开社交图谱分析、职业轨迹一致性验证、4000+网站 OSINT 覆盖、关键人风险评估。</div>
+        <div class="feature-desc">公开网络足迹、职业轨迹一致性验证、多源 OSINT 线索聚合、关键人商业信誉风险评估。</div>
         <div class="feature-quote">"我搜了一下这个人的关联账号……你看这个时间线"</div>
       </div>
       <div class="glass-card glass-appear" style="animation-delay:.25s">
@@ -733,15 +892,15 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
       <div class="glass-card tier-card" data-tier="3" data-users="全员可用">
         <div class="tier-icon">🔌</div>
         <div class="tier-name">Tier 3 · MCP增强</div>
-        <div class="tier-count">5个连接器 (177+接口)</div>
-        <div class="tier-items">企查查(15) · 天眼查(162) · 灵犀 · NeoData · 富途API</div>
+        <div class="tier-count">5 类连接器 · 社区可扩展</div>
+        <div class="tier-items">企查查 · 天眼查 · 灵犀 · NeoData · 富途API · 更多接口欢迎贡献</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:78%"></div></div>
       </div>
       <div class="glass-card tier-card" data-tier="4" data-users="马力全·周通">
         <div class="tier-icon">🕵️</div>
         <div class="tier-name">Tier 4 · OSINT工具</div>
-        <div class="tier-count">5 工具 · 4,000+网站</div>
-        <div class="tier-items">maigret · sherlock · theHarvester · holehe · phoneinfoga</div>
+        <div class="tier-count">5 工具 · 大量公开站点</div>
+        <div class="tier-items">maigret · sherlock · theHarvester · holehe · emailrep · 社区规则库</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:65%"></div></div>
       </div>
       <div class="glass-card tier-card" data-tier="5" data-users="按需分发">
@@ -750,6 +909,44 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
         <div class="tier-count">5+ API</div>
         <div class="tier-items">ocr.space · 慢慢买 · 百度搜索 · Perplexity · Tavily</div>
         <div class="tier-progress"><div class="tier-progress-fill" style="width:55%"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ROADMAP ===================== -->
+<section class="section" id="roadmap">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-pill">🧭 Roadmap</div>
+      <h2 class="section-title">正在开发 / In Development</h2>
+      <p class="section-sub">终局不是更长的报告，而是企业数字孪生、风险事件数据库和信号触发式预警。下面这些能力会逐步开放，也欢迎社区一起补接口、补规则、补行业经验。</p>
+    </div>
+    <div class="roadmap-grid">
+      <div class="roadmap-card">
+        <span class="roadmap-state">v0.5.0 live</span>
+        <h3>一句话尽调 / One-sentence DD</h3>
+        <p>13 个人格化角色按需协作，覆盖企业、财务、行业、风险、人员、报告输出。</p>
+      </div>
+      <div class="roadmap-card">
+        <span class="roadmap-state">building</span>
+        <h3>企业关系图谱 / Entity Graph</h3>
+        <p>从工商、股权、任职、担保、司法、舆情中抽取关系，追踪隐性关联。</p>
+      </div>
+      <div class="roadmap-card">
+        <span class="roadmap-state">building</span>
+        <h3>风险事件库 / Risk Event DB</h3>
+        <p>把分散事件沉淀为可检索、可复用、可监控的风险事件资产。</p>
+      </div>
+      <div class="roadmap-card">
+        <span class="roadmap-state">building</span>
+        <h3>持续监控 / Continuous Watch</h3>
+        <p>企业、实控人、客户、供应商、行业信号进入监控队列，变化时触发分析。</p>
+      </div>
+      <div class="roadmap-card">
+        <span class="roadmap-state">research</span>
+        <h3>数字孪生 / Enterprise Twin</h3>
+        <p>理解企业为什么赚钱、为什么活着、为什么会死，而不是只生成报告。</p>
       </div>
     </div>
   </div>
@@ -824,8 +1021,8 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
           <div class="timeline-dot" style="background:var(--success);box-shadow:0 0 12px rgba(52,199,89,.5)"></div>
           <div class="timeline-content" style="border-color:rgba(52,199,89,.15)">
             <div class="timeline-agent" style="color:var(--success)">暗哨 · 全流程监控</div>
-            <div class="timeline-task">"数据不说话。本次尽调 Token 消耗 2,847，成本 ¥0.03。交付完毕。"</div>
-            <div class="timeline-note">20分钟 · 6维覆盖 · 5格式输出 · 不到一杯豆浆的钱</div>
+            <div class="timeline-task">"数据不说话。本次尽调完成，Token 消耗、来源覆盖和证据缺口已记录。"</div>
+            <div class="timeline-note">一次会话 · 6维覆盖 · 5格式输出 · 成本透明</div>
           </div>
         </div>
       </div>
@@ -893,7 +1090,7 @@ body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;background:var(
 <!-- ===================== FOOTER ===================== -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-brand">2026 华尔街驻铁岭办事处 · v1.0 · MIT License · Built in Tieling, with Wall Street standards</div>
+    <div class="footer-brand">2026 华尔街驻铁岭办事处 · v0.5.0 · MIT License · Built in Tieling, with Wall Street standards</div>
     <div class="footer-links">
       <a href="https://github.com/Dear-Ded/wallstreet-tieling" class="footer-link" target="_blank">GitHub</a>
       <a href="SKILL.md" class="footer-link">文档</a>
@@ -990,6 +1187,110 @@ function switchPlatform(el, key) {
     card.style.display = platforms.includes(key) ? '' : 'none';
   });
 }
+
+// ==================== LIVE EXPERIENCE ====================
+function renderExperience() {
+  const text = document.getElementById('experienceInput').value.trim() || '未知企业';
+  const mode = document.getElementById('experienceMode').value;
+  const name = text.split(/[：:\n]/)[0].replace(/帮我看一下|帮我查一下|查一下|看一下|分析一下/g, '').trim() || '目标企业';
+  const modeMap = {
+    quick: {
+      label: 'QUICK MODE',
+      metricOne: '04',
+      metricTwo: '02',
+      metricThree: '08',
+      signals: [
+        { name: 'Ownership', score: '76%' },
+        { name: 'Finance', score: '61%' },
+        { name: 'Risk', score: '58%' }
+      ],
+      findings: [
+        ['一句话尽调已启动', '先跑公开工商、股权、财务摘要和基础风险信号，再决定是否继续深挖。'],
+        ['线索优先', '优先补齐实控人、关联方和近期风险事件，不先写空话。'],
+        ['开放共建', '欢迎为这个目标补充更多合规公开数据接口。']
+      ]
+    },
+    standard: {
+      label: 'STANDARD MODE',
+      metricOne: '06',
+      metricTwo: '03',
+      metricThree: '12',
+      signals: [
+        { name: 'Ownership', score: '82%' },
+        { name: 'Finance', score: '74%' },
+        { name: 'Risk', score: '68%' }
+      ],
+      findings: [
+        ['实控人穿透待确认', '公开工商与关联网络显示多个链条交叉，建议进入关系图谱追踪。'],
+        ['利润与现金流需要交叉核对', '财务波动方向并不完全一致，适合继续做现金流质量检查。'],
+        ['进入持续监控队列', '舆情、司法、行政和新关联方信号可自动挂入后续监控。']
+      ]
+    },
+    deep: {
+      label: 'DEEP MODE',
+      metricOne: '09',
+      metricTwo: '05',
+      metricThree: '18',
+      signals: [
+        { name: 'Ownership', score: '89%' },
+        { name: 'Finance', score: '83%' },
+        { name: 'Risk', score: '81%' }
+      ],
+      findings: [
+        ['深度穿透已展开', '关联方、担保圈、异常任职和公开争议记录进入联动分析。'],
+        ['财务研究增强', '收入、成本、现金流、资本开支与应收变化一起看，不拆开讲故事。'],
+        ['可输出更多格式', '深度模式优先生成适合审阅与归档的结构化结果。']
+      ]
+    },
+    monitor: {
+      label: 'MONITOR MODE',
+      metricOne: '12',
+      metricTwo: '06',
+      metricThree: '24',
+      signals: [
+        { name: 'Ownership', score: '88%' },
+        { name: 'Finance', score: '69%' },
+        { name: 'Risk', score: '92%' }
+      ],
+      findings: [
+        ['已加入监控', '这个目标会持续观察公开新闻、司法、行政和资本信号。'],
+        ['变化即触发', '当新事件出现时，自动重跑相关分析模块。'],
+        ['适合长期跟踪', '更像盯盘，不像一次性报告。']
+      ]
+    }
+  };
+  const state = modeMap[mode] || modeMap.standard;
+  document.getElementById('profileTitle').textContent = `${name} · Risk Profile`;
+  document.getElementById('profileStatus').textContent = state.label;
+  document.getElementById('metricOne').textContent = state.metricOne;
+  document.getElementById('metricTwo').textContent = state.metricTwo;
+  document.getElementById('metricThree').textContent = state.metricThree;
+  const stack = document.getElementById('signalStack');
+  stack.innerHTML = state.signals.map((item) => `
+    <div class="signal-row" style="--w:${item.score}">
+      <div class="signal-name">${item.name}</div>
+      <div class="signal-bar"><div class="signal-fill"></div></div>
+      <div class="signal-score">${item.score}</div>
+    </div>
+  `).join('');
+  const list = document.getElementById('findingList');
+  list.innerHTML = state.findings.map(([title, copy]) => `
+    <div class="finding">
+      <div class="finding-mark"></div>
+      <div><div class="finding-title">${title}</div><div class="finding-copy">${copy}</div></div>
+    </div>
+  `).join('');
+  document.getElementById('experienceHint').textContent = mode === 'quick'
+    ? '一句话先跑，先看有没有值得深挖的线索。'
+    : mode === 'monitor'
+      ? '这个目标已经进监控队列，后续变化会继续推送到分析位。'
+      : '输入会驱动页面里的结果变化，像一个轻量产品演示。';
+}
+
+document.getElementById('experienceRun').addEventListener('click', renderExperience);
+document.getElementById('experienceMode').addEventListener('change', renderExperience);
+document.getElementById('experienceInput').addEventListener('input', renderExperience);
+renderExperience();
 
 // ==================== STAR COUNT ====================
 fetch('https://api.github.com/repos/Dear-Ded/wallstreet-tieling')
