@@ -1,0 +1,783 @@
+# wallstreet-tieling multi-datasource template
+# Version: 0.5.0
+#
+# Purpose
+# - Give non-technical users a clean default-safe starting point.
+# - Keep every endpoint user-configurable.
+# - Run startup connectivity checks where a source can be checked safely.
+# - Keep auth, token, session, signing, and challenge handling in config.
+# - Do not store tokens, cookies, passwords, or private endpoints in this file.
+
+version: "2.0"
+
+sources:
+  # Public REST API example. Enabled so a fresh install can prove the framework
+  # loads, pings, queries, and normalizes records without credentials.
+  - name: "github_public_api"
+    type: "rest_api"
+    enabled: true
+    priority: 10
+    base_url: "https://api.github.com"
+    timeout: 30
+    description: "Public REST source example. Use for connectivity and routing smoke tests."
+    headers:
+      Accept: "application/vnd.github+json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    params:
+      per_page: 30
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://api.github.com/rate_limit"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 5.0
+      burst_size: 5
+    retry:
+      max_retries: 2
+      backoff_factor: 1.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 300
+    custom:
+      evidence_role: "connectivity_smoke"
+      source_legitimacy: "public_api"
+
+  # Self-hosted SearXNG example for public web search fan-out.
+  # Disabled by default because users must provide their own endpoint.
+  - name: "public_web_search_searxng"
+    type: "rest_api"
+    enabled: false
+    priority: 20
+    base_url: "https://search.example.com"
+    timeout: 20
+    description: "Self-hosted SearXNG JSON endpoint for public web search."
+    headers:
+      Accept: "application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    params:
+      format: "json"
+      language: "auto"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://search.example.com"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 1.0
+      burst_size: 2
+    retry:
+      max_retries: 2
+      backoff_factor: 1.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 600
+    custom:
+      provider_type: "searxng"
+      evidence_role: "public_web_lead"
+      source_legitimacy: "public_web"
+      requires_url_verification: true
+
+  # Official global LEI data. Useful for legal-entity identity, addresses,
+  # registration authority IDs, and parent/relationship links.
+  - name: "gleif_lei_public_api"
+    type: "rest_api"
+    enabled: false
+    priority: 21
+    base_url: "https://api.gleif.org/api/v1"
+    timeout: 25
+    description: "GLEIF public LEI API for legal-entity identity and relationship records."
+    headers:
+      Accept: "application/vnd.api+json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://api.gleif.org/api/v1/lei-records"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 1.0
+      burst_size: 2
+    retry:
+      max_retries: 2
+      backoff_factor: 1.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 3600
+    custom:
+      provider_type: "gleif_lei"
+      evidence_role: "official_entity_identity"
+      source_legitimacy: "official_public_api"
+      coverage_domains:
+        - "corporate_registry"
+        - "ownership_control"
+        - "related_entities"
+      controller_relevance: "parent_relationship_and_registration_authority_leads"
+      provenance_required: true
+
+  # U.S. SEC EDGAR public data API. The connector must use a descriptive
+  # User-Agent and fair-access pacing when enabled.
+  - name: "sec_edgar_public_api"
+    type: "rest_api"
+    enabled: false
+    priority: 22
+    base_url: "https://data.sec.gov"
+    timeout: 25
+    description: "SEC EDGAR public APIs for submissions and XBRL company facts."
+    headers:
+      Accept: "application/json"
+      User-Agent: "wallstreet-tieling/0.5.0 contact@example.invalid"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://data.sec.gov/submissions/CIK0000320193.json"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.2
+      burst_size: 1
+    retry:
+      max_retries: 2
+      backoff_factor: 2.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 3600
+    custom:
+      provider_type: "sec_edgar"
+      evidence_role: "official_public_company_disclosure"
+      source_legitimacy: "official_public_api"
+      coverage_domains:
+        - "corporate_registry"
+        - "financing_capital_markets"
+        - "ownership_control"
+        - "related_entities"
+      controller_relevance: "officer_owner_filing_and_related_party_disclosure_leads"
+      provenance_required: true
+
+  # OpenSanctions bulk metadata is public; API screening/search may require an
+  # API key. Keep the default source as a dataset catalog entry.
+  - name: "opensanctions_public_dataset_catalog"
+    type: "rest_api"
+    enabled: false
+    priority: 23
+    base_url: "https://data.opensanctions.org"
+    timeout: 25
+    description: "OpenSanctions public dataset catalog for sanctions, PEP, and related-entity coverage metadata."
+    headers:
+      Accept: "application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://data.opensanctions.org/datasets/latest/index.json"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.5
+      burst_size: 1
+    retry:
+      max_retries: 2
+      backoff_factor: 2.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 43200
+    custom:
+      provider_type: "opensanctions_dataset_catalog"
+      evidence_role: "watchlist_and_pep_dataset_catalog"
+      source_legitimacy: "public_dataset_catalog"
+      coverage_domains:
+        - "people"
+        - "related_entities"
+        - "administrative_risk"
+        - "ownership_control"
+      controller_relevance: "controller_and_related_person_watchlist_screening_catalog"
+      api_depth_requires_user_key: true
+      provenance_required: true
+
+  # Official U.S. Treasury OFAC consolidated sanctions list. This is a public
+  # XML download and can produce subject-level watchlist evidence without an API key.
+  - name: "ofac_consolidated_sanctions_xml"
+    type: "rest_api"
+    enabled: false
+    priority: 24
+    base_url: "https://www.treasury.gov/ofac/downloads/consolidated"
+    timeout: 30
+    description: "U.S. Treasury OFAC consolidated sanctions XML for public watchlist screening."
+    headers:
+      Accept: "text/xml,application/xml"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://www.treasury.gov/ofac/downloads/consolidated/consolidated.xml"
+    ping_timeout: 10
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.1
+      burst_size: 1
+    retry:
+      max_retries: 2
+      backoff_factor: 2.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 86400
+    custom:
+      provider_type: "ofac_consolidated_xml"
+      evidence_role: "official_watchlist_screening"
+      source_legitimacy: "official_public_dataset"
+      coverage_domains:
+        - "administrative_risk"
+        - "people"
+        - "related_entities"
+      controller_relevance: "controller_and_related_entity_watchlist_screening"
+      provenance_required: true
+
+  # United Nations Security Council consolidated sanctions list. Official
+  # public XML download covering listed people and entities.
+  - name: "un_sc_consolidated_sanctions_xml"
+    type: "rest_api"
+    enabled: false
+    priority: 25
+    base_url: "https://scsanctions.un.org"
+    timeout: 30
+    description: "United Nations Security Council consolidated sanctions XML for public watchlist screening."
+    headers:
+      Accept: "application/xml,text/xml"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://scsanctions.un.org/resources/xml/en/consolidated.xml"
+    ping_timeout: 10
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.1
+      burst_size: 1
+    retry:
+      max_retries: 2
+      backoff_factor: 2.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 86400
+    custom:
+      provider_type: "un_sc_consolidated_sanctions_xml"
+      evidence_role: "official_watchlist_screening"
+      source_legitimacy: "official_public_dataset"
+      coverage_domains:
+        - "administrative_risk"
+        - "people"
+        - "related_entities"
+      controller_relevance: "controller_and_related_entity_watchlist_screening"
+      provenance_required: true
+
+  # Inter-American Development Bank public sanctions dataset catalog. This
+  # catalog source is useful for procurement and counterparty risk coverage
+  # discovery; local-indexed subject screening is a follow-up capability.
+  - name: "idb_sanctioned_firms_dataset_catalog"
+    type: "rest_api"
+    enabled: false
+    priority: 25
+    base_url: "https://data.iadb.org"
+    timeout: 25
+    description: "IDB public dataset catalog for sanctioned firms and individuals."
+    headers:
+      Accept: "text/html"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://data.iadb.org/dataset/dataset-of-sanctioned-firms-and-individuals"
+    ping_timeout: 10
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.2
+      burst_size: 1
+    retry:
+      max_retries: 2
+      backoff_factor: 2.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 86400
+    custom:
+      provider_type: "idb_sanctioned_firms_dataset_catalog"
+      evidence_role: "public_debarment_dataset_catalog"
+      source_legitimacy: "multilateral_public_dataset_catalog"
+      coverage_domains:
+        - "administrative_risk"
+        - "people"
+        - "related_entities"
+      controller_relevance: "controller_and_related_entity_procurement_debarment_screening"
+      local_index_required_for_subject_matching: true
+      provenance_required: true
+
+  # Optional local subject index for deployments that build a reviewed
+  # OpenSanctions-compatible public/authorized dataset snapshot.
+  - name: "opensanctions_local_subject_index"
+    type: "local_index"
+    enabled: false
+    priority: 25
+    base_url: "https://local.invalid"
+    timeout: 5
+    description: "Local public/authorized OpenSanctions-compatible subject index."
+    auth:
+      type: "none"
+    ping: false
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: false
+    retry:
+      max_retries: 0
+    cache_enabled: true
+    cache_ttl: 43200
+    custom:
+      provider: "OpenSanctions local index"
+      dataset: "configured"
+      index_path: "data/indexes/opensanctions-subjects.jsonl"
+      evidence_role: "local_subject_screening"
+      source_legitimacy: "public_or_user_authorized_local_index"
+      coverage_domains:
+        - "people"
+        - "related_entities"
+        - "administrative_risk"
+        - "ownership_control"
+      provenance_required: true
+
+  # Optional local subject index for IDB-style procurement/debarment snapshots.
+  - name: "idb_local_subject_index"
+    type: "local_index"
+    enabled: false
+    priority: 26
+    base_url: "https://local.invalid"
+    timeout: 5
+    description: "Local public/authorized IDB-style procurement screening index."
+    auth:
+      type: "none"
+    ping: false
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: false
+    retry:
+      max_retries: 0
+    cache_enabled: true
+    cache_ttl: 43200
+    custom:
+      provider: "IDB local index"
+      dataset: "configured"
+      index_path: "data/indexes/idb-subjects.csv"
+      evidence_role: "local_procurement_screening"
+      source_legitimacy: "public_or_user_authorized_local_index"
+      coverage_domains:
+        - "administrative_risk"
+        - "people"
+        - "related_entities"
+        - "procurement_projects"
+      provenance_required: true
+
+  # World Bank public debarred firms and individuals list. This official public
+  # page is useful for procurement, supplier, and overseas-project exclusion
+  # screening. It emits subject-level evidence only on exact/strong name match.
+  - name: "world_bank_debarred_firms_public_list"
+    type: "rest_api"
+    enabled: false
+    priority: 26
+    base_url: "https://www.worldbank.org"
+    timeout: 30
+    description: "World Bank public debarred firms list for procurement exclusion screening."
+    headers:
+      Accept: "text/html"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://www.worldbank.org/en/projects-operations/procurement/debarred-firms"
+    ping_timeout: 10
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.2
+      burst_size: 1
+    retry:
+      max_retries: 2
+      backoff_factor: 2.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 10800
+    custom:
+      provider_type: "world_bank_debarred_firms"
+      evidence_role: "official_procurement_debarment_screening"
+      source_legitimacy: "official_public_dataset"
+      coverage_domains:
+        - "administrative_risk"
+        - "procurement_projects"
+        - "people"
+        - "related_entities"
+      controller_relevance: "controller_and_related_entity_procurement_debarment_screening"
+      provenance_required: true
+
+  # Wikidata public graph. Useful as a corroboration layer for public entity,
+  # executive, ownership, website, and identifier leads.
+  - name: "wikidata_public_entity_graph"
+    type: "rest_api"
+    enabled: false
+    priority: 27
+    base_url: "https://www.wikidata.org/w"
+    timeout: 25
+    description: "Wikidata public EntitySearch API for entity graph corroboration."
+    headers:
+      Accept: "application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://www.wikidata.org/w/api.php"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.2
+      burst_size: 1
+    retry:
+      max_retries: 2
+      backoff_factor: 2.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 86400
+    custom:
+      provider_type: "wikidata_entity_search"
+      evidence_role: "public_entity_graph_corroboration"
+      source_legitimacy: "public_knowledge_graph"
+      coverage_domains:
+        - "corporate_registry"
+        - "people"
+        - "related_entities"
+        - "social_web"
+      controller_relevance: "public_executive_owner_identifier_corroboration"
+      provenance_required: true
+
+  # Official portal catalog entries. They are not enabled in the generic REST
+  # router until a dedicated adapter exists because most portals need custom
+  # query construction, fair-access pacing, or challenge-aware handoff.
+  - name: "official_china_registry_portal_catalog"
+    type: "rest_api"
+    enabled: false
+    priority: 27
+    base_url: "https://www.gsxt.gov.cn"
+    timeout: 25
+    description: "National Enterprise Credit Information Publicity System portal catalog entry."
+    headers:
+      Accept: "text/html,application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "challenge_aware"
+      challenge_provider: "browser_handoff"
+    ping: false
+    ping_endpoint: ""
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.2
+      burst_size: 1
+    retry:
+      max_retries: 1
+      backoff_factor: 2.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 3600
+    custom:
+      provider_type: "official_portal_catalog"
+      evidence_role: "official_china_registry"
+      source_legitimacy: "official_public_portal"
+      coverage_domains:
+        - "corporate_registry"
+        - "ownership_control"
+        - "people"
+        - "related_entities"
+      controller_relevance: "legal_representative_shareholder_controller_leads"
+      adapter_required: true
+      parser_status: "validated_snapshot_parser_available"
+      health_semantics: "browser_handoff_or_validated_snapshot_no_live_health"
+      accepted_page_statuses:
+        - "validated_result"
+        - "validated_no_result"
+      expected_fields:
+        - "legal_name"
+        - "unified_social_credit_code"
+        - "legal_representative"
+        - "shareholders"
+        - "registered_address"
+        - "business_status"
+      handoff_steps:
+        - "Open official portal entry."
+        - "Search the exact legal entity name or unified social credit code."
+        - "Retain source URL, retrieval time, and displayed registry fields."
+        - "Map only visible official fields into standardized_records after parser validation."
+      provenance_required: true
+
+  - name: "official_china_credit_portal_catalog"
+    type: "rest_api"
+    enabled: false
+    priority: 28
+    base_url: "https://www.creditchina.gov.cn"
+    timeout: 25
+    description: "Credit China public portal catalog entry for administrative and credit-publicity records."
+    headers:
+      Accept: "text/html,application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: false
+    ping_endpoint: ""
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.2
+      burst_size: 1
+    retry:
+      max_retries: 1
+      backoff_factor: 2.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 3600
+    custom:
+      provider_type: "official_portal_catalog"
+      evidence_role: "official_china_credit_publicity"
+      source_legitimacy: "official_public_portal"
+      coverage_domains:
+        - "administrative_risk"
+        - "court_enforcement"
+        - "people"
+        - "related_entities"
+      controller_relevance: "controller_and_related_entity_credit_risk_leads"
+      adapter_required: true
+      parser_status: "validated_snapshot_parser_available"
+      health_semantics: "browser_handoff_or_validated_snapshot_no_live_health"
+      accepted_page_statuses:
+        - "validated_result"
+        - "validated_no_result"
+      expected_fields:
+        - "legal_name"
+        - "unified_social_credit_code"
+        - "administrative_penalty"
+        - "credit_notice"
+        - "abnormal_operation"
+        - "source_notice_url"
+      handoff_steps:
+        - "Open official public credit portal."
+        - "Search exact legal entity name or identifier."
+        - "Retain notice URL, notice title, issuing authority, date, and page snapshot metadata."
+        - "Map only visible public notice fields into standardized_records after parser validation."
+      provenance_required: true
+
+  - name: "official_china_court_enforcement_catalog"
+    type: "rest_api"
+    enabled: false
+    priority: 29
+    base_url: "https://zxgk.court.gov.cn"
+    timeout: 25
+    description: "China Enforcement Information public portal catalog entry."
+    headers:
+      Accept: "text/html,application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "challenge_aware"
+      challenge_provider: "browser_handoff"
+    ping: false
+    ping_endpoint: ""
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.2
+      burst_size: 1
+    retry:
+      max_retries: 1
+      backoff_factor: 2.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 3600
+    custom:
+      provider_type: "official_portal_catalog"
+      evidence_role: "official_court_enforcement"
+      source_legitimacy: "official_public_portal"
+      coverage_domains:
+        - "court_enforcement"
+        - "people"
+        - "related_entities"
+      controller_relevance: "controller_and_related_person_enforcement_leads"
+      adapter_required: true
+      parser_status: "validated_snapshot_parser_available"
+      health_semantics: "browser_handoff_or_validated_snapshot_no_live_health"
+      accepted_page_statuses:
+        - "validated_result"
+        - "validated_no_result"
+      expected_fields:
+        - "case_number"
+        - "subject_name"
+        - "court"
+        - "filing_date"
+        - "execution_amount"
+        - "case_status"
+      handoff_steps:
+        - "Open official court enforcement portal."
+        - "Search exact legal entity name, person name, or official identifier where supported."
+        - "Retain court, case number, date, amount, and source URL."
+        - "Map only visible official fields into standardized_records after parser validation."
+      provenance_required: true
+
+  # Licensed or user-authorized enterprise data source example.
+  # Users can replace base_url and token env names with their own legal source.
+  - name: "licensed_registry_api"
+    type: "rest_api"
+    enabled: false
+    priority: 30
+    base_url: "https://api.example.com/v1"
+    timeout: 30
+    description: "Licensed or user-authorized enterprise registry API."
+    headers:
+      Accept: "application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "bearer"
+      token: "${LICENSED_REGISTRY_TOKEN}"
+    ping: true
+    ping_endpoint: "https://api.example.com/v1/health"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 2.0
+      burst_size: 4
+    retry:
+      max_retries: 3
+      backoff_factor: 1.0
+      retry_on_status: [401, 408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 900
+    custom:
+      evidence_role: "licensed_registry"
+      source_legitimacy: "licensed_or_user_authorized"
+      provenance_required: true
+
+  # Request-signature example for enterprise APIs that require HMAC signing.
+  - name: "signed_public_records_api"
+    type: "rest_api"
+    enabled: false
+    priority: 40
+    base_url: "https://records.example.com/api"
+    timeout: 30
+    description: "Signed request example for public or authorized records."
+    headers:
+      Accept: "application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "request_signature"
+      signature_secret: "${PUBLIC_RECORDS_SIGNING_SECRET}"
+      signature_header: "X-Signature"
+      timestamp_header: "X-Timestamp"
+      signature_algorithm: "sha256"
+    ping: true
+    ping_endpoint: "https://records.example.com/api/health"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 1.0
+      burst_size: 2
+    retry:
+      max_retries: 2
+      backoff_factor: 1.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 900
+    custom:
+      evidence_role: "signed_public_records"
+      source_legitimacy: "public_or_user_authorized"
+
+  # Human-verification aware source. This detects a challenge and returns
+  # structured handoff metadata. It does not solve or bypass challenges.
+  - name: "challenge_aware_public_portal"
+    type: "rest_api"
+    enabled: false
+    priority: 50
+    base_url: "https://portal.example.com"
+    timeout: 30
+    description: "Challenge-aware public portal with browser/plugin handoff."
+    headers:
+      Accept: "application/json,text/html"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "challenge_aware"
+      token: "${USER_AUTHORIZED_PORTAL_TOKEN}"
+      challenge_provider: "browser_handoff"
+      challenge_provider_config:
+        session_scope: "source"
+        handoff_url: "https://portal.example.com/login"
+        callback_url: "http://127.0.0.1:8765/auth/callback"
+    ping: false
+    ping_endpoint: ""
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.5
+      burst_size: 1
+    retry:
+      max_retries: 1
+      backoff_factor: 1.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 600
+    custom:
+      evidence_role: "challenge_aware_public_portal"
+      source_legitimacy: "public_or_user_authorized"
+      challenge_policy: "handoff_only"
+
+  # Telegram bot delivery shape. The multi-datasource REST layer keeps it
+  # disabled because Telegram transport is handled by TelegramPublicServiceTool.
+  # Keep this metadata so audits and UIs can surface the configured service.
+  - name: "telegram_public_service_example"
+    type: "rest_api"
+    enabled: false
+    priority: 60
+    base_url: "https://api.telegram.org"
+    timeout: 30
+    description: "Metadata placeholder for user-configured Telegram public-service transport."
+    headers:
+      Accept: "application/json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "bearer"
+      token: "${TELEGRAM_BOT_TOKEN}"
+    ping: false
+    ping_endpoint: ""
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 0.5
+      burst_size: 1
+    retry:
+      max_retries: 1
+      backoff_factor: 1.0
+      retry_on_status: [408, 429, 500, 502, 503, 504]
+    cache_enabled: false
+    cache_ttl: 0
+    custom:
+      provider_type: "telegram_public_service"
+      evidence_role: "telegram_delivery_shape"
+      source_legitimacy: "public_or_user_authorized"
+      default_enabled: false
+      source_review_required: true

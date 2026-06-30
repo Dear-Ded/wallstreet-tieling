@@ -1,0 +1,6 @@
+interface:
+  display_name: Wallstreet Tieling
+  short_description: Evidence-first due diligence, risk research, and OSINT planning.
+  default_prompt: |
+    Help maintain and extend the wallstreet-tieling project.
+    Build broad investigative retrieval plans, preserve evidence provenance, and add tests for every change.

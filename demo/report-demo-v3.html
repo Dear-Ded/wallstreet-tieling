@@ -1,0 +1,1110 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京字节跳动 — 尽调报告 | 华尔街驻铁岭办事处</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --bg-card: rgba(255,255,255,0.05);
+            --bg-card-hover: rgba(255,255,255,0.08);
+            --glass: rgba(255,255,255,0.08);
+            --glass-border: rgba(255,255,255,0.12);
+            --glass-hover: rgba(255,255,255,0.15);
+            --text-primary: #f0f0f5;
+            --text-secondary: #b0b0c8;
+            --text-tertiary: #9090b0;
+            --accent-purple: #7c6cf0;
+            --accent-purple-light: #a88cff;
+            --accent-cyan: #5bc8f0;
+            --accent-green: #2dd4a0;
+            --accent-gold: #f5b82e;
+            --accent-red: #f56c6c;
+            --accent-orange: #f59e42;
+            --gradient-1: linear-gradient(135deg, #7c6cf0, #5bc8f0);
+            --gradient-2: linear-gradient(135deg, #2dd4a0, #5bc8f0);
+            --gradient-3: linear-gradient(135deg, #f5b82e, #f56c6c);
+            --gradient-4: linear-gradient(135deg, #7c6cf0, #f56c6c);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow-glow: 0 0 40px rgba(124,108,240,0.2);
+            --font-sans: 'Inter', 'Noto Sans SC', -apple-system, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ========== ANIMATED BACKGROUND ========== */
+        .bg-orbs {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+
+        .orb-1 { width: 600px; height: 600px; background: var(--accent-purple); top: -10%; left: -10%; animation-delay: 0s; }
+        .orb-2 { width: 500px; height: 500px; background: var(--accent-cyan); top: 50%; right: -15%; animation-delay: -5s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--accent-green); bottom: -10%; left: 30%; animation-delay: -10s; }
+        .orb-4 { width: 350px; height: 350px; background: var(--accent-gold); top: 20%; left: 60%; animation-delay: -15s; }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -30px) scale(1.1); }
+            50% { transform: translate(-30px, 50px) scale(0.9); }
+            75% { transform: translate(40px, 20px) scale(1.05); }
+        }
+
+        /* ========== NAV ========== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(10,10,15,0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -1px;
+        }
+
+        .nav-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .nav-subtitle {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
+
+        .nav-meta {
+            display: flex;
+            gap: 24px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .nav-meta .item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-meta .item i { font-size: 11px; color: var(--accent-purple); }
+
+        .pulse-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(45, 212, 160, 0.15);
+            border: 1px solid rgba(45, 212, 160, 0.3);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* ========== MAIN ========== */
+        .main {
+            position: relative;
+            z-index: 1;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 100px 40px 60px;
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .hero-badge i { color: var(--accent-purple); }
+
+        .hero h1 {
+            font-size: clamp(36px, 5vw, 64px);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-purple-light) 50%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 18px;
+            color: var(--text-secondary);
+            font-weight: 300;
+            max-width: 600px;
+            margin: 0 auto 32px;
+        }
+
+        /* ========== KPI CARDS ========== */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: default;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            background: var(--bg-card-hover);
+            border-color: var(--glass-hover);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .kpi-card.c-purple::before { background: var(--gradient-1); }
+        .kpi-card.c-green::before { background: var(--gradient-2); }
+        .kpi-card.c-gold::before { background: var(--gradient-3); }
+        .kpi-card.c-red::before { background: var(--gradient-4); }
+
+        .kpi-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .c-purple .kpi-icon { background: rgba(124,108,240,0.15); color: var(--accent-purple); }
+        .c-green .kpi-icon { background: rgba(45,212,160,0.15); color: var(--accent-green); }
+        .c-gold .kpi-icon { background: rgba(245,184,46,0.15); color: var(--accent-gold); }
+        .c-red .kpi-icon { background: rgba(245,108,108,0.15); color: var(--accent-red); }
+
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+        }
+
+        .kpi-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .kpi-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .kpi-change.up { background: rgba(45,212,160,0.12); color: var(--accent-green); }
+        .kpi-change.down { background: rgba(245,108,108,0.12); color: var(--accent-red); }
+        .kpi-change.neutral { background: rgba(124,108,240,0.12); color: var(--accent-purple); }
+
+        /* ========== GLASS CARD ========== */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--glass-hover);
+        }
+
+        .card-head {
+            padding: 24px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--accent-purple);
+            font-size: 14px;
+        }
+
+        .card-body {
+            padding: 28px;
+        }
+
+        /* ========== INFERENCE CHAIN ========== */
+        .chain-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 32px 20px;
+        }
+
+        .chain-node {
+            padding: 10px 20px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .chain-node:hover {
+            background: var(--glass-hover);
+            transform: translateY(-2px);
+        }
+
+        .chain-node.active {
+            background: var(--gradient-1);
+            border-color: transparent;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(124,108,240,0.3);
+        }
+
+        .chain-arrow {
+            color: var(--accent-purple);
+            font-size: 16px;
+            opacity: 0.6;
+        }
+
+        /* ========== INFO GRID ========== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* ========== TABLE ========== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .data-table tbody td {
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        /* ========== BADGES ========== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success { background: rgba(45,212,160,0.12); color: var(--accent-green); }
+        .badge-warning { background: rgba(245,184,46,0.12); color: var(--accent-gold); }
+        .badge-danger { background: rgba(245,108,108,0.12); color: var(--accent-red); }
+        .badge-info { background: rgba(91,200,240,0.12); color: var(--accent-cyan); }
+        .badge-purple { background: rgba(124,108,240,0.12); color: var(--accent-purple); }
+
+        .source-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* ========== RISK BARS ========== */
+        .risk-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .risk-row:last-child { border-bottom: none; }
+
+        .risk-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+            width: 100px;
+        }
+
+        .risk-bar-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+            margin: 0 16px;
+            overflow: hidden;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .risk-bar-fill.low { background: var(--gradient-2); }
+        .risk-bar-fill.mid { background: var(--gradient-3); }
+        .risk-bar-fill.high { background: var(--accent-red); }
+
+        .risk-level {
+            width: 60px;
+            text-align: right;
+        }
+
+        /* ========== PROGRESS BARS ========== */
+        .metric-row {
+            margin-bottom: 20px;
+        }
+
+        .metric-row:last-child { margin-bottom: 0; }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .metric-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .metric-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .metric-bar-track {
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .metric-bar-fill.purple { background: var(--gradient-1); }
+        .metric-bar-fill.green { background: var(--gradient-2); }
+        .metric-bar-fill.gold { background: var(--gradient-3); }
+
+        .metric-benchmark {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        /* ========== AVATAR ========== */
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gradient-1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .avatar::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid rgba(124,108,240,0.3);
+        }
+
+        .avatar-name {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .avatar-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ========== CONFLICT ALERT ========== */
+        .conflict-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(245,184,46,0.06);
+            border: 1px solid rgba(245,184,46,0.15);
+            border-radius: var(--radius-md);
+            margin-top: 20px;
+        }
+
+        .conflict-alert i {
+            color: var(--accent-gold);
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        .conflict-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
+        }
+
+        .conflict-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ========== TWO COL LAYOUT ========== */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+        }
+
+        /* ========== TEAM AVATARS ========== */
+        .team-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 0;
+        }
+
+        .team-member {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px 6px 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .team-member:hover {
+            background: var(--glass-hover);
+            border-color: var(--accent-purple);
+        }
+
+        .team-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .team-role {
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        /* ========== DISCLAIMER ========== */
+        .disclaimer {
+            padding: 24px 28px;
+            background: rgba(245,108,108,0.04);
+            border: 1px solid rgba(245,108,108,0.1);
+            border-radius: var(--radius-lg);
+            margin-top: 32px;
+        }
+
+        .disclaimer-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-red);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .disclaimer-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 2;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            text-align: center;
+            padding: 48px 0 24px;
+            border-top: 1px solid var(--glass-border);
+            margin-top: 48px;
+        }
+
+        .footer-brand {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .footer-meta {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+        }
+
+        .footer-quote {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-style: italic;
+        }
+
+        /* ========== SCROLL ANIMATION ========== */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .nav { padding: 0 20px; }
+            .nav-meta { display: none; }
+            .main { padding: 80px 20px 40px; }
+            .kpi-row { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 32px; letter-spacing: -1px; }
+            .chain-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Orbs -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <div class="nav-logo">W</div>
+            <div>
+                <div class="nav-title">华尔街驻铁岭办事处</div>
+                <div class="nav-subtitle">Credit Intelligence Expert Team</div>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <div class="item"><i class="fas fa-calendar"></i> 2026-06-05</div>
+            <div class="item"><i class="fas fa-layer-group"></i> 7层穿透</div>
+            <div class="item"><i class="fas fa-database"></i> 12数据源</div>
+            <div class="item"><i class="fas fa-clock"></i> 23:02</div>
+            <div class="pulse-badge"><div class="pulse-dot"></div>已验证</div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Hero -->
+        <div class="hero fade-in">
+            <div class="hero-badge">
+                <i class="fas fa-shield-halved"></i>
+                智能推导报告 · 公开演示版
+            </div>
+            <h1>北京字节跳动<br>尽调报告</h1>
+            <div class="hero-sub">从一个企业名出发，7层穿透至实际控制人，12个数据源交叉验证</div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-row fade-in">
+            <div class="kpi-card c-purple">
+                <div class="kpi-icon"><i class="fas fa-building"></i></div>
+                <div class="kpi-label">企业名称</div>
+                <div class="kpi-value" style="font-size:18px;">北京字节跳动</div>
+                <div class="kpi-change up"><i class="fas fa-check"></i> 已验证</div>
+            </div>
+            <div class="kpi-card c-green">
+                <div class="kpi-icon"><i class="fas fa-star"></i></div>
+                <div class="kpi-label">信用评级</div>
+                <div class="kpi-value">A+</div>
+                <div class="kpi-change up"><i class="fas fa-arrow-up"></i> 行业领先</div>
+            </div>
+            <div class="kpi-card c-gold">
+                <div class="kpi-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="kpi-label">风险等级</div>
+                <div class="kpi-value">中</div>
+                <div class="kpi-change neutral"><i class="fas fa-minus"></i> 需关注</div>
+            </div>
+            <div class="kpi-card c-purple">
+                <div class="kpi-icon"><i class="fas fa-diagram-project"></i></div>
+                <div class="kpi-label">穿透深度</div>
+                <div class="kpi-value">7层</div>
+                <div class="kpi-change up"><i class="fas fa-check-double"></i> 完整穿透</div>
+            </div>
+        </div>
+
+        <!-- Inference Chain -->
+        <div class="glass-card fade-in">
+            <div class="card-head">
+                <div class="card-title"><i class="fas fa-route"></i> 智能推导链条</div>
+                <span class="badge badge-purple">7层穿透</span>
+            </div>
+            <div class="card-body">
+                <div class="chain-container">
+                    <div class="chain-node">北京字节跳动</div>
+                    <div class="chain-arrow"><i class="fas fa-chevron-right"></i></div>
+                    <div class="chain-node">张利东（法人）</div>
+                    <div class="chain-arrow"><i class="fas fa-chevron-right"></i></div>
+                    <div class="chain-node">138****</div>
+                    <div class="chain-arrow"><i class="fas fa-chevron-right"></i></div>
+                    <div class="chain-node">@zld1985</div>
+                    <div class="chain-arrow"><i class="fas fa-chevron-right"></i></div>
+                    <div class="chain-node">字节跳动（香港）</div>
+                    <div class="chain-arrow"><i class="fas fa-chevron-right"></i></div>
+                    <div class="chain-node active">张一鸣（实控人）</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="two-col">
+            <!-- Left: Company Info -->
+            <div>
+                <div class="glass-card fade-in">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-building"></i> 企业基础信息</div>
+                        <span class="source-tag"><i class="fas fa-database"></i> 企查查 / 天眼查</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item"><div class="info-label">企业名称</div><div class="info-value">北京字节跳动科技有限公司</div></div>
+                            <div class="info-item"><div class="info-label">法定代表人</div><div class="info-value">张利东</div></div>
+                            <div class="info-item"><div class="info-label">注册资本</div><div class="info-value">1000万元</div></div>
+                            <div class="info-item"><div class="info-label">成立日期</div><div class="info-value">2012-03-09</div></div>
+                            <div class="info-item"><div class="info-label">信用代码</div><div class="info-value" style="font-family:var(--font-mono);font-size:12px;">911101085923662400</div></div>
+                            <div class="info-item"><div class="info-label">注册地址</div><div class="info-value">北京市海淀区知春路甲48号</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legal Person -->
+                <div class="glass-card fade-in">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-user-tie"></i> 法人信息</div>
+                        <span class="source-tag"><i class="fas fa-database"></i> 企查查 / 多源公开主体数据库</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="avatar-section">
+                            <div class="avatar">张</div>
+                            <div>
+                                <div class="avatar-name">张利东</div>
+                                <div class="avatar-sub">字节跳动法人 · 福建龙岩人</div>
+                            </div>
+                        </div>
+
+                        <div class="info-grid" style="grid-template-columns: repeat(4,1fr); margin-bottom: 20px;">
+                            <div class="info-item"><div class="info-label">公开联系方式</div><div class="info-value" style="font-family:var(--font-mono);">139****</div></div>
+                            <div class="info-item"><div class="info-label">公开身份标识号</div><div class="info-value" style="font-family:var(--font-mono);">350****</div></div>
+                            <div class="info-item"><div class="info-label">住址</div><div class="info-value">北京市海淀区****</div></div>
+                            <div class="info-item"><div class="info-label">关联企业</div><div class="info-value">2家</div></div>
+                        </div>
+
+                        <div class="conflict-alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <div class="conflict-title">数据冲突已解决</div>
+                                <div class="conflict-desc">公开联系方式：企查查 139**** vs 多源公开主体数据库 138**** — 已按权威优先采用企查查数据</div>
+                            </div>
+                        </div>
+
+                        <table class="data-table" style="margin-top: 20px;">
+                            <thead><tr><th>平台</th><th>账号</th><th>粉丝</th><th>内容</th></tr></thead>
+                            <tbody>
+                                <tr><td><i class="fab fa-weibo" style="color:#e6162d"></i> 微博</td><td>@zld1985</td><td>1.2万</td><td>科技、创业</td></tr>
+                                <tr><td><i class="fab fa-zhihu" style="color:#0066ff"></i> 知乎</td><td>@zld1985</td><td>5000</td><td>行业分析</td></tr>
+                                <tr><td><i class="fas fa-briefcase" style="color:#00d6b9"></i> 脉脉</td><td>@zld1985</td><td>-</td><td>字节跳动法人</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Data Traceability -->
+                <div class="glass-card fade-in">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-link"></i> 数据溯源</div>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead><tr><th>数据类型</th><th>权威来源</th><th>其他来源</th><th>冲突</th><th>状态</th></tr></thead>
+                            <tbody>
+                                <tr><td>企业信息</td><td><span class="source-tag">企查查</span> <span class="source-tag">天眼查</span></td><td><span class="source-tag">工商总局</span></td><td>0</td><td><span class="badge badge-success"><i class="fas fa-check"></i> 一致</span></td></tr>
+                                <tr><td>法人信息</td><td><span class="source-tag">企查查</span></td><td><span class="source-tag">多源公开主体数据库</span> <span class="source-tag">社交媒体</span></td><td>2</td><td><span class="badge badge-warning"><i class="fas fa-exclamation"></i> 已解决</span></td></tr>
+                                <tr><td>财务信息</td><td><span class="source-tag">企业年报</span> <span class="source-tag">新浪财经</span></td><td><span class="source-tag">新闻报道</span></td><td>0</td><td><span class="badge badge-success"><i class="fas fa-check"></i> 一致</span></td></tr>
+                                <tr><td>法律风险</td><td><span class="source-tag">裁判文书网</span></td><td><span class="source-tag">社交媒体</span></td><td>0</td><td><span class="badge badge-success"><i class="fas fa-check"></i> 一致</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Risk & Finance -->
+            <div>
+                <!-- Actual Controller -->
+                <div class="glass-card fade-in">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-user-shield"></i> 实际控制人</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="avatar-section">
+                            <div class="avatar" style="background: var(--gradient-2);">张</div>
+                            <div>
+                                <div class="avatar-name">张一鸣</div>
+                                <div class="avatar-sub">字节跳动创始人</div>
+                            </div>
+                        </div>
+                        <div class="info-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-item"><div class="info-label">控制路径</div><div class="info-value" style="font-size:12px;">张一鸣 → 字节跳动（香港）→ 北京字节跳动</div></div>
+                            <div class="info-item"><div class="info-label">控制方式</div><div class="info-value">间接持股</div></div>
+                            <div class="info-item"><div class="info-label">持股比例</div><div class="info-value">99%</div></div>
+                            <div class="info-item"><div class="info-label">估值</div><div class="info-value" style="color:var(--accent-green);">约2250亿美元</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Assessment -->
+                <div class="glass-card fade-in">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-shield-halved"></i> 风险评估</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="risk-row">
+                            <div class="risk-name">信用风险</div>
+                            <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:25%"></div></div>
+                            <div class="risk-level"><span class="badge badge-success">低</span></div>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-name">合规风险</div>
+                            <div class="risk-bar-track"><div class="risk-bar-fill mid" style="width:55%"></div></div>
+                            <div class="risk-level"><span class="badge badge-warning">中</span></div>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-name">经营风险</div>
+                            <div class="risk-bar-track"><div class="risk-bar-fill mid" style="width:50%"></div></div>
+                            <div class="risk-level"><span class="badge badge-warning">中</span></div>
+                        </div>
+                        <div class="risk-row">
+                            <div class="risk-name">市场风险</div>
+                            <div class="risk-bar-track"><div class="risk-bar-fill mid" style="width:60%"></div></div>
+                            <div class="risk-level"><span class="badge badge-warning">中</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Metrics -->
+                <div class="glass-card fade-in">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-chart-line"></i> 财务指标</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric-row">
+                            <div class="metric-header">
+                                <div class="metric-name">资产负债率</div>
+                                <div class="metric-value" style="color:var(--accent-green);">45%</div>
+                            </div>
+                            <div class="metric-bar-track"><div class="metric-bar-fill green" style="width:45%"></div></div>
+                            <div class="metric-benchmark">行业平均 55% · 表现良好</div>
+                        </div>
+                        <div class="metric-row">
+                            <div class="metric-header">
+                                <div class="metric-name">营收（2025）</div>
+                                <div class="metric-value">~1200亿美元</div>
+                            </div>
+                            <div class="metric-bar-track"><div class="metric-bar-fill purple" style="width:95%"></div></div>
+                            <div class="metric-benchmark">行业领先</div>
+                        </div>
+                        <div class="metric-row">
+                            <div class="metric-header">
+                                <div class="metric-name">净利润</div>
+                                <div class="metric-value">~250亿美元</div>
+                            </div>
+                            <div class="metric-bar-track"><div class="metric-bar-fill green" style="width:85%"></div></div>
+                            <div class="metric-benchmark">盈利能力强</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team -->
+        <div class="glass-card fade-in">
+            <div class="card-head">
+                <div class="card-title"><i class="fas fa-users"></i> 参与团队</div>
+                <span class="badge badge-info">13人</span>
+            </div>
+            <div class="card-body">
+                <div class="team-row">
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-1)">钱</div>钱守正 <span class="team-role">总经理</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-3)">吴</div>吴德厚 <span class="team-role">管理</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-2)">陈</div>陈志远 <span class="team-role">业务</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-4)">周</div>周通 <span class="team-role">技术</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-1)">郑</div>郑慎之 <span class="team-role">审计</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-2)">张</div>张铁柱 <span class="team-role">尽调</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-3)">马</div>马力全 <span class="team-role">背调</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-4)">李</div>李明远 <span class="team-role">财务</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-1)">王</div>王思远 <span class="team-role">行业</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-2)">赵</div>赵刚 <span class="team-role">风险</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-3)">刘</div>刘文华 <span class="team-role">报告</span></div>
+                    <div class="team-member"><div class="team-avatar" style="background:var(--gradient-4)">暗</div>暗哨 <span class="team-role">监控</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer fade-in">
+            <div class="disclaimer-title"><i class="fas fa-exclamation-triangle"></i> 免责声明</div>
+            <div class="disclaimer-text">
+                1. 以上信息基于公开数据推导，可能存在误差<br>
+                2. 冲突数据已按权威优先原则解决，其他数据仅供参考<br>
+                3. 建议通过多个渠道交叉验证<br>
+                4. 敏感信息请谨慎使用
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-brand">华尔街驻铁岭办事处 — 信贷情报专家团</div>
+            <div class="footer-meta">公开演示版 · 纯文本+联网模式 · Token: 3,245 / 8,000 (40.6%)</div>
+            <div class="footer-quote">"西装脱了，标准没脱。只摆事实，不给建议。"</div>
+        </div>
+    </div>
+
+    <script>
+        // Scroll animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, i * 80);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // Animate bars on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.risk-bar-fill, .metric-bar-fill').forEach(bar => {
+                    const w = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => { bar.style.width = w; }, 100);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

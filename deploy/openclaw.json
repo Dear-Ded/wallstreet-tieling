@@ -1,0 +1,13 @@
+{
+  "skills": {
+    "entries": {
+      "wallstreet-tieling": {
+        "enabled": true,
+        "config": {
+          "autoUpdate": "disabled",
+          "competenceLevel": "full"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,81 @@
+# Wallstreet Tieling Project Taskboard
+
+Scope: public release roadmap for this repository.
+
+## Operating Rules
+
+- Ultimate goal: implement a public-or-authorized enterprise intelligence and
+  risk discovery product with broad retrieval, evidence provenance, entity
+  resolution, graph analysis, and printable/exportable reports.
+- Current release target: desktop-agent first distribution for Codex,
+  Claude Code, Hermes-style desktop agents, Doubao Office Task Mode,
+  OpenClaude-compatible agents, and WorkBuddy-style expert-team workflows.
+- Work from this board, close tasks one by one, and update status when a task
+  starts, lands, or is re-scoped.
+- Keep the public-data boundary intact: public, licensed, or user-authorized
+  evidence only; preserve provenance, confidence, and human-review boundaries.
+- Treat network failures as normal proxy volatility. Retry with backoff, use
+  alternate official/public routes when available, and fall back to fixtures for
+  local validation.
+- Avoid destructive git actions. Preserve unrelated dirty worktree changes.
+- A release step is not done until local acceptance passes and the public repo
+  has no secrets, cookies, private databases, local paths, private repository
+  names, internal handoff notes, or misleading claims.
+
+## Current Status
+
+Done:
+
+- One-click investigation packet: CLI/API/MCP path, evidence ledger, quality
+  gate, and Markdown report.
+- Public-data guardrails: evidence/lead separation, provenance fields, weak web
+  clues treated as leads, and release hygiene checks.
+- Subject profile: controller candidates, covered dimensions, evidence gaps,
+  and bounded fanout controls.
+- Official/public connectors in the current alpha path: GLEIF LEI, SEC EDGAR,
+  Wikidata EntitySearch/EntityData, UN SC sanctions XML.
+- Runtime connector catalog exposed through `/api/connectors`,
+  `npx wallstreet-tieling --connectors`, and MCP connector catalog output.
+- Runtime release contract exposed through `/api/release`,
+  `npx wallstreet-tieling --release`, and MCP release output.
+- Runtime requirements board exposed through `/api/requirements`,
+  `npx wallstreet-tieling --requirements`, and MCP requirements output.
+- Enterprise Warning/QYYJT benchmark coverage tracked behind authorization and
+  source-admission gates.
+- Query timeout propagation across CLI, API, MCP, Node CLI, and acceptance
+  scripts.
+- Investigation quality gate separates deliverable evidence from full coverage
+  and report renders `Delivery Quality`.
+- Minimum viable financial, industry, product, ownership, and risk cognition
+  are wired into report generation.
+
+In progress:
+
+- Deep commercial due-diligence orchestration across money, goods, people,
+  legal, sanctions, ownership, and public-record dimensions.
+- Source admission hardening for public, licensed, and user-authorized channels.
+- Multi-level related-subject traversal with confidence and provenance.
+- Portable report readiness summaries for desktop-agent hosts.
+- Public-release hygiene hardening and packaging verification.
+
+Next:
+
+- Strengthen report exports: Word document, structured Markdown, JSON packet,
+  and later polished HTML report.
+- Add richer charts, tables, image evidence handling, and printable public-style
+  report formatting.
+- Expand source adapters only through modular, auditable, default-off gates.
+- Keep adding product-path tests that prove runtime behavior, not only helper
+  functions.
+
+## Definition Of Done
+
+- A feature is not done until code, tests, evidence/provenance behavior,
+  report/API/CLI surface, and acceptance impact are checked.
+- A datasource is not production-admitted until health semantics, field
+  contract, parser validation, timeout/retry behavior, provenance, and
+  default-on/default-off status are explicit.
+- A report feature is not done until JSON payload, Markdown report, export
+  behavior, and quality-gate behavior agree.
+- Public package readiness requires passing focused release hygiene tests and
+  the relevant desktop-agent smoke tests.

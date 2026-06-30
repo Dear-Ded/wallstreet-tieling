@@ -1,0 +1,119 @@
+{
+  "description": "回归测试用例 v2 — 每个子skill的输入→期望输出→质量检查规则",
+  "version": "v0.5.0",
+  "tests": [
+    {
+      "skill": "zhang-tie-zhu",
+      "input": "查询北京字节跳动科技有限公司",
+      "expect": [
+        "企业基础信息",
+        "股权结构",
+        "关联企业",
+        "实际控制人"
+      ],
+      "quality": [
+        "每行数据有[来源:]标注"
+      ]
+    },
+    {
+      "skill": "li-ming-yuan",
+      "input": "分析字节跳动财务",
+      "expect": [
+        "盈利能力",
+        "偿债能力",
+        "现金流",
+        "粉饰识别"
+      ],
+      "quality": [
+        "无模糊词",
+        "无信贷决策词"
+      ]
+    },
+    {
+      "skill": "zhao-gang",
+      "input": "评估字节跳动风险",
+      "expect": [
+        "综合风险评级",
+        "六维雷达",
+        "关键风险点"
+      ],
+      "quality": [
+        "风险等级为红/黄/绿之一"
+      ]
+    },
+    {
+      "skill": "ma-li-quan",
+      "input": "查公开联系方式10000000000",
+      "expect": [
+        "基本信息",
+        "联系方式",
+        "社交媒体账号"
+      ],
+      "quality": [
+        "标注工具可用性状态"
+      ]
+    },
+    {
+      "skill": "qian-shou-zheng",
+      "input": "这公司靠谱吗(自然语言)",
+      "expect": [
+        "激活张铁柱+赵刚"
+      ],
+      "quality": [
+        "语义匹配正确路由"
+      ]
+    },
+    {
+      "skill": "wu-de-hou",
+      "input": "任意角色输出",
+      "expect": [
+        "逐项检查清单"
+      ],
+      "quality": [
+        "违规处有[质量检查]标记"
+      ]
+    },
+    {
+      "skill": "zheng-shen-zhi",
+      "input": "多角色数据",
+      "expect": [
+        "验证概要",
+        "冲突清单",
+        "可信度评级"
+      ],
+      "quality": [
+        "每条来源具体可追溯"
+      ]
+    },
+    {
+      "skill": "semantic-dispatch",
+      "input": "帮我看看财务有没有猫腻",
+      "expect": [
+        "激活李明远+郑慎之"
+      ],
+      "quality": [
+        "自然语言正确路由"
+      ]
+    },
+    {
+      "skill": "semantic-dispatch",
+      "input": "老板是什么来头",
+      "expect": [
+        "激活张铁柱+马力全"
+      ],
+      "quality": [
+        "自然语言正确路由"
+      ]
+    },
+    {
+      "skill": "data-source",
+      "input": "任意数据输出",
+      "expect": [],
+      "quality": [
+        "禁止[来源:公开信息]",
+        "禁止[来源:互联网]",
+        "每源必有日期"
+      ]
+    }
+  ]
+}

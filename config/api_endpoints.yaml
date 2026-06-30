@@ -1,0 +1,135 @@
+﻿# QYYJT API endpoint registry.
+# Status: partial. Only endpoints with implementation_status=verified are allowed
+# to be counted as working API integrations.
+
+base_url: "https://www.qyyjt.cn"
+
+auth:
+  type: "授权会话状态"
+  note: "QYYJT requires an authenticated browser session for most APIs. Store 授权会话状态s locally; never store user passwords here."
+
+endpoints:
+  login:
+    path: "/user/login"
+    method: "GET"
+    description: "Login page. Manual/browser authentication flow only."
+    auth_required: false
+    implementation_status: "manual_browser_flow"
+
+  search:
+    path: "/finchinaAPP/v1/finchina-search/v1/multipleSearch"
+    method: "GET"
+    description: "Multi-search endpoint for enterprise/bond search."
+    auth_required: true
+    implementation_status: "verified"
+    params:
+      - name: "pagesize"
+        type: "int"
+        default: 10
+        description: "Page size."
+      - name: "skip"
+        type: "int"
+        default: 0
+        description: "Offset."
+      - name: "text"
+        type: "string"
+        required: true
+        description: "Search keyword."
+      - name: "template"
+        type: "string"
+        default: "list"
+        description: "Response template."
+      - name: "isRelationSearch"
+        type: "int"
+        default: 0
+        description: "Enable relation search."
+    headers:
+      referer: "https://www.qyyjt.cn/search?text={keyword}"
+
+  notices:
+    path: "/finchinaAPP/v1/finchina-search/v1/webNotice/getF9NoticeList"
+    method: "POST"
+    description: "Bond notice list endpoint."
+    auth_required: true
+    implementation_status: "verified"
+    content_type: "application/x-www-form-urlencoded; charset=UTF-8"
+    params:
+      - name: "code"
+        type: "string"
+        required: true
+        description: "Bond code."
+      - name: "type"
+        type: "string"
+        default: "co"
+        description: "Query type."
+      - name: "skip"
+        type: "int"
+        default: 0
+        description: "Offset."
+      - name: "size"
+        type: "int"
+        default: 10
+        description: "Page size."
+      - name: "oneLevelItemCode"
+        type: "string"
+        default: "50"
+        description: "Notice category."
+      - name: "f9Below"
+        type: "boolean"
+        default: true
+        description: "Include F9 subcategory notices."
+    headers:
+      origin: "https://www.qyyjt.cn"
+      referer: "https://www.qyyjt.cn/bond/{bond_code}"
+
+  risk_scan:
+    path: "/TODO"
+    method: "TODO"
+    description: "Risk scan endpoint. Requires authenticated packet capture."
+    auth_required: true
+    implementation_status: "incomplete"
+
+  court_cases:
+    path: "/TODO"
+    method: "TODO"
+    description: "Court case endpoint. Requires authenticated packet capture."
+    auth_required: true
+    implementation_status: "incomplete"
+
+  news_negative:
+    path: "/TODO"
+    method: "TODO"
+    description: "Negative news endpoint. Requires authenticated packet capture."
+    auth_required: true
+    implementation_status: "incomplete"
+
+  actual_controller:
+    path: "/TODO"
+    method: "TODO"
+    description: "Actual controller endpoint. Requires authenticated packet capture."
+    auth_required: true
+    implementation_status: "incomplete"
+
+  related_parties:
+    path: "/TODO"
+    method: "TODO"
+    description: "Related parties endpoint. Requires authenticated packet capture."
+    auth_required: true
+    implementation_status: "incomplete"
+
+references:
+  - name: "QYYJTScraper"
+    url: "https://github.com/YukidokeAzarea/QYYJTScraper"
+    description: "Reference scraper that uses browser login and backend API calls."
+    stars_snapshot: 5
+
+alternative_sources:
+  - name: "Tianyancha Open API"
+    url: "https://open.tianyancha.com/"
+    description: "Commercial enterprise information API."
+  - name: "Qixin API"
+    url: "https://www.qixin.com/api"
+    description: "Commercial enterprise information API."
+  - name: "Qichacha Open API"
+    url: "https://openapi.qcc.com/"
+    description: "Commercial enterprise credit API."

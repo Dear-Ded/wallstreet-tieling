@@ -1,0 +1,1389 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>华尔街驻铁岭办事处 / Wallstreet Tieling</title>
+  <meta name="description" content="0.5.0 Alpha 企业情报与风险发现工作台。">
+  <style>
+    :root {
+      --bg: #f5f6f2;
+      --panel: #ffffff;
+      --panel-soft: #eef1ec;
+      --line: #d7ddd4;
+      --line-strong: #b7c2b2;
+      --ink: #17201a;
+      --muted: #617064;
+      --faint: #879386;
+      --accent: #146c5c;
+      --accent-2: #315b91;
+      --warn: #a7651a;
+      --danger: #a33b38;
+      --ok: #21784f;
+      --shadow: 0 10px 26px rgba(27, 40, 30, .08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+    button, input, select { font: inherit; }
+    button {
+      min-height: 36px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.icon { width: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+    button:disabled { cursor: wait; opacity: .58; }
+    input, select {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 7px 10px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(20, 108, 92, .12); }
+    .app {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: #fbfcf9;
+      padding: 18px 14px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    .brand { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
+    .mark {
+      width: 34px; height: 34px; border-radius: 7px; background: var(--ink);
+      color: #fff; display: grid; place-items: center; font-weight: 800;
+    }
+    .brand b { display: block; font-size: 14px; }
+    .brand span { display: block; color: var(--muted); font-size: 12px; }
+    .nav { display: grid; gap: 6px; margin: 16px 0; }
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 9px 10px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      font-size: 14px;
+    }
+    .nav a.active, .nav a:hover { color: var(--ink); background: var(--panel-soft); border-color: var(--line); }
+    .side-block {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .main { min-width: 0; padding: 20px; }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) 160px auto auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .status {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 99px; background: var(--faint); }
+    .dot.ok { background: var(--ok); }
+    .dot.warn { background: var(--warn); }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(340px, .75fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-head {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcf9;
+    }
+    .panel-head h2 { margin: 0; font-size: 15px; }
+    .panel-body { padding: 12px; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+      min-height: 82px;
+    }
+    .metric b { display: block; font-size: 26px; line-height: 1.05; }
+    .metric span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .tabs { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); background: #fbfcf9; overflow-x: auto; }
+    .tab { border-color: transparent; background: transparent; white-space: nowrap; color: var(--muted); }
+    .tab.active { background: var(--panel-soft); border-color: var(--line); color: var(--ink); }
+    .view { display: none; padding: 12px; }
+    .view.active { display: block; }
+    .report {
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      background: #111814;
+      color: #edf5ed;
+      border-radius: 6px;
+      padding: 12px;
+      max-height: 620px;
+      overflow: auto;
+    }
+    .export-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+    .export-bar button { font-size: 13px; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f6f8f4; color: var(--muted); font-weight: 650; position: sticky; top: 0; z-index: 1; }
+    tr:last-child td { border-bottom: 0; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .tag.ok { color: var(--ok); border-color: rgba(33, 120, 79, .35); background: rgba(33, 120, 79, .08); }
+    .tag.warn { color: var(--warn); border-color: rgba(167, 101, 26, .35); background: rgba(167, 101, 26, .08); }
+    .tag.danger { color: var(--danger); border-color: rgba(163, 59, 56, .32); background: rgba(163, 59, 56, .07); }
+    .list { display: grid; gap: 8px; }
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+    .item b { display: block; margin-bottom: 4px; }
+    .item p { margin: 0; color: var(--muted); font-size: 13px; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .empty {
+      min-height: 160px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fbfcf9;
+      padding: 20px;
+    }
+    .graph {
+      height: 320px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(var(--panel-soft) 1px, transparent 1px),
+        linear-gradient(90deg, var(--panel-soft) 1px, transparent 1px),
+        #fff;
+      background-size: 28px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      min-width: 74px;
+      max-width: 160px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: #fff;
+      padding: 6px 9px;
+      font-size: 12px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .node.seed { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .edge {
+      position: absolute;
+      height: 1px;
+      background: var(--line-strong);
+      transform-origin: left center;
+    }
+    @media (max-width: 1120px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .layout { grid-template-columns: 1fr; }
+      .topbar { grid-template-columns: 1fr 140px auto; }
+      .status { grid-column: 1 / -1; }
+    }
+    @media (max-width: 720px) {
+      .main { padding: 12px; }
+      .topbar { grid-template-columns: 1fr; }
+      .metrics, .split { grid-template-columns: 1fr; }
+      .panel-head { align-items: flex-start; flex-direction: column; }
+    }
+  
+    /* ── 办公室 (Office Chat) ── */
+    .office-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 0;
+      min-height: 520px;
+      max-height: calc(100vh - 260px);
+    }
+    .office-chat-panel {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--line);
+      background: #f8f9f6;
+      overflow: hidden;
+    }
+    .office-gm-banner {
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #eaf4ed 0%, #dce8e0 100%);
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.5;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .office-gm-banner .gm-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .office-gm-banner .gm-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .office-gm-banner .gm-label {
+      font-weight: 700;
+      color: var(--accent);
+      margin-right: 4px;
+    }
+    .office-msgs {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .office-msg {
+      display: flex;
+      gap: 10px;
+      max-width: 92%;
+    }
+    .office-msg .avatar {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      letter-spacing: 0;
+    }
+    .office-msg .bubble {
+      flex: 1;
+      min-width: 0;
+    }
+    .office-msg .bubble-head {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+    .office-msg .bubble-name {
+      font-weight: 650;
+      font-size: 13px;
+      color: var(--ink);
+    }
+    .office-msg .bubble-title {
+      font-size: 11px;
+      color: var(--faint);
+      background: var(--panel-soft);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .office-msg .bubble-time {
+      font-size: 11px;
+      color: var(--faint);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .office-msg .bubble-text {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--ink);
+      word-break: break-word;
+    }
+    .office-msg .bubble-refs {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--accent-2);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .office-msg .bubble-refs span {
+      background: rgba(49, 91, 145, .08);
+      border: 1px solid rgba(49, 91, 145, .18);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .office-side {
+      display: flex;
+      flex-direction: column;
+      background: #fbfcf9;
+      overflow: hidden;
+    }
+    .office-roles {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .office-roles h3 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .office-role-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .office-role-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .office-role-tag .role-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 99px;
+      background: var(--ok);
+      flex-shrink: 0;
+    }
+    .office-role-tag .role-dot.inactive {
+      background: var(--faint);
+    }
+    .office-sentinel {
+      flex: 1;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      overflow-y: auto;
+    }
+    .office-sentinel h3 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .office-sentinel h3 .sentinel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--ok);
+    }
+    .office-sentinel h3 .sentinel-dot.warn {
+      background: var(--warn);
+    }
+    .office-sentinel-msg {
+      background: #111814;
+      color: #a0d0a0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.55;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .office-sentinel-msg .sentinel-label {
+      color: #6a9;
+      font-weight: 700;
+    }
+    .office-refresh {
+      padding: 8px 12px;
+      border-top: 1px solid var(--line);
+      text-align: right;
+    }
+    .office-refresh button {
+      font-size: 12px;
+      min-height: 30px;
+    }
+    @media (max-width: 900px) {
+      .office-layout {
+        grid-template-columns: 1fr;
+        max-height: none;
+      }
+      .office-chat-panel {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        max-height: 420px;
+      }
+      .office-side {
+        max-height: 320px;
+        overflow-y: auto;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark">W</div>
+        <div>
+          <b>华尔街驻铁岭办事处</b>
+          <span>Wallstreet Tieling v0.5.0</span>
+        </div>
+      </div>
+      <nav class="nav" aria-label="工作台导航">
+        <a class="active" href="#investigation">调查工作台</a>
+        <a href="#evidence">证据账本</a>
+        <a href="#connectors">数据源目录</a>
+        <a href="#qyyjt">企业预警通对标</a>
+        <a href="#release">发布状态</a>
+        <a href="#office">办公室</a>
+      </nav>
+      <div class="side-block">
+        <b>数据边界</b>
+        <p>只使用公开、授权或演示数据。空结果是覆盖缺口，不是低风险结论。</p>
+      </div>
+      <div class="side-block">
+        <b>本地 API</b>
+        <p>默认连接 <code>http://127.0.0.1:8080</code>。未启动 API 时使用内置演示包。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="investigation" class="topbar" aria-label="调查输入">
+        <input id="company" value="Apple Inc." aria-label="企业名称或自然语言请求">
+        <select id="mode" aria-label="运行模式">
+          <option value="fixture_pack">演示数据包</option>
+          <option value="default">默认公开路径</option>
+          <option value="official_public_smoke">官方公开 smoke</option>
+        </select>
+        <button id="run" class="primary" type="button" title="运行调查">运行</button>
+        <button id="loadCatalog" class="icon" type="button" title="刷新数据源">↻</button>
+        <div class="status"><span id="statusDot" class="dot"></span><span id="statusText">准备就绪</span></div>
+      </section>
+
+      <div class="metrics" aria-label="核心指标">
+        <div class="metric"><b id="riskScore">--</b><span>风险分</span></div>
+        <div class="metric"><b id="qualityScore">--</b><span>交付质量</span></div>
+        <div class="metric"><b id="evidenceCount">--</b><span>证据数</span></div>
+        <div class="metric"><b id="p0Count">--</b><span>QYYJT P0 队列</span></div>
+      </div>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="brief" type="button">快报</button>
+            <button class="tab" data-tab="report" type="button">报告</button>
+            <button class="tab" data-tab="graph" type="button">图谱</button>
+            <button class="tab" data-tab="evidence" type="button">证据</button>
+            <button class="tab" data-tab="connectors" type="button">数据源</button>
+            <button class="tab" data-tab="qyyjt" type="button">QYYJT</button>
+            <button class="tab" data-tab="release" type="button">发布</button>
+            <button class="tab" data-tab="office" type="button">办公室</button>
+          </div>
+
+          <div id="brief" class="view active">
+            <div class="split">
+              <div>
+                <div class="panel-head"><h2>风险判断</h2><span id="verdictTag" class="tag">未运行</span></div>
+                <div id="briefList" class="list panel-body"></div>
+              </div>
+              <div>
+                <div class="panel-head"><h2>下一步</h2><span id="qualityTag" class="tag">待检查</span></div>
+                <div id="actionsList" class="list panel-body"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="report" class="view">
+            <div class="export-bar" aria-label="报告导出">
+              <button id="exportMarkdown" type="button">下载 Markdown</button>
+              <button id="exportJson" type="button">下载 JSON</button>
+              <button id="exportHtml" type="button">下载 HTML 报告</button>
+            </div>
+            <div id="reportMarkdown" class="report"></div>
+          </div>
+
+          <div id="graph" class="view">
+            <div id="graphCanvas" class="graph"></div>
+          </div>
+
+          <div id="evidence" class="view">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>来源</th><th>标题</th><th>匹配</th><th>置信度</th><th>准入</th></tr></thead>
+                <tbody id="evidenceRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="connectors" class="view">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>连接器</th><th>状态</th><th>默认</th><th>准入</th><th>说明</th></tr></thead>
+                <tbody id="connectorRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="qyyjt" class="view">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>模块</th><th>优先级</th><th>覆盖</th><th>字段契约</th><th>下一步</th></tr></thead>
+                <tbody id="qyyjtRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="release" class="view">
+            <div id="releaseList" class="list"></div>
+          </div>
+
+          <div id="office" class="view">
+            <div class="office-layout">
+              <div class="office-chat-panel">
+                <div id="officeGmBanner" class="office-gm-banner">
+                  <span class="gm-icon">📋</span>
+                  <div class="gm-text"><span class="gm-label">钱总简报</span><span id="officeGmText">加载中…</span></div>
+                </div>
+                <div id="officeMessages" class="office-msgs"></div>
+              </div>
+              <div class="office-side">
+                <div class="office-roles">
+                  <h3>👥 在岗角色</h3>
+                  <div id="officeActiveRoles" class="office-role-tags"></div>
+                </div>
+                <div class="office-sentinel">
+                  <h3><span id="sentinelStatusDot" class="sentinel-dot"></span>🛡️ 暗哨监控</h3>
+                  <div id="officeSentinelMsgs"></div>
+                </div>
+                <div class="office-refresh">
+                  <button id="officeRefreshBtn" type="button" title="刷新办公室数据">🔄 刷新</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <h2>交付质量</h2>
+            <span id="deliveryStatus" class="tag">待运行</span>
+          </div>
+          <div class="panel-body">
+            <div id="qualityList" class="list"></div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = localStorage.getItem('wst_api_base') || 'http://127.0.0.1:8080';
+    const els = Object.fromEntries([
+      'company','mode','run','loadCatalog','statusDot','statusText','riskScore','qualityScore','evidenceCount','p0Count',
+      'verdictTag','qualityTag','briefList','actionsList','reportMarkdown','graphCanvas','evidenceRows','connectorRows',
+      'qyyjtRows','releaseList','deliveryStatus','qualityList','exportMarkdown','exportJson','exportHtml',
+      'officeGmText','officeMessages','officeActiveRoles','sentinelStatusDot','officeSentinelMsgs','officeRefreshBtn'
+    ].map(id => [id, document.getElementById(id)]));
+
+    let currentPacket = null;
+
+    const demoPacket = {
+      risk_brief: {
+        verdict_label: '演示风险待复核',
+        risk_score: 72,
+        confidence_note: '内置演示包，仅用于界面预览。',
+        key_findings: [
+          { title: '控制权候选需要复核', severity: 'medium', why_it_matters: '公开线索指向关键人员，但仍需官方或授权数据交叉印证。' },
+          { title: '司法和行政风险覆盖不足', severity: 'info', why_it_matters: '未接入 live provider 时不能把空结果当作低风险结论。' }
+        ]
+      },
+      quality_gate: {
+        status: 'usable_with_warnings',
+        score: 76,
+        blockers: [],
+        warnings: ['live_sources_not_executed', 'product_depth_missing'],
+        strengths: ['evidence_ledger_present', 'report_markdown_present'],
+        next_actions: ['启动本地 API 后运行真实公开路径', '补齐产品、司法、行政风险证据']
+      },
+      summary: { evidence_count: 6, risk_event_count: 0 },
+      evidence_ledger: [
+        { source: 'fixture_public_registry', title: 'registry profile', entity_match_level: 'exact', confidence: .86, verification_hint: 'fixture_only' },
+        { source: 'fixture_sec_edgar_public_api', title: 'SEC companyfacts fixture', entity_match_level: 'strong', confidence: .78, verification_hint: 'fixture_only' }
+      ],
+      next_actions: ['补充 live official/public sources', '对控制权候选做二次核验'],
+      enterprise_cognition: {
+        risk_hypotheses: ['控制权线索已识别，需要更多官方关系记录核验。'],
+        monitoring_watchlist: ['工商变更', '司法执行', '行政处罚', '负面舆情'],
+        case_investigation_lens: {
+          name: '扒光查案式调查',
+          tracks: [
+            { key: 'money', label: '钱', focus: 'money_in_money_out', evidence_state: 'needs_evidence', known_signals: [], evidence_gaps: ['cash flow and financing evidence'], next_questions: ['钱从哪里来，往哪里去？'] },
+            { key: 'goods', label: '货', focus: 'goods_in_goods_out', evidence_state: 'needs_evidence', known_signals: [], evidence_gaps: ['supply-chain evidence'], next_questions: ['货从哪里来，往哪里去？'] },
+            { key: 'people', label: '人', focus: 'who_controls_and_who_acts_together', evidence_state: 'needs_evidence', known_signals: ['controller_candidates=1'], evidence_gaps: ['relationship network evidence'], next_questions: ['人都是谁，和谁一起？'] }
+          ]
+        },
+        goods_flow_profile: {
+          type: 'goods_flow_profile',
+          evidence_state: 'needs_live_evidence',
+          product_signals: [],
+          industry_signals: [],
+          upstream_signals: [],
+          downstream_signals: [],
+          customer_signals: [],
+          supplier_signals: [],
+          channel_or_partner_signals: [],
+          concentration_signals: [],
+          value_chain_signals: [],
+          pressure_points: [],
+          corroboration_status: 'demo_packet_waiting_for_live_sources',
+          next_questions: ['货从哪里来、往哪里去？', '客户/供应商是否集中或关联？', '产品和行业位置是否解释经营压力？']
+        },
+        people_flow_profile: {
+          type: 'people_flow_profile',
+          evidence_state: 'needs_live_evidence',
+          verification_status: 'demo_packet_waiting_for_live_sources',
+          controller_signals: ['controller_candidates=1'],
+          key_person_signals: [],
+          relationship_signals: [],
+          control_path_signals: [],
+          legal_pressure_signals: [],
+          pressure_points: [],
+          next_questions: ['谁实际控制？', '关键人和关联企业如何连接？', '法务行政记录是否能穿透到责任主体？']
+        }
+      },
+      report_markdown: '# 华尔街驻铁岭办事处\n\n## 尽调快报\n\n这是内置演示包。启动本地 API 后，工作台会调用真实 `/api/investigate` 输出。\n\n## 货物流/生意链画像\n\n- 当前状态: 等待 live source 补证。\n\n## 人线/控制关系画像\n\n- 当前状态: 等待 live source 补证。',
+      persona_surface: {
+        type: 'persona_surface_brief',
+        display_name: '13-role anthropomorphic shell',
+        role_count: 13,
+        active_role_count: 3,
+        active_roles: [
+          { agent_id: 'qian-shou-zheng', display_name: '钱守正' },
+          { agent_id: 'zhang-tie-zhu', display_name: '张铁柱' },
+          { agent_id: 'liu-wen-hua', display_name: '刘文华' }
+        ],
+        principle: '角色是调查分工，不替代证据。'
+      },
+      graph: { nodes: [{ id: 'seed', name: 'Demo Company', kind: 'company' }, { id: 'person', name: 'Controller Lead', kind: 'person' }], edges: [{ from: 'seed', to: 'person', relation_type: 'controller_candidate' }] }
+    };
+
+    const demoCatalog = {
+      summary: { qyyjt_benchmark: { p0_queue_count: 16 } },
+      connectors: [
+        { name: 'default_public_intel', status: 'active', default_enabled: true, admission: { decision: 'production_ready' }, notes: ['Zero-config public route'] },
+        { name: 'qyyjt_tool', status: 'conditionally_active', default_enabled: true, admission: { decision: 'conditional_production' }, notes: ['Public leads by default; credentialed depth gated'] }
+      ],
+      qyyjt_benchmark: {
+        summary: {
+          p0_queue_count: 16,
+          p0_queue: [
+            { module: 'search_multi', parity_priority: 'p0_subject_resolution_entrypoint', coverage_class: 'api', field_contract: { record_type: 'subject_resolution_candidate', required_fields: ['candidate_name','identifier','entity_type','match_score'] }, next_action: 'Harden subject resolution fields.' },
+            { module: 'risk_scan', parity_priority: 'p0_report_critical', coverage_class: 'query_plan', field_contract: { record_type: 'risk_overview', required_fields: ['risk_category','severity','risk_label','summary','status'] }, next_action: 'Map risk overview into normalized alert categories.' }
+          ]
+        }
+      }
+    };
+
+    const demoRelease = {
+      contract: { variants: { universal: {}, codex: {}, claude_code: {}, workbuddy_expert_team: {} } },
+      persona_surface: {
+        type: 'persona_surface_brief',
+        display_name: '13-role anthropomorphic shell',
+        role_count: 13,
+        groups: [
+          { label: '指挥层', agent_ids: ['qian-shou-zheng'] },
+          { label: '前线调查', agent_ids: ['zhang-tie-zhu', 'li-ming-yuan', 'wang-si-yuan', 'zhao-gang', 'ma-li-quan', 'zhou-tong'] },
+          { label: '质检门禁', agent_ids: ['zheng-shen-zhi', 'wu-de-hou'] },
+          { label: '输出团队', agent_ids: ['liu-wen-hua', 'yan-hao-kan'] },
+          { label: '编外支援', agent_ids: ['chen-zhi-yuan', 'an-shao'] }
+        ],
+        signature_features: ['13-role anthropomorphic expert-team surface', 'Anthropomorphic shell and persona-consistent product framing']
+      },
+      blockers: ['Hosted demo/API ownership still requires deployment decision'],
+      next_focus: ['Web UI operating surface', 'live provider hardening']
+    };
+
+    const ROLES_MAP = {
+      "qian-shou-zheng": {"name":"钱守正","title":"总经理","lane":"overall_boundary"},
+      "zhang-tie-zhu":  {"name":"张铁柱","title":"工商核查","lane":"corporate_registry"},
+      "li-ming-yuan":   {"name":"李明远","title":"财务分析","lane":"financial_cognition"},
+      "wang-si-yuan":   {"name":"王思远","title":"行业研究","lane":"industry_intelligence"},
+      "zhao-gang":      {"name":"赵刚","title":"法务风控","lane":"court_legal_risk"},
+      "ma-li-quan":     {"name":"马力全","title":"公开情报","lane":"people_intelligence"},
+      "zhou-tong":       {"name":"周通","title":"数据源","lane":"connector_operations"},
+      "zheng-shen-zhi": {"name":"郑慎之","title":"交叉验证","lane":"cross_verification"},
+      "wu-de-hou":      {"name":"吴德厚","title":"质量门禁","lane":"quality_gate"},
+      "liu-wen-hua":     {"name":"刘文华","title":"报告撰写","lane":"report_generation"},
+      "yan-hao-kan":    {"name":"颜好看","title":"输出设计","lane":"report_layout"},
+      "chen-zhi-yuan":   {"name":"陈志远","title":"任务拆解","lane":"retrieval_planning"},
+      "an-shao":         {"name":"暗哨","title":"系统监控","lane":"runtime_observability"},
+    };
+
+    const AVATAR_COLORS = [
+      '#146c5c','#315b91','#a7651a','#a33b38','#21784f',
+      '#5c4a7a','#7a5c4a','#4a7a5c','#7a4a5c','#5c7a4a',
+      '#3a6b8c','#8c5a3a','#4a8c6b'
+    ];
+
+    function roleAvatar(roleId, index) {
+      const role = ROLES_MAP[roleId];
+      const initials = role ? role.name.slice(0, 2) : roleId.slice(0, 2).toUpperCase();
+      const color = AVATAR_COLORS[index % AVATAR_COLORS.length];
+      return `<div class="avatar" style="background:${color}" title="${role?.name || roleId}">${initials}</div>`;
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    const demoOfficeChat = {
+      company: "Apple Inc.",
+      messages: [
+        { role_id: "qian-shou-zheng", text: "收到任务：对 Apple Inc. 启动企业调查。各部门按职责开展工作，证据先行，不假设。", msg_type: "group", evidence_refs: [], timestamp: 1719300000 },
+        { role_id: "chen-zhi-yuan", text: "已拆分 Apple Inc. 为实体锚点、概览、深入钻取、专项四层检索计划。覆盖公开注册、财务、司法、舆情、供应链。", msg_type: "group", evidence_refs: [], timestamp: 1719300060 },
+        { role_id: "wang-si-yuan", text: "Apple Inc. 行业定位：消费电子 / 软件服务；核心产品：iPhone, Mac, Services。全球供应链，中国制造深度嵌入。", msg_type: "group", evidence_refs: ["enterprise_cognition.industry", "enterprise_cognition.product"], timestamp: 1719300120 },
+        { role_id: "li-ming-yuan", text: "Apple Inc. 已获取 FY2024 财务数据。营收稳健，现金流充裕，但大中华区增速放缓需关注。正在分析债务结构和表外敞口。", msg_type: "group", evidence_refs: ["enterprise_cognition.financial"], timestamp: 1719300180 },
+        { role_id: "zhang-tie-zhu", text: "Apple Inc. 工商登记显示全球实体超过 120 家。中国境内主要运营实体已核实。正在排查关联方和控制路径。", msg_type: "group", evidence_refs: ["subject_profile.controller_candidates"], timestamp: 1719300240 },
+        { role_id: "zhao-gang", text: "Apple Inc. 涉诉案件共检索到 47 条公开记录，以专利纠纷和反垄断调查为主。已标记 3 条高相关度案件待深入。", msg_type: "group", evidence_refs: ["enterprise_cognition.risk_events"], timestamp: 1719300300 },
+        { role_id: "ma-li-quan", text: "公开情报：高管团队稳定，供应链透明度较高。注意欧盟数字市场法案 (DMA) 合规进展和可能的制裁影响。", msg_type: "group", evidence_refs: [], timestamp: 1719300360 },
+        { role_id: "wu-de-hou", text: "[质量门禁] Apple Inc. 调查数据质量评分 82，达到可进入人工复核标准。缺失项：中国境内子公司详细股权链路需补全。", msg_type: "group", evidence_refs: [], timestamp: 1719300420 },
+        { role_id: "liu-wen-hua", text: "Apple Inc. 尽调报告初稿已完成。包含 6 大板块：公司概况、财务分析、法务风险、供应链画像、控制关系、行业竞争。待各位复核。", msg_type: "group", evidence_refs: [], timestamp: 1719300480 },
+        { role_id: "an-shao", text: "系统正常。Token 消耗在预算内（已用 68%）。API 响应延迟 120ms。没有发现协议违规或异常故障。上次自检：2 分钟前。", msg_type: "sentinel_dm", evidence_refs: [], timestamp: 1719300540 },
+      ],
+      active_roles: ["qian-shou-zheng", "zhang-tie-zhu", "li-ming-yuan", "wang-si-yuan", "zhao-gang", "ma-li-quan", "wu-de-hou", "liu-wen-hua", "chen-zhi-yuan", "an-shao"],
+      sentinel_status: "normal",
+      gm_summary: "Apple Inc. 调查进行中。已激活 10 个角色，证据链完整度 85%。财务稳健、法务风险可控、供应链透明。等待中国子公司股权链路补全后即可进入最终复核。预计 1 小时内完成。",
+    };
+
+    function renderOfficeChat(packet) {
+      const p = packet || demoOfficeChat;
+
+      // GM summary
+      els.officeGmText.textContent = p.gm_summary || '暂无简报';
+
+      // Sentinel status
+      const sentinelDot = document.getElementById('sentinelStatusDot');
+      if (sentinelDot) {
+        sentinelDot.className = 'sentinel-dot' + (p.sentinel_status === 'warning' ? ' warn' : '');
+      }
+
+      // Active roles
+      const activeSet = new Set(p.active_roles || []);
+      const allRoleIds = Object.keys(ROLES_MAP);
+      els.officeActiveRoles.innerHTML = allRoleIds.map(rid => {
+        const role = ROLES_MAP[rid];
+        const isActive = activeSet.has(rid);
+        const dotClass = isActive ? '' : ' inactive';
+        const style = isActive ? '' : 'opacity:.55';
+        return `<span class="office-role-tag" style="${style}" title="${role.title} · ${role.lane}"><span class="role-dot${dotClass}"></span>${role.name}</span>`;
+      }).join('');
+
+      // Group messages (sorted by timestamp)
+      const groupMsgs = (p.messages || [])
+        .filter(m => m.msg_type !== 'sentinel_dm')
+        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      // Map role_id to index for avatar color consistency
+      const roleIndex = new Map();
+      let idx = 0;
+      (p.messages || []).forEach(m => {
+        if (!roleIndex.has(m.role_id)) {
+          roleIndex.set(m.role_id, idx++);
+        }
+      });
+
+      els.officeMessages.innerHTML = groupMsgs.map(m => {
+        const role = ROLES_MAP[m.role_id] || { name: m.role_id, title: '' };
+        const ri = roleIndex.get(m.role_id) || 0;
+        const refs = (m.evidence_refs || []).map(r => `<span>📎 ${escapeHtml(r)}</span>`).join('');
+        return `
+          <div class="office-msg">
+            ${roleAvatar(m.role_id, ri)}
+            <div class="bubble">
+              <div class="bubble-head">
+                <span class="bubble-name">${escapeHtml(role.name)}</span>
+                <span class="bubble-title">${escapeHtml(role.title)}</span>
+                <span class="bubble-time">${formatTime(m.timestamp)}</span>
+              </div>
+              <div class="bubble-text">${escapeHtml(m.text)}</div>
+              ${refs ? `<div class="bubble-refs">${refs}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      // Sentinel messages (separate panel)
+      const sentinelMsgs = (p.messages || [])
+        .filter(m => m.msg_type === 'sentinel_dm')
+        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      els.officeSentinelMsgs.innerHTML = sentinelMsgs.length
+        ? sentinelMsgs.map(m => `
+          <div class="office-sentinel-msg">
+            <span class="sentinel-label">[暗哨 ${formatTime(m.timestamp)}]</span>
+            ${escapeHtml(m.text)}
+          </div>`).join('')
+        : '<div class="office-sentinel-msg"><span class="sentinel-label">[暗哨]</span> 暂无监控消息。</div>';
+    }
+
+    async function loadOfficeChat() {
+      try {
+        const json = await getJson('/api/office_chat?company=' + encodeURIComponent(els.company.value.trim() || 'Apple Inc.'));
+        renderOfficeChat(json.data);
+        setStatus('办公室数据已刷新', 'ok');
+      } catch (error) {
+        renderOfficeChat(demoOfficeChat);
+        setStatus('办公室使用演示数据', 'warn');
+      }
+    }
+
+
+    function setStatus(text, kind = '') {
+      els.statusText.textContent = text;
+      els.statusDot.className = `dot ${kind}`;
+    }
+
+    function tag(text, kind = '') {
+      return `<span class="tag ${kind}">${escapeHtml(text || '')}</span>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+
+    function item(title, text) {
+      return `<div class="item"><b>${escapeHtml(title)}</b><p>${escapeHtml(text)}</p></div>`;
+    }
+
+    function personaBriefItems(persona) {
+      if (!persona || !persona.role_count) return [];
+      const activeRoles = (persona.active_roles || [])
+        .map(role => role.display_name || role.nickname || role.agent_id)
+        .filter(Boolean)
+        .slice(0, 8);
+      const groups = (persona.groups || [])
+        .map(group => `${group.label || group.id || '组别'}·${(group.agent_ids || []).length}`)
+        .filter(Boolean)
+        .slice(0, 5);
+      return [
+        item('专家团外壳', `${persona.display_name || 'persona_surface'} · ${persona.role_count} roles · active ${persona.active_role_count || activeRoles.length || 0}`),
+        ...(activeRoles.length ? [item('本次激活角色', activeRoles.join(' / '))] : []),
+        ...(groups.length ? [item('角色分组', groups.join(' / '))] : []),
+        ...(persona.principle ? [item('角色原则', persona.principle)] : [])
+      ];
+    }
+
+    function personaMarkdown(persona) {
+      if (!persona || !persona.role_count) return '';
+      const activeRoles = (persona.active_roles || [])
+        .map(role => role.display_name || role.nickname || role.agent_id)
+        .filter(Boolean);
+      const lines = [
+        '## 专家团分工',
+        '',
+        `- 壳层: ${persona.display_name || 'persona_surface'} / ${persona.role_count} roles`,
+        `- 本次激活: ${persona.active_role_count || activeRoles.length || 0}`
+      ];
+      if (activeRoles.length) lines.push(`- 角色: ${activeRoles.slice(0, 12).join('、')}`);
+      if (persona.principle) lines.push(`- 原则: ${persona.principle}`);
+      return lines.join('\n');
+    }
+
+    function caseLensBriefItems(cognition) {
+      const lens = cognition?.case_investigation_lens;
+      if (!lens || !Array.isArray(lens.tracks)) return [];
+      return lens.tracks.slice(0, 3).map(track => {
+        const known = (track.known_signals || []).slice(0, 2).join('；') || '待补证';
+        const gaps = (track.evidence_gaps || []).slice(0, 2).join('；');
+        const suffix = gaps ? ` / 缺口: ${gaps}` : '';
+        return item(`${lens.name || '查案式调查'} · ${track.label || track.key}`, `${track.focus || ''} · ${track.evidence_state || 'unknown'} · ${known}${suffix}`);
+      });
+    }
+
+    function goodsFlowBriefItems(cognition) {
+      const flow = cognition?.goods_flow_profile;
+      if (!flow) return [];
+      const signals = [
+        ...(flow.product_signals || []),
+        ...(flow.industry_signals || []),
+        ...(flow.upstream_signals || []),
+        ...(flow.downstream_signals || []),
+        ...(flow.customer_signals || []),
+        ...(flow.supplier_signals || []),
+        ...(flow.concentration_signals || [])
+      ].filter(Boolean).slice(0, 4);
+      const text = signals.length ? signals.join('；') : `待补证 / ${flow.corroboration_status || 'unknown'}`;
+      return [item('货物流/生意链', `${flow.evidence_state || 'unknown'} · ${text}`)];
+    }
+
+    function peopleFlowBriefItems(cognition) {
+      const flow = cognition?.people_flow_profile;
+      if (!flow) return [];
+      const signals = [
+        ...(flow.controller_signals || []),
+        ...(flow.key_person_signals || []),
+        ...(flow.relationship_signals || []),
+        ...(flow.control_path_signals || []),
+        ...(flow.legal_pressure_signals || [])
+      ].filter(Boolean).slice(0, 4);
+      const text = signals.length ? signals.join('；') : `待补证 / ${flow.verification_status || 'unknown'}`;
+      return [item('人线/控制关系', `${flow.evidence_state || 'unknown'} · ${text}`)];
+    }
+
+    function caseLensMarkdown(cognition) {
+      const lens = cognition?.case_investigation_lens;
+      if (!lens || !Array.isArray(lens.tracks)) return '';
+      const lines = [`## ${lens.name || '查案式调查'}`, ''];
+      for (const track of lens.tracks.slice(0, 3)) {
+        lines.push(`- ${track.label || track.key}: ${track.focus || ''} / ${track.evidence_state || 'unknown'}`);
+        const known = (track.known_signals || []).slice(0, 4);
+        const gaps = (track.evidence_gaps || []).slice(0, 3);
+        const questions = (track.next_questions || []).slice(0, 2);
+        if (known.length) lines.push(`  - 已知: ${known.join('；')}`);
+        if (gaps.length) lines.push(`  - 缺口: ${gaps.join('；')}`);
+        if (questions.length) lines.push(`  - 追问: ${questions.join('；')}`);
+      }
+      return lines.join('\n');
+    }
+
+    function goodsFlowMarkdown(cognition) {
+      const flow = cognition?.goods_flow_profile;
+      if (!flow) return '';
+      const lines = [
+        '## 货物流/生意链画像',
+        '',
+        `- 证据状态: ${flow.evidence_state || 'unknown'} / 印证: ${flow.corroboration_status || 'unknown'}`
+      ];
+      for (const [label, key] of [
+        ['产品', 'product_signals'],
+        ['行业', 'industry_signals'],
+        ['上游', 'upstream_signals'],
+        ['下游', 'downstream_signals'],
+        ['客户', 'customer_signals'],
+        ['供应商', 'supplier_signals'],
+        ['渠道/伙伴', 'channel_or_partner_signals'],
+        ['价值链', 'value_chain_signals'],
+        ['集中度', 'concentration_signals'],
+        ['压力点', 'pressure_points']
+      ]) {
+        const values = (flow[key] || []).filter(Boolean).slice(0, 4);
+        if (values.length) lines.push(`- ${label}: ${values.join('；')}`);
+      }
+      const questions = (flow.next_questions || []).filter(Boolean).slice(0, 3);
+      if (questions.length) lines.push(`- 追问: ${questions.join('；')}`);
+      return lines.join('\n');
+    }
+
+    function peopleFlowMarkdown(cognition) {
+      const flow = cognition?.people_flow_profile;
+      if (!flow) return '';
+      const lines = [
+        '## 人线/控制关系画像',
+        '',
+        `- 证据状态: ${flow.evidence_state || 'unknown'} / 核验: ${flow.verification_status || 'unknown'}`
+      ];
+      for (const [label, key] of [
+        ['控制候选', 'controller_signals'],
+        ['关键人/网络', 'key_person_signals'],
+        ['关联关系', 'relationship_signals'],
+        ['控制路径', 'control_path_signals'],
+        ['法务压力', 'legal_pressure_signals'],
+        ['压力点', 'pressure_points']
+      ]) {
+        const values = (flow[key] || []).filter(Boolean).slice(0, 4);
+        if (values.length) lines.push(`- ${label}: ${values.join('；')}`);
+      }
+      const questions = (flow.next_questions || []).filter(Boolean).slice(0, 3);
+      if (questions.length) lines.push(`- 追问: ${questions.join('；')}`);
+      return lines.join('\n');
+    }
+
+
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 1800) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function postJson(path, payload) {
+      const res = await fetchWithTimeout(`${API_BASE}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }, 2200);
+      if (!res.ok) throw new Error(`${path} ${res.status}`);
+      return res.json();
+    }
+
+    async function getJson(path) {
+      const res = await fetchWithTimeout(`${API_BASE}${path}`, {}, 1600);
+      if (!res.ok) throw new Error(`${path} ${res.status}`);
+      return res.json();
+    }
+
+    function investigationPayload() {
+      const company = els.company.value.trim() || 'Apple Inc.';
+      const mode = els.mode.value;
+      const payload = { company, query_timeout_seconds: 12 };
+      if (mode === 'fixture_pack') payload.fixture_pack = true;
+      if (mode === 'official_public_smoke') payload.official_public_smoke = true;
+      return payload;
+    }
+
+    async function runInvestigation() {
+      els.run.disabled = true;
+      setStatus('运行中...', 'warn');
+      try {
+        const json = await postJson('/api/investigate', investigationPayload());
+        renderPacket(json.data);
+        setStatus('已连接本地 API', 'ok');
+      } catch (error) {
+        renderPacket(demoPacket);
+        setStatus('API 不可用，显示演示包', 'warn');
+      } finally {
+        els.run.disabled = false;
+      }
+    }
+
+    async function loadCatalogs() {
+      try {
+        const [catalog, release] = await Promise.all([
+          getJson('/api/connectors'),
+          getJson('/api/release')
+        ]);
+        renderCatalog(catalog.data);
+        renderRelease(release.data);
+        setStatus('目录已刷新', 'ok');
+      } catch (error) {
+        renderCatalog(demoCatalog);
+        renderRelease(demoRelease);
+        setStatus('目录使用演示数据', 'warn');
+      }
+    }
+
+    function renderPacket(packet) {
+      currentPacket = packet;
+      const risk = packet.risk_brief || {};
+      const quality = packet.quality_gate || {};
+      const summary = packet.summary || {};
+      els.riskScore.textContent = risk.risk_score ?? '--';
+      els.qualityScore.textContent = quality.score ?? '--';
+      els.evidenceCount.textContent = summary.evidence_count ?? packet.evidence_ledger?.length ?? '--';
+      els.verdictTag.textContent = risk.verdict_label || risk.verdict || '待判断';
+      els.verdictTag.className = `tag ${risk.risk_score >= 70 ? 'warn' : 'ok'}`;
+      els.qualityTag.textContent = quality.status || '待检查';
+      els.qualityTag.className = `tag ${quality.status === 'ready_for_human_review' ? 'ok' : 'warn'}`;
+      els.deliveryStatus.textContent = quality.status || '待检查';
+      els.deliveryStatus.className = `tag ${quality.status === 'ready_for_human_review' ? 'ok' : 'warn'}`;
+      const findingItems = (risk.key_findings || []).map(f => item(f.title || f.severity || '发现', f.why_it_matters || f.rationale || ''));
+      const caseLensItems = caseLensBriefItems(packet.enterprise_cognition || {});
+      const goodsFlowItems = goodsFlowBriefItems(packet.enterprise_cognition || {});
+      const peopleFlowItems = peopleFlowBriefItems(packet.enterprise_cognition || {});
+      els.briefList.innerHTML = [...findingItems, ...caseLensItems, ...goodsFlowItems, ...peopleFlowItems, ...personaBriefItems(packet.persona_surface)].join('') || empty('暂无关键发现');
+      els.actionsList.innerHTML = (packet.next_actions || quality.next_actions || []).map((x, i) => item(`动作 ${i + 1}`, x)).join('') || empty('暂无下一步');
+      els.qualityList.innerHTML = [
+        ...(quality.blockers || []).map(x => item('阻断项', x)),
+        ...(quality.warnings || []).map(x => item('警告', x)),
+        ...(quality.strengths || []).map(x => item('强项', x))
+      ].join('') || empty('暂无质量项');
+      els.reportMarkdown.textContent = packet.report_markdown || '';
+      renderEvidence(packet.evidence_ledger || []);
+      renderGraph(packet.graph || {});
+    }
+
+    function exportBaseName() {
+      const company = (els.company.value || 'investigation').trim();
+      const safe = company
+        .replace(/[\\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, '-')
+        .replace(/[.-]+$/g, '')
+        .slice(0, 80) || 'investigation';
+      return `wallstreet-tieling-${safe}`;
+    }
+
+    function downloadText(filename, mimeType, content) {
+      const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function packetMarkdown(packet) {
+      const report = packet?.report_markdown || '';
+      if (report.trim()) return report;
+      const risk = packet?.risk_brief || {};
+      const quality = packet?.quality_gate || {};
+      const findings = (risk.key_findings || []).map(f => `- ${f.title || f.severity || '发现'}：${f.why_it_matters || f.rationale || ''}`).join('\n');
+      const actions = (packet?.next_actions || quality.next_actions || []).map(x => `- ${x}`).join('\n');
+      return [
+        `# ${els.company.value || '企业调查'} 尽调快报`,
+        '',
+        `- 风险判断：${risk.verdict_label || risk.verdict || '待判断'}`,
+        `- 风险分：${risk.risk_score ?? '--'}`,
+        `- 交付质量：${quality.status || '待检查'} / ${quality.score ?? '--'}`,
+        '',
+        personaMarkdown(packet?.persona_surface),
+        '',
+        caseLensMarkdown(packet?.enterprise_cognition || {}),
+        '',
+        goodsFlowMarkdown(packet?.enterprise_cognition || {}),
+        '',
+        peopleFlowMarkdown(packet?.enterprise_cognition || {}),
+        '',
+        '## 关键发现',
+        findings || '- 暂无关键发现',
+        '',
+        '## 下一步',
+        actions || '- 暂无下一步'
+      ].join('\n');
+    }
+
+    function packetHtml(packet) {
+      const title = `${els.company.value || '企业调查'} - 华尔街驻铁岭办事处`;
+      const evidenceRows = (packet?.evidence_ledger || []).map(row => `
+        <tr><td>${escapeHtml(row.source)}</td><td>${escapeHtml(row.title)}</td><td>${escapeHtml(row.entity_match_level || row.record_kind || '')}</td><td>${escapeHtml(row.confidence ?? '')}</td><td>${escapeHtml(row.verification_hint || '')}</td></tr>
+      `).join('');
+      const markdown = packetMarkdown(packet);
+      return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body{font-family:Inter,system-ui,"Noto Sans SC",sans-serif;margin:32px;color:#17201a;line-height:1.55}
+    h1{font-size:24px;margin:0 0 16px}
+    pre{white-space:pre-wrap;background:#111814;color:#edf5ed;padding:16px;border-radius:8px}
+    table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px}
+    th,td{border-bottom:1px solid #d7ddd4;text-align:left;padding:8px;vertical-align:top}
+    th{color:#617064}
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <pre>${escapeHtml(markdown)}</pre>
+  <h2>证据账本</h2>
+  <table><thead><tr><th>来源</th><th>标题</th><th>匹配</th><th>置信度</th><th>准入</th></tr></thead><tbody>${evidenceRows || '<tr><td colspan="5">暂无证据</td></tr>'}</tbody></table>
+</body>
+</html>`;
+    }
+
+    function exportCurrent(format) {
+      const packet = currentPacket || demoPacket;
+      const base = exportBaseName();
+      if (format === 'markdown') downloadText(`${base}.md`, 'text/markdown', packetMarkdown(packet));
+      if (format === 'json') downloadText(`${base}.json`, 'application/json', JSON.stringify(packet, null, 2));
+      if (format === 'html') downloadText(`${base}.html`, 'text/html', packetHtml(packet));
+    }
+
+    function renderEvidence(rows) {
+      els.evidenceRows.innerHTML = rows.map(row => `
+        <tr>
+          <td>${escapeHtml(row.source)}</td>
+          <td>${escapeHtml(row.title)}</td>
+          <td>${tag(row.entity_match_level || row.record_kind || 'unknown', row.record_kind === 'lead' ? 'warn' : 'ok')}</td>
+          <td>${escapeHtml(row.confidence ?? '')}</td>
+          <td>${escapeHtml(row.verification_hint || '')}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="5">${empty('暂无证据')}</td></tr>`;
+    }
+
+    function renderGraph(graph) {
+      const nodes = (graph.nodes || []).slice(0, 12);
+      const edges = (graph.edges || []).slice(0, 18);
+      els.graphCanvas.innerHTML = '';
+      if (!nodes.length) {
+        els.graphCanvas.innerHTML = empty('暂无图谱节点');
+        return;
+      }
+      const positions = new Map();
+      nodes.forEach((node, index) => {
+        const angle = (Math.PI * 2 * index) / Math.max(nodes.length, 1);
+        const x = index === 0 ? 50 : 50 + Math.cos(angle) * 34;
+        const y = index === 0 ? 50 : 50 + Math.sin(angle) * 34;
+        positions.set(node.id, { x, y });
+      });
+      edges.forEach(edge => {
+        const from = positions.get(edge.from || edge.from_id);
+        const to = positions.get(edge.to || edge.to_id);
+        if (!from || !to) return;
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const div = document.createElement('div');
+        div.className = 'edge';
+        div.style.left = `${from.x}%`;
+        div.style.top = `${from.y}%`;
+        div.style.width = `${length}%`;
+        div.style.transform = `rotate(${angle}deg)`;
+        els.graphCanvas.appendChild(div);
+      });
+      nodes.forEach((node, index) => {
+        const pos = positions.get(node.id);
+        const div = document.createElement('div');
+        div.className = `node ${index === 0 ? 'seed' : ''}`;
+        div.style.left = `${pos.x}%`;
+        div.style.top = `${pos.y}%`;
+        div.title = node.name || node.id;
+        div.textContent = node.name || node.id;
+        els.graphCanvas.appendChild(div);
+      });
+    }
+
+    function renderCatalog(catalog) {
+      const benchmark = catalog.qyyjt_benchmark || {};
+      const qSummary = benchmark.summary || catalog.summary?.qyyjt_benchmark || {};
+      els.p0Count.textContent = qSummary.p0_queue_count ?? '--';
+      els.connectorRows.innerHTML = (catalog.connectors || []).map(row => `
+        <tr>
+          <td>${escapeHtml(row.name)}</td>
+          <td>${tag(row.status, row.production_ready ? 'ok' : 'warn')}</td>
+          <td>${row.default_enabled ? tag('默认', 'ok') : tag('关闭')}</td>
+          <td>${escapeHtml(row.admission?.decision || '')}</td>
+          <td>${escapeHtml((row.notes || [])[0] || '')}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="5">${empty('暂无连接器目录')}</td></tr>`;
+      els.qyyjtRows.innerHTML = (qSummary.p0_queue || []).map(row => `
+        <tr>
+          <td>${escapeHtml(row.module)}</td>
+          <td>${tag(row.parity_priority, 'warn')}</td>
+          <td>${escapeHtml(row.coverage_class)}</td>
+          <td><b>${escapeHtml(row.field_contract?.record_type || '')}</b><br><span class="muted small">${escapeHtml((row.field_contract?.required_fields || []).join(', '))}</span></td>
+          <td>${escapeHtml(row.next_action)}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="5">${empty('暂无 QYYJT 队列')}</td></tr>`;
+    }
+
+    function renderRelease(release) {
+      const variants = Object.keys(release.contract?.variants || {});
+      const persona = release.persona_surface || release.contract?.persona_surface || {};
+      const groups = (persona.groups || []).map(group => `${group.label || group.id || '组别'}·${(group.agent_ids || []).length}`).join(' / ');
+      els.releaseList.innerHTML = [
+        item('发布形态', variants.join(', ') || 'unknown'),
+        ...(persona.role_count ? [item('拟人化壳层', `${persona.display_name || 'persona_surface'} · ${persona.role_count} roles`)] : []),
+        ...(groups ? [item('角色分组', groups)] : []),
+        ...(persona.signature_features || []).slice(0, 2).map((x, i) => item(`壳层特征 ${i + 1}`, x)),
+        ...(release.blockers || []).map(x => item('剩余门槛', x)),
+        ...(release.next_focus || []).map(x => item('下一焦点', x))
+      ].join('');
+    }
+
+    function empty(text) {
+      return `<div class="empty">${escapeHtml(text)}</div>`;
+    }
+
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+    els.run.addEventListener('click', runInvestigation);
+    els.loadCatalog.addEventListener('click', loadCatalogs);
+    els.exportMarkdown.addEventListener('click', () => exportCurrent('markdown'));
+    els.exportJson.addEventListener('click', () => exportCurrent('json'));
+    els.exportHtml.addEventListener('click', () => exportCurrent('html'));
+
+    renderPacket(demoPacket);
+    loadCatalogs();
+    renderOfficeChat(demoOfficeChat);
+    els.officeRefreshBtn.addEventListener('click', loadOfficeChat);
+  </script>
+</body>
+</html>

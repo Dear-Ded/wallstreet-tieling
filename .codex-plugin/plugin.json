@@ -1,0 +1,40 @@
+{
+  "name": "wallstreet-tieling",
+  "version": "0.5.0",
+  "description": "Enterprise intelligence and risk discovery system for evidence-first due diligence workflows.",
+  "author": {
+    "name": "Dear-Ded",
+    "url": "https://github.com/Dear-Ded"
+  },
+  "homepage": "https://dear-ded.github.io/wallstreet-tieling/",
+  "repository": "https://github.com/Dear-Ded/wallstreet-tieling",
+  "license": "MIT",
+  "keywords": [
+    "due-diligence",
+    "risk-discovery",
+    "enterprise-intelligence",
+    "osint",
+    "evidence-graph"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Wallstreet Tieling",
+    "shortDescription": "Evidence-first enterprise risk discovery and due diligence.",
+    "longDescription": "Wallstreet Tieling turns a company name into a structured investigative workflow: public or authorized data sources, evidence records, entity graphs, risk events, timelines, monitoring deltas, and report-ready findings. It is built for information equality, provenance, and practical risk discovery rather than ungrounded summaries.",
+    "developerName": "Dear-Ded",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://dear-ded.github.io/wallstreet-tieling/",
+    "privacyPolicyURL": "https://github.com/Dear-Ded/wallstreet-tieling",
+    "termsOfServiceURL": "https://github.com/Dear-Ded/wallstreet-tieling",
+    "brandColor": "#2563EB",
+    "defaultPrompt": [
+      "Investigate a company and build an evidence graph.",
+      "Run an explicit baseline re-check and explain new signals; continuous monitoring is later-version scope.",
+      "Audit a datasource connector for provenance quality."
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+name: Deploy GitHub Pages
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare public static site
+        run: |
+          mkdir -p public
+          cp index.html public/index.html
+          cp README.md public/README.md
+          cp LICENSE public/LICENSE
+          cp robots.txt public/robots.txt
+          cp sitemap.xml public/sitemap.xml
+          mkdir -p public/docs public/release
+          cp docs/RELEASE_PORTAL.md public/docs/RELEASE_PORTAL.md
+          cp release/variants.yaml public/release/variants.yaml
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: 'public' }
+      - id: deployment
+        uses: actions/deploy-pages@v4

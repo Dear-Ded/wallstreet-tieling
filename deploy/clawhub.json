@@ -1,0 +1,71 @@
+﻿{
+  "name": "wallstreet-tieling",
+  "displayName": "华尔街驻铁岭办事处",
+  "version": "0.5.0",
+  "description": "开源企业情报与风险发现系统。面向公开或用户授权数据，提供企业尽调、财务研究、行业研究、风险事件、证据图谱和报告生成。",
+  "description_en": "Open-source enterprise intelligence and risk discovery system for public or user-authorized data. Due diligence, financial research, industry research, risk events, evidence graphs, and report-ready findings.",
+  "category": "finance",
+  "subcategory": "credit-intelligence",
+  "tags": [
+    "finance",
+    "credit",
+    "due-diligence",
+    "banking",
+    "kyc",
+    "aml",
+    "osint",
+    "corporate-investigation",
+    "risk-assessment",
+    "financial-analysis",
+    "尽调",
+    "信贷",
+    "风控",
+    "反洗钱"
+  ],
+  "author": "Dear-Ded",
+  "homepage": "https://dear-ded.github.io/wallstreet-tieling/",
+  "repository": "https://github.com/Dear-Ded/wallstreet-tieling",
+  "license": "MIT",
+  "compatibility": {
+    "openclaw": ">=1.0.0",
+    "workbuddy": "*",
+    "codebuddy": "*"
+  },
+  "requirements": {
+    "optional": [
+      "qcc-company",
+      "tyc-mcp",
+      "python",
+      "akshare"
+    ],
+    "recommended": [
+      "web_search",
+      "web_fetch"
+    ]
+  },
+  "triggerWords": [
+    "尽调",
+    "风险监控",
+    "公开情报",
+    "财务分析",
+    "行业研究",
+    "风险预警",
+    "授信",
+    "信贷审查",
+    "企业查询",
+    "股东穿透",
+    "实控人",
+    "关联方",
+    "担保圈",
+    "due diligence",
+    "credit analysis",
+    "loan review",
+    "KYC",
+    "KYB",
+    "AML"
+  ],
+  "install": "npx skills add Dear-Ded/wallstreet-tieling -g -y",
+  "screenshots": [
+    "https://dear-ded.github.io/wallstreet-tieling/preview.png"
+  ]
+}

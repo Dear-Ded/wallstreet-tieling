@@ -1,0 +1,140 @@
+{
+  "name": "wallstreet-tieling",
+  "version": "0.5.0",
+  "description": "Executable MCP server for Wallstreet Tieling enterprise intelligence and risk discovery.",
+  "mcpServers": {
+    "wallstreet-tieling": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "wallstreet-tieling",
+        "--mcp"
+      ],
+      "env": {
+        "WST_MCP_TIMEOUT_MS": "120000"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "investigate_company",
+      "description": "Run one-click enterprise investigation and return an investigation_packet with one_click_readiness, report_exports, source-resilience recovery action, relationship graph auditability, risk brief, profile brief, quality gate, evidence ledger, monitoring seed, report markdown, and evidence graph.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "description": "Company name or unified social credit identifier."
+          },
+          "depth": {
+            "type": "string",
+            "enum": [
+              "quick",
+              "standard",
+              "deep"
+            ],
+            "default": "standard"
+          },
+          "config": {
+            "type": "string",
+            "description": "Optional datasource YAML path for live retrieval routing."
+          },
+          "offline_fixture": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use deterministic local public-record fixture."
+          },
+          "fixture_pack": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use multi-source demo fixture pack."
+          },
+          "query_timeout_seconds": {
+            "type": "number",
+            "default": 20,
+            "minimum": 0.1,
+            "maximum": 120,
+            "description": "Maximum seconds per retrieval task before returning a timeout diagnostic, clamped to 0.1..120."
+          },
+          "retrieval_concurrency": {
+            "type": "number",
+            "default": 4,
+            "minimum": 1,
+            "maximum": 20,
+            "description": "Maximum concurrent retrieval tasks, clamped to 1..20."
+          },
+          "fanout_rounds": {
+            "type": "number",
+            "default": 1,
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Bounded associative expansion rounds, clamped to 0..3."
+          },
+          "max_fanout_tasks": {
+            "type": "number",
+            "default": 24,
+            "minimum": 0,
+            "maximum": 80,
+            "description": "Maximum generated fan-out tasks, clamped to 0..80."
+          }
+        },
+        "required": [
+          "company_name"
+        ]
+      }
+    },
+    {
+      "name": "due_diligence",
+      "description": "Compatibility alias for investigate_company."
+    },
+    {
+      "name": "people_investigation",
+      "description": "Prepare a public or user-authorized key-person investigation brief."
+    },
+    {
+      "name": "financial_analysis",
+      "description": "Return the Financial Intelligence Engine checklist for profitability, cash-flow quality, receivables, inventory, capex, related-party transactions, and fraud-signal analysis."
+    },
+    {
+      "name": "anti_nominee_detection",
+      "description": "Return an evidence-first anti-nominee / beneficial-owner penetration checklist."
+    },
+    {
+      "name": "connector_catalog",
+      "description": "Return datasource catalog, default-enabled connectors, production/admission decisions, routing blockers, and source policy."
+    },
+    {
+      "name": "release_readiness",
+      "description": "Return desktop-agent release contract and remaining gates for Universal, Codex, Claude Code, Hermes, Doubao Office Task Mode, OpenClaude/open-source agents, and WorkBuddy."
+    },
+    {
+      "name": "development_requirements",
+      "description": "Return P0/P1/P2/Future development requirement levels, current completion, QYYJT current-version scope, and next focus."
+    },
+    {
+      "name": "aggregate_subject",
+      "description": "Run bounded subject-profile aggregation for a company, controller, or related entity and return relationship graph/profile details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "subject_id": {
+            "type": "string",
+            "description": "Subject entity id to aggregate, such as company:demo_co or a known profile id."
+          },
+          "subject_name": {
+            "type": "string",
+            "description": "Optional readable subject name for report labels."
+          },
+          "max_depth": {
+            "type": "number",
+            "default": 3,
+            "description": "Bounded association depth, clamped to 1..5."
+          }
+        },
+        "required": [
+          "subject_id"
+        ]
+      }
+    }
+  ]
+}

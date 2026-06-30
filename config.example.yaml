@@ -1,0 +1,88 @@
+﻿# wallstreet-tieling configuration template
+# Version: 0.5.0
+#
+# Copy this file to config.yaml for local use.
+# Do not commit config.yaml if it contains real API keys, tokens, authorized session state,
+# private endpoints, or customer-specific configuration.
+
+# API settings
+# Environment variables take priority in most deployment setups.
+api_key: ""                         # Prefer DEEPSEEK_API_KEY or OPENAI_API_KEY.
+api_base: "https://api.deepseek.com/v1"
+default_model: "deepseek-chat"
+
+# Runtime and cost controls
+default_concurrency: 5
+max_tokens: 8192
+temperature: 0.3
+api_timeout_seconds: 300
+
+# Datasource settings
+datasources_config: "adapters/multi_datasource/datasources.yaml"
+auto_check_connectivity: true
+ping_timeout: 5
+
+# Optional local public/authorized subject indexes.
+# Run `python bin/local_index_audit.py <file> --fail-on-review` before enabling.
+local_subject_indexes:
+  opensanctions_index_path: ""
+  idb_index_path: ""
+  require_audit_ready: true
+
+# Retrieval/provider defaults
+public_web_search:
+  enabled: false
+  provider_type: "searxng"
+  searxng_base_url: ""
+  max_results: 10
+  requires_url_verification: true
+
+telegram_public_service:
+  enabled: false
+  source_review_required: true
+  authorization_scope: "public_or_user_authorized"
+  bot_handle: ""
+  endpoint: ""
+  source_description: ""
+
+qyyjt:
+  enabled: false
+  authorization_report_on_startup: false
+  smoke_api: false
+  授权会话状态_store: "~/.wallstreet/授权会话状态s/qyyjt_授权会话状态s.json"
+
+# Output settings
+output_dir: "output"
+report_format: "markdown"
+auto_open_report: false
+
+# Agent and context budgets
+agent_budget_tokens: 8000
+survey_budget_tokens: 60000
+context_capsules:
+  enabled: true
+  max_records_per_source: 20
+  max_evidence_claims_per_record: 5
+
+# Monitoring
+risk_monitor:
+  enabled: false
+  schedule: "manual"
+  companies_file: ""
+  event_store: "output/risk-events.jsonl"
+
+# Logging
+log_level: "INFO"
+log_file: ""
+
+# Reliability
+retry:
+  max_retries: 3
+  backoff_factor: 1.0
+  retryable_status: [408, 409, 425, 429, 500, 502, 503, 504, 520, 522, 524]
+
+# Advanced switches
+enable_conditional_branch: true
+max_conditional_signals: 2
+circuit_breaker_fail_threshold: 5
+circuit_breaker_cooldown_sec: 30.0

@@ -1,0 +1,119 @@
+# 最小可用配置 - 仅包含可达的公共数据源
+# 使用方法: python -m multi_datasource --config datasources.minimal.yaml
+
+version: "2.0"
+
+sources:
+  # ---------------------------------------------------------------------------
+  # GitHub REST API (无需认证的公共 API)
+  # 可达性: ✅ 稳定
+  # 用途: 查询 GitHub 仓库、用户、Issues 等
+  # ---------------------------------------------------------------------------
+  - name: "github_api"
+    type: "rest_api"
+    enabled: true
+    priority: 10  # 最高优先级
+    
+    # 基础配置
+    base_url: "https://api.github.com"
+    timeout: 30  # 秒
+    description: "GitHub REST API - 公共访问 (最小配置)"
+    
+    # 请求头配置
+    headers:
+      Accept: "application/vnd.github.v3+json"
+      User-Agent: "MultiDataSource/2.0"
+    
+    # 默认查询参数
+    params:
+      per_page: 30  # 减少默认返回数量，加快响应
+      sort: "stars"
+      order: "desc"
+    
+    # 认证配置 (无需认证)
+    auth:
+      type: "none"
+    
+    # 限流配置 (GitHub 未认证请求限制约 10 次/秒)
+    rate_limit:
+      requests_per_second: 5.0  # 保守设置
+      burst_size: 5
+      enabled: true
+    
+    # 重试配置
+    retry:
+      max_retries: 2  # 减少重试次数
+      backoff_factor: 1.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    
+    # 可达性检测
+    ping: true
+    ping_endpoint: "https://api.github.com/rate_limit"  # 使用 rate_limit 端点检测
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    
+    # 缓存配置 (启用缓存，减少 API 调用)
+    cache_enabled: true
+    cache_ttl: 300  # 5 分钟
+    
+    # 自定义配置
+    custom:
+      api_version: "v3"
+      supports_pagination: true
+
+  # ---------------------------------------------------------------------------
+  # JSONPlaceholder (免费的在线 REST API 测试工具)
+  # 可达性: ✅ 稳定
+  # 用途: 测试和开发
+  # ---------------------------------------------------------------------------
+  - name: "jsonplaceholder"
+    type: "rest_api"
+    enabled: true
+    priority: 50  # 中等优先级
+    
+    base_url: "https://jsonplaceholder.typicode.com"
+    timeout: 15
+    description: "JSONPlaceholder - 免费的在线 REST API 测试工具 (最小配置)"
+    
+    headers:
+      Content-Type: "application/json"
+    
+    auth:
+      type: "none"
+    
+    # 禁用限流 (测试 API 无限流)
+    rate_limit:
+      enabled: false
+    
+    retry:
+      max_retries: 2
+      backoff_factor: 0.5
+    
+    # 可达性检测
+    ping: true
+    ping_endpoint: ""  # 空则使用 base_url
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    
+    # 缓存配置
+    cache_enabled: true
+    cache_ttl: 60  # 1 分钟
+
+# =============================================================================
+# 使用说明
+# =============================================================================
+# 1. 测试可达性:
+#    python adapters/multi_datasource/ping_datasources.py --config adapters/multi_datasource/datasources.minimal.yaml
+#
+# 2. 运行示例:
+#    python -m adapters.multi_datasource --config adapters/multi_datasource/datasources.minimal.yaml
+#
+# 3. 在代码中使用:
+#    ```python
+#    await SearchEngine.initialize("adapters/multi_datasource/datasources.minimal.yaml")
+#    result = await SearchEngine.search("github_api", "users/octocat")
+#    ```
+#
+# 4. 添加新的数据源:
+#    编辑此文件，添加新的数据源配置，然后运行 ping_datasources.py 验证可达性
+# =============================================================================

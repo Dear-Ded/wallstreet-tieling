@@ -1,0 +1,212 @@
+﻿product:
+  name: wallstreet-tieling
+  display_name: "Wallstreet Tieling"
+  positioning: "Enterprise Intelligence & Risk Discovery System"
+  public_portal_repo: "https://github.com/Dear-Ded/wallstreet-tieling"
+  signature_features:
+    - "13-role anthropomorphic expert-team surface"
+    - "Anthropomorphic shell and persona-consistent product framing"
+    - "Broad public-or-authorized evidence retrieval"
+    - "Evidence graph, risk-event, and report/export surfaces"
+    - "Desktop-agent first delivery; polished HTML, mini-program, app, and desktop app are later-version targets"
+    - "Continuous monitoring is a later-version target"
+  shared_core:
+    - core.engine.Engine
+    - core.enterprise_cognition.EnterpriseCognitionEngine
+    - core.intelligence_retrieval.InvestigativeRetrievalPlanner
+    - core.risk_event_store.RiskEventStore
+    - core.financial_analyzer_v2.EnhancedFinancialAnalyzer
+    - core.industry_intelligence.IndustryIntelligenceEngine
+    - core.product_intelligence.ProductIntelligenceEngine
+
+variants:
+  universal:
+    display_name: "Universal"
+    audience: "Any desktop agent, coding agent, terminal agent, or automation host that can run the CLI, REST API, MCP server, Docker image, or copy the skill prompt."
+    entrypoints:
+      - "SKILL.md"
+      - "bin/cli.js"
+      - "api/server.py"
+      - "adapters/cli.py"
+      - "deploy/mcp-server.json"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+    packaging:
+      - "npm package"
+      - "Docker image"
+      - "REST API"
+      - "MCP server"
+      - "copy/paste skill prompt"
+    required_capabilities:
+      - "Company investigation planning"
+      - "Evidence-first report generation"
+      - "Enterprise cognition profile"
+      - "Risk event ledger"
+      - "Agent-readable JSON and Markdown packet outputs"
+    readiness: "alpha"
+    next_gate:
+      - "Run host smoke across CLI, REST API, and MCP entrypoints"
+      - "Add host-neutral agent packet acceptance for JSON and Markdown outputs"
+
+  codex:
+    display_name: "Codex"
+    audience: "Codex users, Codex plugin marketplace, and repo-maintenance workflows."
+    entrypoints:
+      - ".codex-plugin/plugin.json"
+      - "skills/wallstreet-tieling/SKILL.md"
+      - "bin/retrieval_plan.py"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+    packaging:
+      - "Codex plugin"
+      - "Codex skill"
+    required_capabilities:
+      - "Plugin manifest validation"
+      - "Marketplace-safe skill metadata"
+      - "Repo development handoff workflow"
+      - "No secrets in plugin files"
+    readiness: "alpha"
+    next_gate:
+      - "Add Codex CI workflow for packaged MCP smoke"
+      - "Keep packaged MCP smoke in acceptance for connector_catalog, release_readiness, and investigate_company"
+      - "Add Codex smoke workflow for retrieval plan and cognition profile"
+      - "Prepare marketplace submission screenshots and final review notes"
+
+  claude_code:
+    display_name: "Claude Code"
+    audience: "Claude Code and Claude Project users who consume repository instructions and MCP-friendly assets."
+    entrypoints:
+      - "CLAUDE.md"
+      - "SKILL.md"
+      - "adapters/README.md"
+      - "docs/CLAUDE_CODE_ADAPTER.md"
+      - "deploy/mcp-server.json"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+    packaging:
+      - "Claude Code repo instructions"
+      - "Claude Project knowledge pack"
+      - "MCP-friendly deployment notes"
+    required_capabilities:
+      - "Repo handoff instructions"
+      - "Skill prompt fallback"
+      - "MCP connector mapping"
+      - "No browser cookies or tokens in repo"
+    readiness: "alpha"
+    next_gate:
+      - "Run Claude Code host smoke with MCP connector_catalog and release_readiness"
+      - "Publish Claude Project knowledge-pack bundle"
+      - "Add Claude-specific CI smoke checklist"
+
+  hermes:
+    display_name: "Hermes"
+    audience: "Hermes-style desktop/coding agents that consume repository prompts, CLI tools, and MCP-compatible local services."
+    entrypoints:
+      - "SKILL.md"
+      - "bin/cli.js"
+      - "deploy/mcp-server.json"
+      - "docs/API_CONTRACTS.md"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "deploy/multi-platform-guide.md"
+    packaging:
+      - "Skill prompt"
+      - "CLI tool"
+      - "MCP deployment manifest"
+      - "API contract notes"
+    required_capabilities:
+      - "Plain-language company investigation invocation"
+      - "MCP release_readiness and connector_catalog discovery"
+      - "JSON investigation packet parsing"
+      - "No host-specific browser or UI dependency"
+    readiness: "alpha"
+    next_gate:
+      - "Run Hermes host smoke for load_skill, release_readiness, connector_catalog, and investigate_company"
+      - "Document Hermes configuration and timeout defaults"
+
+  doubao_office_task_mode:
+    display_name: "Doubao Office Task Mode"
+    audience: "豆包办公任务模式 and similar office-task agents that need copy/paste prompts, CLI/API calls, and structured report packets."
+    entrypoints:
+      - "SKILL.md"
+      - "bin/cli.js"
+      - "api/server.py"
+      - "docs/API_CONTRACTS.md"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "deploy/multi-platform-guide.md"
+    packaging:
+      - "Copy/paste skill prompt"
+      - "CLI tool"
+      - "REST API"
+      - "Structured Markdown/JSON report packet"
+    required_capabilities:
+      - "One-line task instruction compatibility"
+      - "Office-agent readable Markdown output"
+      - "Evidence ledger and next-action extraction"
+      - "Default-safe public or user-authorized source policy"
+    readiness: "alpha"
+    next_gate:
+      - "Run office-task prompt smoke with default public investigation output"
+      - "Add concise Chinese operator handoff for task-mode hosts"
+
+  open_claude_agents:
+    display_name: "OpenClaude / Open Source Agents"
+    audience: "OpenClaude-style open-source desktop, terminal, and coding agents that can read repo instructions and call local CLI/API/MCP tools."
+    entrypoints:
+      - "SKILL.md"
+      - "CLAUDE.md"
+      - "bin/cli.js"
+      - "deploy/mcp-server.json"
+      - "docs/API_CONTRACTS.md"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "deploy/multi-platform-guide.md"
+    packaging:
+      - "Repository instruction pack"
+      - "Skill prompt"
+      - "CLI tool"
+      - "MCP server"
+      - "REST API"
+    required_capabilities:
+      - "Host-neutral instructions without marketplace assumptions"
+      - "MCP or CLI fallback execution"
+      - "Structured packet and report parsing"
+      - "No dependency on polished HTML UI"
+    readiness: "alpha"
+    next_gate:
+      - "Create open-source agent smoke checklist covering CLI, MCP, and API modes"
+      - "Document minimal environment variables and local runtime requirements"
+
+  workbuddy_expert_team:
+    display_name: "WorkBuddy Expert Team"
+    audience: "WorkBuddy/OpenClaw/CodeBuddy users who want the 13-role expert-team workflow."
+    entrypoints:
+      - "adapters/workbuddy.py"
+      - "SKILL.md"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "sub-skills/"
+    packaging:
+      - "WorkBuddy skill"
+      - "Expert-team adapter"
+    required_capabilities:
+      - "13-role routing"
+      - "WorkBuddy tool delegation"
+      - "Multi-source adapter fallback"
+      - "Output persistence"
+    readiness: "alpha"
+    next_gate:
+      - "Run WorkBuddy host smoke with connector_catalog, release_readiness, and default_public_intel"
+      - "Add expert-team mode smoke test"
+      - "Document host tool delegation and fallback behavior"
+
+release_gates:
+  public_claims:
+    - "Every public feature claim must map to an entrypoint, test, or roadmap item."
+    - "Verified data-source claims must distinguish live, configured, planned, and fallback sources."
+    - "Marketing language must not imply private-data scraping or unauthorized access."
+  security:
+    - "No API keys, PATs, cookies, browser profiles, local SQLite collaboration databases, or generated secrets."
+    - "Credentials must come from environment variables or user-authorized host integrations."
+    - "Personal/social-web clues remain leads until corroborated by public or authorized sources."
+  quality:
+    - "Focused tests pass for touched surfaces."
+    - "npm run acceptance passes before release claims are updated."
+    - "Desktop-agent entrypoints expose equivalent release_readiness, connector_catalog, and investigate_company behavior."
+    - "Agent-readable outputs include Markdown and JSON packet forms without requiring the polished HTML workbench."
+    - "A release-readiness document exists for each marketplace or host submission."
+    - "Core outputs include evidence gaps instead of fabricated facts."
