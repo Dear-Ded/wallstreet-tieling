@@ -558,15 +558,18 @@ def _delivery_closure_summary() -> dict[str, Any]:
         "document": "docs/DESKTOP_AGENT_ALPHA_DELIVERY.md",
         "baseline_sequence": [
             "release_readiness",
-            "delivery_audit",
             "connector_catalog",
+            "source_preflight",
             "development_requirements",
             "agent_tool_adapters",
             "investigate_company",
         ],
-        "followup_tools": ["aggregate_subject"],
+        "followup_tools": ["aggregate_subject", "verify_report_bundle"],
         "required_verification_commands": [
             "npm run acceptance",
+            "npm run release:agent-smoke",
+            "npm run release:submission-snapshot",
+            "npm run agent:install-smoke",
             "npm run codex:mcp-smoke",
             "npm run agent:host-smoke",
             "npm run api:smoke",
@@ -581,20 +584,30 @@ def _delivery_closure_summary() -> dict[str, Any]:
             "quality_gate",
             "evidence_ledger",
             "one_click_readiness",
+            "runtime_autopilot",
+            "runtime_autopilot.execution_plan",
+            "runtime_autopilot.source_runbook",
+            "source_preflight",
+            "source_preflight.no_prompt_contract",
+            "delivery_closure.advanced_autopilot_contract",
             "one_click_readiness.capital_risk_panel",
             "one_click_readiness.capital_risk_panel.report_visibility",
             "qyyjt_public_origin_handoff",
             "report_exports.agent_decision_digest",
+            "report_exports.agent_decision_digest.source_preflight",
             "report_exports.premium_html",
             "report_exports.portable_html.premium_profile",
             "report_exports.directory_bundle",
             "report_exports.directory_bundle.agent_handoff",
+            "report_exports.directory_bundle.agent_handoff.source_preflight",
             "report_exports.directory_bundle.agent_handoff.report_visibility",
             "report_exports.directory_bundle.agent_handoff.report_visibility.premium_html",
             "report_exports.directory_bundle.agent_handoff.report_visibility.image_evidence",
             "report_exports.directory_bundle.agent_handoff.capital_risk_panel",
             "report_exports.directory_bundle.agent_handoff.source_strengthening",
             "report_exports.directory_bundle.agent_handoff.delivery_decision",
+            "report_exports.directory_bundle.agent_handoff.deep_autopilot_execution_plan",
+            "report_exports.directory_bundle.agent_handoff.deep_autopilot_source_runbook",
             *AUTORUN_PRESERVED_FIELDS,
         ],
         "not_current_release": [
@@ -611,6 +624,9 @@ def _delivery_closure_summary() -> dict[str, Any]:
             "publish from a clean reviewed release branch",
             "keep local fixtures, private reports, cookies, browser profiles, runtime state, and secrets out of package",
         ],
+        "advanced_autopilot_contract": _advanced_autopilot_contract(),
+        "submission_evidence_contract": _submission_evidence_contract(),
+        "report_bundle_verifier_contract": _report_bundle_verifier_contract(),
     }
 
 
@@ -687,6 +703,166 @@ def _release_preflight_summary(
         "policy": (
             "This preflight proves local desktop-agent alpha package readiness only. "
             "Marketplace screenshots, clean branch publishing, and external approval remain separate submission tasks."
+        ),
+    }
+
+
+def _advanced_autopilot_contract() -> dict[str, Any]:
+    return {
+        "type": "advanced_autopilot_contract",
+        "status": "required_for_full_product",
+        "target_user": "senior_due_diligence_operator",
+        "interaction_model": "subject_name_only_after_workspace_preconfiguration",
+        "default_entrypoint": 'npx wallstreet-tieling --investigate "<subject>" --mode deep',
+        "configured_entrypoint": 'npx wallstreet-tieling --investigate "<subject>" --mode deep --config <sources.yaml>',
+        "api_entrypoint": "POST /api/investigate {name, mode: deep}",
+        "mcp_entrypoint": "investigate_company {company_name, mode: deep}",
+        "preconfiguration_once": [
+            "licensed or user-authorized source credentials",
+            "authorized session state or cookie references",
+            "local public/authorized index paths",
+            "report export destination policy",
+            "source scope and audit retention policy",
+        ],
+        "runtime_must": [
+            "run every configured public, licensed, and user-authorized source without mid-run user prompts",
+            "treat operator_work_queue as an internal recovery queue rather than a user-facing task list",
+            "auto-retry transient network and source-health failures within bounded runtime policy",
+            "auto-downgrade blocked or unconfigured sources to public-origin fallback searches",
+            "attempt relationship graph, capital risk, goods-flow, people-flow, and source-resilience closure in deep mode",
+            "generate JSON packet, Markdown, DOCX, portable HTML, directory bundle, audit log, and evidence manifest",
+            "mark unresolved dimensions as evidence gaps instead of asking the user to continue manually",
+        ],
+        "runtime_must_not": [
+            "ask the end user to choose sources after they submit the subject name",
+            "stop the investigation solely because an advanced source is unavailable",
+            "promote lead-only fallback data into verified facts",
+            "hide source failures, fallback usage, or reliance limitations from the final packet",
+        ],
+        "advanced_lanes": [
+            "domestic_registry_and_qyyjt",
+            "official_public_global_sources",
+            "sanctions_and_watchlists",
+            "authorized_commercial_sources",
+            "relationship_graph_and_control_path",
+            "capital_pressure_and_financing",
+            "goods_flow_and_supply_chain",
+            "people_flow_and_public_osint",
+            "report_generation_and_visual_outputs",
+        ],
+        "current_gap": (
+            "Advanced adapters and authorization gates exist, but full-product work must wire them into "
+            "a deep-mode autopilot that exhausts configured sources before producing the final report."
+        ),
+        "acceptance_gate": (
+            "A configured deep-mode run completes from subject name to report bundle with no user "
+            "interaction beyond prior source configuration, source_preflight records readiness/fallbacks, "
+            "and the packet records every downgrade."
+        ),
+    }
+
+
+def _submission_evidence_contract() -> dict[str, Any]:
+    return {
+        "type": "submission_evidence_contract",
+        "command": "npm run release:submission-snapshot",
+        "default_output_dir": ".tmp/release-submission/<timestamp>",
+        "required_files": [
+            "summary.json",
+            "README.txt",
+            "release-readiness.json",
+            "delivery-closure.json",
+            "agent-delivery-packet.json",
+            "agent-doctor.json",
+            "agent-tools.json",
+            "connector-catalog.json",
+            "report-delivery-targets.json",
+            "mcp-protocol-smoke.json",
+            "npm-pack-dry-run.json",
+            "investigation-packet.json",
+            "report-bundle/report-export-manifest.json",
+            "report-bundle/agent-handoff.json",
+            "report-bundle-verifier.json",
+        ],
+        "required_checks": [
+            "release_readiness",
+            "delivery_closure",
+            "agent_delivery_packet",
+            "agent_delivery_doctor",
+            "agent_tool_adapters",
+            "connector_catalog",
+            "report_delivery_targets",
+            "mcp_protocol_smoke",
+            "npm_pack_dry_run",
+            "investigation_export_dir",
+            "report_bundle_verifier",
+        ],
+        "manual_artifacts": [
+            "marketplace listing screenshot",
+            "skill prompt load screenshot",
+            "release readiness output screenshot",
+            "connector catalog output screenshot",
+            "offline fixture investigation packet screenshot",
+        ],
+        "excluded_artifacts": [
+            "credentials",
+            "cookies",
+            "browser profiles",
+            "private reports",
+            "runtime state",
+            "local collaboration databases",
+        ],
+        "status_policy": (
+            "A passing snapshot proves local desktop-agent submission evidence only. "
+            "It does not prove marketplace approval or final polished product launch readiness."
+        ),
+    }
+
+
+def _report_bundle_verifier_contract() -> dict[str, Any]:
+    required_agent_handoff_checks = [
+        "schema_valid",
+        "decision_digest_present",
+        "source_preflight_present",
+        "source_preflight_contract_valid",
+        "manifest_summary_source_preflight_present",
+        "manifest_summary_source_preflight_valid",
+        "deep_autopilot_plan_present",
+        "deep_autopilot_source_runbook_present",
+        "continuation_entrypoints_valid",
+        "source_runbook_valid",
+        "qyyjt_public_origin_valid",
+        "capital_relationship_valid",
+        "relationship_graph_audit_valid",
+        "manifest_summary_depth_handoff_valid",
+    ]
+    return {
+        "type": "report_bundle_verifier_contract",
+        "command": "bin/verify_report_bundle.py <export-dir>",
+        "node_cli": "npx wallstreet-tieling --verify-report-bundle <export-dir>",
+        "required_result_fields": [
+            "ok",
+            "checked_count",
+            "failure_count",
+            "agent_handoff",
+            *[f"agent_handoff.{item}" for item in required_agent_handoff_checks],
+        ],
+        "required_agent_handoff_checks": required_agent_handoff_checks,
+        "must_fail_when_tampered": [
+            "file_manifest sha256 mismatch",
+            "missing decision_digest",
+            "invalid source_preflight no-prompt contract",
+            "invalid manifest agent_summary source_preflight",
+            "missing QYYJT public-origin section_work_orders",
+            "invalid relationship_graph_audit queue_count",
+            "manifest agent_summary capital verification count mismatch",
+            "missing deep autopilot continuation entrypoints",
+            "deep autopilot source runbook lane requires user prompt",
+        ],
+        "policy": (
+            "Desktop-agent alpha delivery is not verified by files existing alone; the verifier must prove "
+            "source preflight, QYYJT/public-origin, capital, relationship graph, manifest summary, deep autopilot, "
+            "and bundle integrity handoffs remain machine-readable."
         ),
     }
 
@@ -1271,6 +1447,9 @@ def _latest_acceptance_evidence() -> dict[str, Any]:
             "directory bundle decision_digest and bundle_integrity verifier",
             "directory bundle verifier_output_fields handoff",
             "directory bundle verification_recipe handoff",
+            "directory bundle source_preflight verifier",
+            "directory bundle QYYJT/capital/relationship handoff verifier",
+            "manifest agent_summary depth handoff verifier",
             "portable HTML handoff visibility",
             "DOCX official metadata/red-head/chart panels",
             "manifest agent_summary deep drift verification",
@@ -1278,16 +1457,23 @@ def _latest_acceptance_evidence() -> dict[str, Any]:
             "DOCX relationship/capital appendix and delivery checklist",
             "QYYJT public-origin work orders",
             "source resilience and recovery queues",
+            "source preflight no-prompt fallback contract",
+            "deep autopilot source runbook no-prompt/non-stop contract",
             "capital verification and relationship graph audit handoff",
             "source_resilience agent_autorun",
             "QYYJT public-origin agent_autorun",
             "capital risk and relationship autorun routes",
             "report_artifact_agent_autorun",
         ],
+        "supporting_commands": [
+            "npm run release:agent-smoke",
+            "npm run release:submission-snapshot",
+            "npm run agent:install-smoke",
+            "npm run mcp:protocol-smoke",
+            "npm pack --dry-run --json",
+        ],
         "artifact_policy": "local acceptance evidence only; marketplace/operator screenshots are still separate release artifacts",
     }
-
-
 def _runtime_surface_with_acceptance(surface: dict[str, Any]) -> dict[str, Any]:
     item = dict(surface)
     proof_tests = _string_list(item.get("proof_tests"))

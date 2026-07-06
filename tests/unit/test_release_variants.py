@@ -156,6 +156,8 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert "report_exports.directory_bundle.agent_handoff.report_visibility.premium_html" in closure["required_preserved_fields"]
     assert "report_exports.directory_bundle.agent_handoff.capital_risk_panel" in closure["required_preserved_fields"]
     assert "report_exports.directory_bundle.agent_handoff.source_strengthening" in closure["required_preserved_fields"]
+    assert "report_exports.directory_bundle.agent_handoff.deep_autopilot_execution_plan" in closure["required_preserved_fields"]
+    assert "report_exports.directory_bundle.agent_handoff.deep_autopilot_source_runbook" in closure["required_preserved_fields"]
     for field in [
         "qyyjt_public_origin_handoff.agent_autorun",
         "report_exports.directory_bundle.agent_handoff.report_visibility.agent_autorun",
@@ -166,6 +168,32 @@ def test_release_contract_can_be_loaded_by_runtime_api():
         "report_exports.directory_bundle.agent_handoff.report_artifact_autorun",
     ]:
         assert field in closure["required_preserved_fields"]
+    autopilot = closure["advanced_autopilot_contract"]
+    assert autopilot["type"] == "advanced_autopilot_contract"
+    assert autopilot["interaction_model"] == "subject_name_only_after_workspace_preconfiguration"
+    assert "--mode deep" in autopilot["default_entrypoint"]
+    assert "run every configured public, licensed, and user-authorized source without mid-run user prompts" in autopilot["runtime_must"]
+    assert "ask the end user to choose sources after they submit the subject name" in autopilot["runtime_must_not"]
+    assert "authorized_commercial_sources" in autopilot["advanced_lanes"]
+    assert "configured deep-mode run completes" in autopilot["acceptance_gate"]
+    evidence_contract = closure["submission_evidence_contract"]
+    assert evidence_contract["type"] == "submission_evidence_contract"
+    assert evidence_contract["command"] == "npm run release:submission-snapshot"
+    assert "summary.json" in evidence_contract["required_files"]
+    assert "report-bundle-verifier.json" in evidence_contract["required_files"]
+    assert "mcp_protocol_smoke" in evidence_contract["required_checks"]
+    assert "marketplace listing screenshot" in evidence_contract["manual_artifacts"]
+    assert "credentials" in evidence_contract["excluded_artifacts"]
+    verifier_contract = closure["report_bundle_verifier_contract"]
+    assert verifier_contract["type"] == "report_bundle_verifier_contract"
+    assert verifier_contract["command"] == "bin/verify_report_bundle.py <export-dir>"
+    assert "agent_handoff.source_preflight_contract_valid" in verifier_contract["required_result_fields"]
+    assert "agent_handoff.qyyjt_public_origin_valid" in verifier_contract["required_result_fields"]
+    assert "agent_handoff.capital_relationship_valid" in verifier_contract["required_result_fields"]
+    assert "agent_handoff.relationship_graph_audit_valid" in verifier_contract["required_result_fields"]
+    assert "agent_handoff.manifest_summary_depth_handoff_valid" in verifier_contract["required_result_fields"]
+    assert "missing QYYJT public-origin section_work_orders" in verifier_contract["must_fail_when_tampered"]
+    assert "invalid relationship_graph_audit queue_count" in verifier_contract["must_fail_when_tampered"]
     assert "always-on continuous monitoring" in closure["not_current_release"]
     assert any("marketplace/operator screenshots" in item for item in closure["open_submission_items"])
     assert brief["latest_acceptance_evidence"]["type"] == "latest_acceptance_evidence"
@@ -210,6 +238,10 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert "report_exports.agent_decision_digest packet routing" in brief["latest_acceptance_evidence"]["covers"]
     assert "directory bundle verifier_output_fields handoff" in brief["latest_acceptance_evidence"]["covers"]
     assert "directory bundle verification_recipe handoff" in brief["latest_acceptance_evidence"]["covers"]
+    assert "directory bundle source_preflight verifier" in brief["latest_acceptance_evidence"]["covers"]
+    assert "directory bundle QYYJT/capital/relationship handoff verifier" in brief["latest_acceptance_evidence"]["covers"]
+    assert "manifest agent_summary depth handoff verifier" in brief["latest_acceptance_evidence"]["covers"]
+    assert "source preflight no-prompt fallback contract" in brief["latest_acceptance_evidence"]["covers"]
     assert "DOCX source provenance appendix and evidence source index" in brief["latest_acceptance_evidence"]["covers"]
     assert "DOCX relationship/capital appendix and delivery checklist" in brief["latest_acceptance_evidence"]["covers"]
     assert "source_resilience agent_autorun" in brief["latest_acceptance_evidence"]["covers"]
@@ -962,6 +994,120 @@ def test_agent_tool_adapter_manifest_covers_all_current_hosts():
         assert "agent_handoff" in adapter["report_outputs"]
         assert "premium_html" in adapter["report_outputs"]
         assert "polished immersive HTML is not required for desktop-agent alpha" in adapter["trust_boundaries"]
+        assert "polished immersive HTML is not required to certify desktop-agent alpha, but remains a final-product requirement" in adapter["trust_boundaries"]
+        assert "desktop-agent alpha must not reduce anthropomorphic role interaction or report output completeness" in adapter["trust_boundaries"]
+
+
+def test_agent_delivery_packet_is_single_runtime_start_surface():
+    from core.agent_delivery_packet import build_agent_delivery_packet
+
+    packet = build_agent_delivery_packet()
+    codex_packet = build_agent_delivery_packet("codex")
+
+    assert packet["type"] == "agent_delivery_packet"
+    assert packet["release_target"] == "desktop_agent_alpha"
+    assert packet["status"] == "ready_for_desktop_agent_alpha"
+    assert packet["release_candidate"] is True
+    assert packet["delivery_decision"]["status"] == "desktop_agent_alpha_release_candidate"
+    assert packet["latest_acceptance_evidence"]["python_tests_passed"] == 799
+    assert "npm run release:agent-smoke" in packet["latest_acceptance_evidence"]["supporting_commands"]
+    assert packet["start_here"]["operator_sequence"] == [
+        "release_readiness",
+        "connector_catalog",
+        "source_preflight",
+        "development_requirements",
+        "agent_tool_adapters",
+        "investigate_company",
+    ]
+    assert "npx wallstreet-tieling --agent-delivery" in packet["start_here"]["first_commands"]
+    assert "npx wallstreet-tieling --report-targets" in packet["start_here"]["first_commands"]
+    assert "agent_delivery_packet" in packet["start_here"]["mcp_sequence"]
+    assert "report_delivery_targets" in packet["start_here"]["mcp_sequence"]
+    assert "source_preflight" in packet["start_here"]["mcp_sequence"]
+    assert "GET /api/agent-delivery" in packet["start_here"]["api_sequence"]
+    assert "GET /api/report-targets" in packet["start_here"]["api_sequence"]
+    assert "GET /api/source-preflight" in packet["start_here"]["api_sequence"]
+    assert packet["host_count"] == 7
+    assert codex_packet["host_count"] == 1
+    assert codex_packet["hosts"][0]["host_id"] == "codex"
+    assert packet["field_preservation_contract"]["advanced_autopilot_contract"]["interaction_model"] == "subject_name_only_after_workspace_preconfiguration"
+    assert "report_exports.directory_bundle.agent_handoff.delivery_decision" in packet["field_preservation_contract"]["required_preserved_fields"]
+    assert "runtime_autopilot.source_runbook" in packet["field_preservation_contract"]["required_preserved_fields"]
+    assert "source_preflight.no_prompt_contract" in packet["field_preservation_contract"]["required_preserved_fields"]
+    assert "report_exports.directory_bundle.agent_handoff.deep_autopilot_source_runbook" in packet["field_preservation_contract"]["required_preserved_fields"]
+    assert "runtime_autopilot" in packet["field_preservation_contract"]["do_not_collapse_to_prose_only"]
+    assert "runtime_autopilot.source_runbook" in packet["field_preservation_contract"]["do_not_collapse_to_prose_only"]
+    assert "source_preflight" in packet["field_preservation_contract"]["do_not_collapse_to_prose_only"]
+    assert "report_exports" in packet["field_preservation_contract"]["do_not_collapse_to_prose_only"]
+    assert "npm pack --dry-run --json" in packet["verification"]["required_commands"]
+    assert "npm run release:submission-snapshot" in packet["verification"]["required_commands"]
+    assert packet["verification"]["advanced_autopilot_contract"]["status"] == "required_for_full_product"
+    assert packet["verification"]["submission_evidence_contract"]["command"] == "npm run release:submission-snapshot"
+    assert packet["verification"]["report_bundle_verifier_contract"]["type"] == "report_bundle_verifier_contract"
+    assert "relationship_graph_audit_valid" in packet["verification"]["report_bundle_verifier_contract"]["required_agent_handoff_checks"]
+    assert packet["verification"]["runtime_blocking_surface_count"] == 0
+    assert packet["boundaries"]["public_or_authorized_data_only"] is True
+    assert packet["boundaries"]["continuous_monitoring_current_release"] is False
+    assert packet["boundaries"]["full_product_status"] == "not_final_release_ready"
+
+
+def test_agent_delivery_doctor_checks_install_surface_and_final_scope_boundary():
+    from core.agent_delivery_doctor import build_agent_delivery_doctor
+
+    doctor = build_agent_delivery_doctor()
+    codex_doctor = build_agent_delivery_doctor("codex")
+
+    assert doctor["type"] == "agent_delivery_doctor"
+    assert doctor["release_target"] == "desktop_agent_alpha"
+    assert doctor["status"] == "pass"
+    assert doctor["release_candidate"] is True
+    assert doctor["blockers"] == []
+    assert doctor["checks"]["release_decision"]["status"] == "desktop_agent_alpha_release_candidate"
+    assert doctor["checks"]["release_decision"]["full_product_status"] == "not_final_release_ready"
+    assert doctor["checks"]["package_files"]["missing"] == []
+    assert "core/agent_delivery_doctor.py" in doctor["checks"]["package_files"]["present"]
+    assert "core/report_delivery_targets.py" in doctor["checks"]["package_files"]["present"]
+    assert "agent_delivery_doctor" in doctor["checks"]["shared_tools"]["required"]
+    assert "report_delivery_targets" in doctor["checks"]["shared_tools"]["required"]
+    assert doctor["checks"]["shared_tools"]["missing"] == []
+    verifier_contract = doctor["checks"]["report_bundle_verifier_contract"]
+    assert verifier_contract["type"] == "report_bundle_verifier_contract"
+    assert "qyyjt_public_origin_valid" in verifier_contract["required_agent_handoff_checks"]
+    assert "capital_relationship_valid" in verifier_contract["required_agent_handoff_checks"]
+    assert "relationship_graph_audit_valid" in verifier_contract["required_agent_handoff_checks"]
+    assert "manifest_summary_depth_handoff_valid" in verifier_contract["required_agent_handoff_checks"]
+    assert doctor["summary"]["report_bundle_verifier_required_check_count"] >= 14
+    assert any(item["command"] == "npm pack --dry-run --json" for item in doctor["checks"]["commands"])
+    assert "complete due-diligence coverage without major functional omissions" in doctor["scope_policy"]["must_not_shrink_final_product"]
+    assert "anthropomorphic 13-role interaction surface preserved across hosts" in doctor["scope_policy"]["must_not_shrink_final_product"]
+    assert "print-ready DOCX report with official-document styling, tables, charts, and image evidence" in doctor["scope_policy"]["must_not_shrink_final_product"]
+    assert "polished immersive HTML report without reducing investigation findings" in doctor["scope_policy"]["must_not_shrink_final_product"]
+    assert codex_doctor["host_filter"] == "codex"
+    assert codex_doctor["summary"]["host_count"] == 1
+
+
+def test_report_delivery_targets_preserve_final_report_scope():
+    from core.report_delivery_targets import build_report_delivery_targets
+
+    targets = build_report_delivery_targets()
+    outputs = {item["id"]: item for item in targets["current_release_outputs"]}
+    final_targets = {item["id"]: item for item in targets["final_product_targets"]}
+
+    assert targets["type"] == "report_delivery_targets"
+    assert targets["current_delivery"] == "desktop_agent_alpha"
+    assert targets["full_product_status"] == "not_final_release_ready"
+    assert targets["status"] == "alpha_report_contract_ready"
+    for output_id in ["json_packet", "markdown_report", "portable_html", "docx_red_head", "directory_bundle"]:
+        assert outputs[output_id]["required"] is True
+    assert outputs["portable_html"]["agent_field"] == "report_exports.portable_html"
+    assert "all investigation findings" in outputs["portable_html"]["must_preserve"]
+    assert outputs["docx_red_head"]["agent_field"] == "report_exports.print_package"
+    assert "embedded_local_image_evidence" in outputs["docx_red_head"]["must_preserve"]
+    assert targets["persona_interaction_contract"]["role_count"] == 13
+    assert "13-role anthropomorphic shell" in targets["persona_interaction_contract"]["must_preserve"]
+    for target_id in ["functional_completeness", "print_ready_official_docx", "immersive_html_report", "persona_not_shrunk"]:
+        assert final_targets[target_id]["status"] == "open_until_final_release"
+    assert any("Do not treat desktop-agent alpha as final-product completion" in item for item in targets["agent_rules"])
 
 
 def test_agent_host_smoke_checklist_covers_release_variants_and_commands():

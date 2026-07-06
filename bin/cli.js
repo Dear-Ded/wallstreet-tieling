@@ -303,6 +303,42 @@ function runSubjectAggregation(args) {
   ].join('; '), () => subjectAggregationFallback(subjectId, subjectName, maxDepth));
 }
 
+function runVerifyReportBundle(args) {
+  const index = args.indexOf('--verify-report-bundle');
+  const target = args[index + 1];
+  if (!target || target.startsWith('--')) {
+    console.error('--verify-report-bundle requires a report export directory or report-export-manifest.json path.');
+    process.exit(2);
+  }
+  const python = resolvePython({ exitOnFailure: false });
+  if (!python) {
+    process.stdout.write(JSON.stringify({
+      type: 'report_export_bundle_verification',
+      ok: false,
+      manifest: target,
+      checked_count: 0,
+      failure_count: 1,
+      failures: [{ role: 'python_runtime', reason: 'python_runtime_unavailable' }],
+      policy: 'Set WST_PYTHON or run in an environment where Python child processes are available.'
+    }, null, 2) + '\n');
+    process.exit(2);
+  }
+  const result = spawnSync(python, [path.join(ROOT, 'bin', 'verify_report_bundle.py'), target], {
+    cwd: ROOT,
+    env: { ...process.env, PYTHONUTF8: '1' },
+    encoding: 'utf-8',
+    maxBuffer: PYTHON_OUTPUT_MAX_BUFFER,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  if (result.stdout) {
+    process.stdout.write(result.stdout);
+  }
+  if (result.stderr) {
+    process.stderr.write(result.stderr);
+  }
+  process.exit(result.status || 0);
+}
+
 function resolvePython(options = {}) {
   const exitOnFailure = options.exitOnFailure !== false;
   const candidates = [
@@ -1627,6 +1663,47 @@ function connectorCatalogFallback() {
   };
 }
 
+function sourcePreflightFallback() {
+  return {
+    type: 'source_preflight',
+    version: '0.5.0',
+    status: 'pass',
+    deep_mode_status: 'ready_with_public_fallbacks',
+    config_loaded: false,
+    no_prompt_contract: {
+      subject_name_only_after_preconfiguration: true,
+      operator_prompt_required_during_run: false,
+      prompt_required_source_count: 0,
+      missing_source_policy: 'continue_with_public_origin_fallback_and_record_gap',
+      stop_on_missing_advanced_source: false,
+      secret_policy: 'secret values are never emitted; only env/config presence is reported'
+    },
+    summary: {
+      total_connectors: 0,
+      ready_to_run: 0,
+      default_public_ready: 0,
+      configured_authorized_ready: 0,
+      fallback_only: 0,
+      blocked_or_pending: 0,
+      lane_count: 0
+    },
+    lanes: [],
+    rows: [],
+    next_actions: [{
+      id: 'restore_python_runtime_for_full_source_preflight',
+      priority: 'P0',
+      status: 'ready',
+      action: 'Set WST_PYTHON or run where Python child processes are available to inspect the real connector registry.',
+      source_names: []
+    }],
+    agent_rules: [
+      'Do not ask the end user to select sources after subject submission.',
+      'Do not stop deep mode because an advanced source is missing; downgrade to public-origin fallback and record the gap.'
+    ],
+    policy: 'Python unavailable fallback only; rerun Python source_preflight before stronger source-readiness claims.'
+  };
+}
+
 function releaseReadinessFallback() {
   return {
     type: 'release_readiness_brief',
@@ -2217,6 +2294,211 @@ function agentToolsFallback() {
   };
 }
 
+function agentDeliveryFallback() {
+  const release = releaseReadinessFallback();
+  const closure = deliveryClosureFallback();
+  const agentTools = agentToolsFallback();
+  return {
+    type: 'agent_delivery_packet',
+    version: '0.5.0',
+    release_target: 'desktop_agent_alpha',
+    status: 'python_runtime_unavailable_fallback',
+    host_filter: 'all',
+    release_candidate: false,
+    delivery_decision: release.delivery_decision || {},
+    latest_acceptance_evidence: {},
+    start_here: {
+      operator_sequence: closure.baseline_sequence,
+      first_commands: [
+        'npx wallstreet-tieling --agent-delivery',
+        'npx wallstreet-tieling --release',
+        'npx wallstreet-tieling --agent-tools',
+        'npx wallstreet-tieling --report-targets',
+        'npx wallstreet-tieling --investigate "<company>" --offline-fixture'
+      ],
+      mcp_sequence: [
+        'agent_delivery_packet',
+        'release_readiness',
+        'report_delivery_targets',
+        'connector_catalog',
+        'source_preflight',
+        'development_requirements',
+        'agent_tool_adapters',
+        'investigate_company'
+      ],
+      api_sequence: [
+        'GET /api/agent-delivery',
+        'GET /api/release',
+        'GET /api/report-targets',
+        'GET /api/connectors',
+        'GET /api/source-preflight',
+        'GET /api/requirements',
+        'GET /api/agent-tools',
+        'POST /api/investigate'
+      ],
+      followup_tools: closure.followup_tools
+    },
+    host_count: agentTools.adapters.length,
+    hosts: agentTools.adapters,
+    shared_tools: agentTools.shared_tools,
+    field_preservation_contract: {
+      required_preserved_fields: closure.required_preserved_fields,
+      minimum_pass_gates: agentTools.minimum_pass_gates || [],
+      advanced_autopilot_contract: closure.advanced_autopilot_contract,
+      do_not_collapse_to_prose_only: [
+        'delivery_decision',
+        'quality_gate',
+        'evidence_ledger',
+        'one_click_readiness',
+        'runtime_autopilot',
+        'runtime_autopilot.source_runbook',
+        'source_preflight',
+        'source_preflight.no_prompt_contract',
+        'qyyjt_public_origin_handoff',
+        'report_exports',
+        'report_exports.directory_bundle.agent_handoff'
+      ]
+    },
+    verification: {
+      required_commands: closure.required_verification_commands,
+      advanced_autopilot_contract: closure.advanced_autopilot_contract,
+      submission_evidence_contract: closure.submission_evidence_contract,
+      report_bundle_verifier_contract: closure.report_bundle_verifier_contract || {},
+      package_gate: 'npm pack --dry-run --json',
+      full_acceptance_gate: 'npm run acceptance',
+      runtime_blocking_surface_count: 1
+    },
+    boundaries: {
+      not_current_release: closure.not_current_release,
+      public_or_authorized_data_only: true,
+      continuous_monitoring_current_release: false,
+      full_product_status: 'not_final_release_ready'
+    },
+    submission_open_items: closure.open_submission_items,
+    policy: 'Python unavailable fallback only; rerun with Python before making final desktop-agent delivery claims.'
+  };
+}
+
+function agentDoctorFallback() {
+  const delivery = agentDeliveryFallback();
+  return {
+    type: 'agent_delivery_doctor',
+    version: '0.5.0',
+    release_target: 'desktop_agent_alpha',
+    host_filter: 'all',
+    status: 'fail',
+    release_candidate: false,
+    blockers: ['python_runtime_unavailable_fallback'],
+    summary: {
+      host_count: delivery.host_count,
+      shared_tool_count: delivery.shared_tools.length,
+      missing_tool_count: 0,
+      required_file_count: 0,
+      missing_file_count: 0,
+      required_command_count: delivery.verification.required_commands.length,
+      runtime_blocking_surface_count: 1,
+      report_bundle_verifier_required_check_count: 0
+    },
+    checks: {
+      release_decision: delivery.delivery_decision,
+      agent_delivery_packet: {
+        status: delivery.status,
+        host_count: delivery.host_count,
+        first_command: delivery.start_here.first_commands[0],
+        mcp_entrypoint_present: true,
+        api_entrypoint_present: true
+      },
+      shared_tools: {
+        required: [
+          'agent_delivery_packet',
+          'agent_delivery_doctor',
+          'report_delivery_targets',
+          'release_readiness',
+          'delivery_closure',
+          'connector_catalog',
+          'source_preflight',
+          'development_requirements',
+          'agent_tool_adapters',
+          'investigate_company',
+          'aggregate_subject',
+          'verify_report_bundle'
+        ],
+        missing: []
+      },
+      package_files: {
+        required_count: 0,
+        present_count: 0,
+        missing_count: 0,
+        present: [],
+        missing: []
+      },
+      source_preflight: sourcePreflightFallback(),
+      report_bundle_verifier_contract: {},
+      commands: delivery.verification.required_commands.map((command) => ({
+        command,
+        required: true,
+        status: 'listed',
+        execution_policy: 'run_on_release_machine_before_stronger_delivery_claims'
+      }))
+    },
+    next_actions: [{
+      id: 'restore_python_runtime',
+      priority: 'P0',
+      status: 'blocked',
+      action: 'Set WST_PYTHON or use an environment where Python child processes are available.',
+      items: ['python_runtime_unavailable_fallback']
+    }],
+    scope_policy: {
+      current_delivery: 'desktop_agent_alpha_install_readiness',
+      does_not_certify: [
+        'final polished HTML launch',
+        'mobile app, mini-program, or standalone desktop app launch',
+        'marketplace approval',
+        'live data coverage for every jurisdiction or licensed source'
+      ],
+      must_not_shrink_final_product: [
+        'complete due-diligence coverage without major functional omissions',
+        'anthropomorphic 13-role interaction surface preserved across hosts',
+        'print-ready DOCX report with official-document styling, tables, charts, and image evidence',
+        'polished immersive HTML report without reducing investigation findings'
+      ]
+    },
+    policy: 'Fallback doctor only; rerun with Python before publishing.'
+  };
+}
+
+function reportTargetsFallback() {
+  return {
+    type: 'report_delivery_targets',
+    version: '0.5.0',
+    current_delivery: 'desktop_agent_alpha',
+    full_product_status: 'not_final_release_ready',
+    status: 'python_runtime_unavailable_fallback',
+    current_release_outputs: [
+      { id: 'json_packet', required: true, current_status: 'ready', agent_field: 'investigation_packet' },
+      { id: 'markdown_report', required: true, current_status: 'ready', agent_field: 'report_markdown' },
+      { id: 'portable_html', required: true, current_status: 'runtime_available_final_visual_polish_remaining', agent_field: 'report_exports.portable_html' },
+      { id: 'docx_red_head', required: true, current_status: 'runtime_available_print_polish_iterating', agent_field: 'report_exports.print_package' },
+      { id: 'directory_bundle', required: true, current_status: 'ready', agent_field: 'report_exports.directory_bundle' }
+    ],
+    persona_interaction_contract: {
+      required: true,
+      role_count: 13,
+      surface: 'persona_surface'
+    },
+    final_product_targets: [
+      { id: 'functional_completeness', status: 'open_until_final_release' },
+      { id: 'print_ready_official_docx', status: 'open_until_final_release' },
+      { id: 'immersive_html_report', status: 'open_until_final_release' },
+      { id: 'persona_not_shrunk', status: 'open_until_final_release' }
+    ],
+    agent_rules: [
+      'Do not collapse report_exports, evidence_ledger, quality_gate, or agent_handoff into prose only.',
+      'Do not treat desktop-agent alpha as final-product completion.'
+    ]
+  };
+}
+
 function subjectAggregationFallback(subjectId, subjectName, maxDepth) {
   return {
     type: 'subject_profile_aggregation_fallback',
@@ -2255,6 +2537,14 @@ function main(args = process.argv.slice(2)) {
       'from core.connector_registry import ConnectorRegistry',
       'print(json.dumps(ConnectorRegistry().product_catalog(), ensure_ascii=False, indent=2, sort_keys=True))'
     ].join('; '), connectorCatalogFallback);
+  } else if (args.includes('--source-preflight')) {
+    const config = optionValue(args, '--config');
+    const configExpr = config ? JSON.stringify(config) : 'None';
+    printPythonJson([
+      'import json',
+      'from core.source_preflight import build_source_preflight',
+      `print(json.dumps(build_source_preflight(${configExpr}), ensure_ascii=False, indent=2, sort_keys=True))`
+    ].join('; '), sourcePreflightFallback);
   } else if (args.includes('--release')) {
     printPythonJson([
       'import json',
@@ -2285,6 +2575,24 @@ function main(args = process.argv.slice(2)) {
       'from core.release_contract import objective_completion_audit_brief',
       'print(json.dumps(objective_completion_audit_brief(), ensure_ascii=False, indent=2, sort_keys=True))'
     ].join('; '), objectiveAuditFallback);
+  } else if (args.includes('--agent-delivery')) {
+    printPythonJson([
+      'import json',
+      'from core.agent_delivery_packet import build_agent_delivery_packet',
+      'print(json.dumps(build_agent_delivery_packet(), ensure_ascii=False, indent=2, sort_keys=True))'
+    ].join('; '), agentDeliveryFallback);
+  } else if (args.includes('--agent-doctor')) {
+    printPythonJson([
+      'import json',
+      'from core.agent_delivery_doctor import build_agent_delivery_doctor',
+      'print(json.dumps(build_agent_delivery_doctor(), ensure_ascii=False, indent=2, sort_keys=True))'
+    ].join('; '), agentDoctorFallback);
+  } else if (args.includes('--report-targets')) {
+    printPythonJson([
+      'import json',
+      'from core.report_delivery_targets import build_report_delivery_targets',
+      'print(json.dumps(build_report_delivery_targets(), ensure_ascii=False, indent=2, sort_keys=True))'
+    ].join('; '), reportTargetsFallback);
   } else if (args.includes('--requirements')) {
     printPythonJson([
       'import json',
@@ -2299,6 +2607,8 @@ function main(args = process.argv.slice(2)) {
     ].join('; '), agentToolsFallback);
   } else if (args.includes('--aggregate-subject')) {
     runSubjectAggregation(args);
+  } else if (args.includes('--verify-report-bundle')) {
+    runVerifyReportBundle(args);
   } else if (args.includes('--investigate')) {
     runInvestigation(args);
   } else {

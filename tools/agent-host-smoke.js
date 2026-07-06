@@ -271,7 +271,7 @@ assert(
 );
 assert(
   release.delivery_closure?.baseline_sequence?.join('>') ===
-    'release_readiness>delivery_audit>connector_catalog>development_requirements>agent_tool_adapters>investigate_company',
+    'release_readiness>connector_catalog>source_preflight>development_requirements>agent_tool_adapters>investigate_company',
   'delivery closure baseline sequence mismatch'
 );
 assert(
