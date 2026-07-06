@@ -8,6 +8,7 @@ Before taking implementation work, read:
 - `README.md`
 - `CLAUDE.md`
 - `PROJECT_TASKBOARD.md`
+- `docs/PROJECT_MANAGEMENT.md`
 - `docs/PROJECT_MAP.md`
 - `docs/SEARCH_INTEGRATION_LEDGER.md`
 - `docs/API_CONTRACTS.md`

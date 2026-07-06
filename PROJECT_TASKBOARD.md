@@ -29,6 +29,12 @@ Scope: desktop-agent-first release roadmap for this repository.
 
 Done:
 
+- Public GitHub desktop-agent alpha snapshot published to `public/master` and
+  `public/main` at `19470c3 chore: publish desktop agent alpha snapshot`.
+- Main development branch `codex/security-ci-hardening` synchronized to
+  `origin` at `056f15d docs: polish public project homepage`.
+- Public homepage standardized with bilingual positioning, badges, quick start,
+  capability matrix, verification gates, and project layout.
 - One-click investigation packet: CLI/API/MCP path, evidence ledger, quality
   gate, and Markdown report.
 - Public-data guardrails: evidence/lead separation, provenance fields, weak web
@@ -54,6 +60,10 @@ Done:
 
 In progress:
 
+- Post-release local hygiene: remove clean stale worktrees, preserve dirty
+  auxiliary worktrees for review, and keep runtime artifacts ignored.
+- Formal project management: use `docs/PROJECT_MANAGEMENT.md` as the operating
+  cadence for work lanes, release gates, branch rules, and cleanup.
 - Deep commercial due-diligence orchestration across money, goods, people,
   legal, sanctions, ownership, and public-record dimensions.
 - Desktop-agent host parity: shared tool discovery, one-click investigation,
@@ -67,6 +77,10 @@ In progress:
 
 Next:
 
+- Review dirty auxiliary worktrees and migrate any still-useful changes into
+  narrow branches or archive them outside the active workspace.
+- Prepare marketplace/operator screenshots and submission assets for the
+  published desktop-agent alpha.
 - Close Agent delivery gaps first: host-specific setup docs, runnable smoke
   tests, uniform packet/export fields, agent-handoff schemas, decision digest,
   delivery checklist, and report bundle verification.

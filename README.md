@@ -200,6 +200,7 @@ python -m json.tool .codex-plugin/plugin.json
 ## Documentation
 
 - [Project map](docs/PROJECT_MAP.md)
+- [Project management system](docs/PROJECT_MANAGEMENT.md)
 - [Release portal](docs/RELEASE_PORTAL.md)
 - [API contracts](docs/API_CONTRACTS.md)
 - [Desktop Agent Alpha delivery](docs/DESKTOP_AGENT_ALPHA_DELIVERY.md)
