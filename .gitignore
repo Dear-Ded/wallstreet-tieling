@@ -2,11 +2,14 @@ node_modules/
 .env
 .env.*
 *.log
+logs/
 .DS_Store
 Thumbs.db
 .archive/
 .colab/
 .coverage
+.mypy_cache/
+.ruff_cache/
 __pycache__/
 *.pyc
 output/
@@ -27,6 +30,7 @@ browser_profiles/
 .pytest-*/
 .pytest_cache/
 .tmp/
+.cache/
 .workbuddy/
 .codex-autonomous/
 outputs/

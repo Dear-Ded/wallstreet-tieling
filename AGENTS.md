@@ -37,7 +37,12 @@ Core rules:
 - Keep default behavior safe. Advanced or credentialed sources must stay
   disabled until the user explicitly authorizes them.
 - Never stage credentials, cookies, browser profiles, local databases, `.tmp/`,
-  `outputs/`, `tmp-events.jsonl`, or local scratch reports.
+  `.cache/`, `.mypy_cache/`, `.ruff_cache/`, `logs/`, `*.log`, `outputs/`,
+  `tmp-events.jsonl`, or local scratch reports.
+- Use `npm run hygiene:audit` to inspect local state and
+  `npm run hygiene:clean:dry` before cleanup. Do not remove dirty auxiliary
+  worktrees, `.codex-autonomous/`, `.workbuddy/`, `.colab/`, `deliverables/`,
+  `audit_reports/`, `node_modules/`, or local source config without review.
 - Do not stage the whole dirty tree. Review `git status --short` and stage only
   intentional files.
 

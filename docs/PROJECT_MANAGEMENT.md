@@ -100,7 +100,8 @@ After each release or long unattended session:
 - Remove clean stale worktrees with `git worktree remove`.
 - Keep dirty worktrees until reviewed.
 - Delete reusable caches: `.tmp/`, `.pytest_cache/`, `.coverage`,
-  `__pycache__/`, pytest scratch directories, `output/`, and `outputs/`.
+  `.mypy_cache/`, `.ruff_cache/`, `.cache/`, `__pycache__/`, pytest scratch
+  directories, top-level `*.log`, `logs/`, `output/`, and `outputs/`.
 - Keep local state out of git: `.codex-autonomous/`, `.workbuddy/`, `.colab/`,
   local source credentials, private reports, and generated artifacts.
 - Run `git worktree prune` after removing worktrees.
@@ -129,6 +130,10 @@ Managed local-only paths:
   artifacts. Delete after release gates pass.
 - `.pytest_cache/`, `.coverage`, `__pycache__/`: test/runtime caches. Delete
   after test sessions when doing release cleanup.
+- `.mypy_cache/`, `.ruff_cache/`, `.cache/`: local tool caches. Delete after
+  large refactors, release packaging, or stale-environment failures.
+- `logs/` and top-level `*.log`: local diagnostic logs. Keep only while
+  debugging an active failure; never commit or package them.
 - `output/`, `outputs/`: generated reports and local API outputs. Keep only
   when tied to an active bug or screenshot task.
 - `tmp-events.jsonl`: local event stream scratch file. Delete after debugging.
@@ -156,7 +161,17 @@ Health command:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-hygiene-audit.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-hygiene-audit.ps1 -Json
+npm run hygiene:audit
+npm run hygiene:clean:dry
+npm run hygiene:clean
 ```
+
+`tools/local-hygiene-clean.ps1` intentionally excludes `.codex-autonomous/`,
+`.workbuddy/`, `.colab/`, `deliverables/`, `audit_reports/`,
+`config/datasources_qyyjt.yaml`, `node_modules/`, `package-lock.json`, and all
+auxiliary worktrees. Those paths can contain coordination state, expensive
+artifacts, local authorization config, or unmerged work and must be reviewed
+before cleanup.
 
 ## Current Post-Release State
 
