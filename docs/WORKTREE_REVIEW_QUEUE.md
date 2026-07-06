@@ -9,6 +9,8 @@ Current primary branch: `codex/security-ci-hardening`.
 
 Last reviewed from main workspace: `2026-07-06`.
 
+Latest high-value migration pass: `2026-07-06`.
+
 Health commands:
 
 ```powershell
@@ -60,6 +62,46 @@ npm run hygiene:audit
 | `scout-context` | needs-manual-review | 1 | `bin/cli.js` | Likely obsolete scout edit; compare CLI diff. |
 | `verifier-negative-coverage` | migration-candidate-verifier | 3 | verifier/API contract/test | Inspect before removal; possible useful negative test. |
 | `wallstreet-tieling-release-verify` | needs-manual-review | 5 | delivery doctor/packet/release contract/test/smoke | Inspect for still-useful release doctor ideas before removal. |
+
+## Migration Decisions
+
+### 2026-07-06 High-Value Pass
+
+Reviewed:
+
+- `runtime-contract-drift-audit-p0`
+- `verifier-negative-coverage`
+- `review-release-hygiene`
+- `wallstreet-tieling-release-verify`
+
+Decisions:
+
+- `verifier-negative-coverage`: mostly superseded by mainline. Current
+  `bin/verify_report_bundle.py` already rejects stale `agent_summary`
+  delivery decision, decision digest, report visibility, and work-queue fields,
+  and current tests cover those failures. Keep worktree until final cleanup,
+  but do not migrate wholesale.
+- `review-release-hygiene`: one low-risk idea was migrated into mainline:
+  `test_npm_package_file_allowlist_excludes_runtime_and_private_artifacts`.
+  This protects `package.json.files` from adding runtime/private prefixes even
+  before `npm pack` is run.
+- `wallstreet-tieling-release-verify`: do not migrate wholesale. The
+  `agent_delivery_packet` / `agent_delivery_doctor` idea is useful, but the
+  candidate depends on surfaces not currently present in mainline
+  (`source_preflight`, `report_delivery_targets`, and extra final-smoke
+  scripts). Treat it as a design input for a future narrow branch, not as a
+  copy-paste patch.
+- `runtime-contract-drift-audit-p0`: keep as a high-value compare source. It
+  touches broad CLI/API/MCP/release/verifier contracts; many concepts appear
+  already represented by current `delivery_audit`, `objective_audit`,
+  `agent_tool_adapters`, and report bundle verifier. It needs file-by-file
+  comparison before deletion.
+
+Immediate result:
+
+- Mainline gained a package file allowlist regression test.
+- No dirty auxiliary worktree was deleted.
+- No isolated beautification artifact was promoted directly into production.
 
 ## Beautification Isolation Review
 

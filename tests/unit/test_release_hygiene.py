@@ -69,6 +69,20 @@ TRACKED_PRIVATE_PATTERNS = [
     "overview.md",
     "send_message_to_product_ai.py",
 ]
+PACKAGE_FILE_DENYLIST = [
+    ".colab/",
+    ".tmp/",
+    ".workbuddy/",
+    "audit_reports/",
+    "browser-profile/",
+    "browser_profiles/",
+    "deliverables/",
+    "docs/PRIVATE_DEV_HANDOFF.md",
+    "output/",
+    "outputs/",
+    "sessions/",
+    "tmp-events.jsonl",
+]
 STALE_VERSION_PATTERNS = [
     re.compile(r"(?i)\bv[23]\.0\.\d+\b"),
     re.compile(r"(?i)\bV3\.0\b"),
@@ -188,6 +202,20 @@ def test_public_repo_does_not_track_private_runtime_artifacts() -> None:
         for path in tracked
         for pattern in TRACKED_PRIVATE_PATTERNS
         if (ROOT / path).exists() and Path(path).match(pattern)
+    ]
+
+    assert hits == []
+
+
+def test_npm_package_file_allowlist_excludes_runtime_and_private_artifacts() -> None:
+    package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+    package_files = [str(item).replace("\\", "/").strip() for item in package.get("files", [])]
+
+    hits = [
+        entry
+        for entry in package_files
+        for denied in PACKAGE_FILE_DENYLIST
+        if entry == denied.rstrip("/") or entry.startswith(denied)
     ]
 
     assert hits == []
