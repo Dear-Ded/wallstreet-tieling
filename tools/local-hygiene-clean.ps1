@@ -47,6 +47,7 @@ function Test-ExcludedRecursivePath {
     ".codex-autonomous",
     ".workbuddy",
     ".colab",
+    ".reasonix",
     "deliverables",
     "audit_reports",
     "node_modules"
@@ -66,8 +67,25 @@ $safeTopLevelPaths = @(
   "tmp-events.jsonl"
 )
 
+$safeEmptyManagedDirs = @(
+  ".workbuddy",
+  ".colab",
+  ".reasonix",
+  "audit_reports"
+)
+
 $results = @()
 foreach ($path in $safeTopLevelPaths) {
+  $results += Remove-ManagedPath $path
+}
+
+foreach ($path in $safeEmptyManagedDirs) {
+  $fullPath = Assert-InRepo $path
+  if (-not $fullPath) { continue }
+  $item = Get-Item -LiteralPath $fullPath -Force -ErrorAction SilentlyContinue
+  if (-not $item -or -not $item.PSIsContainer) { continue }
+  $children = @(Get-ChildItem -LiteralPath $fullPath -Force -ErrorAction SilentlyContinue)
+  if ($children.Count -ne 0) { continue }
   $results += Remove-ManagedPath $path
 }
 

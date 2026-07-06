@@ -241,6 +241,7 @@ python -m json.tool .codex-plugin/plugin.json
 - [Requirement intake](docs/REQUIREMENT_INTAKE.md)
 - [Release portal](docs/RELEASE_PORTAL.md)
 - [Release asset checklist](docs/RELEASE_ASSET_CHECKLIST.md)
+- [Local workspace governance](docs/LOCAL_WORKSPACE_GOVERNANCE.md)
 - [API contracts](docs/API_CONTRACTS.md)
 - [Desktop Agent Alpha delivery](docs/DESKTOP_AGENT_ALPHA_DELIVERY.md)
 - [Agent host smoke checklist](docs/AGENT_HOST_SMOKE_CHECKLIST.md)

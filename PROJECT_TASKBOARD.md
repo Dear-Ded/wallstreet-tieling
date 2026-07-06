@@ -64,6 +64,9 @@ In progress:
   auxiliary worktrees for review, and keep runtime artifacts ignored. Current
   evidence comes from `npm run hygiene:audit:json` and
   `npm run worktrees:audit:json`.
+- Local workspace governance: keep root-level release files, ignored runtime
+  state, auxiliary worktrees, and NightPilot queue hygiene separated through
+  `docs/LOCAL_WORKSPACE_GOVERNANCE.md` and `tools/nightpilot-state-audit.py`.
 - Requirement intake: use `docs/REQUIREMENT_INTAKE.md` to translate abstract
   product requests into scoped plans, branches, files, and verification.
 - Deep commercial due-diligence orchestration across money, goods, people,
@@ -81,6 +84,8 @@ Next:
 
 - Review dirty auxiliary worktrees and migrate any still-useful changes into
   the main branch or archive them outside the active workspace.
+- Prune stale NightPilot terminal queue entries that no longer point to valid
+  auxiliary work and keep ready tasks intact.
 - Prepare marketplace/operator screenshots and submission assets for the
   published desktop-agent alpha.
 - Review the beautification isolation lane with `npm run worktrees:audit:json`;

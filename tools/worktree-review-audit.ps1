@@ -25,6 +25,9 @@ function Get-Classification {
 
   if ((Normalize-PathForCompare $Path) -eq $normalizedRoot) { return "primary-worktree" }
   if ($DirtyCount -eq 0) { return "remove-candidate-clean" }
+  if ($Path -like "*\.codex/worktrees\*" -or $Name -like "*unattended*" -or $Name -like "*nightpilot*") {
+    return "nightpilot-runtime-review"
+  }
   if ($Path -like "*deliverables/beautification-helper-codex-worktrees*" -or $Name -like "beautification-*") {
     return "beautification-artifact-review"
   }
@@ -46,6 +49,7 @@ function Get-RecommendedAction {
   switch ($Classification) {
     "primary-worktree" { return "keep-primary-clean" }
     "remove-candidate-clean" { return "remove-worktree" }
+    "nightpilot-runtime-review" { return "state-owner-review-before-delete" }
     "beautification-artifact-review" { return "review-for-report-ui-ideas-only" }
     "migration-candidate-runtime-contract" { return "diff-and-merge-runtime-contract-changes" }
     "migration-candidate-release-hygiene" { return "diff-and-merge-release-hygiene-changes" }
