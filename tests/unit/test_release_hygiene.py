@@ -359,10 +359,7 @@ def test_npm_package_privacy_scan_contract_is_packaged() -> None:
     package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
     scanner = (ROOT / "tools" / "package-privacy-scan.py").read_text(encoding="utf-8")
 
-    assert package["scripts"]["release:privacy-scan"] == (
-        "powershell -NoProfile -ExecutionPolicy Bypass -File "
-        "tools/run-python.ps1 tools/package-privacy-scan.py --json"
-    )
+    assert package["scripts"]["release:privacy-scan"] == "node tools/run-python.js tools/package-privacy-scan.py --json"
     assert "tools/package-privacy-scan.py" in package["files"]
     assert "FORBIDDEN_PREFIXES" in scanner
     assert '".codex-autonomous/"' in scanner
