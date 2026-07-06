@@ -54,7 +54,7 @@ class Engine:
         """一行代码创建引擎（自动构造 adapter）。
 
         用法:
-            engine = Engine.create_engine("ABC公司", model="deepseek-chat")
+            engine = Engine.create_engine("ABC公司", model="your-model-name")
             result = await engine.run()
         """
         from adapters.cli import StandaloneLLM, NoopTools, StandaloneOutput

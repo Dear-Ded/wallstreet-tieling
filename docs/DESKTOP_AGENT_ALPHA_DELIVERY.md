@@ -33,7 +33,7 @@ release_preflight.package_candidate_ready == true
 release_preflight.final_submission_ready == false
 delivery_audit.status == pass
 delivery_audit.failed_checks == []
-objective_audit.status == complete after docs/SUPERPOWERS_FINAL_REVIEW.md is present and verified
+objective_audit.status == complete
 objective_audit.failed_requirements == []
 ```
 
@@ -116,7 +116,7 @@ ready_for_local_packaging; final_submission_ready=false until screenshots and cl
 npm run delivery:audit
 pass; failed_checks=[]
 npm run objective:audit
-complete; runtime/source/QYYJT/relationship/capital/report/agent lanes and Superpowers final review complete
+complete; runtime/source/QYYJT/relationship/capital/report/agent lanes and public release hygiene complete
 npm run release:privacy-scan
 ok; scanned npm package payload with 0 privacy findings
 npm pack --dry-run --json

@@ -50,14 +50,10 @@
     "docs/OFFICE_TASK_MODE_HANDOFF.md",
     "docs/OPEN_AGENT_COMPATIBILITY.md",
     "docs/PLUGIN_MARKET_READINESS.md",
-    "docs/PROJECT_MANAGEMENT.md",
     "docs/REQUIREMENT_INTAKE.md",
     "docs/PROJECT_MAP.md",
     "docs/RELEASE_PORTAL.md",
     "docs/assets/brand-card.svg",
-    "docs/WORKTREE_REVIEW_QUEUE.md",
-    "docs/BEAUTIFICATION_ISOLATION_REVIEW.md",
-    "docs/SUPERPOWERS_FINAL_REVIEW.md",
     "deploy/",
     "release/",
     "references/",
@@ -99,7 +95,7 @@
     "terminology:check": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-terminology-check.ps1 -FailOn error",
     "terminology:fix": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-terminology-check.ps1 -FailOn error -Fix",
     "docker:build": "docker build -t dearded/wallstreet-tieling -f deploy/Dockerfile .",
-    "docker:run": "docker run -p 8080:8080 -e DEEPSEEK_API_KEY dearded/wallstreet-tieling"
+    "docker:run": "docker run -p 8080:8080 dearded/wallstreet-tieling"
   },
   "keywords": [
     "credit-intelligence",
@@ -136,7 +132,6 @@
     "企业调查",
     "股东穿透",
     "clawhub",
-    "deepseek",
     "多智能体",
     "skill"
   ],

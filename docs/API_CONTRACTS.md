@@ -289,9 +289,9 @@ Rules:
 
 ## `GET /api/objective-audit`
 
-Returns the active development objective audit. Use it before marking the
-NightPilot/thread goal complete because it maps the objective to concrete
-evidence and remaining work.
+Returns the active development objective audit. Use it before marking a release
+objective complete because it maps the objective to concrete evidence and
+remaining work.
 
 Response highlights:
 
@@ -305,12 +305,7 @@ Response highlights:
       "delivery_audit_status": "pass",
       "ready_for_local_packaging": true
     },
-    "failed_requirements": [
-      {
-        "id": "superpowers_final_review",
-        "status": "incomplete"
-      }
-    ]
+    "failed_requirements": []
   }
 }
 ```

@@ -10,8 +10,8 @@ assignees: ''
 清晰描述问题是什么。
 
 **复现步骤**
-1. 使用的平台（WorkBuddy / ChatGPT / Claude / 其他）：
-2. 使用的模型（如 DeepSeek V4 Pro / MiMo v2.5 Pro）：
+1. 使用的平台（Codex / Claude Code / Hermes / OpenClaude / WorkBuddy / 其他）：
+2. 使用的模型或本地 Agent（如适用）：
 3. 输入了什么：
 4. 期望结果：
 5. 实际结果：
@@ -20,6 +20,6 @@ assignees: ''
 如有，附上截图或错误日志。
 
 **环境信息**
-- 版本：v3.x
+- 版本：0.5.x
 - 平台/OS：
 - AI 平台：

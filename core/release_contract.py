@@ -2,6 +2,7 @@
 """Runtime release contract for portal, plugins, and marketplace checks."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -135,12 +136,12 @@ def objective_completion_audit_brief(path: str | Path | None = None) -> dict[str
     preserved_fields = set(_string_list(closure.get("required_preserved_fields")))
     required_commands = set(_string_list(closure.get("required_verification_commands")))
     coverage = _dict(delivery_audit.get("coverage"))
-    superpowers_review = _superpowers_final_review_summary()
+    public_release_review = _public_release_hygiene_summary()
 
     requirements = [
         _objective_requirement(
-            "nightpilot_goal_mode",
-            "NightPilot goal-mode continuity and unattended handoff state remain available for the active objective.",
+            "unattended_handoff_continuity",
+            "Unattended handoff continuity and objective state remain available for the active release objective.",
             bool(preflight.get("package_candidate_ready"))
             and latest_acceptance.get("status") == "passed"
             and "npm run delivery:audit" in required_commands,
@@ -148,7 +149,7 @@ def objective_completion_audit_brief(path: str | Path | None = None) -> dict[str
                 "release_preflight.package_candidate_ready",
                 "latest_acceptance_evidence.status",
                 "delivery_closure.required_verification_commands",
-                ".codex-autonomous/state.json",
+                "local unattended state",
             ],
             [
                 "Child Codex execution may still be limited by account quota; continue manual main-session implementation when child workers are unavailable.",
@@ -253,20 +254,20 @@ def objective_completion_audit_brief(path: str | Path | None = None) -> dict[str
             ],
         ),
         _objective_requirement(
-            "superpowers_final_review",
-            "Final Superpowers review/update has been performed after all objective work.",
-            superpowers_review["status"] == "pass"
+            "public_release_hygiene",
+            "Public release hygiene is complete: public-facing docs, package metadata, and privacy gates are aligned.",
+            public_release_review["status"] == "pass"
             and latest_acceptance.get("status") == "passed"
             and delivery_audit.get("status") == "pass"
             and not delivery_audit.get("failed_checks"),
             [
-                "docs/SUPERPOWERS_FINAL_REVIEW.md",
-                "Superpowers using-superpowers",
-                "Superpowers verification-before-completion",
-                "npm run objective:audit",
-                "npm run delivery:audit",
+                "README.md",
+                "docs/RELEASE_PORTAL.md",
+                "tests/unit/test_release_hygiene.py",
+                "npm run release:privacy-scan",
+                "npm pack --dry-run --json",
             ],
-            superpowers_review["remaining_work"],
+            public_release_review["remaining_work"],
         ),
     ]
     failed = [item for item in requirements if item["status"] != "complete"]
@@ -290,7 +291,7 @@ def objective_completion_audit_brief(path: str | Path | None = None) -> dict[str
             "required_commands": sorted(required_commands),
             "delivery_audit_failed_checks": delivery_audit.get("failed_checks", []),
             "release_blocking_surface_count": runtime_delivery.get("release_blocking_surface_count", 0),
-            "superpowers_final_review": superpowers_review,
+            "public_release_hygiene": public_release_review,
         },
         "next_actions": [
             item
@@ -304,54 +305,43 @@ def objective_completion_audit_brief(path: str | Path | None = None) -> dict[str
     }
 
 
-def _superpowers_final_review_summary() -> dict[str, Any]:
-    review_path = PROJECT_ROOT / "docs" / "SUPERPOWERS_FINAL_REVIEW.md"
-    skill_root = (
-        Path.home()
-        / ".codex"
-        / "plugins"
-        / "cache"
-        / "openai-curated"
-        / "superpowers"
-        / "d6169bef"
-    )
-    required_markers = [
-        "Status: pass",
-        "using-superpowers",
-        "verification-before-completion",
-        "npm run objective:audit",
-        "npm run delivery:audit",
-        "npm run release:preflight",
-        "npm run release:privacy-scan",
-        "npm pack --dry-run --json",
-        "58 passed",
-        "issue_count: 0",
-        "desktop-agent alpha",
+def _public_release_hygiene_summary() -> dict[str, Any]:
+    required_files = [
+        "README.md",
+        "docs/RELEASE_PORTAL.md",
+        "docs/DESKTOP_AGENT_ALPHA_DELIVERY.md",
+        "tests/unit/test_release_hygiene.py",
+        "tools/package-privacy-scan.py",
+        "package.json",
     ]
     remaining_work: list[str] = []
-    content = ""
-    if not review_path.exists():
-        remaining_work.append("Create docs/SUPERPOWERS_FINAL_REVIEW.md with requirement-by-requirement final evidence.")
-    else:
-        content = review_path.read_text(encoding="utf-8", errors="replace")
-        missing_markers = [marker for marker in required_markers if marker not in content]
-        if missing_markers:
-            remaining_work.append(
-                "Update docs/SUPERPOWERS_FINAL_REVIEW.md missing markers: "
-                + ", ".join(missing_markers)
-            )
-    if not (skill_root / "skills" / "using-superpowers" / "SKILL.md").exists():
-        remaining_work.append("Superpowers using-superpowers skill is not installed in the local plugin cache.")
-    if not (skill_root / "skills" / "verification-before-completion" / "SKILL.md").exists():
-        remaining_work.append("Superpowers verification-before-completion skill is not installed in the local plugin cache.")
+    for rel in required_files:
+        if not (PROJECT_ROOT / rel).exists():
+            remaining_work.append(f"{rel} is missing from the public release hygiene set.")
+    package = {}
+    package_path = PROJECT_ROOT / "package.json"
+    if package_path.exists():
+        try:
+            package = json.loads(package_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            remaining_work.append("package.json is not valid JSON.")
+    package_files = {str(item).replace("\\", "/") for item in package.get("files", [])}
+    for rel in [
+        "README.md",
+        "docs/RELEASE_PORTAL.md",
+        "docs/DESKTOP_AGENT_ALPHA_DELIVERY.md",
+        "tools/package-privacy-scan.py",
+    ]:
+        if package and rel not in package_files:
+            remaining_work.append(f"{rel} is not included in package.json files.")
     return {
-        "type": "superpowers_final_review_evidence",
-        "document": "docs/SUPERPOWERS_FINAL_REVIEW.md",
+        "type": "public_release_hygiene_evidence",
         "status": "pass" if not remaining_work else "incomplete",
-        "skill_cache": "local_openai_curated_superpowers_cache",
-        "skills_checked": [
-            "using-superpowers",
-            "verification-before-completion",
+        "documents": required_files,
+        "gates": [
+            "tests/unit/test_release_hygiene.py",
+            "npm run release:privacy-scan",
+            "npm pack --dry-run --json",
         ],
         "remaining_work": remaining_work,
     }

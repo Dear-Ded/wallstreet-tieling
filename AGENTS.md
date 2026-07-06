@@ -8,7 +8,6 @@ Before taking implementation work, read:
 - `README.md`
 - `CLAUDE.md`
 - `PROJECT_TASKBOARD.md`
-- `docs/PROJECT_MANAGEMENT.md`
 - `docs/REQUIREMENT_INTAKE.md`
 - `docs/PROJECT_MAP.md`
 - `docs/SEARCH_INTEGRATION_LEDGER.md`
@@ -40,11 +39,10 @@ Core rules:
   `.cache/`, `.mypy_cache/`, `.ruff_cache/`, `logs/`, `*.log`, `outputs/`,
   `tmp-events.jsonl`, or local scratch reports.
 - Use `npm run hygiene:audit` to inspect local state and
-  `npm run hygiene:clean:dry` before cleanup. Do not remove dirty auxiliary
-  worktrees, `.codex-autonomous/`, `.workbuddy/`, `.colab/`, `deliverables/`,
-  `audit_reports/`, `node_modules/`, or local source config without review.
-- Use `npm run worktrees:audit` and `docs/WORKTREE_REVIEW_QUEUE.md` before
-  migrating or removing auxiliary worktrees.
+  `npm run hygiene:clean:dry` before cleanup. Do not stage generated reports,
+  caches, logs, local source config, browser profiles, or runtime state.
+- Auxiliary worktrees are local operator state. Review and migrate useful
+  changes before removing them; never publish local coordination notes.
 - Do not stage the whole dirty tree. Review `git status --short` and stage only
   intentional files.
 

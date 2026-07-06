@@ -28,7 +28,7 @@ When a new request arrives:
 2. Classify it into a lane: runtime, agent delivery, report output, source
    admission, public release, product design, or local hygiene.
 3. Decide whether it is P0, P1, P2, or future-only.
-4. Check `PROJECT_TASKBOARD.md` and `docs/PROJECT_MANAGEMENT.md` for conflicts.
+4. Check `PROJECT_TASKBOARD.md` and `docs/PROJECT_MAP.md` for conflicts.
 5. Create or reuse a narrow branch/worktree when the change is substantial.
 6. Implement only the lane that was selected.
 7. Run focused tests first; run release gates when release surfaces change.

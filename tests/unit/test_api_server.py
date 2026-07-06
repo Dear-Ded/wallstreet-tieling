@@ -768,7 +768,7 @@ def test_objective_audit_endpoint_maps_goal_to_evidence() -> None:
     assert payload["completion_percent"] == 100
     assert payload["release_gate"]["delivery_audit_status"] == "pass"
     assert payload["verification_evidence"]["latest_acceptance"]["python_tests_passed"] == 799
-    assert payload["verification_evidence"]["superpowers_final_review"]["status"] == "pass"
+    assert payload["verification_evidence"]["public_release_hygiene"]["status"] == "pass"
     statuses = {item["id"]: item["status"] for item in payload["requirements"]}
     assert statuses["source_resilience"] == "complete"
     assert statuses["qyyjt_public_origin_mapping"] == "complete"
@@ -778,7 +778,7 @@ def test_objective_audit_endpoint_maps_goal_to_evidence() -> None:
     assert statuses["acceptance_closure"] == "complete"
     assert statuses["desktop_agent_delivery"] == "complete"
     assert statuses["workbuddy_expert_team_compatibility"] == "complete"
-    assert statuses["superpowers_final_review"] == "complete"
+    assert statuses["public_release_hygiene"] == "complete"
     assert payload["failed_requirements"] == []
 
 

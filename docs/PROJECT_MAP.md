@@ -46,7 +46,7 @@ The current product must:
 - [x] Report exports for Markdown, JSON, portable HTML, DOCX metadata, and directory bundles.
 - [x] API, CLI, MCP, skill-prompt, and desktop-agent host surfaces.
 - [x] Release contract for Universal, Codex, Claude Code, Hermes, Doubao Office Task Mode, OpenClaude/open-source agents, and WorkBuddy.
-- [x] Objective audit and Superpowers final review evidence.
+- [x] Objective audit and public release hygiene evidence.
 
 ### Still Evolving
 
@@ -60,11 +60,10 @@ The current product must:
       premium full-fidelity HTML report, and a third owner-confirmed output form.
 - [ ] Public repository hygiene: keep release commits narrow, reviewed, and free
       of runtime artifacts, local paths, generated reports, or private coordination files.
-- [ ] Dirty auxiliary worktree review: use `docs/WORKTREE_REVIEW_QUEUE.md` and
-      `npm run worktrees:audit` before removing or migrating old NightPilot lanes.
-- [ ] Beautification isolation integration: use
-      `docs/BEAUTIFICATION_ISOLATION_REVIEW.md` before moving premium HTML work
-      into production report exports.
+- [ ] Auxiliary worktree review: migrate useful changes through reviewed
+      branches before cleanup.
+- [ ] Premium report integration: move polished HTML/Word work into production
+      exports only after contract, visual, and verifier checks pass.
 
 ### Future Version Only
 
@@ -104,7 +103,7 @@ The current product must:
 | Claude Code | `CLAUDE.md`, `docs/CLAUDE_CODE_ADAPTER.md`, `docs/CLAUDE_PROJECT_KNOWLEDGE_PACK.md` |
 | Hermes / open agents | `docs/HERMES_AGENT_SETUP.md`, `docs/OPEN_AGENT_COMPATIBILITY.md` |
 | Doubao Office Task Mode | `docs/OFFICE_TASK_MODE_HANDOFF.md` |
-| WorkBuddy | `docs/workbuddy/`, `agent_tool_adapters` WorkBuddy branch |
+| WorkBuddy | `adapters/workbuddy.py`, `agent_tool_adapters` WorkBuddy branch |
 
 ## 5. Release Gates
 
@@ -126,7 +125,4 @@ Current evidence is recorded in:
 
 - `docs/DESKTOP_AGENT_ALPHA_DELIVERY.md`
 - `docs/RELEASE_PORTAL.md`
-- `docs/SUPERPOWERS_FINAL_REVIEW.md`
 - `core/release_contract.py`
-- `docs/WORKTREE_REVIEW_QUEUE.md`
-- `docs/BEAUTIFICATION_ISOLATION_REVIEW.md`

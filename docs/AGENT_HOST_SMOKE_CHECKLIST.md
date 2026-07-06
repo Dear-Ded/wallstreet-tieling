@@ -35,7 +35,7 @@ The shared smoke must confirm:
   and the safe release claim.
 - `objective_audit` returns the active objective completion audit; hosts must
   treat non-empty `failed_requirements` as remaining work and must not mark the
-  NightPilot/thread goal complete.
+  release objective complete.
 - `release_readiness` and `delivery_closure` may return
   `execution_mode=node_metadata_fallback` when the host blocks nested Python
   child processes; this is acceptable for release metadata, but not for full

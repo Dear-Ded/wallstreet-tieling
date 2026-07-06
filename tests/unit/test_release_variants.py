@@ -259,7 +259,7 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert requirement_status["report_visibility"] == "complete"
     assert requirement_status["desktop_agent_delivery"] == "complete"
     assert requirement_status["workbuddy_expert_team_compatibility"] == "complete"
-    assert requirement_status["superpowers_final_review"] == "complete"
+    assert requirement_status["public_release_hygiene"] == "complete"
     assert objective_audit["failed_requirements"] == []
     assert brief["runtime_delivery"]["type"] == "runtime_delivery_summary"
     assert brief["runtime_delivery"]["agent_first"] is True
@@ -1321,7 +1321,7 @@ def test_node_cli_objective_audit_entrypoint_maps_goal_to_evidence():
     assert payload["status"] == "complete"
     assert payload["completion_percent"] == 100
     assert payload["release_gate"]["delivery_audit_status"] == "pass"
-    assert payload["verification_evidence"]["superpowers_final_review"]["status"] == "pass"
+    assert payload["verification_evidence"]["public_release_hygiene"]["status"] == "pass"
     requirement_ids = {item["id"] for item in payload["requirements"]}
     assert {
         "source_resilience",
@@ -1332,8 +1332,8 @@ def test_node_cli_objective_audit_entrypoint_maps_goal_to_evidence():
         "acceptance_closure",
         "desktop_agent_delivery",
         "workbuddy_expert_team_compatibility",
-        "superpowers_final_review",
+        "public_release_hygiene",
     } <= requirement_ids
     requirement_status = {item["id"]: item["status"] for item in payload["requirements"]}
-    assert requirement_status["superpowers_final_review"] == "complete"
+    assert requirement_status["public_release_hygiene"] == "complete"
     assert payload["failed_requirements"] == []
