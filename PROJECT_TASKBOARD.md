@@ -1,15 +1,18 @@
 # Wallstreet Tieling Project Taskboard
 
-Scope: public release roadmap for this repository.
+Scope: desktop-agent-first release roadmap for this repository.
 
 ## Operating Rules
 
 - Ultimate goal: implement a public-or-authorized enterprise intelligence and
   risk discovery product with broad retrieval, evidence provenance, entity
   resolution, graph analysis, and printable/exportable reports.
-- Current release target: desktop-agent first distribution for Codex,
-  Claude Code, Hermes-style desktop agents, Doubao Office Task Mode,
-  OpenClaude-compatible agents, and WorkBuddy-style expert-team workflows.
+- Current release target: ship the Agent-facing version first. The deliverable
+  is a working desktop-agent package for Codex, Claude Code, Hermes-style
+  desktop agents, Doubao Office Task Mode, OpenClaude-compatible agents,
+  universal CLI/API/MCP hosts, and WorkBuddy-style expert-team workflows.
+- Later release targets: polished standalone HTML site, mini-program, mobile
+  app, and desktop app. Do not let those tracks displace Agent runtime delivery.
 - Work from this board, close tasks one by one, and update status when a task
   starts, lands, or is re-scoped.
 - Keep the public-data boundary intact: public, licensed, or user-authorized
@@ -53,6 +56,10 @@ In progress:
 
 - Deep commercial due-diligence orchestration across money, goods, people,
   legal, sanctions, ownership, and public-record dimensions.
+- Desktop-agent host parity: shared tool discovery, one-click investigation,
+  export bundle delivery, agent-handoff routing, decision digest, and verifier
+  behavior across CLI, API, MCP, Codex, Claude Code, Hermes, Doubao Office Task
+  Mode, OpenClaude-compatible agents, and WorkBuddy.
 - Source admission hardening for public, licensed, and user-authorized channels.
 - Multi-level related-subject traversal with confidence and provenance.
 - Portable report readiness summaries for desktop-agent hosts.
@@ -60,8 +67,11 @@ In progress:
 
 Next:
 
-- Strengthen report exports: Word document, structured Markdown, JSON packet,
-  and later polished HTML report.
+- Close Agent delivery gaps first: host-specific setup docs, runnable smoke
+  tests, uniform packet/export fields, agent-handoff schemas, decision digest,
+  delivery checklist, and report bundle verification.
+- Strengthen report exports for Agent consumption: Word document, structured
+  Markdown, JSON packet, portable HTML, manifest, agent-handoff, and verifier.
 - Add richer charts, tables, image evidence handling, and printable public-style
   report formatting.
 - Expand source adapters only through modular, auditable, default-off gates.

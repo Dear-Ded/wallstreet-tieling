@@ -30,6 +30,30 @@ def test_visual_challenge_solve_blocks_when_unauthorized():
     assert "error" in r
 
 
+def test_visual_challenge_standardizes_ocr_assisted_query_lead():
+    from adapters.runtime_deep import VisualChallengeSolver
+
+    adapter = VisualChallengeSolver(_make_gate())
+    result = adapter.standardize_result(
+        "Demo Holdings",
+        {
+            "query_subject_hash": "abc123",
+            "source": "gsxt.gov.cn",
+            "access_path": "gsxt_ocr_full_chain",
+            "fields": {"gsxt_results_found": 1, "ocr_engine": "ddddocr"},
+            "field_count": 2,
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "ocr_assisted_public_registry_query_lead"
+    assert record["source_hint"] == "runtime_visual_challenge_solver"
+    assert record["entity_match"]["level"] == "review"
+    assert record["evidence"][0]["engine"] == "ddddocr"
+    assert record["evidence"][0]["manual_review_required"] is True
+
+
 def test_username_verifier_gated():
     from adapters.runtime_deep import UsernameCrossPlatformVerifier
     a = UsernameCrossPlatformVerifier(_make_gate())
@@ -43,6 +67,29 @@ def test_username_verifier_enabled():
     a = UsernameCrossPlatformVerifier(_make_gate())
     a.enable()
     assert a.is_available()
+
+
+def test_username_verifier_standardizes_runtime_cross_platform_lead():
+    from adapters.runtime_deep import UsernameCrossPlatformVerifier
+
+    adapter = UsernameCrossPlatformVerifier(_make_gate())
+    result = adapter.standardize_result(
+        "demo_user",
+        {
+            "authorized": True,
+            "engine": "manual_http",
+            "fields": {"platforms_found": 2, "platforms": ["github", "medium"]},
+            "field_count": 2,
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "runtime_cross_platform_username_lead"
+    assert record["source_hint"] == "runtime_username_cross_platform_verifier"
+    assert record["entity_match"]["level"] == "review"
+    assert len(record["evidence"]) == 2
+    assert record["evidence"][0]["manual_review_required"] is True
 
 
 def test_aiqicha_session_gated():
@@ -62,6 +109,35 @@ def test_aiqicha_extract_fields_from_html():
     # 但我们可以验证适配器结构
     assert a.source_domain == "aiqicha_baidu"
     assert a.data_boundary == "user_authorized"
+
+
+def test_aiqicha_session_standardizes_registry_lead():
+    from adapters.runtime_deep import AiqichaSessionLookup
+
+    adapter = AiqichaSessionLookup(_make_gate())
+    result = adapter.standardize_result(
+        "Demo Holdings",
+        {
+            "query_subject_hash": "company123",
+            "source": "aiqicha.baidu.com",
+            "fields": {
+                "legal_person": "Alice Zhang",
+                "registered_capital": "1000万人民币",
+                "establishment_date": "2020-01-01",
+                "uscc": "91110000123456789X",
+            },
+            "field_count": 4,
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    assert result["health"]["requires_user_session"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "runtime_aiqicha_enterprise_registry_lead"
+    assert record["source_hint"] == "runtime_aiqicha_session_lookup"
+    assert record["entity_match"]["level"] == "strong"
+    assert record["entity_match"]["identifiers"]["unified_social_credit_code"] == "91110000123456789X"
+    assert record["evidence"][0]["requires_user_session"] is True
 
 
 def test_username_verifier_fallback_works():

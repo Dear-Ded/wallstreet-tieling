@@ -138,7 +138,7 @@ Key: https://developer.company-information.service.gov.uk/ (免费)
 
 ---
 
-## BLOCKED — Cloudflare/反爬保护,需浏览器自动化路径
+## BLOCKED — Cloudflare/访问稳定性与站点规则适配保护,需浏览器自动化路径
 
 ### 18. FastPeopleSearch公开记录
 URL: https://www.fastpeoplesearch.com/name/{name}

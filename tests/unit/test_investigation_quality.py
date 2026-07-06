@@ -99,7 +99,17 @@ def test_source_diagnostics_marks_recovery_steps_ready_when_connector_available(
     assert decision["ready_to_run"] is True
     assert decision["recommended_step"]["source"] == "creditchina_public"
     assert decision["recommended_step"]["status"] == "ready"
+    assert decision["retry_policy"]["retryable"] is True
+    assert decision["retry_policy"]["max_attempts"] == 3
+    assert decision["retry_policy"]["backoff"] == "exponential_jitter"
+    assert decision["retry_policy"]["timeout_seconds"] > 0
     assert "Capture" in decision["next_action"] or "capture" in decision["next_action"]
+    resilience = source_summary["source_resilience_profile"]
+    assert resilience["recommended_step"]["source"] == "creditchina_public"
+    assert resilience["recommended_step"]["status"] == "ready"
+    assert resilience["retry_policy"] == decision["retry_policy"]
+    assert resilience["recommended_step_ready_to_run"] is True
+    assert resilience["recommended_step_blocked_reason"] == ""
 
     from core.investigation import _recovery_execution_queue
 
@@ -109,6 +119,7 @@ def test_source_diagnostics_marks_recovery_steps_ready_when_connector_available(
     assert queue["queue"][0]["source"] == "creditchina_public"
     assert queue["queue"][0]["priority"] == "P0"
     assert queue["queue"][0]["status"] == "queued"
+    assert queue["queue"][0]["retry_policy"]["retryable"] is True
 
 
 def test_source_diagnostics_decision_explains_blocked_recovery_step() -> None:
@@ -143,7 +154,19 @@ def test_source_diagnostics_decision_explains_blocked_recovery_step() -> None:
         "explicit_enable_required",
         "configured_unavailable",
     }
+    assert decision["retry_policy"]["retryable"] is False
+    assert decision["retry_policy"]["max_attempts"] == 0
+    assert decision["retry_policy"]["backoff"] == "blocked_until_source_enabled"
     assert "before retrying ownership_control" in decision["next_action"]
+    resilience = source_summary["source_resilience_profile"]
+    assert resilience["recommended_step"]["domain"] == "ownership_control"
+    assert resilience["retry_policy"] == decision["retry_policy"]
+    assert resilience["recommended_step_ready_to_run"] is False
+    assert resilience["recommended_step_blocked_reason"] in {
+        "connector_required",
+        "explicit_enable_required",
+        "configured_unavailable",
+    }
 
 
 def test_source_diagnostics_routes_supply_chain_to_public_contract_sources() -> None:
@@ -241,8 +264,18 @@ def test_recovery_execution_queue_builds_actionable_work_order() -> None:
     assert first["query"] == "Demo Recovery Co. + administrative penalty/regulatory notice"
     assert first["key_fields"] == ["penalty_date", "issuing_authority", "penalty_amount"]
     assert first["admission_rule"].startswith("official_public")
+    assert first["replay_route"]["type"] == "source_recovery_replay_route"
+    assert first["replay_route"]["tool"] == "investigate_company"
+    assert first["replay_route"]["tool_arguments"]["company"] == "Demo Recovery Co."
+    assert first["replay_route"]["tool_arguments"]["target_recovery"]["source"] == "creditchina_public"
+    assert first["replay_route"]["command"].startswith('npx wallstreet-tieling --investigate "Demo Recovery Co."')
+    assert first["retry_limit"] == first["replay_route"]["retry_limit"]
+    assert first["done_condition"] == first["replay_route"]["done_condition"]
+    assert "low-risk conclusion" in first["non_reliance_caveat"]
     assert queue["work_order"]["subject"] == "Demo Recovery Co."
     assert queue["work_order"]["ready_queries"][0]["query"] == first["query"]
+    assert queue["work_order"]["ready_queries"][0]["replay_route"] == first["replay_route"]
+    assert queue["work_order"]["ready_queries"][0]["non_reliance_caveat"] == first["non_reliance_caveat"]
 
 
 def test_quality_gate_still_blocks_when_no_factual_evidence() -> None:

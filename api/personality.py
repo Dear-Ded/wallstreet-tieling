@@ -430,6 +430,63 @@ def build_persona_surface_brief() -> dict[str, object]:
             for group in PERSONA_SURFACE_GROUPS
         ],
         "role_roster": roster,
+        "runtime_lane_bindings": [
+            {
+                "lane": "finance",
+                "agent_ids": ["li-ming-yuan"],
+                "packet_fields": [
+                    "enterprise_cognition.capital_pressure_profile",
+                    "enterprise_cognition.public_capital_profile",
+                    "one_click_readiness.capital_verification_top_step",
+                    "one_click_readiness.capital_relationship_next_action",
+                ],
+                "handoff": "Close capital, solvency, and relationship-backed finance verification steps.",
+            },
+            {
+                "lane": "people",
+                "agent_ids": ["ma-li-quan"],
+                "packet_fields": [
+                    "enterprise_cognition.people_flow_profile",
+                    "enterprise_cognition.public_people_profile",
+                    "one_click_readiness.relationship_graph_audit_top_step",
+                ],
+                "handoff": "Map controller, UBO, executive, and relationship-network leads without promoting weak leads.",
+            },
+            {
+                "lane": "data_sources",
+                "agent_ids": ["zhou-tong"],
+                "packet_fields": [
+                    "source_failure_summary",
+                    "monitoring_seed.source_repair_priority_queue",
+                    "one_click_readiness.operator_work_queue",
+                    "one_click_readiness.operator_work_top_action",
+                    "qyyjt_public_origin_handoff",
+                ],
+                "handoff": "Turn failed or gated retrieval into executable public-origin/source-repair work.",
+            },
+            {
+                "lane": "verification",
+                "agent_ids": ["zheng-shen-zhi", "wu-de-hou"],
+                "packet_fields": [
+                    "quality_gate",
+                    "evidence_ledger",
+                    "one_click_readiness.reliance_limitations",
+                    "one_click_readiness.can_make_clean_conclusion",
+                ],
+                "handoff": "Keep conclusion strength tied to corroboration, limitations, and explicit clean-conclusion gates.",
+            },
+            {
+                "lane": "task_planning",
+                "agent_ids": ["chen-zhi-yuan"],
+                "packet_fields": [
+                    "next_actions",
+                    "enterprise_cognition.next_questions",
+                    "monitoring_seed.recovery_execution_queue",
+                    "one_click_readiness.operator_work_queue",
+                ],
+                "handoff": "Convert unresolved packet gaps into prioritized operator-ready tasks.",
+            },
+        ],
         "signature_features": [
             "13-role anthropomorphic expert-team surface",
             "Anthropomorphic shell and persona-consistent product framing",

@@ -213,7 +213,11 @@ class PublicWebSearchTool(ToolProvider):
                 sources=["public_web_search:error"],
             )
 
-        raw_results = kwargs.get("results") or []
+        requested_result_limit = _coerce_result_limit(
+            kwargs.get("max_results"),
+            self.config.max_results,
+        )
+        raw_results = _limit_results(kwargs.get("results") or [], requested_result_limit)
         request_timeout_seconds = _coerce_timeout(
             kwargs.get("request_timeout_seconds"),
             self.config.request_timeout_seconds,
@@ -230,7 +234,7 @@ class PublicWebSearchTool(ToolProvider):
                 search_public_web_provider(
                     query,
                     provider=provider,
-                    max_results=int(kwargs.get("max_results", self.config.max_results) or 10),
+                    max_results=requested_result_limit,
                     provider_options=dict(kwargs.get("provider_options", self.config.provider_options or {}) or {}),
                 ),
                 timeout=request_timeout_seconds,
@@ -252,6 +256,7 @@ class PublicWebSearchTool(ToolProvider):
                 "source_type": "search_engine",
                 "provider_configured": provider_configured,
                 "provider_attempted": provider_attempted,
+                "requested_result_limit": requested_result_limit,
                 "provider_report": self.provider_report(),
                 "execution_state": self._execution_state(
                     records=records,
@@ -338,7 +343,7 @@ async def search_public_web_provider(
         return []
     if hasattr(raw, "__await__"):
         raw = await raw
-    return normalize_search_provider_results(raw)
+    return _limit_results(normalize_search_provider_results(raw), _coerce_result_limit(max_results, 10))
 
 
 class SearxngSearchProvider:
@@ -452,6 +457,22 @@ def normalize_search_provider_results(raw: Any) -> list[dict[str, Any]]:
             }
         )
     return normalized
+
+
+def _coerce_result_limit(value: Any, default: int) -> int:
+    try:
+        parsed = int(value if value is not None else default)
+    except (TypeError, ValueError):
+        parsed = int(default)
+    return max(0, parsed)
+
+
+def _limit_results(results: Any, limit: int) -> list[dict[str, Any]]:
+    if not isinstance(results, list):
+        return []
+    if limit <= 0:
+        return []
+    return [item for item in results if isinstance(item, dict)][:limit]
 
 
 def _normalize_duckduckgo_instant_answer(raw: dict[str, Any]) -> list[dict[str, Any]]:
@@ -594,6 +615,8 @@ def public_web_cognition_claims(
     market_position_signals = _public_web_market_position_signals(text)
     business_model_signals = _public_web_business_model_signals(text)
     people_signals = _public_web_people_claim_signals(text)
+    page_type = _classify_page_type(title, text)
+    source_specific_goods_signals = _public_web_source_specific_goods_signals(page_type, text)
     claims: list[str] = []
     if industry:
         signal_text = "; ".join(industry_signals)
@@ -650,6 +673,17 @@ def public_web_cognition_claims(
         claims.append(
             "Public web business-model lead: "
             + "; ".join([*business_model_signals, "sources=public web title/snippet/fetch preview"])
+        )
+    if source_specific_goods_signals:
+        claims.append(
+            "Public web source-specific goods lead: "
+            + "; ".join(
+                [
+                    f"source_page_type={page_type}",
+                    *source_specific_goods_signals,
+                    "sources=public web title/snippet/fetch preview",
+                ]
+            )
         )
     if capital_signals:
         claims.append(
@@ -1099,6 +1133,37 @@ def _classify_page_type(title: str, snippet: str) -> str:
         if re.search(pattern, text, re.IGNORECASE):
             return ptype
     return "general"
+
+
+def _public_web_source_specific_goods_signals(page_type: str, text: str) -> list[str]:
+    """Promote page-type parsers into conservative goods-economics leads."""
+    if page_type not in {"industry_report", "annual_report", "procurement", "official_company"}:
+        return []
+    signals: list[str] = []
+    currency_market = re.search(
+        r"(?:market size|tam|total addressable market)[^0-9$€£¥]{0,40}([$€£¥]?\s*\d[\d,.]*)\s*(billion|million|trillion)",
+        str(text or "").lower(),
+    )
+    if currency_market:
+        signals.append(
+            f"market_size={currency_market.group(1).replace(' ', '')}{currency_market.group(2)}"
+        )
+    for extractor in (
+        _public_web_market_size_signals,
+        _public_web_pricing_power_signals,
+        _public_web_peer_comparison_signals,
+        _public_web_cac_ltv_signals,
+        _public_web_revenue_model_signals,
+        _public_web_moat_signals,
+        _public_web_competitor_set_signals,
+        _public_web_capacity_cycle_signals,
+        _public_web_procurement_tender_signals,
+        _public_web_brand_value_signals,
+    ):
+        signals.extend(extractor(text))
+    return list(dict.fromkeys(signals))[:10]
+
+
 def _public_web_unit_economics_signals(text: str) -> list[str]:
     signals=[]
     lowered=str(text or "").lower()
@@ -2002,7 +2067,7 @@ def _public_web_tech_innovation_signals(text: str) -> list[str]:
 def _public_web_cac_ltv_signals(text: str) -> list[str]:
     lowered=str(text or "").lower()
     s=[]
-    if re.search(r"(customer acquisition cost|CAC|获客成本|LTV|life.?time value|客户终身价值|LTV.CAC)",lowered):s.append("cac_ltv=publicly_described")
+    if re.search(r"(customer acquisition cost|cac|获客成本|ltv|life.?time value|客户终身价值|ltv.cac)",lowered):s.append("cac_ltv=publicly_described")
     if re.search(r"(payback period|回收期|customer economics|客户经济学|unit economics|单位经济|cohort|用户群组)",lowered):s.append("unit_economics=publicly_described")
     return list(dict.fromkeys(s))[:3]
 

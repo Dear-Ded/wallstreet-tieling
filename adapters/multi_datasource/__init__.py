@@ -349,6 +349,14 @@ class StandardizedRecord:
     registration_authority: str = ""
     jurisdiction: str = ""
     lei: str = ""
+    record_type: str = ""
+    subject_lei: str = ""
+    subject_name: str = ""
+    related_lei: str = ""
+    related_name: str = ""
+    relationship_type: str = ""
+    relationship_status: str = ""
+    relationship_period: str = ""
     source_hint: str = ""
     entity_match: Dict[str, Any] = field(default_factory=dict)
     risk_events: List[Dict[str, Any]] = field(default_factory=list)
@@ -375,6 +383,14 @@ class StandardizedRecord:
             "registration_authority": self.registration_authority,
             "jurisdiction": self.jurisdiction,
             "lei": self.lei,
+            "record_type": self.record_type,
+            "subject_lei": self.subject_lei,
+            "subject_name": self.subject_name,
+            "related_lei": self.related_lei,
+            "related_name": self.related_name,
+            "relationship_type": self.relationship_type,
+            "relationship_status": self.relationship_status,
+            "relationship_period": self.relationship_period,
             "source_hint": self.source_hint,
             "entity_match": self.entity_match,
             "risk_events": self.risk_events,
@@ -456,7 +472,10 @@ def standardize_records(
                             "severity", "source_hint", "entity_match",
                             "entities", "registered_address",
                             "headquarters_address", "registration_authority",
-                            "jurisdiction", "lei",
+                            "jurisdiction", "lei", "record_type",
+                            "subject_lei", "subject_name", "related_lei",
+                            "related_name", "relationship_type",
+                            "relationship_status", "relationship_period",
                         }
                     }
                     records.append(
@@ -1064,7 +1083,7 @@ class RestApiDataSource(BaseDataSource):
         query = request.query.strip()
         params = {**self.config.params, **request.params}
 
-        if provider_type == "gleif_lei":
+        if provider_type in {"gleif_lei", "gleif_relationship_traversal"}:
             endpoint = "lei-records"
             provider_params = {
                 key: value
@@ -1220,6 +1239,132 @@ class RestApiDataSource(BaseDataSource):
             })
         return {"standardized_records": records, "raw": raw_data}
 
+    def _format_gleif_relationship_traversal_result(self, raw_data: Any) -> Dict[str, Any]:
+        data = raw_data.get("data", []) if isinstance(raw_data, dict) else []
+        records: List[Dict[str, Any]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            attributes = item.get("attributes", {}) or {}
+            entity = attributes.get("entity", {}) or {}
+            subject_lei = str(item.get("id") or attributes.get("lei") or "").strip()
+            subject_name = (entity.get("legalName", {}) or {}).get("name", "") if isinstance(entity, dict) else ""
+            subject_name = str(subject_name or subject_lei).strip()
+            relationship_entities = self._gleif_relationship_entities(item, attributes, entity if isinstance(entity, dict) else {})
+            relationship_links = self._gleif_relationship_links(item)
+            for related in relationship_entities:
+                relationship_type = str(related.get("relation") or "related_entity").strip()
+                related_name = str(related.get("name") or "").strip()
+                related_lei = str(related.get("lei") or "").strip()
+                entity_match = self._gleif_relationship_entity_match(
+                    subject_name=subject_name,
+                    subject_lei=subject_lei,
+                    related_name=related_name,
+                    related_lei=related_lei,
+                )
+                source_url = (
+                    relationship_links.get(relationship_type)
+                    or relationship_links.get("relationship_record")
+                    or (f"https://search.gleif.org/#/record/{subject_lei}" if subject_lei else "")
+                )
+                records.append(
+                    {
+                        "source_name": self.name,
+                        "source_type": self.type_name,
+                        "record_type": "gleif_relationship_edge",
+                        "entity": subject_name,
+                        "title": f"GLEIF relationship edge: {subject_name} -> {related_name}",
+                        "summary": (
+                            f"subject_lei={subject_lei}; related_lei={related_lei}; "
+                            f"relationship_type={relationship_type}; relationship_status=reported"
+                        ),
+                        "url": source_url,
+                        "confidence": 0.78,
+                        "subject_lei": subject_lei,
+                        "subject_name": subject_name,
+                        "related_lei": related_lei,
+                        "related_name": related_name,
+                        "relationship_type": relationship_type,
+                        "relationship_status": "reported",
+                        "relationship_period": str(related.get("relationship_period") or ""),
+                        "entity_match": entity_match,
+                        "entities": [
+                            {
+                                "kind": "company",
+                                "name": subject_name,
+                                "relation": "subject",
+                                "confidence": 0.86,
+                                "source": "GLEIF",
+                                "lei": subject_lei,
+                            },
+                            {
+                                "kind": "company",
+                                "name": related_name,
+                                "relation": relationship_type,
+                                "confidence": 0.76,
+                                "source": "GLEIF",
+                                "lei": related_lei,
+                            },
+                        ],
+                        "evidence": [
+                            {
+                                "type": "official_public_api_relation",
+                                "provider": "GLEIF",
+                                "subject_lei": subject_lei,
+                                "related_lei": related_lei,
+                                "relationship_type": relationship_type,
+                                "relationship_status": "reported",
+                                "source_url": source_url,
+                                "entity_match_level": entity_match.get("level"),
+                                "entity_match_score": entity_match.get("score"),
+                            }
+                        ],
+                        "raw": {"subject": item, "related": related},
+                    }
+                )
+        return {"standardized_records": self._dedupe_gleif_relationship_records(records), "raw": raw_data}
+
+    def _gleif_relationship_entity_match(
+        self,
+        *,
+        subject_name: str,
+        subject_lei: str,
+        related_name: str,
+        related_lei: str,
+    ) -> Dict[str, Any]:
+        identifiers = {
+            "subject_lei": subject_lei,
+            "related_lei": related_lei,
+            "related_name": related_name,
+            "source": "gleif_relationship_traversal",
+        }
+        if EntityResolutionScorer and self._current_query_hint and subject_name:
+            match = EntityResolutionScorer.score(self._current_query_hint, subject_name, identifiers)
+            if str(match.get("level") or "") in {"exact", "strong"}:
+                match["method"] = "query_subject_name_plus_source_reported_lei"
+                match["identifiers"] = {**identifiers, **(match.get("identifiers") if isinstance(match.get("identifiers"), dict) else {})}
+                match["subject_name"] = subject_name
+                match["related_name"] = related_name
+                return match
+        if subject_lei and related_lei:
+            return {
+                "level": "strong",
+                "score": 0.94,
+                "method": "source_reported_lei_pair",
+                "identifiers": identifiers,
+                "subject_name": subject_name,
+                "related_name": related_name,
+                "confidence_basis": "GLEIF relationship record reports both subject_lei and related_lei",
+            }
+        return {
+            "level": "review",
+            "score": 0.55,
+            "method": "relationship_record_without_complete_lei_pair",
+            "identifiers": identifiers,
+            "subject_name": subject_name,
+            "related_name": related_name,
+        }
+
     @classmethod
     def _gleif_relationship_entities(
         cls,
@@ -1307,6 +1452,51 @@ class RestApiDataSource(BaseDataSource):
             or payload.get("relatedEntityName")
             or ""
         ).strip()
+
+    @classmethod
+    def _gleif_relationship_links(cls, item: Dict[str, Any]) -> Dict[str, str]:
+        links: Dict[str, str] = {}
+
+        def add_link(key: str, value: Any) -> None:
+            if isinstance(value, str) and value.strip():
+                links.setdefault(key, value.strip())
+            elif isinstance(value, dict):
+                href = value.get("href") or value.get("related") or value.get("self")
+                if isinstance(href, str) and href.strip():
+                    links.setdefault(key, href.strip())
+
+        for container in (item, item.get("relationships") if isinstance(item.get("relationships"), dict) else {}):
+            if not isinstance(container, dict):
+                continue
+            raw_links = container.get("links")
+            if isinstance(raw_links, dict):
+                for key, value in raw_links.items():
+                    normalized_key = str(key or "").replace("-", "_")
+                    add_link(normalized_key, value)
+                    if "relationship" in normalized_key:
+                        add_link("relationship_record", value)
+            relationships = container.get("relationships")
+            if isinstance(relationships, dict):
+                for key, value in relationships.items():
+                    if not isinstance(value, dict):
+                        continue
+                    normalized_key = str(key or "").replace("-", "_")
+                    add_link(normalized_key, value.get("links"))
+                    if "parent" in normalized_key:
+                        add_link(normalized_key.replace("parent", "parent_organization"), value.get("links"))
+        return links
+
+    @staticmethod
+    def _dedupe_gleif_relationship_records(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        deduped: Dict[tuple[str, str, str], Dict[str, Any]] = {}
+        for record in records:
+            key = (
+                str(record.get("subject_lei") or record.get("entity") or "").casefold(),
+                str(record.get("related_lei") or record.get("related_name") or "").casefold(),
+                str(record.get("relationship_type") or "").casefold(),
+            )
+            deduped.setdefault(key, record)
+        return list(deduped.values())
 
     @staticmethod
     def _format_gleif_address(raw_address: Any) -> str:
@@ -1803,18 +1993,37 @@ class RestApiDataSource(BaseDataSource):
             title = str(item.get("title") or name).strip()
             category = str(item.get("category") or item.get("type") or "").strip()
             summary = str(item.get("summary") or item.get("description") or "").strip()
+            license_name = str(item.get("license") or item.get("license_name") or item.get("licence") or "").strip()
+            license_url = str(item.get("license_url") or item.get("licence_url") or item.get("licenseUrl") or "").strip()
+            updated_at = str(
+                item.get("updated_at")
+                or item.get("last_modified")
+                or item.get("last_updated")
+                or item.get("modified")
+                or ""
+            ).strip()
+            publisher = str(item.get("publisher") or item.get("maintainer") or "OpenSanctions").strip()
             if not name and not title:
                 continue
+            url = str(item.get("url") or f"https://www.opensanctions.org/datasets/{quote(name)}/" if name else "")
             records.append({
                 "source_name": self.name,
                 "source_type": self.type_name,
+                "source_hint": "opensanctions_public_dataset_catalog",
+                "record_type": "watchlist_dataset_catalog",
                 "entity": title or name,
                 "title": f"OpenSanctions dataset coverage: {title or name}",
                 "summary": "; ".join(
-                    part for part in (f"name={name}" if name else "", f"category={category}" if category else "", summary)
+                    part for part in (
+                        f"name={name}" if name else "",
+                        f"category={category}" if category else "",
+                        f"license={license_name}" if license_name else "",
+                        f"updated_at={updated_at}" if updated_at else "",
+                        summary,
+                    )
                     if part
                 ),
-                "url": str(item.get("url") or f"https://www.opensanctions.org/datasets/{quote(name)}/" if name else ""),
+                "url": url,
                 "confidence": 0.58,
                 "evidence": [
                     {
@@ -1822,11 +2031,28 @@ class RestApiDataSource(BaseDataSource):
                         "provider": "OpenSanctions",
                         "dataset": name,
                         "category": category,
+                        "license": license_name,
+                        "license_url": license_url,
+                        "publisher": publisher,
+                        "updated_at": updated_at,
+                        "license_review": {
+                            "status": "metadata_exposed",
+                            "subject_screening_policy": "catalog rows are coverage evidence only; subject facts require reviewed local index or authorized API match",
+                            "attribution_required": bool(license_name or license_url),
+                        },
                     }
                 ],
-                "raw": item,
+                "raw": {
+                    **item,
+                    "license": license_name,
+                    "license_url": license_url,
+                    "publisher": publisher,
+                    "updated_at": updated_at,
+                    "subject_screening_policy": "local_or_authorized_index_required_for_subject_matches",
+                },
             })
-        return {"source_catalog_records": records[:20], "standardized_records": [], "raw": raw_data}
+        catalog_records = records[:20]
+        return {"source_catalog_records": catalog_records, "standardized_records": catalog_records, "raw": raw_data}
 
     def _format_idb_sanctioned_firms_catalog_result(self, raw_data: Any) -> Dict[str, Any]:
         if not isinstance(raw_data, str) or not raw_data.strip():
@@ -1853,6 +2079,7 @@ class RestApiDataSource(BaseDataSource):
             "source_name": self.name,
             "source_type": self.type_name,
             "source_hint": self.name,
+            "record_type": "procurement_debarment_dataset_catalog",
             "entity": title,
             "title": f"IDB sanctions dataset coverage: {title}",
             "summary": "; ".join(part for part in summary_parts if part),
@@ -1865,6 +2092,8 @@ class RestApiDataSource(BaseDataSource):
                     "dataset": title,
                     "doi": doi,
                     "online_date": online_date,
+                    "subject_screening_policy": "catalog rows are coverage evidence only; subject facts require idb_local_subject_index exact/strong match",
+                    "runtime_companion": "idb_local_subject_index",
                 }
             ],
             "raw": {
@@ -1874,11 +2103,13 @@ class RestApiDataSource(BaseDataSource):
                 "online_date": online_date,
                 "description": description,
                 "url": source_url,
+                "subject_screening_policy": "local_index_required_for_subject_matches",
+                "runtime_companion": "idb_local_subject_index",
             },
         }
         return {
             "source_catalog_records": [record],
-            "standardized_records": [],
+            "standardized_records": [record],
             "raw": record["raw"],
         }
 
@@ -2366,6 +2597,7 @@ class RestApiDataSource(BaseDataSource):
             "source_name": self.name,
             "source_type": self.type_name,
             "source_hint": self.name,
+            "record_type": "official_portal_no_result_snapshot",
             "entity": query or str(snapshot.get("legal_name") or snapshot.get("subject_name") or ""),
             "title": f"Validated official portal no-result: {self.config.description or self.name}",
             "summary": f"page_status=validated_no_result; evidence_role={evidence_role}; query={query}",
@@ -2394,6 +2626,8 @@ class RestApiDataSource(BaseDataSource):
                 "score": 1.0,
                 "rationale": "validated official portal no-result page",
             },
+            "entity_match_level": "no_result",
+            "entity_match_score": 1.0,
         }
         return {
             "source_catalog_records": [],
@@ -2510,6 +2744,7 @@ class RestApiDataSource(BaseDataSource):
             entities=entities,
             registered_address=address,
             source_hint="official_china_registry",
+            record_type="official_registry_snapshot",
             risk_category="corporate_registry",
             raw_extra={
                 "unified_social_credit_code": uscc,
@@ -2558,6 +2793,7 @@ class RestApiDataSource(BaseDataSource):
             summary="; ".join(part for part in summary_parts if part),
             confidence=0.74,
             source_hint="official_china_credit_publicity",
+            record_type="official_credit_publicity_snapshot",
             risk_category="administrative_risk" if risk_events else "credit_publicity",
             severity="medium" if penalty else ("low" if abnormal else ""),
             risk_events=risk_events,
@@ -2613,6 +2849,7 @@ class RestApiDataSource(BaseDataSource):
             summary="; ".join(part for part in summary_parts if part),
             confidence=0.78,
             source_hint="official_china_court_enforcement",
+            record_type="official_court_enforcement_snapshot",
             risk_category="court_enforcement",
             severity="high" if amount else "medium",
             risk_events=risk_events,
@@ -2645,6 +2882,7 @@ class RestApiDataSource(BaseDataSource):
             summary="; ".join(f"{key}={value}" for key, value in snapshot.items() if str(value).strip()),
             confidence=0.65,
             source_hint=self.name,
+            record_type="official_portal_validated_snapshot",
         )
 
     def _official_portal_record(
@@ -2658,6 +2896,7 @@ class RestApiDataSource(BaseDataSource):
         summary: str,
         confidence: float,
         source_hint: str,
+        record_type: str,
         entities: Optional[List[Dict[str, Any]]] = None,
         registered_address: str = "",
         risk_category: str = "",
@@ -2693,6 +2932,7 @@ class RestApiDataSource(BaseDataSource):
             "source_name": self.name,
             "source_type": self.type_name,
             "source_hint": source_hint,
+            "record_type": record_type,
             "entity": entity,
             "title": title,
             "summary": summary,
@@ -2704,6 +2944,8 @@ class RestApiDataSource(BaseDataSource):
             "entities": entities or [],
             "registered_address": registered_address,
             "entity_match": match,
+            "entity_match_level": match.get("level"),
+            "entity_match_score": match.get("score"),
             "risk_category": risk_category,
             "severity": severity,
             "risk_events": risk_events or [],
@@ -3108,6 +3350,8 @@ class RestApiDataSource(BaseDataSource):
         provider_type = str(self.config.custom.get("provider_type", ""))
         if provider_type == "gleif_lei":
             return self._format_gleif_result(raw_data)
+        if provider_type == "gleif_relationship_traversal":
+            return self._format_gleif_relationship_traversal_result(raw_data)
         if provider_type == "sec_edgar":
             return self._format_sec_result(raw_data)
         if provider_type == "opensanctions_dataset_catalog":

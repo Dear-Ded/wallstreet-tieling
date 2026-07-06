@@ -30,6 +30,7 @@ from adapters.public_web_search_tool import (
     public_web_results_to_standardized_records,
     search_public_web_provider,
 )
+from core.public_web_profile_bridge import build_public_web_profiles
 from core.risk_discovery_pipeline import RiskDiscoveryPipeline
 
 
@@ -173,6 +174,48 @@ def test_public_web_results_add_conservative_supply_chain_leads_for_subject() ->
     assert any("supplier_concentration=0.48" in claim for claim in claims)
 
 
+def test_public_web_results_add_source_specific_goods_economics_leads() -> None:
+    records = asyncio.run(
+        public_web_results_to_standardized_records(
+            "Demo SaaS Co.",
+            [
+                {
+                    "title": "Demo SaaS Co. industry report and market report",
+                    "url": "https://example.com/demo-saas-market-report",
+                    "snippet": (
+                        "The industry report says Demo SaaS Co. operates in a market size of "
+                        "$12 billion with pricing power, peer comparison disclosures, CAC and "
+                        "LTV/CAC metrics, subscription revenue, high retention, an economic moat, "
+                        "competitors include Peer Alpha and Peer Beta, and capacity expansion."
+                    ),
+                    "confidence": 0.74,
+                }
+            ],
+        )
+    )
+
+    claims = [item["claim"] for item in records[0]["evidence"]]
+
+    assert any("Public web source-specific goods lead" in claim for claim in claims)
+    assert any("source_page_type=industry_report" in claim for claim in claims)
+    assert any("market_size=$12billion" in claim for claim in claims)
+    assert any("pricing_power=publicly_described" in claim for claim in claims)
+    assert any("peer_comparison=publicly_described" in claim for claim in claims)
+    assert any("cac_ltv=publicly_described" in claim for claim in claims)
+    assert any("subscription_model=publicly_described" in claim for claim in claims)
+    assert any("moat=publicly_described" in claim for claim in claims)
+    assert any("competitor_set=publicly_mentioned" in claim for claim in claims)
+    assert any("capacity_cycle=publicly_described" in claim for claim in claims)
+
+    profiles = build_public_web_profiles(records)
+    public_goods = profiles["public_goods_profile"]
+    assert "market_size=$12billion" in public_goods["market_position_claims"]
+    assert "pricing_power=publicly_described" in public_goods["bargaining_power_claims"]
+    assert "cac_ltv=publicly_described" in public_goods["unit_economics_claims"]
+    assert "subscription_model=publicly_described" in public_goods["business_model_claims"]
+    assert "competitor_set=publicly_mentioned" in public_goods["competitive_landscape_claims"]
+
+
 def test_public_web_results_add_capital_and_people_leads_for_subject() -> None:
     records = asyncio.run(
         public_web_results_to_standardized_records(
@@ -306,6 +349,39 @@ async def test_search_public_web_provider_accepts_callable_provider() -> None:
     hits = await search_public_web_provider("Demo Live Co.", provider=provider)
 
     assert hits[0]["url"] == "https://example.com/live"
+
+
+@pytest.mark.asyncio
+async def test_search_public_web_provider_enforces_max_results_after_normalization() -> None:
+    async def provider(query: str, max_results: int = 10):
+        return [
+            {"title": f"{query} hit {index}", "url": f"https://example.com/{index}"}
+            for index in range(5)
+        ]
+
+    hits = await search_public_web_provider("Demo Limit Co.", provider=provider, max_results=2)
+
+    assert len(hits) == 2
+    assert hits[1]["url"] == "https://example.com/1"
+
+
+@pytest.mark.asyncio
+async def test_public_web_search_caps_fixture_results_with_requested_limit() -> None:
+    tool = PublicWebSearchTool()
+
+    result = await tool.search(
+        "Demo Fixture Limit Co.",
+        "public_web_search",
+        max_results=1,
+        results=[
+            {"title": "first", "url": "https://example.com/first", "snippet": "first lead"},
+            {"title": "second", "url": "https://example.com/second", "snippet": "second lead"},
+        ],
+    )
+
+    assert result.data["requested_result_limit"] == 1
+    assert len(result.data["standardized_records"]) == 1
+    assert result.data["standardized_records"][0]["url"] == "https://example.com/first"
 
 
 @pytest.mark.asyncio
@@ -1611,6 +1687,7 @@ def test_profile_bridge_builds_runtime_profiles_from_flat_evidence():
         "claims": [
             "debt_or_credit_obligation=publicly_described; refinancing_risk=2027",
             "supplier=Demo Supplier; customer=Demo Bank",
+            "distributor=Demo Distributor; channel=online marketplace",
             "actual_controller=Alice Zhang; regulatory_penalty=publicly_described",
         ],
     }]
@@ -1627,6 +1704,9 @@ def test_profile_bridge_builds_runtime_profiles_from_flat_evidence():
     assert profiles["public_capital_profile"]["structured_summary"]["refinancing"] >= 1
     assert "debt_or_credit_obligation=publicly_described" in profiles["public_capital_profile"]["debt_credit_claims"]
     assert profiles["public_goods_profile"]["row_count"] >= 2
+    assert profiles["public_goods_profile"]["structured_summary"]["channels"] == 2
+    assert "distributor=Demo Distributor" in profiles["public_goods_profile"]["channel_partner_claims"]
+    assert "channel=online marketplace" in profiles["public_goods_profile"]["channel_partner_claims"]
     assert profiles["public_people_profile"]["row_count"] >= 2
 
 def test_profile_bridge_maps_qyyjt_public_plan_to_profiles():

@@ -58,8 +58,8 @@ class TestAPIKey:
         assert payload["public_web_search"]["provider_type"] == "searxng"
         assert payload["telegram_public_service"]["source_review_required"] is True
         assert payload["qyyjt"]["enabled"] is False
-        assert "github" + "_pat_" not in text
-        assert "gh" + "p_" not in text
+        assert "github_pat_" not in text
+        assert "ghp_" not in text
         assert "gho_" not in text
         assert "sk-" not in payload["api_key"]
 

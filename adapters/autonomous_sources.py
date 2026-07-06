@@ -251,6 +251,126 @@ class AutonomousEnterpriseRegistryLookup(SafeResearchAdapter):
         except Exception as e:
             return {"error": str(e), "data_boundary": "fully_public"}
 
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "autonomous_enterprise_registry",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "default_enabled": False,
+            "output_contract": [
+                "source",
+                "access_method",
+                "response_status",
+                "fields",
+                "source_url",
+                "entity_match",
+                "evidence",
+            ],
+            "report_gate": "lead-only until explicit authorization, provenance, exact/strong entity match, and challenge/session review pass",
+        }
+
+    def standardize_result(self, company_name: str, result: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"health": self.health_check(), "standardized_records": [], "raw": result}
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        source = str(result.get("source") or self._source_key)
+        source_url = self._source_url_for(source, company_name)
+        risk_events = self._risk_events_for_enterprise_source(source, fields)
+        record = {
+            "source_name": "autonomous_enterprise_registry",
+            "source_type": self.source_type,
+            "source_hint": "autonomous_enterprise_registry",
+            "record_type": "autonomous_enterprise_public_registry_lead",
+            "entity": company_name.strip(),
+            "title": f"Autonomous public registry lead: {company_name.strip()}",
+            "summary": "; ".join(
+                part
+                for part in (
+                    f"source={source}",
+                    f"access_method={result.get('access_method', '')}" if result.get("access_method") else "",
+                    f"field_count={result.get('field_count', len(fields))}",
+                    f"risk_events={len(risk_events)}" if risk_events else "",
+                )
+                if part
+            ),
+            "url": source_url,
+            "confidence": 0.66,
+            "risk_category": "public_registry",
+            "risk_events": risk_events,
+            "entity_match": {
+                "level": "review",
+                "score": 0.58,
+                "method": "queried_company_public_registry_lead_requires_exact_identity_fields",
+                "identifiers": {
+                    "company_name": company_name.strip(),
+                    "query_subject_hash": result.get("query_subject_hash", ""),
+                    "source": source,
+                },
+            },
+            "entities": [
+                {
+                    "kind": "company",
+                    "name": company_name.strip(),
+                    "relation": "queried_subject",
+                    "confidence": 0.58,
+                    "source": source,
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "autonomous_public_registry_lookup",
+                    "provider": source,
+                    "source_url": source_url,
+                    "access_method": result.get("access_method", ""),
+                    "data_boundary": result.get("data_boundary", ""),
+                    "field_keys": sorted(fields.keys()),
+                    "entity_match_level": "review",
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
+    @staticmethod
+    def _source_url_for(source: str, company_name: str) -> str:
+        query = urllib.parse.quote(company_name.strip())
+        if "creditchina" in source:
+            return f"https://www.creditchina.gov.cn/search?keyword={query}"
+        if "aiqicha" in source:
+            return f"https://aiqicha.baidu.com/s?q={query}"
+        if "gsxt" in source:
+            return "https://www.gsxt.gov.cn/"
+        if "court" in source or "zxgk" in source:
+            return "https://zxgk.court.gov.cn/"
+        return ""
+
+    @staticmethod
+    def _risk_events_for_enterprise_source(source: str, fields: dict[str, Any]) -> list[dict[str, Any]]:
+        events: list[dict[str, Any]] = []
+        penalty_count = int(fields.get("penalty_records_found") or 0)
+        if penalty_count:
+            events.append(
+                {
+                    "risk_category": "administrative_penalty",
+                    "severity": "medium",
+                    "count": penalty_count,
+                    "source": source,
+                }
+            )
+        court_count = int(fields.get("court_record_indicators") or 0)
+        if court_count:
+            events.append(
+                {
+                    "risk_category": "court_enforcement",
+                    "severity": "high",
+                    "count": court_count,
+                    "source": source,
+                }
+            )
+        return events
+
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}
 
@@ -340,6 +460,87 @@ class AutonomousPublicRecordAggregator(SafeResearchAdapter):
             },
             "field_count": 3,
         }
+
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "autonomous_public_records",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "default_enabled": False,
+            "output_contract": [
+                "sources_accessed",
+                "source_count",
+                "record_indicators",
+                "entity_match",
+                "evidence",
+            ],
+            "report_gate": "lead-only until explicit authorization, data minimization review, person context, and exact/strong entity match pass",
+        }
+
+    def standardize_result(self, name: str, result: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"health": self.health_check(), "standardized_records": [], "raw": result}
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        sources = [str(item) for item in fields.get("sources_accessed", []) if str(item).strip()]
+        source_count = int(fields.get("source_count") or len(sources))
+        indicators = int(fields.get("record_indicators") or 0)
+        confidence = min(0.72, 0.45 + source_count * 0.06)
+        record = {
+            "source_name": "autonomous_public_records",
+            "source_type": self.source_type,
+            "source_hint": "autonomous_public_records",
+            "record_type": "autonomous_public_record_presence_lead",
+            "entity": name.strip(),
+            "title": f"Autonomous public-record presence lead: {name.strip()}",
+            "summary": f"source_count={source_count}; record_indicators={indicators}",
+            "url": "",
+            "confidence": confidence,
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "queried_name_public_record_presence_requires_person_context",
+                "identifiers": {
+                    "name": name.strip(),
+                    "query_subject_hash": result.get("query_subject_hash", ""),
+                },
+            },
+            "entities": [
+                {
+                    "kind": "person",
+                    "name": name.strip(),
+                    "relation": "public_record_candidate",
+                    "confidence": confidence,
+                    "source": "public record aggregators",
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "public_record_aggregator_presence",
+                    "provider": source,
+                    "source_url": self._aggregator_url(source, name),
+                    "data_minimization": "presence_and_indicator_counts_only",
+                    "entity_match_level": "review",
+                    "manual_review_required": True,
+                }
+                for source in sources[:10]
+            ],
+            "raw": {
+                "sources_accessed": sources,
+                "source_count": source_count,
+                "record_indicators": indicators,
+                "data_minimization": "detailed address/phone fields are not standardized without review",
+            },
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
+    @classmethod
+    def _aggregator_url(cls, source: str, name: str) -> str:
+        slug = urllib.parse.quote(name.strip().replace(" ", "-"))
+        for key, template, _purpose in cls.AGGREGATORS:
+            if key == source:
+                return template.format(slug)
+        return ""
 
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}

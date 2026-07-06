@@ -73,6 +73,85 @@ class AuthorizedCompaniesHouseLookup:
             self._gate.log_access(self._source_key, "company_search", target_hash, f"error_{type(e).__name__}")
             return {"error": str(e), "authorized": True}
 
+    def schema_health(self) -> dict[str, Any]:
+        """Return non-network contract health for release and agent routing."""
+        return {
+            "ok": True,
+            "source_type": "authorized_companies_house_api",
+            "default_enabled": False,
+            "requires_user_authorization": True,
+            "requires_api_key": True,
+            "standardized_records": True,
+            "record_type": "companies_house_company_search_result",
+            "required_fields": ["company_name", "company_number", "company_status", "source_url"],
+            "fact_gate": "explicit user authorization plus exact/strong company-name or company-number match before report-fact reliance",
+        }
+
+    def standardize_search_result(self, company_name: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Map an authorized Companies House search response into registry lead records."""
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"standardized_records": [], "raw": result}
+
+        records: list[dict[str, Any]] = []
+        for item in result.get("sample") or []:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or "").strip()
+            number = str(item.get("number") or "").strip()
+            status = str(item.get("status") or "").strip()
+            address = str(item.get("address") or "").strip()
+            if not name and not number:
+                continue
+            source_url = (
+                f"https://find-and-update.company-information.service.gov.uk/company/{urllib.parse.quote(number)}"
+                if number
+                else "https://find-and-update.company-information.service.gov.uk/"
+            )
+            match = self._company_match(company_name, name, {"company_number": number})
+            records.append({
+                "source_name": "authorized_companies_house_api",
+                "source_type": "public_api",
+                "source_hint": "authorized_companies_house_api",
+                "record_type": "companies_house_company_search_result",
+                "entity": name or company_name,
+                "title": f"Companies House company registry lead: {name or number}",
+                "summary": f"company_name={name}; company_number={number}; company_status={status}; address={address}",
+                "url": source_url,
+                "confidence": 0.78 if match["level"] in {"exact", "strong"} else 0.55,
+                "registered_address": address,
+                "jurisdiction": "GB",
+                "entity_match": match,
+                "evidence": [
+                    {
+                        "type": "authorized_official_company_registry_search",
+                        "provider": "Companies House",
+                        "company_number": number,
+                        "company_status": status,
+                        "source_url": source_url,
+                        "manual_review_required": True,
+                    }
+                ],
+                "raw": item,
+            })
+        return {"standardized_records": records, "raw": result}
+
+    @staticmethod
+    def _company_match(seed_name: str, candidate_name: str, identifiers: dict[str, Any] | None = None) -> dict[str, Any]:
+        seed = " ".join(str(seed_name or "").casefold().split())
+        candidate = " ".join(str(candidate_name or "").casefold().split())
+        if seed and candidate and seed == candidate:
+            level, score, method = "exact", 1.0, "normalized_company_name_exact"
+        elif seed and candidate and (seed in candidate or candidate in seed):
+            level, score, method = "strong", 0.9, "normalized_company_name_contains"
+        else:
+            level, score, method = "review", 0.55, "authorized_registry_search_candidate"
+        return {
+            "level": level,
+            "score": score,
+            "method": method,
+            "identifiers": identifiers or {},
+        }
+
 
 class AuthorizedSECEdgarLookup:
     """
@@ -156,6 +235,105 @@ class AuthorizedSECEdgarLookup:
             return {"error": str(e), "authorized": True}
 
 
+    def schema_health(self) -> dict[str, Any]:
+        """Return non-network contract health for release and agent routing."""
+        return {
+            "ok": True,
+            "source_type": "authorized_sec_edgar_full_api",
+            "default_enabled": False,
+            "requires_user_authorization": True,
+            "standardized_records": True,
+            "record_types": ["sec_edgar_authorized_company_lookup", "sec_edgar_authorized_filing_history"],
+            "required_fields": ["cik", "ticker_or_company_name", "source_url", "retrieved_at"],
+            "fact_gate": "explicit user authorization plus CIK/ticker/company-name match before report-fact reliance",
+        }
+
+    def standardize_ticker_result(self, ticker: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Map an authorized SEC ticker lookup into an issuer identity lead."""
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"standardized_records": [], "raw": result}
+        cik = str(result.get("cik") or "").zfill(10) if result.get("cik") else ""
+        company_name = str(result.get("company_name") or "").strip()
+        ticker_value = str(result.get("ticker") or ticker or "").strip().upper()
+        if not cik and not company_name:
+            return {"standardized_records": [], "raw": result}
+        source_url = f"https://data.sec.gov/submissions/CIK{cik}.json" if cik else "https://www.sec.gov/files/company_tickers.json"
+        record = {
+            "source_name": "authorized_sec_edgar_full_api",
+            "source_type": "public_api",
+            "source_hint": "authorized_sec_edgar_full_api",
+            "record_type": "sec_edgar_authorized_company_lookup",
+            "entity": company_name or ticker_value,
+            "title": f"SEC EDGAR issuer identity lead: {company_name or ticker_value}",
+            "summary": f"ticker={ticker_value}; cik={cik}; company_name={company_name}",
+            "url": source_url,
+            "confidence": 0.86 if cik else 0.62,
+            "jurisdiction": "US",
+            "entity_match": {
+                "level": "exact" if ticker_value and str(ticker).upper() == ticker_value else "strong",
+                "score": 0.96 if cik else 0.75,
+                "method": "authorized_sec_ticker_to_cik",
+                "identifiers": {"cik": cik, "ticker": ticker_value},
+            },
+            "evidence": [
+                {
+                    "type": "authorized_official_sec_issuer_lookup",
+                    "provider": "SEC EDGAR",
+                    "cik": cik,
+                    "ticker": ticker_value,
+                    "source_url": source_url,
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"standardized_records": [record], "raw": result}
+
+    def standardize_filing_history_result(self, cik: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Map an authorized SEC filing-history response into capital-market disclosure leads."""
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"standardized_records": [], "raw": result}
+        cik_value = str(result.get("cik") or cik or "").zfill(10)
+        company_name = str(result.get("company_name") or "").strip()
+        filing_types = result.get("filing_types") if isinstance(result.get("filing_types"), dict) else {}
+        source_url = f"https://data.sec.gov/submissions/CIK{cik_value}.json"
+        summary = (
+            f"cik={cik_value}; company_name={company_name}; "
+            f"total_recent_filings={result.get('total_recent_filings', 0)}; filing_types={filing_types}"
+        )
+        record = {
+            "source_name": "authorized_sec_edgar_full_api",
+            "source_type": "public_api",
+            "source_hint": "authorized_sec_edgar_full_api",
+            "record_type": "sec_edgar_authorized_filing_history",
+            "entity": company_name or cik_value,
+            "title": f"SEC EDGAR filing history lead: {company_name or cik_value}",
+            "summary": summary,
+            "url": source_url,
+            "confidence": 0.82,
+            "jurisdiction": "US",
+            "risk_category": "financing_capital_markets",
+            "entity_match": {
+                "level": "strong",
+                "score": 0.94,
+                "method": "authorized_sec_cik_filing_history",
+                "identifiers": {"cik": cik_value},
+            },
+            "evidence": [
+                {
+                    "type": "authorized_official_sec_filing_history",
+                    "provider": "SEC EDGAR",
+                    "cik": cik_value,
+                    "filing_types": filing_types,
+                    "source_url": source_url,
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"standardized_records": [record], "raw": result}
+
+
 class AuthorizedOpenSanctionsLookup:
     """
     OpenSanctions公开制裁与合规名单查询(非商业用途免费API Key)。
@@ -210,3 +388,76 @@ class AuthorizedOpenSanctionsLookup:
                 }
         except Exception as e:
             return {"error": str(e), "authorized": True}
+
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "opensanctions",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "requires_api_key": True,
+            "license": "CC BY-NC 4.0",
+            "license_review": "non_commercial_or_authorized_use_required",
+            "output_contract": [
+                "total_results",
+                "matches",
+                "sample",
+                "license",
+                "entity_match",
+                "evidence",
+            ],
+        }
+
+    def standardize_result(self, entity_name: str, result: dict[str, Any]) -> dict[str, Any]:
+        sample = result.get("sample") if isinstance(result, dict) else []
+        sample = [item for item in sample if isinstance(item, dict)]
+        clean_entity = entity_name.strip()
+        records = []
+        for item in sample[:10]:
+            matched_name = str(item.get("name") or "").strip()
+            match_level = "exact" if matched_name and matched_name.casefold() == clean_entity.casefold() else "review"
+            records.append(
+                {
+                    "source_name": "authorized_opensanctions_api",
+                    "source_type": "public_api",
+                    "source_hint": "authorized_opensanctions_api",
+                    "record_type": "authorized_watchlist_subject_match",
+                    "entity": matched_name or clean_entity,
+                    "title": f"OpenSanctions authorized match lead: {matched_name or clean_entity}",
+                    "summary": (
+                        f"query={clean_entity}; schema={item.get('schema', '')}; "
+                        f"countries={','.join(str(country) for country in item.get('countries', []))}"
+                    ),
+                    "url": f"https://www.opensanctions.org/search/?q={urllib.parse.quote(clean_entity)}",
+                    "confidence": 0.84 if match_level == "exact" else 0.58,
+                    "entity_match": {
+                        "level": match_level,
+                        "score": 0.92 if match_level == "exact" else 0.58,
+                        "method": "authorized_opensanctions_caption_to_query",
+                        "identifiers": {"query": clean_entity, "matched_name": matched_name},
+                    },
+                    "entities": [
+                        {
+                            "kind": "person_or_company",
+                            "name": matched_name or clean_entity,
+                            "relation": "watchlist_match_candidate",
+                            "confidence": 0.78 if match_level == "exact" else 0.55,
+                            "source": "OpenSanctions",
+                        }
+                    ],
+                    "evidence": [
+                        {
+                            "type": "authorized_watchlist_search_result",
+                            "provider": "OpenSanctions",
+                            "source_url": f"https://www.opensanctions.org/search/?q={urllib.parse.quote(clean_entity)}",
+                            "schema": item.get("schema", ""),
+                            "countries": item.get("countries", []),
+                            "license": "CC BY-NC 4.0",
+                            "license_review": "non_commercial_or_authorized_use_required",
+                            "entity_match_level": match_level,
+                        }
+                    ],
+                    "raw": item,
+                }
+            )
+        return {"health": self.health_check(), "standardized_records": records, "raw": result}

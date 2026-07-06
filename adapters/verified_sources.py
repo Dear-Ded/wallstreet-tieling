@@ -135,6 +135,71 @@ class GitHubPublicProfileLookup(SafeResearchAdapter):
         except Exception as e:
             return {"error": str(e), "authorized": True}
 
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "github_api",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "output_contract": [
+                "name",
+                "company",
+                "public_repos",
+                "followers",
+                "profile_url",
+                "entity_match",
+                "evidence",
+            ],
+        }
+
+    def standardize_result(self, github_username: str, result: dict[str, Any]) -> dict[str, Any]:
+        fields = result.get("fields") if isinstance(result, dict) else {}
+        fields = fields if isinstance(fields, dict) else {}
+        username = github_username.strip().lstrip("@")
+        display_name = str(fields.get("name") or username).strip()
+        profile_url = f"https://github.com/{urllib.parse.quote(username)}"
+        record = {
+            "source_name": "verified_github_public_profile",
+            "source_type": self.source_type,
+            "source_hint": "verified_github_public_profile",
+            "record_type": "public_developer_profile_lead",
+            "entity": display_name,
+            "title": f"GitHub public profile lead: {display_name}",
+            "summary": (
+                f"username={username}; company={fields.get('company', '')}; "
+                f"public_repos={fields.get('public_repos', 0)}; followers={fields.get('followers', 0)}"
+            ),
+            "url": profile_url,
+            "confidence": 0.62,
+            "entity_match": {
+                "level": "review",
+                "score": 0.58,
+                "method": "username_public_profile_lead_requires_person_context",
+                "identifiers": {"username": username, "platform": "github"},
+            },
+            "entities": [
+                {
+                    "kind": "person_or_account",
+                    "name": display_name,
+                    "relation": "public_profile_candidate",
+                    "confidence": 0.58,
+                    "source": "GitHub",
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "public_developer_platform_profile",
+                    "provider": "GitHub",
+                    "source_url": profile_url,
+                    "username": username,
+                    "company": fields.get("company", ""),
+                    "entity_match_level": "review",
+                }
+            ],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}
 
@@ -193,6 +258,69 @@ class WikipediaEnterpriseLookup(SafeResearchAdapter):
         except Exception as e:
             return {"error": str(e), "authorized": True}
 
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "wikipedia_api",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "output_contract": [
+                "title",
+                "extract_preview",
+                "extract_length",
+                "license",
+                "source_url",
+                "entity_match",
+                "evidence",
+            ],
+        }
+
+    def standardize_result(self, company_name: str, result: dict[str, Any]) -> dict[str, Any]:
+        fields = result.get("fields") if isinstance(result, dict) else {}
+        fields = fields if isinstance(fields, dict) else {}
+        title = str(fields.get("title") or company_name).strip()
+        source_url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(title.replace(' ', '_'))}"
+        match_level = "exact" if title.casefold() == company_name.strip().casefold() else "review"
+        record = {
+            "source_name": "verified_wikipedia_enterprise_entry",
+            "source_type": self.source_type,
+            "source_hint": "verified_wikipedia_enterprise_entry",
+            "record_type": "public_encyclopedia_profile_lead",
+            "entity": title,
+            "title": f"Wikipedia enterprise profile lead: {title}",
+            "summary": str(fields.get("extract_preview") or "")[:500],
+            "url": source_url,
+            "confidence": 0.64 if match_level == "exact" else 0.52,
+            "entity_match": {
+                "level": match_level,
+                "score": 0.84 if match_level == "exact" else 0.52,
+                "method": "queried_title_to_wikipedia_page_title",
+                "identifiers": {"title": title, "query": company_name},
+            },
+            "entities": [
+                {
+                    "kind": "company",
+                    "name": title,
+                    "relation": "encyclopedia_profile_candidate",
+                    "confidence": 0.62,
+                    "source": "Wikipedia",
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "public_encyclopedia_entry",
+                    "provider": "Wikipedia",
+                    "source_url": source_url,
+                    "license": "CC BY-SA",
+                    "attribution_required": True,
+                    "extract_length": fields.get("extract_length", 0),
+                    "entity_match_level": match_level,
+                }
+            ],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}
 
@@ -250,6 +378,75 @@ class CRTshDomainLookup(SafeResearchAdapter):
                     "field_count": 2}
         except Exception as e:
             return {"error": str(e), "authorized": True}
+
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "crt_sh",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "output_contract": [
+                "unique_domains_found",
+                "sample_domains",
+                "source_url",
+                "entity_match",
+                "evidence",
+            ],
+        }
+
+    def standardize_result(self, domain: str, result: dict[str, Any]) -> dict[str, Any]:
+        fields = result.get("fields") if isinstance(result, dict) else {}
+        fields = fields if isinstance(fields, dict) else {}
+        sample_domains = [
+            str(item).strip().lower()
+            for item in fields.get("sample_domains", [])
+            if str(item).strip()
+        ]
+        clean_domain = domain.strip().lower()
+        source_url = f"https://crt.sh/?q=%.{urllib.parse.quote(clean_domain)}&output=json"
+        match_level = "exact" if clean_domain and any(item == clean_domain or item.endswith(f".{clean_domain}") for item in sample_domains) else "review"
+        record = {
+            "source_name": "verified_crtsh_domain_lookup",
+            "source_type": self.source_type,
+            "source_hint": "verified_crtsh_domain_lookup",
+            "record_type": "certificate_transparency_domain_asset",
+            "entity": clean_domain,
+            "title": f"Certificate transparency domain assets: {clean_domain}",
+            "summary": (
+                f"unique_domains_found={fields.get('unique_domains_found', len(sample_domains))}; "
+                f"sample_count={len(sample_domains)}"
+            ),
+            "url": source_url,
+            "confidence": 0.72 if match_level == "exact" else 0.55,
+            "entity_match": {
+                "level": match_level,
+                "score": 0.9 if match_level == "exact" else 0.55,
+                "method": "domain_suffix_match_against_certificate_transparency_names",
+                "identifiers": {"domain": clean_domain},
+            },
+            "entities": [
+                {
+                    "kind": "domain",
+                    "name": item,
+                    "relation": "certificate_subject_name",
+                    "confidence": 0.7,
+                    "source": "crt.sh",
+                }
+                for item in sample_domains[:30]
+            ],
+            "evidence": [
+                {
+                    "type": "public_certificate_transparency_log",
+                    "provider": "crt.sh",
+                    "source_url": source_url,
+                    "domain": clean_domain,
+                    "sample_domains": sample_domains[:30],
+                    "entity_match_level": match_level,
+                }
+            ],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
 
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}

@@ -117,11 +117,15 @@ def test_registry_filters_by_domain_shape_and_readiness() -> None:
         "default_public_intel",
         "qyyjt_tool",
         "telegram_bot_public_service",
+        "opensanctions_public_dataset_catalog",
         "opensanctions_local_subject_index",
         "ofac_consolidated_sanctions_xml",
         "un_sc_consolidated_sanctions_xml",
         "idb_local_subject_index",
         "world_bank_debarred_firms_public_list",
+        "official_china_registry_portal_catalog",
+        "official_china_credit_portal_catalog",
+        "official_china_court_enforcement_catalog",
     }
 
 
@@ -145,29 +149,104 @@ def test_product_catalog_exposes_zero_config_and_admission_groups() -> None:
     assert "default_public_intel" in catalog["summary"]["zero_config_ready"]
     assert "public_web_search" in catalog["summary"]["zero_config_ready"]
     assert catalog["groups"]["default_enabled"]
-    assert catalog["groups"]["needs_admission"]
+    assert "needs_admission" in catalog["groups"]
     assert catalog["groups"]["explicit_only"]
     assert catalog["summary"]["explicit_only"] >= 1
     assert catalog["summary"]["admission_counts"]
     assert catalog["summary"]["data_effectiveness"]["fact_capable_sources"] >= 4
     assert "qyyjt_tool" in catalog["summary"]["data_effectiveness"]["default_fact_source_names"]
+    assert catalog["summary"]["source_strengthening"]["type"] == "source_strengthening_summary"
+    assert catalog["summary"]["source_strengthening"]["candidate_count"] == len(catalog["source_strengthening_queue"])
+    assert sum(catalog["summary"]["source_strengthening"]["by_priority"].values()) == catalog["summary"]["source_strengthening"]["candidate_count"]
+    admission_gates = catalog["summary"]["admission_gate_summary"]
+    assert admission_gates["default_fact_source_count"] >= 1
+    assert any(item["name"] == "qyyjt_tool" for item in admission_gates["default_fact_sources"])
+    assert "field_contract_required" in admission_gates["gate_counts"]
+    assert admission_gates["policy"].startswith("Default-on sources still require")
     assert catalog["data_effectiveness"]
+    if catalog["source_strengthening_queue"]:
+        top_source_work = catalog["source_strengthening_queue"][0]
+        assert top_source_work["type"] == "source_strengthening_work_order"
+        assert top_source_work["priority"] in {"P1", "P2", "P3"}
+        assert top_source_work["can_feed_report_facts_now"] is False
+        assert top_source_work["implementation_pack"]["type"] == "source_strengthening_implementation_pack"
+        assert top_source_work["acceptance_commands"]
+        assert top_source_work["execution_plan"]["type"] == "source_strengthening_execution_plan"
+        assert top_source_work["execution_plan"]["primary_acceptance_command"]
+        assert top_source_work["execution_plan"]["ordered_steps"]
+        if top_source_work["connector"] in {"idb_sanctioned_firms_dataset_catalog"}:
+            assert top_source_work["runtime_companion"]["type"] == "source_strengthening_runtime_companion"
+            assert top_source_work["execution_plan"]["runtime_companion"]["connector"].endswith("_local_subject_index")
+        assert "do not promote lead-only or catalog-only rows into report facts" in top_source_work["do_not"]
+    else:
+        assert catalog["summary"]["source_strengthening"]["top_connectors"] == []
+        assert catalog["summary"]["source_strengthening"]["by_priority"] == {}
     assert catalog["policy"]["empty_result_rule"]
     assert catalog["policy"]["production_route_rule"]
 
     rows = {item["name"]: item for item in catalog["connectors"]}
     assert rows["sec_edgar_public_api"]["data_effectiveness"]["admission_mode"] == "fact_source_when_subject_match_passes"
+    assert "entity_match_exact_or_strong" in rows["sec_edgar_public_api"]["data_effectiveness"]["admission_gates"]
+    assert "field_contract_required" in rows["qyyjt_tool"]["data_effectiveness"]["admission_gates"]
     assert "financing_capital_markets" in rows["sec_edgar_public_api"]["data_effectiveness"]["analysis_outputs"]
     assert rows["public_web_search"]["data_effectiveness"]["admission_mode"] == "lead_source_with_exact_match_promotion"
-    assert rows["official_china_registry_portal_catalog"]["data_effectiveness"]["can_feed_report_facts"] is False
+    assert rows["official_china_registry_portal_catalog"]["data_effectiveness"]["can_feed_report_facts"] is True
+    assert rows["official_china_registry_portal_catalog"]["data_effectiveness"]["admission_mode"] == "fact_source_when_subject_match_passes"
+    assert rows["official_china_registry_portal_catalog"]["health_check"] is True
+    assert rows["official_china_registry_portal_catalog"]["standardized_records"] is True
     assert rows["gleif_lei_public_api"]["admission"]["decision"] == "production_ready"
+    assert rows["gleif_lei_relationship_traversal_public_api"]["production_ready"] is True
+    assert rows["gleif_lei_relationship_traversal_public_api"]["default_enabled"] is False
+    assert rows["gleif_lei_relationship_traversal_public_api"]["data_effectiveness"]["can_feed_report_facts"] is True
+    assert rows["gleif_lei_relationship_traversal_public_api"]["data_effectiveness"]["admission_mode"] == "fact_source_when_subject_match_passes"
     assert rows["sec_edgar_public_api"]["admission"]["decision"] == "production_ready"
-    assert rows["official_china_registry_portal_catalog"]["admission"]["production_admissible"] is False
+    assert rows["official_china_registry_portal_catalog"]["admission"]["decision"] == "conditional_production"
+    assert rows["official_china_registry_portal_catalog"]["admission"]["production_admissible"] is True
     assert rows["enterprise_executive_identity_verification"]["default_enabled"] is False
     assert rows["enterprise_executive_identity_verification"]["access"] == "user_authorized"
-    assert rows["enterprise_executive_identity_verification"]["data_effectiveness"]["can_feed_report_facts"] is False
+    assert rows["enterprise_executive_identity_verification"]["data_effectiveness"]["can_feed_report_facts"] is True
+    assert "entity_match_exact_or_strong" in rows["enterprise_executive_identity_verification"]["data_effectiveness"]["admission_gates"]
     assert "explicit_enable_required" in rows["enterprise_domain_security_assessment"]["risk_flags"]
+    assert rows["enterprise_domain_security_assessment"]["production_ready"] is True
+    assert rows["enterprise_domain_security_assessment"]["default_enabled"] is False
+    assert rows["enterprise_domain_security_assessment"]["standardized_records"] is True
+    assert rows["enterprise_domain_security_assessment"]["data_effectiveness"]["admission_mode"] == "user_authorized_fact_source_when_entity_match_passes"
+    assert rows["enterprise_executive_identity_verification"]["production_ready"] is True
+    assert rows["enterprise_executive_identity_verification"]["default_enabled"] is False
+    assert rows["enterprise_executive_identity_verification"]["standardized_records"] is True
+    assert rows["enterprise_executive_identity_verification"]["data_effectiveness"]["admission_mode"] == "user_authorized_fact_source_when_entity_match_passes"
+    assert rows["enterprise_contact_attribution_verification"]["production_ready"] is True
+    assert rows["enterprise_contact_attribution_verification"]["default_enabled"] is False
+    assert rows["enterprise_contact_attribution_verification"]["standardized_records"] is True
+    assert rows["enterprise_contact_attribution_verification"]["data_effectiveness"]["admission_mode"] == "user_authorized_fact_source_when_entity_match_passes"
+    assert rows["enterprise_key_personnel_record_crosscheck"]["production_ready"] is True
+    assert rows["enterprise_key_personnel_record_crosscheck"]["default_enabled"] is False
+    assert rows["enterprise_key_personnel_record_crosscheck"]["standardized_records"] is True
+    assert rows["enterprise_key_personnel_record_crosscheck"]["data_effectiveness"]["admission_mode"] == "user_authorized_fact_source_when_entity_match_passes"
+    assert rows["authorized_companies_house_api"]["production_ready"] is True
+    assert rows["authorized_companies_house_api"]["default_enabled"] is False
+    assert rows["authorized_companies_house_api"]["standardized_records"] is True
+    assert rows["authorized_companies_house_api"]["data_effectiveness"]["admission_mode"] == "user_authorized_fact_source_when_entity_match_passes"
+    assert rows["authorized_sec_edgar_full_api"]["production_ready"] is True
+    assert rows["authorized_sec_edgar_full_api"]["default_enabled"] is False
+    assert rows["authorized_sec_edgar_full_api"]["standardized_records"] is True
+    assert rows["authorized_sec_edgar_full_api"]["data_effectiveness"]["admission_mode"] == "user_authorized_fact_source_when_entity_match_passes"
     assert "authorized_opensanctions_api" in {
+        item["name"] for item in catalog["groups"]["explicit_only"]
+    }
+    assert "enterprise_tax_credit_public_records" in {
+        item["name"] for item in catalog["groups"]["explicit_only"]
+    }
+    assert "enterprise_judicial_asset_public_records" in {
+        item["name"] for item in catalog["groups"]["explicit_only"]
+    }
+    assert "enterprise_mofcom_overseas_investment_public_records" in {
+        item["name"] for item in catalog["groups"]["explicit_only"]
+    }
+    assert "enterprise_baidu_aiqicha_public_aggregation" in {
+        item["name"] for item in catalog["groups"]["explicit_only"]
+    }
+    assert "enterprise_shuidi_credit_public_aggregation" in {
         item["name"] for item in catalog["groups"]["explicit_only"]
     }
     assert "runtime_aiqicha_session_lookup" in {
@@ -194,6 +273,21 @@ def test_product_catalog_exposes_zero_config_and_admission_groups() -> None:
     assert "telegram_public_aggregation" in {
         item["name"] for item in catalog["groups"]["explicit_only"]
     }
+    assert rows["enterprise_tax_credit_public_records"]["production_ready"] is True
+    assert rows["enterprise_tax_credit_public_records"]["default_enabled"] is False
+    assert rows["enterprise_tax_credit_public_records"]["access"] == "user_authorized"
+    assert rows["enterprise_tax_credit_public_records"]["authority"] == "official"
+    assert rows["enterprise_tax_credit_public_records"]["data_effectiveness"]["admission_mode"] == "user_authorized_fact_source_when_entity_match_passes"
+    assert "administrative_credit_risk" in rows["enterprise_tax_credit_public_records"]["data_effectiveness"]["analysis_outputs"]
+    assert "explicit_enable_required" in rows["enterprise_judicial_asset_public_records"]["risk_flags"]
+    assert rows["enterprise_judicial_asset_public_records"]["data_effectiveness"]["can_feed_report_facts"] is True
+    assert "legal_enforcement_risk" in rows["enterprise_judicial_asset_public_records"]["data_effectiveness"]["analysis_outputs"]
+    assert rows["enterprise_mofcom_overseas_investment_public_records"]["data_effectiveness"]["can_feed_report_facts"] is True
+    assert "cross_border_relationship_review_required" in rows["enterprise_mofcom_overseas_investment_public_records"]["risk_flags"]
+    assert rows["enterprise_baidu_aiqicha_public_aggregation"]["authority"] == "commercial"
+    assert "official_origin_provenance_required" in rows["enterprise_baidu_aiqicha_public_aggregation"]["risk_flags"]
+    assert rows["enterprise_shuidi_credit_public_aggregation"]["authority"] == "commercial"
+    assert "official_origin_provenance_required" in rows["enterprise_shuidi_credit_public_aggregation"]["risk_flags"]
     assert "autonomous_enterprise_registry" in {
         item["name"] for item in catalog["groups"]["explicit_only"]
     }
@@ -226,6 +320,44 @@ def test_product_catalog_exposes_zero_config_and_admission_groups() -> None:
         "Validated browser-handoff snapshot parser" in note
         for note in rows["official_china_registry_portal_catalog"]["notes"]
     )
+    source_work = {
+        item["connector"]: item
+        for item in catalog["source_strengthening_queue"]
+    }
+    assert "gleif_lei_relationship_traversal_public_api" not in source_work
+    assert "idb_sanctioned_firms_dataset_catalog" not in source_work
+    assert rows["idb_sanctioned_firms_dataset_catalog"]["production_ready"] is True
+    assert rows["idb_sanctioned_firms_dataset_catalog"]["default_enabled"] is False
+    assert rows["idb_sanctioned_firms_dataset_catalog"]["standardized_records"] is True
+    assert rows["idb_sanctioned_firms_dataset_catalog"]["data_effectiveness"]["can_feed_report_facts"] is False
+    assert rows["idb_sanctioned_firms_dataset_catalog"]["data_effectiveness"]["admission_mode"] == "catalog_source_requires_local_subject_index"
+    assert "local_subject_index_required" in rows["idb_sanctioned_firms_dataset_catalog"]["data_effectiveness"]["admission_gates"]
+    assert rows["idb_local_subject_index"]["production_ready"] is True
+    assert rows["idb_local_subject_index"]["default_enabled"] is False
+    assert "opensanctions_public_dataset_catalog" not in source_work
+    assert "enterprise_domain_security_assessment" not in source_work
+    assert "enterprise_executive_identity_verification" not in source_work
+    assert "enterprise_contact_attribution_verification" not in source_work
+    assert "enterprise_key_personnel_record_crosscheck" not in source_work
+    assert "authorized_companies_house_api" not in source_work
+    assert "authorized_sec_edgar_full_api" not in source_work
+    assert rows["opensanctions_public_dataset_catalog"]["production_ready"] is True
+    assert rows["opensanctions_public_dataset_catalog"]["default_enabled"] is False
+    assert rows["opensanctions_public_dataset_catalog"]["data_effectiveness"]["can_feed_report_facts"] is False
+    assert rows["opensanctions_public_dataset_catalog"]["data_effectiveness"]["admission_mode"] == "lead_source_with_exact_match_promotion"
+    assert "local_or_authorized_subject_index_required" in rows["opensanctions_public_dataset_catalog"]["risk_flags"]
+    assert "official_china_registry_portal_catalog" not in source_work
+    assert "official_china_credit_portal_catalog" not in source_work
+    assert "official_china_court_enforcement_catalog" not in source_work
+    assert rows["official_china_registry_portal_catalog"]["production_ready"] is True
+    assert rows["official_china_registry_portal_catalog"]["default_enabled"] is False
+    assert rows["official_china_registry_portal_catalog"]["data_effectiveness"]["admission_mode"] == "fact_source_when_subject_match_passes"
+    assert rows["official_china_credit_portal_catalog"]["production_ready"] is True
+    assert rows["official_china_credit_portal_catalog"]["default_enabled"] is False
+    assert rows["official_china_credit_portal_catalog"]["data_effectiveness"]["admission_mode"] == "fact_source_when_subject_match_passes"
+    assert rows["official_china_court_enforcement_catalog"]["production_ready"] is True
+    assert rows["official_china_court_enforcement_catalog"]["default_enabled"] is False
+    assert rows["official_china_court_enforcement_catalog"]["data_effectiveness"]["admission_mode"] == "fact_source_when_subject_match_passes"
     assert rows["qyyjt_tool"]["admission"]["decision"] == "conditional_production"
     assert catalog["qyyjt_benchmark"]["type"] == "qyyjt_benchmark"
     assert catalog["qyyjt_benchmark"]["summary"]["module_count"] == 45
@@ -355,20 +487,20 @@ def test_public_catalog_connectors_are_registered_but_not_overclaimed() -> None:
         "gleif_lei_public_api",
         "sec_edgar_public_api",
     }
-    catalog_sources = {
-        "opensanctions_public_dataset_catalog",
-        "idb_sanctioned_firms_dataset_catalog",
-        "official_china_registry_portal_catalog",
-        "official_china_credit_portal_catalog",
-        "official_china_court_enforcement_catalog",
-    }
+    catalog_sources = set()
     production_default_off_sources = {
+        "gleif_lei_relationship_traversal_public_api",
+        "opensanctions_public_dataset_catalog",
         "opensanctions_local_subject_index",
         "ofac_consolidated_sanctions_xml",
         "un_sc_consolidated_sanctions_xml",
+        "idb_sanctioned_firms_dataset_catalog",
         "idb_local_subject_index",
         "world_bank_debarred_firms_public_list",
         "wikidata_public_entity_graph",
+        "official_china_registry_portal_catalog",
+        "official_china_credit_portal_catalog",
+        "official_china_court_enforcement_catalog",
     }
 
     for name in direct_public_apis:
@@ -393,6 +525,8 @@ def test_public_catalog_connectors_are_registered_but_not_overclaimed() -> None:
         assert connector.production_ready is True
 
     assert registry.get("gleif_lei_public_api").status is ConnectorStatus.ACTIVE
+    assert registry.get("gleif_lei_relationship_traversal_public_api").status is ConnectorStatus.CONDITIONALLY_ACTIVE
+    assert registry.get("opensanctions_public_dataset_catalog").status is ConnectorStatus.CONDITIONALLY_ACTIVE
     assert registry.get("sec_edgar_public_api").status is ConnectorStatus.ACTIVE
     assert registry.get("opensanctions_local_subject_index").status is ConnectorStatus.CONDITIONALLY_ACTIVE
     assert registry.get("ofac_consolidated_sanctions_xml").status is ConnectorStatus.ACTIVE
@@ -400,6 +534,14 @@ def test_public_catalog_connectors_are_registered_but_not_overclaimed() -> None:
     assert registry.get("idb_local_subject_index").status is ConnectorStatus.CONDITIONALLY_ACTIVE
     assert registry.get("world_bank_debarred_firms_public_list").status is ConnectorStatus.ACTIVE
     assert registry.get("wikidata_public_entity_graph").status is ConnectorStatus.ACTIVE
-    assert registry.get("official_china_registry_portal_catalog").status is ConnectorStatus.NEEDS_REVIEW
+    assert registry.get("official_china_registry_portal_catalog").status is ConnectorStatus.CONDITIONALLY_ACTIVE
+    assert registry.get("official_china_registry_portal_catalog").health_check is True
+    assert registry.get("official_china_registry_portal_catalog").standardized_records is True
+    assert registry.get("official_china_credit_portal_catalog").status is ConnectorStatus.CONDITIONALLY_ACTIVE
     assert "live_health_pending" in registry.get("official_china_credit_portal_catalog").risk_flags
+    assert registry.get("official_china_credit_portal_catalog").health_check is True
+    assert registry.get("official_china_credit_portal_catalog").standardized_records is True
+    assert registry.get("official_china_court_enforcement_catalog").status is ConnectorStatus.CONDITIONALLY_ACTIVE
     assert "live_health_pending" in registry.get("official_china_court_enforcement_catalog").risk_flags
+    assert registry.get("official_china_court_enforcement_catalog").health_check is True
+    assert registry.get("official_china_court_enforcement_catalog").standardized_records is True

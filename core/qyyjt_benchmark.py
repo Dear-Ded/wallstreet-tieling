@@ -105,6 +105,7 @@ def build_qyyjt_benchmark() -> dict[str, Any]:
         item for item in work_items
         if str(item["parity_priority"]).startswith("p0_")
     ]
+    public_origin_execution_queue = _public_origin_execution_queue(work_items)
     lane_counts = {
         lane.value: sum(1 for row in rows if row.surface_lane == lane.value)
         for lane in QYYJTDeliveryLane
@@ -131,6 +132,8 @@ def build_qyyjt_benchmark() -> dict[str, Any]:
             "surface_lanes": lane_counts,
             "field_contracts": _field_contracts(rows),
             "public_origin_plans": _public_origin_plans(rows),
+            "public_origin_execution_queue": public_origin_execution_queue,
+            "public_origin_execution_summary": _public_origin_execution_summary(public_origin_execution_queue),
             "surface_profile": {
                 "concrete_api_or_legacy_modules": counts["api"],
                 "rich_query_plan_modules": counts["query_plan"],
@@ -337,6 +340,159 @@ def _public_origin_plans(rows: list[QYYJTBenchmarkRow]) -> dict[str, dict[str, A
         for row in rows
         if row.public_origin_plan.get("origin_channels")
     }
+
+
+def _public_origin_execution_queue(work_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    queue: list[dict[str, Any]] = []
+    for item in work_items:
+        plan = item.get("public_origin_plan") if isinstance(item.get("public_origin_plan"), dict) else {}
+        contract = item.get("field_contract") if isinstance(item.get("field_contract"), dict) else {}
+        origin_channels = [str(value) for value in plan.get("origin_channels", []) if str(value).strip()]
+        if not origin_channels:
+            continue
+        module = str(item.get("module") or "")
+        queue.append(
+            {
+                "action_id": f"PUBLIC-ORIGIN-{module.upper()}",
+                "module": module,
+                "module_family": item.get("module_family"),
+                "priority": item.get("parity_priority"),
+                "priority_rank": item.get("priority_rank"),
+                "coverage_class": item.get("coverage_class"),
+                "target_lane": contract.get("report_section") or item.get("module_family"),
+                "record_type": contract.get("record_type"),
+                "origin_channels": origin_channels[:6],
+                "query_families": list(plan.get("query_families") or [])[:6],
+                "required_fields": list(contract.get("required_fields") or [])[:10],
+                "optional_fields": list(contract.get("optional_fields") or [])[:8],
+                "admission_gate": item.get("admission_gate"),
+                "acceptance_gate": item.get("acceptance_gate"),
+                "done_condition": item.get("done_when"),
+                "compliance_rule": plan.get("compliance_rule"),
+                "evidence_boundary": plan.get("evidence_boundary"),
+            }
+        )
+    return queue
+
+
+def _public_origin_execution_summary(queue: list[dict[str, Any]]) -> dict[str, Any]:
+    p0_items = [
+        item for item in queue
+        if str(item.get("priority") or "").startswith("p0_")
+    ]
+    lane_counts: dict[str, int] = {}
+    origin_channel_counts: dict[str, int] = {}
+    missing_required_fields: list[str] = []
+    for item in queue:
+        lane = str(item.get("target_lane") or "unknown")
+        lane_counts[lane] = lane_counts.get(lane, 0) + 1
+        for channel in item.get("origin_channels", []):
+            channel_key = str(channel)
+            origin_channel_counts[channel_key] = origin_channel_counts.get(channel_key, 0) + 1
+        if not item.get("required_fields"):
+            missing_required_fields.append(str(item.get("module") or "unknown"))
+    next_batch = [
+        {
+            "action_id": item.get("action_id"),
+            "module": item.get("module"),
+            "priority": item.get("priority"),
+            "target_lane": item.get("target_lane"),
+            "record_type": item.get("record_type"),
+            "origin_channels": list(item.get("origin_channels") or [])[:4],
+            "required_fields": list(item.get("required_fields") or [])[:6],
+            "done_condition": item.get("done_condition"),
+        }
+        for item in sorted(
+            queue,
+            key=lambda value: (
+                _execution_priority_rank(value.get("priority_rank")),
+                str(value.get("target_lane") or ""),
+                str(value.get("module") or ""),
+            ),
+        )[:8]
+    ]
+    report_section_batches = _public_origin_report_section_batches(queue)
+    return {
+        "type": "public_origin_execution_summary",
+        "queue_count": len(queue),
+        "p0_count": len(p0_items),
+        "p1_or_later_count": max(0, len(queue) - len(p0_items)),
+        "target_lane_counts": dict(sorted(lane_counts.items())),
+        "origin_channel_counts": dict(sorted(origin_channel_counts.items())),
+        "top_action": next_batch[0] if next_batch else {},
+        "next_batch": next_batch,
+        "report_section_batches": report_section_batches,
+        "field_contract_gap_count": len(missing_required_fields),
+        "field_contract_gap_modules": missing_required_fields[:20],
+        "policy": "Execute public-origin reconstruction only through public or user-authorized channels; keep outputs lead-only until field contract, provenance, and admission gates pass.",
+    }
+
+
+def _public_origin_report_section_batches(queue: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for item in queue:
+        section = str(item.get("target_lane") or "unknown")
+        grouped.setdefault(section, []).append(item)
+
+    section_order = {
+        "subject_resolution": 0,
+        "corporate_registry": 1,
+        "ownership_control": 2,
+        "legal_risk": 3,
+        "asset_solvency": 4,
+        "financing_capital_markets": 5,
+        "bond_credit": 6,
+        "relationship_network": 7,
+        "trade_supply_chain": 8,
+        "public_opinion": 9,
+        "ip_technology": 10,
+    }
+    batches: list[dict[str, Any]] = []
+    for section, items in grouped.items():
+        sorted_items = sorted(
+            items,
+            key=lambda value: (
+                _execution_priority_rank(value.get("priority_rank")),
+                str(value.get("module") or ""),
+            ),
+        )
+        top_actions = [
+            {
+                "action_id": item.get("action_id"),
+                "module": item.get("module"),
+                "priority": item.get("priority"),
+                "record_type": item.get("record_type"),
+                "origin_channels": list(item.get("origin_channels") or [])[:4],
+                "query_families": list(item.get("query_families") or [])[:4],
+                "required_fields": list(item.get("required_fields") or [])[:6],
+                "done_condition": item.get("done_condition"),
+            }
+            for item in sorted_items[:4]
+        ]
+        batches.append(
+            {
+                "report_section": section,
+                "queue_count": len(items),
+                "p0_count": sum(1 for item in items if str(item.get("priority") or "").startswith("p0_")),
+                "record_types": sorted({str(item.get("record_type")) for item in items if str(item.get("record_type") or "").strip()})[:12],
+                "top_actions": top_actions,
+                "done_condition": "complete_or_explicitly_mark_no_public_origin_evidence_for_section",
+            }
+        )
+    return sorted(
+        batches,
+        key=lambda item: (
+            section_order.get(str(item.get("report_section") or ""), 99),
+            -int(item.get("p0_count") or 0),
+            str(item.get("report_section") or ""),
+        ),
+    )
+
+
+def _execution_priority_rank(value: Any) -> int:
+    if value in (None, ""):
+        return 99
+    return int(value)
 
 
 def _operator_work_item(

@@ -108,6 +108,73 @@ class VisualChallengeSolver(SafeResearchAdapter):
             self._gate.log_access(self._source_key, "gsxt_query_error", target, type(e).__name__)
             return {"error": str(e), "authorized": True}
 
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "runtime_visual_challenge_solver",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "requires_runtime_dependency": "ddddocr",
+            "default_enabled": False,
+            "output_contract": [
+                "engine",
+                "access_path",
+                "fields",
+                "source_url",
+                "entity_match",
+                "evidence",
+            ],
+            "report_gate": "OCR-assisted public-query output remains lead-only until official page provenance and exact/strong subject match pass",
+        }
+
+    def standardize_result(self, subject: str, result: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"health": self.health_check(), "standardized_records": [], "raw": result}
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        source = str(result.get("source") or "gsxt.gov.cn")
+        record = {
+            "source_name": "runtime_visual_challenge_solver",
+            "source_type": self.source_type,
+            "source_hint": "runtime_visual_challenge_solver",
+            "record_type": "ocr_assisted_public_registry_query_lead",
+            "entity": subject.strip(),
+            "title": f"OCR-assisted public registry query lead: {subject.strip()}",
+            "summary": (
+                f"source={source}; engine={result.get('engine') or fields.get('ocr_engine') or 'ddddocr'}; "
+                f"field_count={result.get('field_count', len(fields))}"
+            ),
+            "url": "https://www.gsxt.gov.cn/",
+            "confidence": 0.56,
+            "entity_match": {
+                "level": "review",
+                "score": 0.56,
+                "method": "ocr_assisted_query_requires_official_result_identity_fields",
+                "identifiers": {"subject": subject.strip(), "query_subject_hash": result.get("query_subject_hash", "")},
+            },
+            "entities": [
+                {
+                    "kind": "company",
+                    "name": subject.strip(),
+                    "relation": "ocr_assisted_registry_query_subject",
+                    "confidence": 0.56,
+                    "source": source,
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "ocr_assisted_public_query",
+                    "provider": source,
+                    "source_url": "https://www.gsxt.gov.cn/",
+                    "engine": result.get("engine") or fields.get("ocr_engine") or "ddddocr",
+                    "access_path": result.get("access_path", ""),
+                    "entity_match_level": "review",
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}
 
@@ -193,6 +260,80 @@ class UsernameCrossPlatformVerifier(SafeResearchAdapter):
 # ================================================================
 # 爱企查cookie会话持久化 — 真实集成
 # ================================================================
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "runtime_username_cross_platform_verifier",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "optional_runtime_dependency": "maigret",
+            "default_enabled": False,
+            "output_contract": [
+                "engine",
+                "platforms_found",
+                "platforms",
+                "entity_match",
+                "evidence",
+            ],
+            "report_gate": "username matches remain lead-only until person context, false-positive review, and exact/strong identity match pass",
+        }
+
+    def standardize_result(self, username: str, result: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"health": self.health_check(), "standardized_records": [], "raw": result}
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        platforms = [str(item) for item in fields.get("platforms", []) if str(item).strip()]
+        found = int(fields.get("platforms_found") or len(platforms))
+        confidence = min(0.82, 0.45 + found * 0.05)
+        clean_username = username.strip().lstrip("@")
+        record = {
+            "source_name": "runtime_username_cross_platform_verifier",
+            "source_type": self.source_type,
+            "source_hint": "runtime_username_cross_platform_verifier",
+            "record_type": "runtime_cross_platform_username_lead",
+            "entity": clean_username,
+            "title": f"Runtime cross-platform username lead: {clean_username}",
+            "summary": f"engine={result.get('engine', '')}; platforms_found={found}",
+            "url": "",
+            "confidence": confidence,
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "runtime_username_presence_requires_person_context",
+                "identifiers": {"username": clean_username, "platform_count": found},
+            },
+            "entities": [
+                {
+                    "kind": "person_or_account",
+                    "name": clean_username,
+                    "relation": "runtime_cross_platform_profile_candidate",
+                    "confidence": confidence,
+                    "source": result.get("engine", "cross_platform_runtime"),
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "runtime_cross_platform_username_presence",
+                    "provider": str(platform),
+                    "source_url": self._platform_url(platform, clean_username),
+                    "engine": result.get("engine", ""),
+                    "username": clean_username,
+                    "entity_match_level": "review",
+                    "manual_review_required": True,
+                }
+                for platform in platforms[:30]
+            ],
+            "raw": result,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
+    @staticmethod
+    def _platform_url(platform: str, username: str) -> str:
+        if platform == "ycombinator-news":
+            return f"https://news.ycombinator.com/user?id={urllib.parse.quote(username)}"
+        return f"https://{platform}.com/{urllib.parse.quote(username)}"
+
+
 class AiqichaSessionLookup(SafeResearchAdapter):
     """使用ENScan_GO(4.5k★)或直接HTTP+BeautifulSoup查询爱企查。真实运行时适配器。"""
 
@@ -258,6 +399,87 @@ class AiqichaSessionLookup(SafeResearchAdapter):
                     "response_status": 200}
         except Exception as e:
             return {"error": str(e), "authorized": True}
+
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "runtime_aiqicha_session_lookup",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "requires_user_session": True,
+            "default_enabled": False,
+            "output_contract": [
+                "legal_person",
+                "registered_capital",
+                "establishment_date",
+                "uscc",
+                "entity_match",
+                "evidence",
+            ],
+            "report_gate": "Aiqicha session results remain lead-only until user session authorization, official-source provenance, and exact/strong entity match pass",
+        }
+
+    def standardize_result(self, company_name: str, result: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"health": self.health_check(), "standardized_records": [], "raw": result}
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        clean_company = company_name.strip()
+        uscc = str(fields.get("uscc") or "").strip()
+        source_url = f"https://aiqicha.baidu.com/s?q={urllib.parse.quote(clean_company)}"
+        record = {
+            "source_name": "runtime_aiqicha_session_lookup",
+            "source_type": self.source_type,
+            "source_hint": "runtime_aiqicha_session_lookup",
+            "record_type": "runtime_aiqicha_enterprise_registry_lead",
+            "entity": clean_company,
+            "title": f"Aiqicha session enterprise registry lead: {clean_company}",
+            "summary": "; ".join(
+                part
+                for part in (
+                    f"legal_person={fields.get('legal_person')}" if fields.get("legal_person") else "",
+                    f"registered_capital={fields.get('registered_capital')}" if fields.get("registered_capital") else "",
+                    f"establishment_date={fields.get('establishment_date')}" if fields.get("establishment_date") else "",
+                    f"uscc={uscc}" if uscc else "",
+                )
+                if part
+            ),
+            "url": source_url,
+            "confidence": 0.68 if uscc else 0.58,
+            "registration_authority": "Aiqicha/Baidu aggregated public registry",
+            "entity_match": {
+                "level": "strong" if uscc else "review",
+                "score": 0.86 if uscc else 0.58,
+                "method": "queried_company_to_aiqicha_visible_registry_fields",
+                "identifiers": {
+                    "company_name": clean_company,
+                    "unified_social_credit_code": uscc,
+                    "query_subject_hash": result.get("query_subject_hash", ""),
+                },
+            },
+            "entities": [
+                {
+                    "kind": "company",
+                    "name": clean_company,
+                    "relation": "queried_subject",
+                    "confidence": 0.68 if uscc else 0.58,
+                    "source": "Aiqicha",
+                    "unified_social_credit_code": uscc,
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "user_authorized_commercial_registry_session_lookup",
+                    "provider": "Aiqicha/Baidu",
+                    "source_url": source_url,
+                    "field_keys": sorted(fields.keys()),
+                    "requires_user_session": True,
+                    "entity_match_level": "strong" if uscc else "review",
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
 
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}

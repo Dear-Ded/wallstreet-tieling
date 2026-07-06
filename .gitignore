@@ -22,3 +22,24 @@ config/datasources_qyyjt.yaml
 cookies.json
 browser-profile/
 browser_profiles/
+
+# Runtime/test artifacts
+.pytest-*/
+.pytest_cache/
+.tmp/
+.workbuddy/
+.codex-autonomous/
+outputs/
+tmp-events.jsonl
+*.bak
+*.bak.*
+audit_reports/
+
+# Local coordination and generated handoff notes
+AGENT_COORDINATION_BOARD.md
+docs/COMPREHENSIVE_AUDIT_REPORT_*.md
+docs/FINAL_DELIVERY_REPORT_*.md
+gen_ci.py
+overview.md
+send_message_to_product_ai.py
+package-lock.json

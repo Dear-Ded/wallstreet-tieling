@@ -593,6 +593,11 @@ def test_qyyjt_fin_inst_reaches_packet_and_report(tmp_path) -> None:
     assert profile["rows"][0]["institution_name"] == "Beijing Credit Bank"
     assert profile["rows"][0]["counterparty_role"] == "credit_lender"
     assert profile["rows"][0]["credit_line"] == "50000000"
+    assert profile["rows"][0]["record_type"] == "financial_institution_profile"
+    assert profile["rows"][0]["field_values"]["institution_name"] == "Beijing Credit Bank"
+    assert profile["top_exposures"][0]["identifier"] == "Beijing Credit Bank"
+    assert profile["monitoring_queue"][0]["module"] == "fin_inst"
+    assert profile["field_coverage"]["coverage_ratio"] > 0.5
     assert "credit_lender" in profile["rows"][0]["summary"]
     fund_flow = packet["enterprise_cognition"]["fund_flow_profile"]
     assert any("financial_institution_counterparties=1" in signal for signal in fund_flow["operating_activity_signals"])
@@ -600,6 +605,8 @@ def test_qyyjt_fin_inst_reaches_packet_and_report(tmp_path) -> None:
     assert "financial_institution_profile" in capital_pressure["source_basis"]
     assert any("financial_counterparties=1" in signal for signal in capital_pressure["pressure_signals"])
     assert any(row.get("institution_name") == "Beijing Credit Bank" for row in capital_pressure["rows"])
+    assert "top exposure: fin_inst:Beijing Credit Bank" in packet["report_markdown"]
+    assert "next verification: P1 QYYJT-FIN_INST-01" in packet["report_markdown"]
     assert "金融机构对手方画像" in packet["report_markdown"]
     assert "Beijing Credit Bank" in packet["report_markdown"]
     assert "credit_lender" in packet["report_markdown"]
@@ -1127,9 +1134,20 @@ def test_qyyjt_domain_depth_modules_have_contracts_and_structured_events(tmp_pat
     categories = {event.category.value for event in result.graph.risk_events}
     assert {"financing_capital_markets", "location_assets", "ip_tech"} <= categories
     assert any(event.severity.value == "high" for event in result.graph.risk_events)
-    assert packet["enterprise_cognition"]["bond_credit_profile"]["default_count"] == 1
-    assert packet["enterprise_cognition"]["asset_solvency_profile"]["pledge_count"] == 1
+    bond_profile = packet["enterprise_cognition"]["bond_credit_profile"]
+    asset_profile = packet["enterprise_cognition"]["asset_solvency_profile"]
+    assert bond_profile["default_count"] == 1
+    assert bond_profile["top_exposures"][0]["identifier"] == "Demo 2026 Bond"
+    assert bond_profile["top_exposures"][0]["pressure_flag"] == "high"
+    assert bond_profile["monitoring_queue"][0]["priority"] == "P0"
+    assert "bond_name" in bond_profile["field_coverage"]["covered_fields"]
+    assert asset_profile["pledge_count"] == 1
+    assert asset_profile["top_exposures"][0]["counterparty"] == "Demo Bank"
+    assert asset_profile["monitoring_queue"][0]["module"] == "pledge"
+    assert "pledged_amount" in asset_profile["field_coverage"]["covered_fields"]
     assert packet["enterprise_cognition"]["ip_tech_profile"]["patent_count"] == 1
+    assert "top exposure: bond_default:Demo 2026 Bond" in packet["report_markdown"]
+    assert "next verification: P0 QYYJT-BOND_CREDIT-01" in packet["report_markdown"]
     assert "债券信用画像" in packet["report_markdown"]
     assert "资产偿付画像" in packet["report_markdown"]
     assert "知识产权画像" in packet["report_markdown"]
@@ -1214,6 +1232,11 @@ def test_qyyjt_regional_credit_modules_feed_report_cognition(tmp_path) -> None:
     assert profile["region_economy_count"] == 1
     assert profile["region_debt_count"] == 1
     assert profile["high_or_critical_event_count"] >= 1
+    assert profile["top_exposures"][0]["identifier"] == "Demo City"
+    assert profile["top_exposures"][0]["pressure_flag"] == "high"
+    assert profile["monitoring_queue"][0]["priority"] == "P0"
+    assert "risk_level" in profile["field_coverage"]["covered_fields"]
+    assert "top exposure: city_invest:Demo City" in packet["report_markdown"]
     assert "Demo City" in packet["report_markdown"]
     assert "platform_debt_pressure" in packet["report_markdown"]
 
@@ -1594,6 +1617,32 @@ def test_qyyjt_benchmark_surface_is_fully_module_specific() -> None:
     assert all(item["field_contract"]["required_fields"] for item in benchmark["summary"]["p0_queue"])
     assert benchmark["summary"]["public_origin_plans"]["ent_basic"]["fallback_mode"] == "public_origin_reconstruction"
     assert "official_company_registry" in benchmark["summary"]["public_origin_plans"]["ent_basic"]["origin_channels"]
+    execution_queue = benchmark["summary"]["public_origin_execution_queue"]
+    execution_summary = benchmark["summary"]["public_origin_execution_summary"]
+    assert execution_queue[0]["action_id"] == "PUBLIC-ORIGIN-SEARCH_MULTI"
+    assert execution_queue[0]["record_type"] == "subject_resolution_candidate"
+    assert "candidate_name" in execution_queue[0]["required_fields"]
+    assert "official_company_registry" in execution_queue[0]["origin_channels"]
+    assert all(item["done_condition"] for item in execution_queue)
+    assert execution_summary["type"] == "public_origin_execution_summary"
+    assert execution_summary["queue_count"] == len(execution_queue)
+    assert execution_summary["p0_count"] == benchmark["summary"]["p0_queue_count"]
+    assert execution_summary["top_action"]["action_id"] == "PUBLIC-ORIGIN-SEARCH_MULTI"
+    assert len(execution_summary["next_batch"]) == 8
+    assert execution_summary["field_contract_gap_count"] == 0
+    assert execution_summary["target_lane_counts"]["financing_capital_markets"] >= 1
+    assert execution_summary["origin_channel_counts"]["official_company_registry"] >= 1
+    section_batches = execution_summary["report_section_batches"]
+    assert section_batches[0]["report_section"] == "subject_resolution"
+    assert all(item["top_actions"] for item in section_batches)
+    legal_batch = next(item for item in section_batches if item["report_section"] == "legal_risk")
+    assert legal_batch["queue_count"] >= 1
+    assert legal_batch["done_condition"] == "complete_or_explicitly_mark_no_public_origin_evidence_for_section"
+    asset_batch = next(item for item in section_batches if item["report_section"] == "asset_solvency")
+    assert "equity_pledge" in asset_batch["record_types"]
+    financing_action = next(item for item in execution_queue if item["module"] == "ent_financing")
+    assert financing_action["target_lane"] == "financing_capital_markets"
+    assert "amount" in financing_action["required_fields"]
     assert "do_not_bypass_authentication_paywalls_captcha_or_rate_limits" in {
         item["public_origin_plan"]["compliance_rule"]
         for item in benchmark["summary"]["work_items"]

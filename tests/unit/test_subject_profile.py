@@ -317,6 +317,205 @@ def test_subject_profile_derives_indirect_controller_path_from_relationship_grap
     assert not any("controller and beneficial-owner evidence" in gap for gap in profile["evidence_gaps"])
 
 
+def test_subject_profile_exposes_structured_multi_layer_control_path_summary() -> None:
+    graph = EvidenceGraph()
+    root = "company:demo_nested_co."
+    holding = "company:demo_holding_ltd"
+    vehicle = "company:demo_family_vehicle"
+    owner = "person:alice_ultimate"
+    graph.add_entity(
+        InvestigationEntity(root, EntityKind.COMPANY, "Demo Nested Co.", 1.0, [], {"seed": True})
+    )
+    graph.add_entity(
+        InvestigationEntity(holding, EntityKind.COMPANY, "Demo Holding Ltd", 0.91, [])
+    )
+    graph.add_entity(
+        InvestigationEntity(vehicle, EntityKind.COMPANY, "Demo Family Vehicle", 0.9, [])
+    )
+    graph.add_entity(
+        InvestigationEntity(owner, EntityKind.PERSON, "Alice Ultimate", 0.89, [])
+    )
+    evidence = [
+        EvidenceItem(
+            id="evidence:shareholder",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="qyyjt_api:shareholder",
+            title="Licensed shareholder layer",
+            confidence=0.89,
+            source_profile=SourceCatalog.profile_for("registry_and_commercial_sources"),
+            entity_match={"level": "exact", "score": 1.0},
+        ),
+        EvidenceItem(
+            id="evidence:group",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="qyyjt_api:group_network",
+            title="Licensed group layer",
+            confidence=0.87,
+            source_profile=SourceCatalog.profile_for("registry_and_commercial_sources"),
+            entity_match={"level": "exact", "score": 0.97},
+        ),
+        EvidenceItem(
+            id="evidence:ubo",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="qyyjt_api:ubo_path",
+            title="Licensed UBO layer",
+            confidence=0.86,
+            source_profile=SourceCatalog.profile_for("registry_and_commercial_sources"),
+            entity_match={"level": "exact", "score": 0.96},
+        ),
+    ]
+    for item in evidence:
+        graph.add_evidence(item)
+    graph.add_relation(
+        InvestigationRelation(root, holding, "majority_shareholder", 0.89, ("evidence:shareholder",))
+    )
+    graph.add_relation(
+        InvestigationRelation(holding, vehicle, "controlling_shareholder", 0.87, ("evidence:group",))
+    )
+    graph.add_relation(
+        InvestigationRelation(vehicle, owner, "beneficial_owner", 0.86, ("evidence:ubo",))
+    )
+
+    profile = SubjectProfileBuilder().build(graph, seed_subject_id=root).to_dict()
+    candidate = profile["controller_candidates"][0]
+    summary = candidate["control_path_summaries"][0]
+
+    assert candidate["name"] == "Alice Ultimate"
+    assert "Demo Nested Co. -> Demo Holding Ltd -> Demo Family Vehicle -> Alice Ultimate" in candidate["control_paths"]
+    assert summary["path_text"] == "Demo Nested Co. -> Demo Holding Ltd -> Demo Family Vehicle -> Alice Ultimate"
+    assert summary["hop_count"] == 3
+    assert summary["relation_types"] == [
+        "majority_shareholder",
+        "controlling_shareholder",
+        "beneficial_owner",
+    ]
+    assert summary["source_names"] == [
+        "qyyjt_api:group_network",
+        "qyyjt_api:shareholder",
+        "qyyjt_api:ubo_path",
+    ]
+    assert summary["source_families"] == ["licensed_commercial"]
+    assert summary["source_family_summary"]["top_family"] == "licensed_commercial"
+    assert summary["source_family_summary"]["has_official_or_authorized"] is True
+    assert candidate["source_families"] == ["licensed_commercial"]
+    assert summary["evidence_ids"] == ["evidence:group", "evidence:shareholder", "evidence:ubo"]
+    assert summary["admission"] == "fact"
+    assert summary["source_strength"] >= 4
+    assert summary["min_confidence"] == 0.86
+
+
+def test_subject_profile_summarizes_control_source_families_across_major_feeds() -> None:
+    graph = EvidenceGraph()
+    root = "company:demo_cross_source_co."
+    parent = "company:demo_registry_parent"
+    holding = "company:demo_gleif_holding"
+    owner = "person:alice_cross_source"
+    graph.add_entity(
+        InvestigationEntity(root, EntityKind.COMPANY, "Demo Cross Source Co.", 1.0, [], {"seed": True})
+    )
+    graph.add_entity(
+        InvestigationEntity(parent, EntityKind.COMPANY, "Demo Registry Parent", 0.92, [])
+    )
+    graph.add_entity(
+        InvestigationEntity(holding, EntityKind.COMPANY, "Demo GLEIF Holding", 0.9, [])
+    )
+    graph.add_entity(
+        InvestigationEntity(owner, EntityKind.PERSON, "Alice Cross Source", 0.88, [])
+    )
+    evidence = [
+        EvidenceItem(
+            id="evidence:registry-parent",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="official_registry",
+            title="Official registry shareholder layer",
+            confidence=0.9,
+            source_profile=SourceCatalog.profile_for("registry_sources"),
+            entity_match={"level": "exact", "score": 1.0},
+        ),
+        EvidenceItem(
+            id="evidence:gleif-parent",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="gleif_lei_public_api",
+            title="GLEIF parent layer",
+            confidence=0.86,
+            source_profile=SourceCatalog.profile_for("gleif_lei_public_api"),
+            entity_match={"level": "exact", "score": 0.98},
+        ),
+        EvidenceItem(
+            id="evidence:qyyjt-ubo",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="qyyjt_api:ubo_path",
+            title="QYYJT UBO terminal layer",
+            confidence=0.87,
+            source_profile=SourceCatalog.profile_for("registry_and_commercial_sources"),
+            entity_match={"level": "exact", "score": 0.99},
+        ),
+        EvidenceItem(
+            id="evidence:sec-officer",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="sec_edgar_public_api",
+            title="SEC officer corroboration",
+            confidence=0.82,
+            source_profile=SourceCatalog.profile_for("sec_edgar_public_api"),
+            entity_match={"level": "exact", "score": 0.97},
+        ),
+        EvidenceItem(
+            id="evidence:wikidata-board",
+            evidence_type=EvidenceType.DATABASE_RESULT,
+            source="wikidata_public_entity_graph",
+            title="Wikidata board corroboration",
+            confidence=0.68,
+            source_profile=SourceCatalog.profile_for("wikidata_public_entity_graph"),
+            entity_match={"level": "exact", "score": 0.95},
+        ),
+    ]
+    for item in evidence:
+        graph.add_evidence(item)
+    graph.add_relation(InvestigationRelation(root, parent, "majority_shareholder", 0.9, ("evidence:registry-parent",)))
+    graph.add_relation(InvestigationRelation(parent, holding, "ultimate_parent", 0.86, ("evidence:gleif-parent",)))
+    graph.add_relation(
+        InvestigationRelation(
+            holding,
+            owner,
+            "beneficial_owner",
+            0.87,
+            ("evidence:qyyjt-ubo", "evidence:sec-officer", "evidence:wikidata-board"),
+        )
+    )
+
+    profile = SubjectProfileBuilder().build(graph, seed_subject_id=root).to_dict()
+    candidate = next(item for item in profile["controller_candidates"] if item["name"] == "Alice Cross Source")
+    family_names = {item["family"] for item in candidate["source_family_summary"]["families"]}
+    multi_layer = next(
+        summary for summary in candidate["control_path_summaries"]
+        if summary["path_text"] == "Demo Cross Source Co. -> Demo Registry Parent -> Demo GLEIF Holding -> Alice Cross Source"
+    )
+    edge = next(
+        item for item in profile["relationship_graph"]["edges"]
+        if item["relation_type"] == "ultimate_parent"
+    )
+
+    assert candidate["confidence_tier"] == "corroborated_fact"
+    assert family_names == {
+        "official_registry",
+        "official_public_gleif",
+        "licensed_commercial",
+        "official_public_sec",
+        "public_knowledge_graph",
+    }
+    assert candidate["source_family_summary"]["has_official_or_authorized"] is True
+    assert multi_layer["hop_count"] == 3
+    assert multi_layer["source_families"] == [
+        "licensed_commercial",
+        "official_public_gleif",
+        "official_public_sec",
+        "official_registry",
+        "public_knowledge_graph",
+    ]
+    assert multi_layer["source_family_summary"]["policy"].startswith("Source families explain")
+    assert edge["source_families"] == ["official_public_gleif"]
+
+
 def test_subject_profile_uses_gleif_parent_relationship_entities() -> None:
     planner = InvestigativeRetrievalPlanner()
     plan = planner.build_company_plan("Demo GLEIF Child Ltd")
@@ -360,6 +559,64 @@ def test_subject_profile_uses_gleif_parent_relationship_entities() -> None:
         for edge in profile["relationship_graph"]["edges"]
     )
     assert not any("relationship-network evidence" in gap for gap in profile["evidence_gaps"])
+
+
+def test_subject_profile_uses_gleif_relationship_edge_records() -> None:
+    planner = InvestigativeRetrievalPlanner()
+    plan = planner.build_company_plan("Demo GLEIF Child Ltd")
+    seed_id = "company:demo_gleif_child_ltd"
+    task = plan.by_domain(RetrievalDomain.RELATED_ENTITIES)[0]
+
+    EvidenceIngestor.ingest_standardized_records(
+        plan.graph,
+        seed_entity_id=seed_id,
+        task=task,
+        records=[
+            {
+                "source_name": "gleif_lei_relationship_traversal_public_api",
+                "source_type": "rest_api",
+                "source_hint": "gleif_lei_relationship_traversal_public_api",
+                "record_type": "gleif_relationship_edge",
+                "entity": "Demo GLEIF Child Ltd",
+                "title": "GLEIF relationship edge: Demo GLEIF Child Ltd -> Demo Direct Parent Ltd",
+                "summary": "subject_lei=549300CHILD; related_lei=549300PARENT; relationship_type=direct_parent",
+                "confidence": 0.78,
+                "subject_lei": "549300CHILD",
+                "related_lei": "549300PARENT",
+                "relationship_type": "direct_parent",
+                "relationship_status": "reported",
+                "entities": [
+                    {
+                        "kind": "company",
+                        "name": "Demo Direct Parent Ltd",
+                        "relation": "direct_parent",
+                        "confidence": 0.76,
+                        "source": "GLEIF",
+                        "lei": "549300PARENT",
+                    }
+                ],
+                "evidence": [
+                    {
+                        "type": "official_public_api_relation",
+                        "provider": "GLEIF",
+                        "subject_lei": "549300CHILD",
+                        "related_lei": "549300PARENT",
+                        "relationship_type": "direct_parent",
+                        "source_url": "https://api.gleif.org/api/v1/lei-records/549300CHILD/relationships",
+                    }
+                ],
+            }
+        ],
+    )
+
+    profile = SubjectProfileBuilder().build(plan.graph, seed_subject_id=seed_id).to_dict()
+
+    assert any(
+        edge["relation_type"] == "direct_parent"
+        and edge["to_id"] == "company:demo_direct_parent_ltd"
+        and "official_public_gleif" in edge["source_families"]
+        for edge in profile["relationship_graph"]["edges"]
+    )
 
 
 def test_subject_profile_uses_sec_structured_key_people_as_controller_candidates() -> None:
@@ -533,6 +790,44 @@ def test_subject_profile_excludes_query_plan_controller_relation_from_candidates
     profile = SubjectProfileBuilder().build(graph, seed_subject_id=root).to_dict()
 
     assert profile["controller_candidates"] == []
+
+
+@pytest.mark.parametrize("match_level", ["weak", "review"])
+def test_subject_profile_keeps_official_weak_match_relationship_as_lead(match_level: str) -> None:
+    graph = EvidenceGraph()
+    root = "company:weak_official_match_co."
+    related = "company:lookalike_related_co."
+    graph.add_entity(
+        InvestigationEntity(root, EntityKind.COMPANY, "Weak Official Match Co.", 1.0, [], {"seed": True})
+    )
+    graph.add_entity(
+        InvestigationEntity(related, EntityKind.COMPANY, "Lookalike Related Co.", 0.86, [])
+    )
+    evidence = EvidenceItem(
+        id="evidence:official-weak-match",
+        evidence_type=EvidenceType.DATABASE_RESULT,
+        source="official_registry",
+        title="Official registry relation with weak subject match",
+        confidence=0.91,
+        source_profile=SourceCatalog.profile_for("registry_sources"),
+        entity_match={"level": match_level, "score": 0.54},
+    )
+    graph.add_evidence(evidence)
+    graph.add_relation(
+        InvestigationRelation(
+            from_id=root,
+            to_id=related,
+            relation_type="shareholder",
+            confidence=0.88,
+            evidence_ids=(evidence.id,),
+        )
+    )
+
+    profile = SubjectProfileBuilder().build(graph, seed_subject_id=root).to_dict()
+    edge = profile["relationship_graph"]["edges"][0]
+
+    assert edge["admission"] == "lead"
+    assert edge["evidence_ids"] == ["evidence:official-weak-match"]
 
 
 def test_subject_profile_recursion_depth_is_configurable_and_capped() -> None:

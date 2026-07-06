@@ -32,6 +32,7 @@ def build_relationship_resolution(evidence_v2=None, entities=None, graph=None):
             adm = "lead"
 
         leads.extend(_field_relationship_leads(item, seed=seed, evidence_id=eid, source_name=src, lane=lane))
+        leads.extend(_structured_relationship_leads(item, seed=seed, evidence_id=eid, source_name=src))
 
         if lane == "goods":
             leads.append(_lead(f"lead-goods-{eid}", "seed", subj, "supplier_of", adm, 0.35, src, f"Goods lane evidence from {src}: {subj}", eid))
@@ -65,6 +66,7 @@ def build_relationship_resolution(evidence_v2=None, entities=None, graph=None):
     leads = _dedupe_leads(leads)
     summary = _resolution_summary(leads, edges)
     return {
+        "type": "relationship_resolution_v1",
         "phase1_candidate_leads": leads,
         "lead_count": len(leads),
         "phase2_admitted_edges": edges,
@@ -86,6 +88,7 @@ def build_relationship_resolution(evidence_v2=None, entities=None, graph=None):
             "same_address": "weak_lead",
             "from_evidence_lanes": True,
             "field_claims_to_candidate_edges": True,
+            "structured_relationship_records_to_candidate_edges": True,
         },
     }
 
@@ -133,6 +136,69 @@ def _field_relationship_leads(item: dict[str, Any], *, seed: str, evidence_id: A
     return leads
 
 
+def _structured_relationship_leads(item: dict[str, Any], *, seed: str, evidence_id: Any, source_name: str) -> list[dict[str, Any]]:
+    record_type = str(item.get("record_type") or item.get("type") or "").strip().lower()
+    has_relationship_fields = any(
+        item.get(field)
+        for field in (
+            "subject_lei",
+            "related_lei",
+            "related_name",
+            "relationship_type",
+            "relationship_status",
+        )
+    )
+    if record_type != "gleif_relationship_edge" and not has_relationship_fields:
+        return []
+
+    related = item.get("related_name") or item.get("related_lei") or item.get("to") or item.get("target")
+    if not related:
+        return []
+
+    relation_type = str(item.get("relationship_type") or item.get("relation_type") or item.get("edge_type") or "related_to").strip() or "related_to"
+    subject = item.get("subject") or item.get("subject_name") or seed
+    entity_match = item.get("entity_match") if isinstance(item.get("entity_match"), dict) else {}
+    if not entity_match and item.get("entity_match_level"):
+        entity_match = {
+            "level": item.get("entity_match_level"),
+            "score": item.get("entity_match_score"),
+            "method": "preserved_evidence_match_fields",
+        }
+    return [
+        _lead(
+            f"lead-structured-{relation_type}-{evidence_id}",
+            str(subject or seed),
+            related,
+            relation_type,
+            "lead",
+            _structured_relationship_confidence(item),
+            source_name,
+            f"Structured relationship record from {source_name}: {subject} -> {related} ({relation_type})",
+            evidence_id,
+            structured_record_type=record_type or "structured_relationship",
+            subject_lei=item.get("subject_lei"),
+            subject_name=item.get("subject_name") or item.get("subject"),
+            related_lei=item.get("related_lei"),
+            related_name=item.get("related_name"),
+            relationship_status=item.get("relationship_status"),
+            relationship_period=item.get("relationship_period"),
+            source_url=item.get("url") or item.get("source_url"),
+            entity_match=entity_match,
+            entity_match_level=entity_match.get("level") if entity_match else item.get("entity_match_level"),
+            entity_match_score=entity_match.get("score") if entity_match else item.get("entity_match_score"),
+        )
+    ]
+
+
+def _structured_relationship_confidence(item: dict[str, Any]) -> float:
+    status = str(item.get("relationship_status") or "").lower()
+    if any(marker in status for marker in ("active", "reported", "validated")):
+        return 0.65
+    if status:
+        return 0.6
+    return 0.55
+
+
 def _parse_claim_pairs(raw: Any) -> dict[str, str]:
     values: dict[str, str] = {}
     claims = raw if isinstance(raw, list) else [raw]
@@ -166,6 +232,7 @@ def _lead(
     evidence_id: Any,
     *,
     extracted_field: str | None = None,
+    **extra: Any,
 ) -> dict[str, Any]:
     row = {
         "lead_id": lead_id,
@@ -180,6 +247,9 @@ def _lead(
     }
     if extracted_field:
         row["extracted_field"] = extracted_field
+    for key, value in extra.items():
+        if value not in (None, "", [], {}):
+            row[key] = value
     return row
 
 
@@ -238,7 +308,11 @@ def _resolution_summary(leads: list[dict[str, Any]], edges: list[dict[str, Any]]
             edge_sources.append(source)
 
     weak_count = by_admission.get("weak_lead", 0)
-    typed_count = sum(1 for lead in leads if str(lead.get("extracted_field") or "").strip())
+    typed_count = sum(
+        1
+        for lead in leads
+        if str(lead.get("extracted_field") or lead.get("structured_record_type") or "").strip()
+    )
     lead_risk_level = "high_review_need" if weak_count >= 3 else "review_needed" if leads else "no_candidate_leads"
     verification_queue = sorted(
         verification_queue,
@@ -274,7 +348,7 @@ def _relationship_lane(relation_type: str, extracted_field: str) -> str:
         return "capital"
     if any(marker in value for marker in ("supplier", "customer", "counterparty", "partner")):
         return "goods"
-    if any(marker in value for marker in ("control", "owner", "shareholder", "ubo", "beneficial")):
+    if any(marker in value for marker in ("control", "owner", "shareholder", "ubo", "beneficial", "parent", "ultimate", "direct")):
         return "people"
     return "unknown"
 

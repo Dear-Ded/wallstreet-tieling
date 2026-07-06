@@ -189,6 +189,89 @@ class TelegramPublicAggregationAdapter(SafeResearchAdapter):
 
     # --- 实际的Telegram查询执行(在用户的部署环境中运行) ---
 
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "telegram_public_aggregation",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "requires_user_credentials": True,
+            "default_enabled": False,
+            "service_count": len(self.PUBLIC_AGGREGATION_SERVICES),
+            "output_contract": [
+                "service_type",
+                "service_description",
+                "data_origin",
+                "expected_result_type",
+                "access_path",
+                "entity_match",
+                "evidence",
+            ],
+            "report_gate": "service plans and returned aggregation leads remain lead-only until user credentials, source provenance, service terms, and entity-match review pass",
+        }
+
+    def standardize_result(self, query_text: str, result: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"health": self.health_check(), "standardized_records": [], "raw": result}
+        service_type = str(result.get("service_type") or "").strip()
+        service_info = self.PUBLIC_AGGREGATION_SERVICES.get(service_type, {})
+        provider_url = "https://telegram.org/"
+        confidence = 0.5 if result.get("error") else 0.62
+        record = {
+            "source_name": "telegram_public_aggregation",
+            "source_type": self.source_type,
+            "source_hint": "telegram_public_aggregation",
+            "record_type": "telegram_public_aggregation_service_plan",
+            "entity": query_text.strip(),
+            "title": f"Telegram public aggregation plan: {service_type or 'unknown_service'}",
+            "summary": "; ".join(
+                part
+                for part in (
+                    f"service_type={service_type}" if service_type else "",
+                    f"data_origin={result.get('data_origin') or service_info.get('data_origin', '')}",
+                    f"expected_result_type={result.get('expected_result_type') or service_info.get('result_type', '')}",
+                    f"error={result.get('error')}" if result.get("error") else "",
+                )
+                if part
+            ),
+            "url": provider_url,
+            "confidence": confidence,
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "telegram_aggregation_service_plan_requires_returned_source_evidence",
+                "identifiers": {
+                    "query_text_hash": hashlib.sha256(query_text.encode()).hexdigest()[:12],
+                    "service_type": service_type,
+                },
+            },
+            "entities": [
+                {
+                    "kind": "query_subject",
+                    "name": query_text.strip(),
+                    "relation": "telegram_aggregation_query",
+                    "confidence": confidence,
+                    "source": "Telegram public aggregation service",
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "telegram_public_aggregation_service_plan",
+                    "provider": "Telegram public API / user configured public aggregation service",
+                    "source_url": provider_url,
+                    "service_type": service_type,
+                    "access_path": result.get("access_path", ""),
+                    "data_origin": result.get("data_origin") or service_info.get("data_origin", ""),
+                    "expected_result_type": result.get("expected_result_type") or service_info.get("result_type", ""),
+                    "requires_user_credentials": True,
+                    "entity_match_level": "review",
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
     def _execute_telegram_query(self, service_type: str, query_text: str) -> dict[str, Any]:
         """
         通过Telethon执行实际的查询。

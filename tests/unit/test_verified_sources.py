@@ -44,6 +44,31 @@ def test_github_real_data():
         assert r["fields"]["company"] == "Linux Foundation"
 
 
+def test_github_standardizes_public_profile_lead():
+    from adapters.verified_sources import GitHubPublicProfileLookup
+
+    adapter = GitHubPublicProfileLookup(_make_gate())
+    result = adapter.standardize_result(
+        "torvalds",
+        {
+            "fields": {
+                "name": "Linus Torvalds",
+                "company": "Linux Foundation",
+                "public_repos": 8,
+                "followers": 100000,
+            }
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "public_developer_profile_lead"
+    assert record["entity"] == "Linus Torvalds"
+    assert record["entity_match"]["level"] == "review"
+    assert record["evidence"][0]["provider"] == "GitHub"
+    assert record["entities"][0]["relation"] == "public_profile_candidate"
+
+
 def test_wikipedia_real_data():
     _require_live_verified_sources()
     """Wikipedia API: 真实数据 — Apple Inc. 应返回86k字符"""
@@ -57,6 +82,30 @@ def test_wikipedia_real_data():
         assert r["fields"]["extract_length"] > 0  # exintro返回导言部分
 
 
+def test_wikipedia_standardizes_public_encyclopedia_lead():
+    from adapters.verified_sources import WikipediaEnterpriseLookup
+
+    adapter = WikipediaEnterpriseLookup(_make_gate())
+    result = adapter.standardize_result(
+        "Apple Inc.",
+        {
+            "fields": {
+                "title": "Apple Inc.",
+                "extract_preview": "Apple Inc. is a technology company.",
+                "extract_length": 1024,
+            }
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "public_encyclopedia_profile_lead"
+    assert record["entity"] == "Apple Inc."
+    assert record["entity_match"]["level"] == "exact"
+    assert record["evidence"][0]["license"] == "CC BY-SA"
+    assert record["evidence"][0]["attribution_required"] is True
+
+
 def test_crtsh_real_data():
     _require_live_verified_sources()
     """crt.sh: 真实数据 — apple.com 应返回>50个域名"""
@@ -67,6 +116,84 @@ def test_crtsh_real_data():
     assert r.get("authorized") is True
     if "error" not in r:
         assert r["fields"]["unique_domains_found"] > 50
+
+
+def test_crtsh_standardizes_certificate_domain_assets():
+    from adapters.verified_sources import CRTshDomainLookup
+
+    adapter = CRTshDomainLookup(_make_gate())
+    result = adapter.standardize_result(
+        "example.com",
+        {
+            "fields": {
+                "unique_domains_found": 2,
+                "sample_domains": ["example.com", "www.example.com"],
+            }
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "certificate_transparency_domain_asset"
+    assert record["entity"] == "example.com"
+    assert record["entity_match"]["level"] == "exact"
+    assert record["evidence"][0]["provider"] == "crt.sh"
+    assert record["entities"][0]["relation"] == "certificate_subject_name"
+
+
+def test_whois_rdap_standardizes_domain_registration_record():
+    from adapters.deep_profile_verified import WHOISDomainLookup
+
+    adapter = WHOISDomainLookup(_make_gate())
+    result = adapter.standardize_result(
+        "example.com",
+        {
+            "fields": {
+                "registration_date": "1995-08-14T04:00:00Z",
+                "expiration_date": "2026-08-13T04:00:00Z",
+                "nameservers": ["A.IANA-SERVERS.NET", "B.IANA-SERVERS.NET"],
+                "domain_status": ["active"],
+            }
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "domain_registration_public_record"
+    assert record["entity"] == "example.com"
+    assert record["entity_match"]["level"] == "exact"
+    assert "registration_date=1995-08-14T04:00:00Z" in record["summary"]
+    assert record["evidence"][0]["provider"] == "ICANN RDAP"
+    assert record["entities"][0]["relation"] == "domain_nameserver"
+
+
+def test_cross_platform_standardizes_public_profile_presence():
+    from adapters.deep_profile_verified import CrossPlatformProfileVerifier
+
+    adapter = CrossPlatformProfileVerifier(_make_gate())
+    result = adapter.standardize_result(
+        "demo_user",
+        {
+            "fields": {
+                "platforms_found": 2,
+                "total_checked": 15,
+                "profiles": [
+                    {"platform": "GitHub", "url": "https://github.com/demo_user", "purpose": "code"},
+                    {"platform": "Medium", "url": "https://medium.com/@demo_user", "purpose": "writing"},
+                ],
+                "consistency_assessment": "moderate_consistency",
+            }
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "cross_platform_public_profile_presence"
+    assert record["entity"] == "demo_user"
+    assert record["entity_match"]["level"] == "review"
+    assert len(record["evidence"]) == 2
+    assert record["evidence"][0]["provider"] == "GitHub"
+    assert record["entities"][0]["relation"] == "cross_platform_profile_candidate"
 
 
 def test_gleif_real_data():

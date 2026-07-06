@@ -79,6 +79,89 @@ class WHOISDomainLookup(SafeResearchAdapter):
         except Exception as e:
             return {"error": str(e), "authorized": True}
 
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "icann_rdap",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "output_contract": [
+                "registration_date",
+                "expiration_date",
+                "nameservers",
+                "domain_status",
+                "source_url",
+                "entity_match",
+                "evidence",
+            ],
+        }
+
+    def standardize_result(self, domain: str, result: dict[str, Any]) -> dict[str, Any]:
+        fields = result.get("fields") if isinstance(result, dict) else {}
+        fields = fields if isinstance(fields, dict) else {}
+        clean_domain = domain.strip().lower()
+        tld = clean_domain.rsplit(".", 1)[-1] if "." in clean_domain else "com"
+        registry_rdap = {
+            "com": "https://rdap.verisign.com/com/v1/domain/",
+            "net": "https://rdap.verisign.com/net/v1/domain/",
+            "org": "https://rdap.pir.org/org/v1/domain/",
+        }
+        source_url = f"{registry_rdap.get(tld, registry_rdap['com'])}{urllib.parse.quote(clean_domain)}"
+        nameservers = [
+            str(item).strip().lower()
+            for item in fields.get("nameservers", [])
+            if str(item).strip()
+        ]
+        record = {
+            "source_name": "verified_whois_rdap_domain_lookup",
+            "source_type": self.source_type,
+            "source_hint": "verified_whois_rdap_domain_lookup",
+            "record_type": "domain_registration_public_record",
+            "entity": clean_domain,
+            "title": f"WHOIS/RDAP domain registration record: {clean_domain}",
+            "summary": "; ".join(
+                part
+                for part in (
+                    f"registration_date={fields.get('registration_date')}" if fields.get("registration_date") else "",
+                    f"expiration_date={fields.get('expiration_date')}" if fields.get("expiration_date") else "",
+                    f"nameserver_count={len(nameservers)}",
+                )
+                if part
+            ),
+            "url": source_url,
+            "confidence": 0.76,
+            "entity_match": {
+                "level": "exact" if clean_domain else "review",
+                "score": 0.9 if clean_domain else 0.5,
+                "method": "queried_domain_to_rdap_record",
+                "identifiers": {"domain": clean_domain, "tld": tld},
+            },
+            "entities": [
+                {
+                    "kind": "nameserver",
+                    "name": item,
+                    "relation": "domain_nameserver",
+                    "confidence": 0.72,
+                    "source": "ICANN RDAP",
+                }
+                for item in nameservers[:10]
+            ],
+            "evidence": [
+                {
+                    "type": "public_domain_registration_record",
+                    "provider": "ICANN RDAP",
+                    "source_url": source_url,
+                    "domain": clean_domain,
+                    "registration_date": fields.get("registration_date", ""),
+                    "expiration_date": fields.get("expiration_date", ""),
+                    "domain_status": fields.get("domain_status", []),
+                    "entity_match_level": "exact" if clean_domain else "review",
+                }
+            ],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
     def _build_url(self, k, **p): return ""
     def _extract_public_fields(self, r): return {}
 
@@ -156,6 +239,77 @@ class CrossPlatformProfileVerifier(SafeResearchAdapter):
                 "consistency_assessment": self._assess_consistency(found_platforms),
                 "data_note": "仅查询各平台公开档案页 — 均为用户主动公开的信息"},
             "field_count": 4}
+
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "public_platform_apis",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "output_contract": [
+                "platforms_found",
+                "total_checked",
+                "profiles",
+                "consistency_assessment",
+                "entity_match",
+                "evidence",
+            ],
+        }
+
+    def standardize_result(self, username: str, result: dict[str, Any]) -> dict[str, Any]:
+        fields = result.get("fields") if isinstance(result, dict) else {}
+        fields = fields if isinstance(fields, dict) else {}
+        profiles = [
+            item
+            for item in fields.get("profiles", [])
+            if isinstance(item, dict) and str(item.get("platform") or "").strip()
+        ]
+        clean_username = username.strip().lstrip("@")
+        platforms_found = int(fields.get("platforms_found") or len(profiles))
+        total_checked = int(fields.get("total_checked") or len(self.PROFESSIONAL_PLATFORMS))
+        confidence = min(0.82, 0.45 + platforms_found * 0.06)
+        record = {
+            "source_name": "verified_cross_platform_profile_check",
+            "source_type": self.source_type,
+            "source_hint": "verified_cross_platform_profile_check",
+            "record_type": "cross_platform_public_profile_presence",
+            "entity": clean_username,
+            "title": f"Cross-platform public profile lead: {clean_username}",
+            "summary": (
+                f"platforms_found={platforms_found}; total_checked={total_checked}; "
+                f"assessment={fields.get('consistency_assessment', '')}"
+            ),
+            "url": profiles[0].get("url", "") if profiles else "",
+            "confidence": confidence,
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "same_username_public_profile_presence_requires_person_context",
+                "identifiers": {"username": clean_username, "platform_count": platforms_found},
+            },
+            "entities": [
+                {
+                    "kind": "person_or_account",
+                    "name": clean_username,
+                    "relation": "cross_platform_profile_candidate",
+                    "confidence": confidence,
+                    "source": "public platform pages",
+                }
+            ],
+            "evidence": [
+                {
+                    "type": "public_profile_presence",
+                    "provider": str(item.get("platform") or ""),
+                    "source_url": str(item.get("url") or ""),
+                    "purpose": str(item.get("purpose") or ""),
+                    "username": clean_username,
+                    "entity_match_level": "review",
+                }
+                for item in profiles[:20]
+            ],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
 
     def _is_not_found(self, html: str) -> bool:
         return any(m in html.lower()[:500] for m in

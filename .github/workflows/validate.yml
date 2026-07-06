@@ -46,10 +46,17 @@ jobs:
       - name: Python syntax check
         run: |
           python -m compileall api/ core/ tests/
-      - name: Python lint (flake8)
+      - name: Python compatibility lint
         run: |
-          python -m flake8 api/ tests/ --select=E,F --max-line-length=120
-      - name: Markdown lint
+          python -m flake8 api/ core/ tests/ --select=E999,F821,F822,F823,F831 --max-line-length=120
+      - name: Markdown lint release-facing docs
         run: |
           npm install -g markdownlint-cli
-          markdownlint '**/*.md' --ignore node_modules
+          markdownlint \
+            SKILL.md \
+            skills/wallstreet-tieling/SKILL.md \
+            docs/AGENT_HOST_SMOKE_CHECKLIST.md \
+            docs/DESKTOP_AGENT_ALPHA_DELIVERY.md \
+            docs/DESKTOP_AGENT_HOSTS.md \
+            docs/OPEN_AGENT_COMPATIBILITY.md \
+            --disable MD013

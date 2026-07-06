@@ -55,7 +55,6 @@ or unverified certainty.
 ## Related Documents
 
 - `PROJECT_TASKBOARD.md`
-- `docs/PRIVATE_DEV_HANDOFF.md`
 - `docs/SEARCH_INTEGRATION_LEDGER.md`
 - `docs/ENGINEERING_BLUEPRINT.md`
 - `release/variants.yaml`

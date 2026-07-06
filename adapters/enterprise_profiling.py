@@ -119,6 +119,70 @@ class ExecutiveIdentityVerification(SafeResearchAdapter):
         markers = ["not found", "doesn't exist", "no user", "page not found"]
         return any(m in html.lower()[:500] for m in markers)
 
+    def schema_health(self) -> dict[str, Any]:
+        """Return non-network contract health for release and agent routing."""
+        return {
+            "ok": True,
+            "source_type": self.source_type,
+            "default_enabled": False,
+            "requires_user_authorization": True,
+            "standardized_records": True,
+            "record_type": "enterprise_executive_identity_consistency",
+            "required_fields": ["executive_name", "platforms_found", "platform_list", "retrieved_at"],
+            "fact_gate": "explicit user authorization plus exact person/company context before report-fact reliance",
+        }
+
+    def standardize_identity_result(self, executive_name: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Map an authorized profile consistency result into auditable people-lane leads."""
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"standardized_records": [], "raw": result}
+
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        platforms = [str(item) for item in fields.get("platform_list") or [] if str(item).strip()]
+        platforms_found = int(fields.get("platforms_found") or len(platforms) or 0)
+        retrieved_at = str(result.get("retrieved_at") or "")
+        summary = f"executive_name={executive_name}; platforms_found={platforms_found}; platforms={', '.join(platforms[:8])}"
+        confidence = 0.62 if platforms_found else 0.45
+        record = {
+            "source_name": "enterprise_executive_identity_verification",
+            "source_type": self.source_type,
+            "source_hint": "enterprise_executive_identity_verification",
+            "record_type": "enterprise_executive_identity_consistency",
+            "entity": executive_name,
+            "title": f"Executive public identity consistency lead: {executive_name}",
+            "summary": summary,
+            "retrieved_at": retrieved_at,
+            "confidence": confidence,
+            "risk_category": "people_identity_consistency",
+            "entities": [
+                {
+                    "kind": "person",
+                    "name": executive_name,
+                    "relation": "key_person_identity_subject",
+                    "confidence": confidence,
+                    "source": self.source_type,
+                }
+            ],
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "authorized_key_person_query_context",
+                "identifiers": {"query_subject_hash": result.get("query_subject_hash", "")},
+            },
+            "evidence": [
+                {
+                    "type": "authorized_public_profile_consistency_check",
+                    "provider": "ExecutiveIdentityVerification",
+                    "data_boundary": self.data_boundary,
+                    "access_path": result.get("access_path"),
+                    "platforms": platforms,
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"standardized_records": [record], "raw": result}
+
     def _build_url(self, keyword: str, **params) -> str: return ""
     def _extract_public_fields(self, raw_data: Any) -> dict[str, Any]: return {}
 
@@ -190,6 +254,77 @@ class EnterpriseDomainSecurityAssessment(SafeResearchAdapter):
         self._gate.log_access(self._source_key, "domain_security_check", target_hash, "no_events_found")
         return {"query_subject_hash": target_hash, "data_boundary": self.data_boundary,
                 "authorized": True, "access_path": "all_paths_exhausted", "fields": {}, "field_count": 0}
+
+    def schema_health(self) -> dict[str, Any]:
+        """Return non-network contract health for release and agent routing."""
+        return {
+            "ok": True,
+            "source_type": self.source_type,
+            "default_enabled": False,
+            "requires_user_authorization": True,
+            "standardized_records": True,
+            "record_type": "enterprise_domain_security_event",
+            "required_fields": ["domain", "domain_reputation", "has_public_events", "source_url", "retrieved_at"],
+            "fact_gate": "explicit user authorization plus exact domain attribution before report-fact reliance",
+        }
+
+    def standardize_domain_risk_result(self, company_domain: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Map an authorized runtime result into auditable lead records without re-querying."""
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"standardized_records": [], "raw": result}
+
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        reputation = str(fields.get("domain_reputation") or "unknown")
+        has_events = bool(fields.get("has_public_events"))
+        source_url = f"https://emailrep.io/admin@{urllib.parse.quote(company_domain)}" if company_domain else ""
+        retrieved_at = str(result.get("retrieved_at") or "")
+        risk_level = "medium" if has_events else "low"
+        summary = (
+            f"domain={company_domain}; domain_reputation={reputation}; "
+            f"has_public_events={str(has_events).lower()}; access_path={result.get('access_path', '')}"
+        )
+        record = {
+            "source_name": "enterprise_domain_security_assessment",
+            "source_type": self.source_type,
+            "source_hint": "enterprise_domain_security_assessment",
+            "record_type": "enterprise_domain_security_event",
+            "entity": company_domain,
+            "title": f"Enterprise domain security event lead: {company_domain}",
+            "summary": summary,
+            "url": source_url,
+            "retrieved_at": retrieved_at,
+            "confidence": 0.66 if has_events else 0.52,
+            "risk_category": "domain_security",
+            "risk_level": risk_level,
+            "severity": risk_level,
+            "risk_events": [
+                {
+                    "risk_category": "domain_security",
+                    "severity": risk_level,
+                    "title": "Public domain security signal",
+                    "summary": summary,
+                    "confidence": 0.66 if has_events else 0.52,
+                }
+            ] if has_events else [],
+            "entity_match": {
+                "level": "exact" if company_domain else "review",
+                "score": 1.0 if company_domain else 0.5,
+                "method": "explicit_authorized_domain_input",
+                "identifiers": {"domain": company_domain} if company_domain else {},
+            },
+            "evidence": [
+                {
+                    "type": "authorized_public_domain_security_assessment",
+                    "provider": "EnterpriseDomainSecurityAssessment",
+                    "data_boundary": self.data_boundary,
+                    "access_path": result.get("access_path"),
+                    "source_url": source_url,
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"standardized_records": [record], "raw": result}
 
     def _build_url(self, keyword: str, **params) -> str: return ""
     def _extract_public_fields(self, raw_data: Any) -> dict[str, Any]: return {}
@@ -263,6 +398,77 @@ class EnterpriseContactAttribution(SafeResearchAdapter):
         return {"query_subject_hash": target_hash, "data_boundary": self.data_boundary,
                 "authorized": True, "access_path": "all_paths_exhausted", "fields": {}, "field_count": 0}
 
+    def schema_health(self) -> dict[str, Any]:
+        """Return non-network contract health for release and agent routing."""
+        return {
+            "ok": True,
+            "source_type": self.source_type,
+            "default_enabled": False,
+            "requires_user_authorization": True,
+            "standardized_records": True,
+            "record_type": "enterprise_contact_attribution",
+            "required_fields": ["phone_hash", "country", "location", "carrier", "line_type", "location_consistency"],
+            "fact_gate": "explicit user authorization plus visible public contact context before report-fact reliance",
+        }
+
+    def standardize_contact_result(self, phone_number: str, expected_location: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Map an authorized public contact-attribution result into location/operations leads."""
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"standardized_records": [], "raw": result}
+
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        phone_hash = str(result.get("query_subject_hash") or hashlib.sha256(phone_number.encode()).hexdigest()[:12])
+        location_consistency = str(fields.get("location_consistency") or "not_checked")
+        country = str(fields.get("country") or "")
+        location = str(fields.get("location") or "")
+        carrier = str(fields.get("carrier") or "")
+        line_type = str(fields.get("line_type") or "")
+        confidence = 0.64 if fields else 0.42
+        severity = "medium" if location_consistency == "inconsistent" else "low"
+        summary = (
+            f"phone_hash={phone_hash}; country={country}; location={location}; "
+            f"carrier={carrier}; line_type={line_type}; location_consistency={location_consistency}"
+        )
+        record = {
+            "source_name": "enterprise_contact_attribution_verification",
+            "source_type": self.source_type,
+            "source_hint": "enterprise_contact_attribution_verification",
+            "record_type": "enterprise_contact_attribution",
+            "entity": phone_hash,
+            "title": "Enterprise public contact attribution lead",
+            "summary": summary,
+            "confidence": confidence,
+            "risk_category": "location_contact_consistency",
+            "risk_level": severity,
+            "severity": severity,
+            "risk_events": [
+                {
+                    "risk_category": "location_contact_consistency",
+                    "severity": severity,
+                    "title": "Public contact location consistency signal",
+                    "summary": summary,
+                    "confidence": confidence,
+                }
+            ] if location_consistency == "inconsistent" else [],
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "authorized_public_contact_query_context",
+                "identifiers": {"phone_hash": phone_hash, "expected_location": expected_location},
+            },
+            "evidence": [
+                {
+                    "type": "authorized_public_contact_attribution",
+                    "provider": "EnterpriseContactAttribution",
+                    "data_boundary": self.data_boundary,
+                    "access_path": result.get("access_path"),
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"standardized_records": [record], "raw": result}
+
     def _build_url(self, keyword: str, **params) -> str: return ""
     def _extract_public_fields(self, raw_data: Any) -> dict[str, Any]: return {}
 
@@ -335,6 +541,73 @@ class KeyPersonnelRecordCrossCheck(SafeResearchAdapter):
                        "data_note": "数据来源: 政府公开记录聚合平台"},
             "field_count": 2, "response_status": 200,
         }
+
+    def schema_health(self) -> dict[str, Any]:
+        """Return non-network contract health for release and agent routing."""
+        return {
+            "ok": True,
+            "source_type": self.source_type,
+            "default_enabled": False,
+            "requires_user_authorization": True,
+            "standardized_records": True,
+            "record_type": "enterprise_key_personnel_record_crosscheck",
+            "required_fields": ["person_name", "company_name", "sources_accessed", "source_count", "retrieved_at"],
+            "fact_gate": "explicit user authorization plus exact person/company context before report-fact reliance",
+        }
+
+    def standardize_crosscheck_result(self, name: str, company_name: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Map an authorized key-person public-record cross-check into auditable leads."""
+        if not isinstance(result, dict) or result.get("error") == "source_not_authorized":
+            return {"standardized_records": [], "raw": result}
+
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else {}
+        sources = [str(item) for item in fields.get("sources_accessed") or [] if str(item).strip()]
+        source_count = int(fields.get("source_count") or len(sources) or 0)
+        retrieved_at = str(result.get("retrieved_at") or "")
+        confidence = 0.6 if source_count else 0.43
+        summary = f"person_name={name}; company_name={company_name}; sources_accessed={', '.join(sources[:8])}; source_count={source_count}"
+        record = {
+            "source_name": "enterprise_key_personnel_record_crosscheck",
+            "source_type": self.source_type,
+            "source_hint": "enterprise_key_personnel_record_crosscheck",
+            "record_type": "enterprise_key_personnel_record_crosscheck",
+            "entity": name,
+            "title": f"Key personnel public record cross-check lead: {name}",
+            "summary": summary,
+            "retrieved_at": retrieved_at,
+            "confidence": confidence,
+            "risk_category": "key_person_record_consistency",
+            "entities": [
+                {
+                    "kind": "person",
+                    "name": name,
+                    "relation": "key_person_record_subject",
+                    "confidence": confidence,
+                    "source": self.source_type,
+                }
+            ],
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "authorized_key_person_public_record_context",
+                "identifiers": {
+                    "query_subject_hash": result.get("query_subject_hash", ""),
+                    "company_name": company_name,
+                },
+            },
+            "evidence": [
+                {
+                    "type": "authorized_key_person_public_record_crosscheck",
+                    "provider": "KeyPersonnelRecordCrossCheck",
+                    "data_boundary": self.data_boundary,
+                    "access_path": result.get("access_path"),
+                    "sources_accessed": sources,
+                    "manual_review_required": True,
+                }
+            ],
+            "raw": result,
+        }
+        return {"standardized_records": [record], "raw": result}
 
     def _build_url(self, keyword: str, **params) -> str: return ""
     def _extract_public_fields(self, raw_data: Any) -> dict[str, Any]: return {}

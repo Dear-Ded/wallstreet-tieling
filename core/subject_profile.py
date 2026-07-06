@@ -144,6 +144,25 @@ class SubjectProfileBuilder:
     """Builds subject profiles from graph entities, relations, and evidence."""
 
     DEFAULT_POLICY = RecursionPolicy()
+    CONTROL_RELATION_KEYWORDS = (
+        "control",
+        "controller",
+        "owner",
+        "shareholder",
+        "beneficial",
+        "role",
+        "executive",
+        "chief",
+        "representative",
+        "legal_representative",
+        "founder",
+        "chair",
+        "director",
+        "board",
+        "manager",
+        "parent",
+        "holding",
+    )
     DIMENSION_ORDER = tuple(item.value for item in SubjectProfileDimension)
     RELATION_DIMENSIONS: tuple[tuple[SubjectProfileDimension, tuple[str, ...]], ...] = (
         (
@@ -581,26 +600,7 @@ class SubjectProfileBuilder:
             if target is None or target.kind is not EntityKind.PERSON:
                 continue
             rel = relation.relation_type.lower()
-            if not any(
-                keyword in rel
-                for keyword in (
-                    "control",
-                    "controller",
-                    "owner",
-                    "shareholder",
-                    "beneficial",
-                    "role",
-                    "executive",
-                    "chief",
-                    "representative",
-                    "legal_representative",
-                    "founder",
-                    "chair",
-                    "director",
-                    "board",
-                    "manager",
-                )
-            ):
+            if not self._is_controller_relation(rel):
                 continue
             key = self._controller_candidate_key(target)
             evidence_ids = list(relation.evidence_ids)
@@ -609,6 +609,22 @@ class SubjectProfileBuilder:
             confidence_tier = self._controller_confidence_tier(graph, relation, target)
             confidence_basis = self._controller_confidence_basis(graph, relation, target)
             control_paths = self._controller_control_paths(graph, seed_subject_id, relation, target)
+            control_path_summaries = self._controller_control_path_summaries(
+                graph,
+                seed_subject_id,
+                relation,
+                target,
+            )
+            source_names = sorted(
+                set(source_names)
+                | {
+                    str(source_name)
+                    for summary in control_path_summaries
+                    for source_name in summary.get("source_names", [])
+                    if str(source_name).strip()
+                }
+            )
+            source_family_summary = self._source_family_summary_from_names(source_names)
             source_strength = self._controller_source_strength(graph, relation.evidence_ids)
             match_score = self._controller_match_score(graph, relation.evidence_ids)
             existing = candidates_by_key.get(key)
@@ -622,10 +638,13 @@ class SubjectProfileBuilder:
                     "confidence_tier": confidence_tier,
                     "confidence_basis": confidence_basis,
                     "control_paths": control_paths,
+                    "control_path_summaries": control_path_summaries,
                     "source_strength": source_strength,
                     "match_score": match_score,
                     "evidence_ids": evidence_ids,
                     "source_names": source_names,
+                    "source_families": [item["family"] for item in source_family_summary["families"]],
+                    "source_family_summary": source_family_summary,
                     "verification_status": verification_status,
                 }
                 continue
@@ -640,6 +659,10 @@ class SubjectProfileBuilder:
             existing["control_paths"] = sorted(
                 set(existing.get("control_paths") or []) | set(control_paths)
             )
+            existing["control_path_summaries"] = self._merge_control_path_summaries(
+                list(existing.get("control_path_summaries") or []),
+                control_path_summaries,
+            )
             existing["source_strength"] = max(int(existing.get("source_strength") or 0), source_strength)
             existing["match_score"] = max(
                 float(existing.get("match_score") or 0),
@@ -647,6 +670,9 @@ class SubjectProfileBuilder:
             )
             existing["evidence_ids"] = sorted(set(existing["evidence_ids"]) | set(evidence_ids))
             existing["source_names"] = sorted(set(existing["source_names"]) | set(source_names))
+            merged_family_summary = self._source_family_summary_from_names(list(existing["source_names"]))
+            existing["source_families"] = [item["family"] for item in merged_family_summary["families"]]
+            existing["source_family_summary"] = merged_family_summary
             relation_types = list(existing.get("relation_types") or [existing["relation_type"]])
             if relation.relation_type not in relation_types:
                 relation_types.append(relation.relation_type)
@@ -675,6 +701,11 @@ class SubjectProfileBuilder:
     @staticmethod
     def _controller_candidate_key(entity: InvestigationEntity) -> str:
         return entity.name.strip().casefold() or entity.id
+
+    @classmethod
+    def _is_controller_relation(cls, relation_type: str) -> bool:
+        rel = relation_type.lower()
+        return any(keyword in rel for keyword in cls.CONTROL_RELATION_KEYWORDS)
 
     @staticmethod
     def _controller_relation_rank(relation_type: str) -> int:
@@ -763,6 +794,270 @@ class SubjectProfileBuilder:
             )
             paths.append(graph_path or f"{relation.from_id} -> {target.name}")
         return sorted(set(paths))
+
+    def _controller_control_path_summaries(
+        self,
+        graph: EvidenceGraph,
+        seed_subject_id: str,
+        relation: InvestigationRelation,
+        target: InvestigationEntity,
+    ) -> list[dict[str, Any]]:
+        summaries: list[dict[str, Any]] = []
+        explicit_path = None
+        for key in ("control_path", "path_nodes"):
+            value = target.attributes.get(key)
+            if value not in (None, ""):
+                explicit_path = self._control_path_text(value)
+                if explicit_path:
+                    source_names = list(self._sources_for_evidence(graph, relation.evidence_ids))
+                    source_family_summary = self._source_family_summary_from_names(source_names)
+                    summaries.append(
+                        {
+                            "path_text": explicit_path,
+                            "path_nodes": [
+                                item.strip()
+                                for item in explicit_path.split(" -> ")
+                                if item.strip()
+                            ],
+                            "hop_count": max(len(explicit_path.split(" -> ")) - 1, 1),
+                            "relation_types": [relation.relation_type],
+                            "terminal_name": target.name,
+                            "terminal_kind": target.kind.value,
+                            "min_confidence": round(min(relation.confidence, target.confidence), 4),
+                            "confidence": round(max(relation.confidence, target.confidence), 4),
+                            "source_strength": self._controller_source_strength(graph, relation.evidence_ids),
+                            "source_names": source_names,
+                            "source_families": [item["family"] for item in source_family_summary["families"]],
+                            "source_family_summary": source_family_summary,
+                            "evidence_ids": list(relation.evidence_ids),
+                            "admission": self._relation_admission(graph, relation),
+                            "verification_status": self._verification_status(graph, relation.evidence_ids).value,
+                            "basis": "explicit_source_control_path",
+                        }
+                    )
+                    break
+
+        directed_relations = self._shortest_relation_path(
+            graph,
+            seed_subject_id,
+            relation.to_id,
+            directed=True,
+        )
+        relation_path = directed_relations or self._shortest_relation_path(
+            graph,
+            seed_subject_id,
+            relation.to_id,
+            directed=False,
+        )
+        if relation_path:
+            summaries.append(
+                self._relation_path_summary(
+                    graph,
+                    seed_subject_id,
+                    relation.to_id,
+                    relation_path,
+                    directed=bool(directed_relations),
+                )
+            )
+        if not summaries and explicit_path:
+            return summaries
+        if not summaries:
+            source_names = list(self._sources_for_evidence(graph, relation.evidence_ids))
+            source_family_summary = self._source_family_summary_from_names(source_names)
+            summaries.append(
+                {
+                    "path_text": f"{relation.from_id} -> {target.name}",
+                    "path_nodes": [relation.from_id, target.name],
+                    "hop_count": 1,
+                    "relation_types": [relation.relation_type],
+                    "terminal_name": target.name,
+                    "terminal_kind": target.kind.value,
+                    "min_confidence": round(min(relation.confidence, target.confidence), 4),
+                    "confidence": round(max(relation.confidence, target.confidence), 4),
+                    "source_strength": self._controller_source_strength(graph, relation.evidence_ids),
+                    "source_names": source_names,
+                    "source_families": [item["family"] for item in source_family_summary["families"]],
+                    "source_family_summary": source_family_summary,
+                    "evidence_ids": list(relation.evidence_ids),
+                    "admission": self._relation_admission(graph, relation),
+                    "verification_status": self._verification_status(graph, relation.evidence_ids).value,
+                    "basis": "direct_relation_fallback",
+                }
+            )
+        return self._merge_control_path_summaries([], summaries)
+
+    def _relation_path_summary(
+        self,
+        graph: EvidenceGraph,
+        start_id: str,
+        target_id: str,
+        relation_path: list[InvestigationRelation],
+        *,
+        directed: bool,
+    ) -> dict[str, Any]:
+        node_ids = self._node_ids_from_relation_path(start_id, target_id, relation_path)
+        path_nodes = [
+            graph.entities[entity_id].name
+            for entity_id in node_ids
+            if entity_id in graph.entities and str(graph.entities[entity_id].name).strip()
+        ]
+        evidence_ids = sorted(
+            {
+                evidence_id
+                for relation in relation_path
+                for evidence_id in relation.evidence_ids
+                if str(evidence_id).strip()
+            }
+        )
+        source_names = list(self._sources_for_evidence(graph, tuple(evidence_ids)))
+        source_family_summary = self._source_family_summary_from_names(source_names)
+        relation_types = [relation.relation_type for relation in relation_path]
+        admissions = [self._relation_admission(graph, relation) for relation in relation_path]
+        min_confidence = min([relation.confidence for relation in relation_path] or [0.0])
+        terminal = graph.entities.get(target_id)
+        return {
+            "path_text": " -> ".join(path_nodes),
+            "path_nodes": path_nodes,
+            "hop_count": max(len(path_nodes) - 1, 0),
+            "relation_types": relation_types,
+            "terminal_name": terminal.name if terminal else target_id,
+            "terminal_kind": terminal.kind.value if terminal else "unknown",
+            "min_confidence": round(min_confidence, 4),
+            "confidence": round(max([relation.confidence for relation in relation_path] or [0.0]), 4),
+            "source_strength": max(
+                [self._controller_source_strength(graph, relation.evidence_ids) for relation in relation_path]
+                or [0]
+            ),
+            "source_names": source_names,
+            "source_families": [item["family"] for item in source_family_summary["families"]],
+            "source_family_summary": source_family_summary,
+            "evidence_ids": evidence_ids,
+            "admission": "fact" if admissions and all(item == "fact" for item in admissions) else "lead",
+            "verification_status": self._verification_status(graph, tuple(evidence_ids)).value,
+            "basis": "directed_control_graph_path" if directed else "undirected_control_graph_path",
+        }
+
+    @staticmethod
+    def _node_ids_from_relation_path(
+        start_id: str,
+        target_id: str,
+        relation_path: list[InvestigationRelation],
+    ) -> list[str]:
+        if not relation_path:
+            return []
+        node_ids = [start_id]
+        current = start_id
+        for relation in relation_path:
+            if relation.from_id == current:
+                current = relation.to_id
+            elif relation.to_id == current:
+                current = relation.from_id
+            elif relation.to_id == target_id:
+                current = relation.to_id
+            else:
+                current = relation.from_id
+            node_ids.append(current)
+        return node_ids
+
+    def _shortest_relation_path(
+        self,
+        graph: EvidenceGraph,
+        start_id: str,
+        target_id: str,
+        *,
+        directed: bool,
+    ) -> list[InvestigationRelation]:
+        if not start_id or not target_id or start_id not in graph.entities or target_id not in graph.entities:
+            return []
+        adjacency: dict[str, list[tuple[str, InvestigationRelation]]] = {}
+        for relation in graph.relations:
+            if not self._is_controller_relation(relation.relation_type):
+                continue
+            if not self._evidence_ids_can_feed_profile(graph, relation.evidence_ids):
+                continue
+            adjacency.setdefault(relation.from_id, []).append((relation.to_id, relation))
+            if not directed:
+                adjacency.setdefault(relation.to_id, []).append((relation.from_id, relation))
+        queue: list[tuple[str, list[InvestigationRelation]]] = [(start_id, [])]
+        visited = {start_id}
+        max_hops = max(self.policy.default_depth + 2, 4)
+        while queue:
+            current, path = queue.pop(0)
+            if current == target_id:
+                return path
+            if len(path) >= max_hops:
+                continue
+            for neighbor, relation in sorted(
+                adjacency.get(current, []),
+                key=lambda item: (
+                    self._controller_relation_rank(item[1].relation_type),
+                    -item[1].confidence,
+                    item[0],
+                ),
+            ):
+                if neighbor in visited:
+                    continue
+                visited.add(neighbor)
+                queue.append((neighbor, [*path, relation]))
+        return []
+
+    @staticmethod
+    def _merge_control_path_summaries(
+        current: list[dict[str, Any]],
+        incoming: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        merged: dict[str, dict[str, Any]] = {}
+        for item in [*current, *incoming]:
+            if not isinstance(item, dict):
+                continue
+            path_text = " ".join(str(item.get("path_text") or "").split())
+            if not path_text:
+                continue
+            key = path_text.casefold()
+            existing = merged.get(key)
+            if existing is None:
+                merged[key] = dict(item, path_text=path_text)
+                continue
+            existing["source_names"] = sorted(
+                set(existing.get("source_names") or []) | set(item.get("source_names") or [])
+            )
+            merged_family_summary = SubjectProfileBuilder._source_family_summary_from_names(
+                list(existing.get("source_names") or [])
+            )
+            existing["source_families"] = [entry["family"] for entry in merged_family_summary["families"]]
+            existing["source_family_summary"] = merged_family_summary
+            existing["evidence_ids"] = sorted(
+                set(existing.get("evidence_ids") or []) | set(item.get("evidence_ids") or [])
+            )
+            existing["relation_types"] = sorted(
+                set(existing.get("relation_types") or []) | set(item.get("relation_types") or [])
+            )
+            existing["source_strength"] = max(
+                int(existing.get("source_strength") or 0),
+                int(item.get("source_strength") or 0),
+            )
+            try:
+                existing["min_confidence"] = round(
+                    max(float(existing.get("min_confidence") or 0), float(item.get("min_confidence") or 0)),
+                    4,
+                )
+                existing["confidence"] = round(
+                    max(float(existing.get("confidence") or 0), float(item.get("confidence") or 0)),
+                    4,
+                )
+            except (TypeError, ValueError):
+                pass
+            if str(item.get("admission") or "").lower() == "fact":
+                existing["admission"] = item.get("admission")
+        return sorted(
+            merged.values(),
+            key=lambda item: (
+                -int(item.get("source_strength") or 0),
+                -float(item.get("min_confidence") or 0),
+                int(item.get("hop_count") or 0),
+                str(item.get("path_text") or ""),
+            ),
+        )
 
     @staticmethod
     def _entity_path_text(
@@ -910,6 +1205,8 @@ class SubjectProfileBuilder:
             if relation.from_id not in reachable_set or relation.to_id not in reachable_set:
                 continue
             evidence_ids = tuple(relation.evidence_ids)
+            source_names = list(self._sources_for_evidence(graph, evidence_ids))
+            source_family_summary = self._source_family_summary_from_names(source_names)
             edges.append(
                 {
                     "from_id": relation.from_id,
@@ -917,7 +1214,9 @@ class SubjectProfileBuilder:
                     "relation_type": relation.relation_type,
                     "confidence": relation.confidence,
                     "evidence_ids": list(evidence_ids),
-                    "source_names": list(self._sources_for_evidence(graph, evidence_ids)),
+                    "source_names": source_names,
+                    "source_families": [item["family"] for item in source_family_summary["families"]],
+                    "source_family_summary": source_family_summary,
                     "source_strength": self._controller_source_strength(graph, evidence_ids),
                     "admission": self._relation_admission(graph, relation),
                 }
@@ -939,6 +1238,8 @@ class SubjectProfileBuilder:
         for item in evidence:
             profile = item.source_profile
             if profile is None:
+                continue
+            if not self._evidence_can_feed_profile(item):
                 continue
             authority = str(profile.authority.value)
             access = str(profile.access.value)
@@ -1027,6 +1328,49 @@ class SubjectProfileBuilder:
                 }
             )
         )
+
+    @staticmethod
+    def _source_family(source_name: str) -> str:
+        source = source_name.strip().lower()
+        if not source:
+            return "unknown"
+        if "qyyjt" in source or "licensed" in source or "commercial" in source:
+            return "licensed_commercial"
+        if "gleif" in source:
+            return "official_public_gleif"
+        if "sec" in source or "edgar" in source:
+            return "official_public_sec"
+        if "wikidata" in source:
+            return "public_knowledge_graph"
+        if "registry" in source or "gsxt" in source or "official" in source:
+            return "official_registry"
+        if "web" in source or "search" in source:
+            return "public_web"
+        return "other_public_or_authorized"
+
+    @staticmethod
+    def _source_family_summary_from_names(source_names: list[str]) -> dict[str, Any]:
+        counts: dict[str, int] = {}
+        for source_name in source_names:
+            family = SubjectProfileBuilder._source_family(str(source_name))
+            if family == "unknown":
+                continue
+            counts[family] = counts.get(family, 0) + 1
+        families = [
+            {"family": family, "count": count}
+            for family, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        ]
+        return {
+            "family_count": len(families),
+            "top_family": families[0]["family"] if families else "",
+            "families": families,
+            "has_official_or_authorized": any(
+                str(item["family"]).startswith("official_public_")
+                or str(item["family"]) in {"official_registry", "licensed_commercial"}
+                for item in families
+            ),
+            "policy": "Source families explain controller/UBO provenance breadth only; they do not upgrade weak leads into facts.",
+        }
 
     @staticmethod
     def _entity_sensitivity(kind: EntityKind) -> SignalSensitivity:

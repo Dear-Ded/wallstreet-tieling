@@ -72,7 +72,36 @@ This project is an Enterprise Intelligence & Risk Discovery System.
 ```bash
 python bin/investigate.py "Demo Technology Co., Ltd." --fixture-pack
 npx wallstreet-tieling --investigate "Demo Technology Co., Ltd." --fixture-pack
+npx wallstreet-tieling --agent-tools
 ```
+
+## Desktop Agent Runtime Contract
+
+For Codex, Claude Code, Hermes, Doubao Office Task Mode, OpenClaude-style
+agents, and WorkBuddy, do not guess the host workflow from prose alone. First
+read the machine contract:
+
+```bash
+npx wallstreet-tieling --agent-tools
+```
+
+Equivalent runtime surfaces:
+
+- CLI: `npx wallstreet-tieling --agent-tools`
+- REST: `GET /api/agent-tools`
+- MCP: `agent_tool_adapters`
+
+Canonical baseline sequence for every desktop-agent host:
+
+1. `release_readiness`
+2. `connector_catalog`
+3. `development_requirements`
+4. `investigate_company`
+
+Only use `aggregate_subject` after the baseline packet identifies a related
+subject that needs bounded follow-up. Preserve `quality_gate`,
+`evidence_ledger`, `one_click_readiness`, `qyyjt_public_origin_handoff`, and
+`report_exports` instead of replacing the packet with prose-only output.
 
 ## 13 个角色
 

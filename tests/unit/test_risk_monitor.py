@@ -79,6 +79,15 @@ def test_risk_monitor_run_store_summarizes_source_health_trends(tmp_path) -> Non
                             }
                         }
                     },
+                    "source_diagnostics": [
+                        {
+                            "source": "source_c",
+                            "status": "timeout",
+                            "failure_category": "timeout",
+                            "objective": "bond credit recovery",
+                            "trace_id": "monitor:first:source:001",
+                        }
+                    ],
                 }
             ],
             failures=[],
@@ -105,6 +114,15 @@ def test_risk_monitor_run_store_summarizes_source_health_trends(tmp_path) -> Non
                             }
                         }
                     },
+                    "source_diagnostics": [
+                        {
+                            "source": "source_c",
+                            "status": "timeout",
+                            "failure_category": "timeout",
+                            "objective": "bond credit recovery",
+                            "trace_id": "monitor:second:source:001",
+                        }
+                    ],
                 }
             ],
             failures=[],
@@ -116,12 +134,34 @@ def test_risk_monitor_run_store_summarizes_source_health_trends(tmp_path) -> Non
     trends = run_store.source_health_trends(company="Demo Health Co., Ltd.")
 
     assert trends["run_count"] == 2
-    assert trends["source_count"] == 2
+    assert trends["source_count"] == 3
     assert trends["sources"]["source_a"]["availability_ratio"] == 1.0
     assert trends["sources"]["source_a"]["ok_count"] == 2
     assert trends["sources"]["source_b"]["ok_count"] == 1
     assert trends["sources"]["source_b"]["down_count"] == 1
     assert trends["sources"]["source_b"]["companies"] == ["Demo Health Co., Ltd."]
+    assert trends["sources"]["source_c"]["down_count"] == 2
+    assert trends["failure_category_counts"]["timeout"] == 2
+    assert trends["failure_category_counts"]["source_unavailable"] == 1
+    pattern = trends["recurring_failure_patterns"][0]
+    assert pattern["source"] == "source_c"
+    assert pattern["failure_category"] == "timeout"
+    assert pattern["domain"] == "financing_capital_markets"
+    assert pattern["count"] == 2
+    assert pattern["is_recurring"] is True
+    assert "larger timeout" in pattern["operator_action"]
+    recovery_queue = trends["connector_recovery_queue"]
+    assert recovery_queue[0]["source"] == "source_c"
+    assert recovery_queue[0]["priority"] == "P0"
+    assert recovery_queue[0]["status"] == "degraded_connector"
+    assert recovery_queue[0]["recurring_failure_count"] == 1
+    assert recovery_queue[0]["release_warning"] is True
+    assert "source_availability_recovers" in recovery_queue[0]["done_condition"]
+    warnings = trends["release_readiness_warnings"]
+    assert trends["release_readiness_warning_count"] == len(warnings)
+    assert warnings[0]["source"] == "source_c"
+    assert warnings[0]["failure_category"] == "timeout"
+    assert "stronger readiness claims" in warnings[0]["impact"]
 
 
 @pytest.mark.asyncio
@@ -160,3 +200,4 @@ def test_run_monitor_once_sync_helper(tmp_path) -> None:
     assert run.company_count == 1
     assert run.ok_count == 1
     assert run.alerts[0]["company"] == company
+    assert run.results[0]["source_diagnostics"]

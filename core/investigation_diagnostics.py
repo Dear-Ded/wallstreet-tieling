@@ -291,6 +291,10 @@ def _source_resilience_profile(
         "recovery_blocked_count": blocked_recovery,
         "top_blockers": top_blockers[:6],
         "recommended_action": coverage_recovery_decision.get("next_action") or "",
+        "recommended_step": _dict(coverage_recovery_decision.get("recommended_step")),
+        "retry_policy": _dict(coverage_recovery_decision.get("retry_policy")),
+        "recommended_step_ready_to_run": bool(coverage_recovery_decision.get("ready_to_run")),
+        "recommended_step_blocked_reason": coverage_recovery_decision.get("blocked_reason") or "",
         "ready_to_recover_now": bool(ready_recovery),
         "policy": "Source resilience is retrieval/recovery health only; it is not a subject risk verdict.",
     }
@@ -682,6 +686,12 @@ def _coverage_recovery_execution_readiness(
             "query_family": step.get("query_family"),
             "key_fields": list(step.get("key_fields") or [])[:6],
             "required_action": _coverage_recovery_step_required_action(status, source),
+            "retry_policy": _coverage_recovery_retry_policy(
+                status=status,
+                tier=tier,
+                priority=str(step.get("priority") or "P1"),
+                source=source,
+            ),
         }
         if status == "ready":
             ready_steps.append(row)
@@ -710,6 +720,56 @@ def _coverage_recovery_step_required_action(status: str, source: str) -> str:
     if status == "smoke_tested_not_enabled":
         return f"Enable smoke-tested source {source} for this run before retrying."
     return f"Add or map a connector for {source} before retrying this recovery step."
+
+
+def _coverage_recovery_retry_policy(
+    *,
+    status: str,
+    tier: str,
+    priority: str,
+    source: str,
+) -> dict[str, Any]:
+    """Return bounded retry guidance for an operator or desktop-agent runner."""
+    normalized_status = str(status or "connector_required").strip()
+    normalized_tier = str(tier or "public_fallback").strip()
+    normalized_priority = str(priority or "P1").strip().upper()
+    is_ready = normalized_status == "ready"
+    requires_authorization = (
+        normalized_status == "explicit_enable_required"
+        or normalized_tier == "authorized_aggregator"
+    )
+    official_tier = normalized_tier in {
+        "official_public",
+        "global_public_registry",
+        "global_public_court",
+        "global_public_business_credit",
+        "global_public_trade",
+        "global_public_procurement",
+        "global_public_archive",
+    }
+    max_attempts = 3 if is_ready and normalized_priority == "P0" else 2 if is_ready else 0
+    timeout_seconds = 45 if is_ready and official_tier else 30 if is_ready else 0
+    concurrency = 1 if normalized_priority == "P0" or requires_authorization else 2 if is_ready else 0
+    return {
+        "type": "coverage_recovery_retry_policy",
+        "source": source,
+        "retryable": bool(is_ready),
+        "requires_user_authorization": bool(requires_authorization),
+        "max_attempts": max_attempts,
+        "initial_delay_seconds": 2 if is_ready else 0,
+        "backoff": "exponential_jitter" if is_ready else "blocked_until_source_enabled",
+        "timeout_seconds": timeout_seconds,
+        "concurrency": concurrency,
+        "stop_conditions": [
+            "source_returns_admissible_evidence_or_explicit_empty_result",
+            "entity_match_is_weak_or_unrelated",
+            "source_requests_login_captcha_payment_or_unapproved_authorization",
+        ],
+        "safe_fallback_rule": (
+            "Use public or user-authorized fallback sources only; do not convert empty, blocked, "
+            "captcha, paywall, or authorization failures into low-risk conclusions."
+        ),
+    }
 
 
 def _coverage_recovery_decision(
@@ -765,7 +825,9 @@ def _coverage_recovery_decision(
             "status": next_step.get("status"),
             "query_family": next_plan.get("query_family"),
             "key_fields": list(next_plan.get("key_fields") or [])[:6],
+            "retry_policy": _dict(next_step.get("retry_policy")),
         } if next_step else {},
+        "retry_policy": _dict(next_step.get("retry_policy")) if next_step else {},
         "blocked_reason": blocker,
         "blocker_counts": blocker_counts,
         "ready_count": len(ready_steps),

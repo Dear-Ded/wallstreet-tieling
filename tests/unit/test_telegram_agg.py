@@ -48,6 +48,35 @@ def test_all_services_have_data_origin():
         assert "GSXT" in info["data_origin"] or "官方" in info["data_origin"] or "公开" in info["data_origin"] or "裁判" in info["data_origin"] or "信用" in info["data_origin"] or "多个公开" in info["data_origin"]
 
 
+def test_standardizes_telegram_aggregation_service_plan():
+    from adapters.telegram_aggregation import TelegramPublicAggregationAdapter
+
+    adapter = TelegramPublicAggregationAdapter(_make_gate())
+    result = adapter.standardize_result(
+        "Demo Holdings",
+        {
+            "authorized": True,
+            "access_path": "telegram_public_api_telethon",
+            "service_type": "enterprise_lookup",
+            "service_description": "enterprise lookup",
+            "data_origin": "GSXT public registry",
+            "expected_result_type": "company profile",
+            "fields": {"platform": "Telegram"},
+            "response_status": 200,
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    assert result["health"]["requires_user_credentials"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "telegram_public_aggregation_service_plan"
+    assert record["source_hint"] == "telegram_public_aggregation"
+    assert record["entity"] == "Demo Holdings"
+    assert record["entity_match"]["level"] == "review"
+    assert record["evidence"][0]["requires_user_credentials"] is True
+    assert record["evidence"][0]["manual_review_required"] is True
+
+
 def test_disable_revokes():
     from adapters.telegram_aggregation import TelegramPublicAggregationAdapter
     gate = _make_gate()

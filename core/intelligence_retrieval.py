@@ -393,6 +393,8 @@ class EvidenceItem:
     claims: tuple[str, ...] = ()
     source_profile: SourceProfile | None = None
     entity_match: dict[str, Any] | None = None
+    field_contract: dict[str, Any] | None = None
+    report_admission: dict[str, Any] | None = None
 
 
 @dataclass
@@ -857,6 +859,16 @@ class EvidenceIngestor:
             claims=claims,
             source_profile=cls._source_profile(result, task),
             entity_match=entity_match,
+            field_contract=(
+                result.get("field_contract")
+                if isinstance(result.get("field_contract"), dict)
+                else None
+            ),
+            report_admission=(
+                result.get("report_admission")
+                if isinstance(result.get("report_admission"), dict)
+                else None
+            ),
         )
         graph.add_evidence(evidence)
         graph.attach_evidence_to_entity(seed_entity_id, evidence.id)
@@ -975,6 +987,7 @@ class EvidenceIngestor:
             "entity_match": record.get("entity_match"),
             "record_source_type": source_type,
             "field_contract": record.get("field_contract"),
+            "report_admission": record.get("report_admission"),
             "qyyjt_module": record.get("qyyjt_module"),
         }
 
@@ -1854,6 +1867,8 @@ class RetrievalPlan:
                             else SourceCatalog.profile_for(item.source).to_dict()
                         ),
                         "entity_match": item.entity_match,
+                        "field_contract": item.field_contract,
+                        "report_admission": item.report_admission,
                     }
                     for key, item in self.graph.evidence.items()
                 },

@@ -30,12 +30,14 @@ Act as the continuing developer and operator for the `wallstreet-tieling` projec
 ## Default Workflow
 
 1. Inspect the current task context, `git status --short`, and relevant tests before editing.
-2. For company-name investigation requests, start with `InvestigativeRetrievalPlanner.build_company_plan(company)` and use its tasks as the retrieval checklist.
-3. Execute available connectors in this order: official/public records, configured commercial APIs, multi-data-source adapters, web search, model reasoning only as a final synthesis layer.
-4. Store results as evidence items before adding graph relations or conclusions.
-5. Add or update focused tests for every behavior change.
-6. Run focused tests first, then full `pytest -q` when the touched surface is shared.
-7. Update audit or roadmap notes when the implementation changes project readiness or known gaps.
+2. For desktop-agent host work, run `npx wallstreet-tieling --agent-tools` or call MCP `agent_tool_adapters` before making host-specific claims.
+3. Use the canonical baseline tool sequence: `release_readiness`, `connector_catalog`, `development_requirements`, `agent_tool_adapters`, then `investigate_company`.
+4. For company-name investigation requests, start with `InvestigativeRetrievalPlanner.build_company_plan(company)` and use its tasks as the retrieval checklist.
+5. Execute available connectors in this order: official/public records, configured commercial APIs, multi-data-source adapters, web search, model reasoning only as a final synthesis layer.
+6. Store results as evidence items before adding graph relations or conclusions.
+7. Add or update focused tests for every behavior change.
+8. Run focused tests first, then full `pytest -q` when the touched surface is shared.
+9. Update audit or roadmap notes when the implementation changes project readiness or known gaps.
 
 ## Validation Commands
 
@@ -52,11 +54,19 @@ python -m pytest tests\unit\test_intelligence_retrieval.py -q
 python -m pytest tests\unit\test_multi_datasource.py adapters\multi_datasource\test_security.py -q
 ```
 
+Agent host contract smoke:
+
+```powershell
+npx wallstreet-tieling --agent-tools
+npm run agent:host-smoke
+```
+
 ## Plugin-Market Readiness
 
 Before claiming marketplace readiness:
 
 - Validate `.codex-plugin/plugin.json` with the official plugin validator.
 - Confirm `skills/wallstreet-tieling/SKILL.md` has concise trigger metadata and no TODO placeholders.
+- Confirm `agent_tool_adapters` is exposed through MCP and `--agent-tools` is documented for desktop-agent hosts.
 - Confirm tests pass and no secrets are tracked.
 - Maintain a report in `audit_reports/` describing what is implemented, what is planned, and what requires user-provided credentials or browser authentication.

@@ -65,3 +65,37 @@ def test_mass_profiler_authorized_path_uses_public_profile_checks(monkeypatch) -
     assert result["fields"]["platforms_found"] == 1
     assert result["fields"]["platforms_checked"] == 1
     assert result["fields"]["by_category"] == {"code": ["ExampleCode"]}
+
+
+def test_mass_profiler_standardizes_digital_footprint_leads() -> None:
+    from adapters.mass_profiler import MassCrossPlatformProfiler
+
+    adapter = MassCrossPlatformProfiler(_make_gate())
+    result = adapter.standardize_result(
+        "demo",
+        {
+            "fields": {
+                "platforms_found": 2,
+                "platforms_checked": 30,
+                "coverage_ratio": "2/30",
+                "detailed_results": {
+                    "code": [
+                        {"platform": "GitHub", "purpose": "code", "url": "https://github.com/demo"}
+                    ],
+                    "writing": [
+                        {"platform": "Medium", "purpose": "writing", "url": "https://medium.com/@demo"}
+                    ],
+                },
+                "assessment": "moderate_presence",
+            }
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "mass_cross_platform_digital_footprint_lead"
+    assert record["entity"] == "demo"
+    assert record["entity_match"]["level"] == "review"
+    assert len(record["evidence"]) == 2
+    assert record["evidence"][0]["provider"] == "GitHub"
+    assert record["entities"][0]["relation"] == "mass_cross_platform_profile_candidate"

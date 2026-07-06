@@ -176,3 +176,8 @@ def test_risk_monitor_cli_reports_source_health_from_run_store(tmp_path) -> None
     assert payload["source_count"] == 2
     assert payload["sources"]["source_a"]["availability_ratio"] == 1.0
     assert payload["sources"]["source_b"]["down_count"] == 1
+    assert payload["connector_recovery_queue"][0]["source"] == "source_b"
+    assert payload["connector_recovery_queue"][0]["priority"] == "P0"
+    assert payload["connector_recovery_queue"][0]["status"] == "source_down"
+    assert payload["release_readiness_warning_count"] == 1
+    assert payload["release_readiness_warnings"][0]["source"] == "source_b"

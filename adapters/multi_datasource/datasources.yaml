@@ -121,6 +121,46 @@ sources:
       controller_relevance: "parent_relationship_and_registration_authority_leads"
       provenance_required: true
 
+  # GLEIF relationship traversal stays separate from the stable LEI identity
+  # lookup. It produces bounded graph-edge records only after LEI resolution.
+  - name: "gleif_lei_relationship_traversal_public_api"
+    type: "rest_api"
+    enabled: false
+    priority: 22
+    base_url: "https://api.gleif.org/api/v1"
+    timeout: 25
+    description: "GLEIF public relationship traversal for parent, branch, and related-entity graph edges."
+    headers:
+      Accept: "application/vnd.api+json"
+      User-Agent: "wallstreet-tieling/0.5.0"
+    auth:
+      type: "none"
+    ping: true
+    ping_endpoint: "https://api.gleif.org/api/v1/lei-records"
+    ping_timeout: 5
+    auto_disable_on_fail: true
+    rate_limit:
+      enabled: true
+      requests_per_second: 1.0
+      burst_size: 2
+    retry:
+      max_retries: 2
+      backoff_factor: 1.0
+      retry_on_status: [429, 500, 502, 503, 504]
+    cache_enabled: true
+    cache_ttl: 3600
+    custom:
+      provider_type: "gleif_relationship_traversal"
+      evidence_role: "official_relationship_graph_edge"
+      source_legitimacy: "official_public_api"
+      coverage_domains:
+        - "ownership_control"
+        - "related_entities"
+        - "financing_capital_markets"
+      controller_relevance: "parent_branch_relationship_edge_traversal"
+      provenance_required: true
+      fact_promotion_gate: "subject_lei resolution, related_lei, relationship_status/period, source_url, and exact/strong entity match"
+
   # U.S. SEC EDGAR public data API. The connector must use a descriptive
   # User-Agent and fair-access pacing when enabled.
   - name: "sec_edgar_public_api"
@@ -200,6 +240,9 @@ sources:
         - "ownership_control"
       controller_relevance: "controller_and_related_person_watchlist_screening_catalog"
       api_depth_requires_user_key: true
+      license_review_status: "metadata_exposed_per_dataset"
+      attribution_policy: "retain dataset license, license_url, publisher, and update cadence in every catalog record"
+      subject_screening_policy: "catalog metadata is coverage evidence only; subject-level facts require reviewed local index or authorized API exact/strong match"
       provenance_required: true
 
   # Official U.S. Treasury OFAC consolidated sanctions list. This is a public

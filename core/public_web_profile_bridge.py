@@ -63,14 +63,19 @@ GOODS_KEYWORDS = {
     "backlog",
     "brand",
     "capacity",
+    "cac",
     "channel",
+    "competitive",
+    "competitor",
     "contract",
     "customer",
     "export",
     "goods",
+    "gross_margin",
     "import",
     "industry",
     "inventory",
+    "ltv",
     "logistic",
     "market",
     "patent",
@@ -96,6 +101,7 @@ PEOPLE_KEYWORDS = {
     "board",
     "case",
     "ceo",
+    "common",
     "controller",
     "court",
     "director",
@@ -113,6 +119,7 @@ PEOPLE_KEYWORDS = {
     "regulat",
     "related",
     "shareholder",
+    "shared",
     "ubo",
     "wage",
 }
@@ -154,6 +161,8 @@ def build_public_web_profiles(evidence_ledger: list[dict[str, Any]] | None) -> d
             _enrich_public_capital_profile(profile)
         if name == "public_goods_profile":
             _enrich_public_goods_profile(profile)
+        if name == "public_people_profile":
+            _enrich_public_people_profile(profile)
         profile["row_count"] = len(profile["claims"])
         profile["verification_status"] = "public_lead_needs_corroboration"
         profile["source"] = "public_web"
@@ -257,7 +266,15 @@ def _enrich_public_goods_profile(profile: dict[str, Any]) -> None:
         "product_claims": {"product", "product_dependency", "core_product", "substitution_risk", "substitute_availability"},
         "upstream_claims": {"upstream", "raw_material_pressure", "upstream_power"},
         "downstream_claims": {"downstream", "downstream_power"},
-        "channel_partner_claims": {"channel", "partner", "sales_channel", "value_chain_role"},
+        "channel_partner_claims": {
+            "channel",
+            "dealer",
+            "distributor",
+            "partner",
+            "reseller",
+            "sales_channel",
+            "value_chain_role",
+        },
         "market_position_claims": {
             "market_position",
             "market_share",
@@ -265,9 +282,15 @@ def _enrich_public_goods_profile(profile: dict[str, Any]) -> None:
             "market_concentration",
             "competitive_landscape",
             "entry_barriers",
+            "barrier_to_entry",
             "pricing_power",
             "competitor",
             "peer_comparison",
+            "competitor_count",
+            "competitor_set",
+            "competitive_dynamics",
+            "competitive_position",
+            "competitive_pressure",
         },
         "business_model_claims": {
             "business_model",
@@ -278,6 +301,63 @@ def _enrich_public_goods_profile(profile: dict[str, Any]) -> None:
             "unit_economics",
             "switching_cost",
             "repeat_purchase",
+        },
+        "unit_economics_claims": {
+            "arpu",
+            "breakeven",
+            "cac",
+            "cac_ltv",
+            "contribution_margin",
+            "cost_to_serve",
+            "customer_acquisition_cost",
+            "customer_churn",
+            "customer_churn_rate",
+            "gross_margin",
+            "gross_profit_margin",
+            "ltv",
+            "ltv_cac",
+            "margin_profile",
+            "payback_period",
+            "repeat_purchase",
+            "repeat_purchase_rate",
+            "retention",
+            "unit_economics",
+            "unit_margin",
+        },
+        "bargaining_power_claims": {
+            "barrier_to_entry",
+            "brand_premium",
+            "brand_value",
+            "buyer_power",
+            "customer_power",
+            "customer_stickiness",
+            "downstream_power",
+            "entry_barriers",
+            "moat",
+            "pricing_power",
+            "seller_power",
+            "supplier_power",
+            "switching_behavior",
+            "switching_cost",
+            "upstream_power",
+        },
+        "competitive_landscape_claims": {
+            "barrier_to_entry",
+            "competitive_dynamics",
+            "competitive_landscape",
+            "competitive_position",
+            "competitive_pressure",
+            "competitor",
+            "competitor_count",
+            "competitor_mentioned",
+            "competitor_set",
+            "entry_barriers",
+            "market_concentration",
+            "market_position",
+            "market_share",
+            "peer_comparison",
+            "tender_competition",
+            "underperform_peers",
         },
     }
     for claim in [str(item) for item in profile.get("claims", []) if str(item).strip()]:
@@ -301,8 +381,111 @@ def _enrich_public_goods_profile(profile: dict[str, Any]) -> None:
         "suppliers": len(profile.get("supplier_claims", [])),
         "customers": len(profile.get("customer_claims", [])),
         "products": len(profile.get("product_claims", [])),
+        "channels": len(profile.get("channel_partner_claims", [])),
         "market_position": len(profile.get("market_position_claims", [])),
         "business_model": len(profile.get("business_model_claims", [])),
+        "unit_economics": len(profile.get("unit_economics_claims", [])),
+        "bargaining_power": len(profile.get("bargaining_power_claims", [])),
+        "competitive_landscape": len(profile.get("competitive_landscape_claims", [])),
+    }
+
+
+def _enrich_public_people_profile(profile: dict[str, Any]) -> None:
+    """Expose people/control public leads as structured, corroboration-needed buckets."""
+    buckets = {
+        "control_role_claims": {
+            "actual_controller",
+            "beneficial_owner",
+            "controller",
+            "control_person",
+            "controlling_shareholder",
+            "founder",
+            "owner",
+            "ultimate_beneficial_owner",
+            "ubo",
+        },
+        "key_person_claims": {
+            "board",
+            "ceo",
+            "chairman",
+            "cfo",
+            "cto",
+            "director",
+            "executive",
+            "general_manager",
+            "key_person",
+            "legal_representative",
+            "president",
+            "supervisor",
+        },
+        "legal_pressure_claims": {
+            "administrative_penalty",
+            "case",
+            "court_case",
+            "dishonest",
+            "dishonesty_record",
+            "enforcement",
+            "enforcement_case",
+            "judgment",
+            "legal_case",
+            "limit_high",
+            "penalty",
+            "regulatory_penalty",
+            "restricted_consumption",
+        },
+        "ownership_change_claims": {
+            "controller_change",
+            "equity_change",
+            "executive_change",
+            "ownership_change",
+            "shareholder",
+            "shareholder_change",
+            "shareholding_change",
+            "ubo_change",
+        },
+        "related_party_claims": {
+            "common_address",
+            "common_director",
+            "common_project",
+            "common_shareholder",
+            "related_company",
+            "related_party",
+            "same_controller",
+            "shared_phone",
+        },
+        "labor_social_claims": {
+            "labor_dispute",
+            "social_insurance",
+            "strike",
+            "union",
+            "wage",
+            "worker",
+        },
+    }
+    for claim in [str(item) for item in profile.get("claims", []) if str(item).strip()]:
+        if "=" not in claim:
+            continue
+        raw_key, raw_value = claim.split("=", 1)
+        clean_key = _clean_signal_key(raw_key)
+        clean_value = _trim_signal_value(raw_value)
+        if not clean_key or not clean_value:
+            continue
+        for bucket, keys in buckets.items():
+            if clean_key in keys or any(token in clean_key for token in keys):
+                values = profile.setdefault(bucket, [])
+                entry = f"{clean_key}={clean_value}"
+                if entry not in values:
+                    values.append(entry)
+    for bucket in buckets:
+        if bucket in profile:
+            profile[bucket] = profile[bucket][:8]
+    profile["structured_summary"] = {
+        "control_roles": len(profile.get("control_role_claims", [])),
+        "key_people": len(profile.get("key_person_claims", [])),
+        "legal_pressure": len(profile.get("legal_pressure_claims", [])),
+        "ownership_changes": len(profile.get("ownership_change_claims", [])),
+        "related_parties": len(profile.get("related_party_claims", [])),
+        "labor_social": len(profile.get("labor_social_claims", [])),
     }
 
 
@@ -417,10 +600,22 @@ def _text_to_public_lead_keys(text: str) -> dict[str, str]:
         ("market", "market_position"),
         ("recruit", "recruiting_active"),
         ("controller", "actual_controller"),
+        ("actual controller", "actual_controller"),
         ("ubo", "beneficial_owner"),
+        ("beneficial owner", "beneficial_owner"),
+        ("legal representative", "legal_representative"),
+        ("director", "director"),
+        ("executive", "executive"),
         ("shareholder", "shareholder"),
+        ("shareholder change", "shareholder_change"),
+        ("ownership change", "ownership_change"),
+        ("enforcement", "enforcement_case"),
+        ("dishonest", "dishonesty_record"),
+        ("limit high", "limit_high"),
         ("court", "court_case"),
+        ("administrative penalty", "administrative_penalty"),
         ("penalty", "regulatory_penalty"),
+        ("related party", "related_party"),
         ("negative", "negative_news"),
     ):
         if marker in lowered:
@@ -431,15 +626,43 @@ def _text_to_public_lead_keys(text: str) -> dict[str, str]:
 def _profile_for_key(key: str) -> str:
     token = key.lower()
     if token in {
+        "arpu",
+        "barrier_to_entry",
+        "brand_premium",
+        "brand_value",
         "business_model",
+        "buyer_power",
+        "cac",
+        "cac_ltv",
+        "competitive_dynamics",
+        "competitive_landscape",
+        "competitive_position",
+        "competitive_pressure",
+        "competitor_count",
+        "competitor_mentioned",
+        "competitor_set",
+        "contribution_margin",
+        "cost_to_serve",
+        "customer_acquisition_cost",
+        "customer_power",
         "revenue_model",
         "sales_model",
         "sales_channel",
+        "seller_power",
         "subscription_model",
         "subscription_revenue_ratio",
+        "gross_margin",
+        "gross_profit_margin",
+        "ltv",
+        "ltv_cac",
+        "margin_profile",
+        "payback_period",
         "unit_economics",
+        "unit_margin",
         "switching_cost",
+        "switching_behavior",
         "repeat_purchase",
+        "repeat_purchase_rate",
     }:
         return "public_goods_profile"
     if _contains_any(token, MONEY_KEYWORDS):

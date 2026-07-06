@@ -191,7 +191,7 @@ L3: 均不可用 → 降级为 WebSearch + WebFetch
 |:-----|:-----|
 | **基础镜像** | `python:3.11-slim` |
 | **端口** | 8080 |
-| **命令** | `docker build -t wallstreet-tieling . && docker run -p 8080:8080 -e OPENAI_API_KEY=OPENAI_API_KEY_VALUE wallstreet-tieling` |
+| **命令** | `docker build -t wallstreet-tieling . && docker run -p 8080:8080 --env-file .env wallstreet-tieling` |
 | **缺失后影响** | 🔴 Docker容器模式不可用，不影响其他部署形态 |
 
 ### 🟡 其他部署平台
@@ -286,11 +286,11 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 
 # API 服务模式
 pip install flask flask-cors aiohttp requests
-export DEEPSEEK_API_KEY="DEEPSEEK_API_KEY_VALUE"
+# 在 .env 中配置 DeepSeek 或 OpenAI API Key 后启动
 python api/server.py
 
 # Docker 模式
-docker run -p 8080:8080 -e DEEPSEEK_API_KEY=DEEPSEEK_API_KEY_VALUE dearded/wallstreet-tieling
+docker run -p 8080:8080 --env-file .env dearded/wallstreet-tieling
 ```
 
 ### 增强安装（OSINT工具）

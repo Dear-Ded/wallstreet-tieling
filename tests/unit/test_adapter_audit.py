@@ -72,4 +72,7 @@ def test_adapter_audit_classifies_public_official_connector_tiers() -> None:
         assert "unknown_source_tier" not in rows[name]["admission"]["blockers"]
 
     assert rows["authorized_opensanctions_api"]["admission"]["tier"] == "user_authorized_service"
-    assert rows["authorized_opensanctions_api"]["production_ready"] is False
+    assert rows["authorized_opensanctions_api"]["production_ready"] is True
+    assert rows["authorized_opensanctions_api"]["capability"]["default_enabled"] is False
+    assert "api_key_required" in rows["authorized_opensanctions_api"]["capability"]["risk_flags"]
+    assert "license_review_required" in rows["authorized_opensanctions_api"]["capability"]["risk_flags"]

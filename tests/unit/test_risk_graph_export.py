@@ -131,6 +131,31 @@ def test_risk_graph_cli_fixture_pack_exports_multi_source_graph(tmp_path) -> Non
     assert payload["summary"]["evidence_count"] == 6
     assert payload["summary"]["risk_event_count"] >= 1
     assert payload["summary"]["subject_profile"]["controller_candidate_count"] >= 1
+    capital_exposure = payload["summary"]["capital_exposure"]
+    assert capital_exposure["type"] == "capital_exposure_summary"
+    assert capital_exposure["pressure_level"] == "elevated"
+    assert capital_exposure["capital_evidence_count"] >= 1
+    assert capital_exposure["pressure_signal_count"] >= 1
+    assert capital_exposure["inflow_signal_count"] >= 1
+    assert capital_exposure["relationship_status"] == "needs_relationship_mapping"
+    assert capital_exposure["evidence_ids"]
+    assert capital_exposure["relationship_audit_queue_count"] >= 1
+    assert capital_exposure["relationship_audit_top_step"]["priority"] == "P0"
+    assert capital_exposure["relationship_audit_top_step"]["kind"] == "capital_relationship_mapping_required"
+    assert capital_exposure["relationship_audit_top_step"]["done_condition"] == "at_least_one_admitted_capital_relationship_edge_or_explicit_no_relationship_reason"
+    assert capital_exposure["verification_queue_count"] >= 2
+    assert capital_exposure["verification_queue"][0]["priority"] == "P0"
+    assert any(
+        item["kind"] in {"risk_event_verification", "capital_evidence_review"}
+        for item in capital_exposure["verification_queue"]
+    )
+    assert any(
+        item["kind"] == "relationship_mapping_required"
+        and item["priority"] == "P0"
+        and item["done_condition"] == "at_least_one_admitted_capital_relationship_edge_or_explicit_no_relationship_reason"
+        for item in capital_exposure["verification_queue"]
+    )
+    assert "lenders" in capital_exposure["next_action"]
     assert {
         item["source"]
         for item in payload["evidence"]

@@ -30,6 +30,7 @@ variants:
       - "adapters/cli.py"
       - "deploy/mcp-server.json"
       - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "docs/AGENT_HOST_SMOKE_CHECKLIST.md"
     packaging:
       - "npm package"
       - "Docker image"
@@ -44,17 +45,23 @@ variants:
       - "Agent-readable JSON and Markdown packet outputs"
     readiness: "alpha"
     next_gate:
-      - "Run host smoke across CLI, REST API, and MCP entrypoints"
-      - "Add host-neutral agent packet acceptance for JSON and Markdown outputs"
+      - "Keep host smoke green across CLI, REST API, and MCP entrypoints"
+      - "Keep host-neutral agent packet acceptance for JSON, Markdown, portable HTML, and DOCX renderer metadata"
 
   codex:
     display_name: "Codex"
     audience: "Codex users, Codex plugin marketplace, and repo-maintenance workflows."
+    delivery_priority:
+      lane: "primary"
+      rank: 1
+      reason: "Codex plugin and Codex skill delivery are the current mainline release target."
     entrypoints:
       - ".codex-plugin/plugin.json"
       - "skills/wallstreet-tieling/SKILL.md"
       - "bin/retrieval_plan.py"
       - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "docs/CODEX_MARKETPLACE_SUBMISSION_NOTES.md"
+      - "docs/PLUGIN_MARKET_READINESS.md"
     packaging:
       - "Codex plugin"
       - "Codex skill"
@@ -65,10 +72,10 @@ variants:
       - "No secrets in plugin files"
     readiness: "alpha"
     next_gate:
-      - "Add Codex CI workflow for packaged MCP smoke"
-      - "Keep packaged MCP smoke in acceptance for connector_catalog, release_readiness, and investigate_company"
-      - "Add Codex smoke workflow for retrieval plan and cognition profile"
-      - "Prepare marketplace submission screenshots and final review notes"
+      - "Keep Codex CI workflow green for packaged MCP smoke and host-neutral desktop-agent smoke"
+      - "Keep packaged MCP smoke in acceptance for connector_catalog, release_readiness, development_requirements, agent_tool_adapters, retrieval_plan, and investigate_company"
+      - "Keep Codex smoke workflow covering retrieval plan and cognition profile"
+      - "Capture marketplace submission screenshots after final acceptance pass"
 
   claude_code:
     display_name: "Claude Code"
@@ -78,8 +85,10 @@ variants:
       - "SKILL.md"
       - "adapters/README.md"
       - "docs/CLAUDE_CODE_ADAPTER.md"
+      - "docs/CLAUDE_PROJECT_KNOWLEDGE_PACK.md"
       - "deploy/mcp-server.json"
       - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "docs/AGENT_HOST_SMOKE_CHECKLIST.md"
     packaging:
       - "Claude Code repo instructions"
       - "Claude Project knowledge pack"
@@ -91,9 +100,9 @@ variants:
       - "No browser cookies or tokens in repo"
     readiness: "alpha"
     next_gate:
-      - "Run Claude Code host smoke with MCP connector_catalog and release_readiness"
-      - "Publish Claude Project knowledge-pack bundle"
-      - "Add Claude-specific CI smoke checklist"
+      - "Keep Claude Code host smoke checklist aligned with MCP connector_catalog, release_readiness, development_requirements, and agent_tool_adapters"
+      - "Keep Claude Project knowledge-pack bundle aligned with runtime handoffs"
+      - "Keep Claude-specific CI smoke checklist mapped to shared agent host smoke"
 
   hermes:
     display_name: "Hermes"
@@ -104,6 +113,8 @@ variants:
       - "deploy/mcp-server.json"
       - "docs/API_CONTRACTS.md"
       - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "docs/HERMES_AGENT_SETUP.md"
+      - "docs/AGENT_HOST_SMOKE_CHECKLIST.md"
       - "deploy/multi-platform-guide.md"
     packaging:
       - "Skill prompt"
@@ -117,8 +128,8 @@ variants:
       - "No host-specific browser or UI dependency"
     readiness: "alpha"
     next_gate:
-      - "Run Hermes host smoke for load_skill, release_readiness, connector_catalog, and investigate_company"
-      - "Document Hermes configuration and timeout defaults"
+      - "Keep Hermes host smoke checklist covering load_skill, release_readiness, connector_catalog, development_requirements, agent_tool_adapters, and investigate_company"
+      - "Keep Hermes configuration and timeout defaults aligned with smoke gates"
 
   doubao_office_task_mode:
     display_name: "Doubao Office Task Mode"
@@ -129,6 +140,8 @@ variants:
       - "api/server.py"
       - "docs/API_CONTRACTS.md"
       - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "docs/OFFICE_TASK_MODE_HANDOFF.md"
+      - "docs/AGENT_HOST_SMOKE_CHECKLIST.md"
       - "deploy/multi-platform-guide.md"
     packaging:
       - "Copy/paste skill prompt"
@@ -142,8 +155,8 @@ variants:
       - "Default-safe public or user-authorized source policy"
     readiness: "alpha"
     next_gate:
-      - "Run office-task prompt smoke with default public investigation output"
-      - "Add concise Chinese operator handoff for task-mode hosts"
+      - "Keep office-task prompt smoke checklist aligned with default public investigation output"
+      - "Keep concise Chinese operator handoff aligned with runtime packet fields"
 
   open_claude_agents:
     display_name: "OpenClaude / Open Source Agents"
@@ -155,6 +168,8 @@ variants:
       - "deploy/mcp-server.json"
       - "docs/API_CONTRACTS.md"
       - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "docs/OPEN_AGENT_COMPATIBILITY.md"
+      - "docs/AGENT_HOST_SMOKE_CHECKLIST.md"
       - "deploy/multi-platform-guide.md"
     packaging:
       - "Repository instruction pack"
@@ -169,16 +184,41 @@ variants:
       - "No dependency on polished HTML UI"
     readiness: "alpha"
     next_gate:
-      - "Create open-source agent smoke checklist covering CLI, MCP, and API modes"
-      - "Document minimal environment variables and local runtime requirements"
+      - "Keep open-source agent smoke checklist covering CLI, MCP, and API modes"
+      - "Keep minimal environment variables and local runtime requirements aligned with smoke gates"
 
   workbuddy_expert_team:
     display_name: "WorkBuddy Expert Team"
     audience: "WorkBuddy/OpenClaw/CodeBuddy users who want the 13-role expert-team workflow."
+    delivery_priority:
+      lane: "secondary"
+      rank: 20
+      reason: "WorkBuddy expert-team mode follows Codex mainline delivery and must not displace Codex adaptation work."
+      depends_on:
+        - "codex"
+    project_branch:
+      branch_id: "workbuddy_expert_team"
+      branch_type: "expert_team_host_adapter"
+      owns:
+        - "WorkBuddy persona/tool routing"
+        - "13-role expert-team handoff"
+        - "WorkBuddy-specific fallback instructions"
+      must_not_touch:
+        - "core runtime architecture"
+        - "source admission policy"
+        - "release truth source"
+        - "production HTML UI"
+      shared_runtime_contract:
+        - "release_readiness"
+        - "connector_catalog"
+        - "development_requirements"
+        - "agent_tool_adapters"
+        - "investigate_company"
     entrypoints:
       - "adapters/workbuddy.py"
       - "SKILL.md"
       - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "docs/AGENT_HOST_SMOKE_CHECKLIST.md"
       - "sub-skills/"
     packaging:
       - "WorkBuddy skill"
@@ -190,9 +230,9 @@ variants:
       - "Output persistence"
     readiness: "alpha"
     next_gate:
-      - "Run WorkBuddy host smoke with connector_catalog, release_readiness, and default_public_intel"
-      - "Add expert-team mode smoke test"
-      - "Document host tool delegation and fallback behavior"
+      - "Keep WorkBuddy host smoke checklist aligned with connector_catalog, release_readiness, development_requirements, agent_tool_adapters, and investigate_company"
+      - "Keep expert-team mode smoke test mapped to tests/unit/test_workbuddy.py"
+      - "Document host tool delegation, investigation packet routing, and fallback behavior"
 
 release_gates:
   public_claims:
@@ -206,7 +246,7 @@ release_gates:
   quality:
     - "Focused tests pass for touched surfaces."
     - "npm run acceptance passes before release claims are updated."
-    - "Desktop-agent entrypoints expose equivalent release_readiness, connector_catalog, and investigate_company behavior."
+    - "Desktop-agent entrypoints expose equivalent release_readiness, connector_catalog, development_requirements, agent_tool_adapters, and investigate_company behavior."
     - "Agent-readable outputs include Markdown and JSON packet forms without requiring the polished HTML workbench."
     - "A release-readiness document exists for each marketplace or host submission."
     - "Core outputs include evidence gaps instead of fabricated facts."

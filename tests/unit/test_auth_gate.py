@@ -93,3 +93,30 @@ def test_opensanctions_requires_authorization():
     gate = UserAuthorizationGate("test_user")
     lookup = AuthorizedOpenSanctionsLookup(gate)
     assert not lookup.is_available()
+
+
+def test_opensanctions_standardizes_authorized_watchlist_leads():
+    from core.user_auth_gate import UserAuthorizationGate
+    from adapters.authorized_sources import AuthorizedOpenSanctionsLookup
+
+    lookup = AuthorizedOpenSanctionsLookup(UserAuthorizationGate("test_user"), api_key="test-key")
+    result = lookup.standardize_result(
+        "Demo Person",
+        {
+            "sample": [
+                {
+                    "name": "Demo Person",
+                    "schema": "Person",
+                    "countries": ["us"],
+                }
+            ]
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    assert result["health"]["license"] == "CC BY-NC 4.0"
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "authorized_watchlist_subject_match"
+    assert record["entity_match"]["level"] == "exact"
+    assert record["evidence"][0]["provider"] == "OpenSanctions"
+    assert record["evidence"][0]["license_review"] == "non_commercial_or_authorized_use_required"

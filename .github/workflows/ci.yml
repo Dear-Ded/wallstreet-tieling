@@ -1,0 +1,110 @@
+name: Agent Release CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - "codex/**"
+    paths:
+      - ".codex-plugin/**"
+      - ".github/workflows/ci.yml"
+      - "CLAUDE.md"
+      - "SKILL.md"
+      - "api/**"
+      - "bin/**"
+      - "core/**"
+      - "deploy/**"
+      - "docs/API_CONTRACTS.md"
+      - "docs/CLAUDE_CODE_ADAPTER.md"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "lib/**"
+      - "package.json"
+      - "release/**"
+      - "requirements.txt"
+      - "skills/**"
+      - "sub-skills/**"
+      - "tests/unit/test_encoding_integrity.py"
+      - "tests/unit/test_release_hygiene.py"
+      - "tests/unit/test_release_variants.py"
+      - "tools/**"
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - ".codex-plugin/**"
+      - ".github/workflows/ci.yml"
+      - "CLAUDE.md"
+      - "SKILL.md"
+      - "api/**"
+      - "bin/**"
+      - "core/**"
+      - "deploy/**"
+      - "docs/API_CONTRACTS.md"
+      - "docs/CLAUDE_CODE_ADAPTER.md"
+      - "docs/DESKTOP_AGENT_HOSTS.md"
+      - "lib/**"
+      - "package.json"
+      - "release/**"
+      - "requirements.txt"
+      - "skills/**"
+      - "sub-skills/**"
+      - "tests/unit/test_encoding_integrity.py"
+      - "tests/unit/test_release_hygiene.py"
+      - "tests/unit/test_release_variants.py"
+      - "tools/**"
+
+permissions:
+  contents: read
+
+jobs:
+  agent-release-smoke:
+    name: Desktop-agent release smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          npm install --ignore-scripts
+
+      - name: Check runtime JavaScript syntax
+        run: |
+          node --check bin/cli.js
+          node --check lib/mcp-server.js
+          node --check tools/codex-mcp-smoke.js
+          node --check tools/agent-host-smoke.js
+
+      - name: Validate release contracts and hygiene
+        run: |
+          python -m pytest \
+            tests/unit/test_release_variants.py \
+            tests/unit/test_encoding_integrity.py::test_claude_code_docs_reference_executable_mcp_and_catalogs \
+            tests/unit/test_encoding_integrity.py::test_api_contracts_match_runtime_handoff_surfaces \
+            tests/unit/test_release_hygiene.py \
+            -q
+
+      - name: Run packaged Codex MCP smoke
+        run: npm run codex:mcp-smoke
+
+      - name: Run REST API smoke
+        run: npm run api:smoke
+
+      - name: Run host-neutral desktop-agent smoke
+        run: npm run agent:host-smoke

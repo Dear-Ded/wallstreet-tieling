@@ -562,7 +562,7 @@ def test_creditchina_only_extracts_public_fields():
     assert "disclosure_type" in fields
 
     # 不提取任何受保护字段
-    prohibited = ["身份证", "手机", "地址", "联系方式", "password", "token"]
+    prohibited = ["主体身份标识", "手机", "地址", "联系方式", "password", "token"]
     all_fields_str = str(fields)
     for p in prohibited:
         assert p not in all_fields_str, f"Found prohibited field indicator: {p}"

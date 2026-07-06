@@ -63,6 +63,58 @@ def test_relationship_resolution_extracts_field_relationship_leads():
     assert controller["extracted_field"] == "controller"
     assert result["rules"]["field_claims_to_candidate_edges"] is True
 
+def test_relationship_resolution_uses_gleif_relationship_edge_records():
+    from core.relationship_resolution import build_relationship_resolution
+
+    result = build_relationship_resolution(
+        [
+            {
+                "evidence_id": "ev-gleif-rel-1",
+                "source_name": "gleif_lei_relationship_traversal_public_api",
+                "lane": "graph",
+                "record_type": "gleif_relationship_edge",
+                "subject": "Demo GLEIF Child Ltd",
+                "subject_lei": "549300CHILD",
+                "related_name": "Demo Direct Parent Ltd",
+                "related_lei": "549300PARENT",
+                "relationship_type": "direct_parent",
+                "relationship_status": "reported",
+                "relationship_period": "2025-01-01..",
+                "admission": "fact",
+                "url": "https://api.gleif.org/api/v1/lei-records/549300CHILD/relationships",
+                "entity_match": {"level": "strong", "score": 0.94, "method": "source_reported_lei_pair"},
+            }
+        ],
+        {"resolved_entities": [{"name": "Demo GLEIF Child Ltd"}]},
+        None,
+    )
+
+    lead = next(
+        item
+        for item in result["phase1_candidate_leads"]
+        if item["relation_type"] == "direct_parent" and item["to"] == "Demo Direct Parent Ltd"
+    )
+    assert lead["admission"] == "lead"
+    assert lead["source"] == "gleif_lei_relationship_traversal_public_api"
+    assert lead["evidence_ids"] == ["ev-gleif-rel-1"]
+    assert lead["subject_lei"] == "549300CHILD"
+    assert lead["related_lei"] == "549300PARENT"
+    assert lead["entity_match"]["level"] == "strong"
+    assert lead["entity_match_level"] == "strong"
+    assert lead["entity_match_score"] == 0.94
+    assert lead["source_url"].endswith("/relationships")
+    summary = result["resolution_summary"]
+    assert summary["by_relation_type"]["direct_parent"] == 1
+    assert summary["by_lane"]["people"] >= 1
+    assert summary["typed_lead_count"] >= 1
+    assert any(
+        item["relation_type"] == "direct_parent"
+        and item["source"] == "gleif_lei_relationship_traversal_public_api"
+        and item["evidence_ids"] == ["ev-gleif-rel-1"]
+        for item in summary["verification_queue"]
+    )
+    assert result["rules"]["structured_relationship_records_to_candidate_edges"] is True
+
 def test_strategy_v2_binds_gap_status():
     from core.investigation_strategy import build_strategy_v2
     gap = {"gap_summary": {"capital": {"status": "missing", "signal_count": 0}}}
@@ -153,6 +205,23 @@ def test_relationship_graph_pipeline_contract():
     g={"edges":[{"from":"A","to":"B","type":"controls"}],"edge_count":1}
     r=build_capability_audit(None,None,None,g,{},{},{},{})
     assert r["capabilities"]["relationship_graph"]["wired_to_pipeline"] is True
+
+def test_empty_relationship_graph_is_wired_not_missing_capability():
+    from core.due_diligence_audit import build_capability_audit
+    g={"nodes":[{"id":"seed","name":"Demo Co"}],"edges":[],"node_count":1,"edge_count":0}
+    r=build_capability_audit(None,None,None,g,{},{},{},{})
+    assert r["capabilities"]["relationship_graph"]["implemented"] is True
+    assert r["capabilities"]["relationship_graph"]["wired_to_pipeline"] is True
+    assert r["capabilities"]["relationship_graph"]["tested"] is True
+    assert r["capabilities"]["high_value_paths"]["wired_to_pipeline"] is True
+
+def test_capability_audit_marks_qyyjt_and_persona_as_tested_surfaces():
+    from core.due_diligence_audit import build_capability_audit
+    readiness={"authorization_required_sources":["qyyjt_api"]}
+    r=build_capability_audit(None,None,None,None,readiness,{},{},{})
+    assert r["capabilities"]["qyyjt_authorized_source"]["tested"] is True
+    assert r["capabilities"]["qyyjt_authorized_source"]["fixture_only"] is True
+    assert r["capabilities"]["persona_activation"]["tested"] is True
 
 def test_entity_resolution_rules_exist():
     from core.entity_resolution import build_entity_resolution

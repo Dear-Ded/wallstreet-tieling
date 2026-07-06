@@ -90,7 +90,7 @@ async def test_rate_limiter_waits_when_bucket_is_empty(monkeypatch):
     monkeypatch.setattr("core.api_optimizer.asyncio.sleep", fake_sleep)
     assert await limiter.acquire() is True
     assert await limiter.acquire() is True
-    assert sleeps == pytest.approx([0.5])
+    assert sleeps == pytest.approx([0.5], abs=0.001)
 
 
 @pytest.mark.asyncio

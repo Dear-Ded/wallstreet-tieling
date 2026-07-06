@@ -48,6 +48,7 @@ foreach ($candidate in $pythonCandidates) {
 if (-not $python) {
     throw "No usable Python runtime found. Set WST_PYTHON to continue."
 }
+$env:WST_PYTHON = $python
 
 if (-not $PytestArgs -or $PytestArgs.Count -eq 0) {
     $PytestArgs = @("tests\unit\test_investigation.py", "tests\unit\test_default_public_intel_tool.py", "tests\unit\test_public_web_search_tool.py")

@@ -262,7 +262,7 @@ Type: Pure Research — No Code Changes
 | 自动完成验证码/CAPTCHA | 自动化视觉响应处理 (automated visual challenge processing) | GSXT/法院/专利查询 |
 | 自动完成付费墙/paywall | 公开存档访问 (public archive access) | 新闻/财务报告 |
 | 自动完成登录/login bypass | 会话状态持久化与复用 (session state persistence & reuse) | 裁判文书网/专业数据库 |
-| 反爬/anti-automated query | 采集稳定性优化 (collection stability optimization) | 所有公开网页采集 |
+| 访问稳定性与站点规则适配/anti-automated query | 采集稳定性优化 (collection stability optimization) | 所有公开网页采集 |
 | 浏览器自动化 | 浏览器兼容性增强 (browser compatibility enhancement) | 复杂交互页面 |
 | 多源聚合 | 多源公开数据聚合 (multi-source public data aggregation) | 企业尽调整体架构 |
 | 深度查询/画像 | 深度主体公开信息分析 (deep subject public information analysis) | 尽调报告综合 |

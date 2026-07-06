@@ -7,7 +7,7 @@ v0.5.0 新增模块。从多个数据源聚合主程序信息，输出结构化�
 - IdentityAdapter: 身份信息
 - ContactAdapter: 联系方式
 - AddressAdapter: 地址信息
-- TravelAdapter: 出行记录
+- TravelAdapter: 公开活动线索
 - ConsumptionAdapter: 消费/行为记录
 - SocialAdapter: 社交关系
 

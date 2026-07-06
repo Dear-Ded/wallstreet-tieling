@@ -43,6 +43,7 @@ The source of truth for public release status is `PROJECT_TASKBOARD.md` and
 - Runtime datasource catalog: `npx wallstreet-tieling --connectors` or `GET /api/connectors`
 - Runtime release contract: `npx wallstreet-tieling --release` or `GET /api/release`
 - Runtime requirements board: `npx wallstreet-tieling --requirements` or `GET /api/requirements`
+- Runtime agent adapter contract: `npx wallstreet-tieling --agent-tools`, `GET /api/agent-tools`, or MCP `agent_tool_adapters`
 - Project taskboard: `PROJECT_TASKBOARD.md`
 - Project map: `docs/PROJECT_MAP.md`
 - Search integration ledger: `docs/SEARCH_INTEGRATION_LEDGER.md`
@@ -60,9 +61,10 @@ Start here:
 2. Run `npx wallstreet-tieling --release` to see the current release contract.
 3. Run `npx wallstreet-tieling --connectors` to see datasource readiness.
 4. Run `npx wallstreet-tieling --requirements` to see the executable P0/P1/P2/Future board.
-5. Run `git status --short` before staging and stage only intentional files.
-6. Use `npx wallstreet-tieling --investigate "Demo Technology Co., Ltd." --offline-fixture --report-only` for a local smoke test.
-7. Use `npx wallstreet-tieling --mcp` when a host supports MCP tools.
+5. Run `npx wallstreet-tieling --agent-tools` to see the host-specific baseline sequence, fallback order, smoke command, and packet fields.
+6. Run `git status --short` before staging and stage only intentional files.
+7. Use `npx wallstreet-tieling --investigate "Demo Technology Co., Ltd." --offline-fixture --report-only` for a local smoke test.
+8. Use `npx wallstreet-tieling --mcp` when a host supports MCP tools.
 
 Claude Project knowledge pack:
 
@@ -86,6 +88,9 @@ Claude Code acceptance checklist:
 - `/api/release` or `--release` exposes all desktop-agent variants and their gates.
 - `/api/requirements` or `--requirements` exposes P0/P1/P2/Future scope,
   including QYYJT as current-version work and monitoring as Future work.
+- `/api/agent-tools`, `--agent-tools`, or MCP `agent_tool_adapters` exposes
+  every host adapter and the canonical `release_readiness -> connector_catalog
+  -> development_requirements -> investigate_company` sequence.
 - No tokens, cookies, browser profiles, local collaboration databases, or generated secrets are staged.
 
 ## Development Rules

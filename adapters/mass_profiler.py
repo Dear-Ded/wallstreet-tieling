@@ -141,6 +141,83 @@ class MassCrossPlatformProfiler(SafeResearchAdapter):
             "field_count": 5,
         }
 
+    def health_check(self) -> dict[str, Any]:
+        return {
+            "source": "mass_cross_platform_verification",
+            "ok": True,
+            "mode": "schema_contract",
+            "requires_authorization": True,
+            "output_contract": [
+                "platforms_found",
+                "platforms_checked",
+                "coverage_ratio",
+                "by_category",
+                "detailed_results",
+                "assessment",
+                "entity_match",
+                "evidence",
+            ],
+        }
+
+    def standardize_result(self, username: str, result: dict[str, Any]) -> dict[str, Any]:
+        fields = result.get("fields") if isinstance(result, dict) else {}
+        fields = fields if isinstance(fields, dict) else {}
+        details = fields.get("detailed_results") if isinstance(fields.get("detailed_results"), dict) else {}
+        evidence = []
+        for category, items in details.items():
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                evidence.append(
+                    {
+                        "type": "public_profile_presence",
+                        "category": str(category),
+                        "provider": str(item.get("platform") or ""),
+                        "source_url": str(item.get("url") or ""),
+                        "purpose": str(item.get("purpose") or ""),
+                        "username": username,
+                        "entity_match_level": "review",
+                    }
+                )
+        clean_username = username.strip().lstrip("@")
+        found = int(fields.get("platforms_found") or len(evidence))
+        checked = int(fields.get("platforms_checked") or 0)
+        confidence = min(0.86, 0.42 + found * 0.025)
+        record = {
+            "source_name": "mass_cross_platform_profiler",
+            "source_type": self.source_type,
+            "source_hint": "mass_cross_platform_profiler",
+            "record_type": "mass_cross_platform_digital_footprint_lead",
+            "entity": clean_username,
+            "title": f"Mass cross-platform digital footprint lead: {clean_username}",
+            "summary": (
+                f"platforms_found={found}; platforms_checked={checked}; "
+                f"coverage_ratio={fields.get('coverage_ratio', '')}; assessment={fields.get('assessment', '')}"
+            ),
+            "url": evidence[0]["source_url"] if evidence else "",
+            "confidence": confidence,
+            "entity_match": {
+                "level": "review",
+                "score": confidence,
+                "method": "same_username_mass_public_profile_presence_requires_person_context",
+                "identifiers": {"username": clean_username, "platform_count": found},
+            },
+            "entities": [
+                {
+                    "kind": "person_or_account",
+                    "name": clean_username,
+                    "relation": "mass_cross_platform_profile_candidate",
+                    "confidence": confidence,
+                    "source": "public platform pages",
+                }
+            ],
+            "evidence": evidence[:50],
+            "raw": fields,
+        }
+        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+
     def _is_404(self, html: str) -> bool:
         return any(m in html.lower()[:500] for m in
             ["not found","doesn't exist","no user","page not found","couldn't find","sorry"])

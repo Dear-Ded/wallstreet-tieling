@@ -428,6 +428,87 @@ class TestRestApiDataSource:
         )
 
     @pytest.mark.asyncio
+    async def test_gleif_relationship_traversal_maps_parent_edges(self, monkeypatch):
+        source = RestApiDataSource(
+            DataSourceConfig(
+                name="gleif_relationship",
+                type="rest_api",
+                base_url="https://api.gleif.org/api/v1",
+                headers={"Accept": "application/vnd.api+json"},
+                custom={"provider_type": "gleif_relationship_traversal"},
+                rate_limit={"enabled": False},
+            )
+        )
+        session = FakeSession(
+            FakeResponse(
+                payload={
+                    "data": [
+                        {
+                            "id": "549300SUBJECTLEI0",
+                            "links": {
+                                "self": "https://api.gleif.org/api/v1/lei-records/549300SUBJECTLEI0",
+                                "relationship-record": "https://api.gleif.org/api/v1/lei-records/549300SUBJECTLEI0/relationships",
+                            },
+                            "attributes": {
+                                "entity": {
+                                    "legalName": {"name": "Demo Global Ltd"},
+                                    "directParent": {
+                                        "lei": "549300PARENTDIRECT",
+                                        "legalName": {"name": "Demo Direct Parent Ltd"},
+                                    },
+                                    "ultimateParent": {
+                                        "lei": "549300PARENTULTIM",
+                                        "legalName": {"name": "Demo Ultimate Parent Ltd"},
+                                    },
+                                }
+                            },
+                        }
+                    ]
+                }
+            )
+        )
+
+        async def fake_get_session():
+            return session
+
+        monkeypatch.setattr(source, "_get_session", fake_get_session)
+
+        result = await source.query(QueryRequest(query="Demo Global Ltd"))
+
+        assert result.is_success
+        assert session.calls[0]["url"] == "https://api.gleif.org/api/v1/lei-records"
+        assert session.calls[0]["params"]["filter[entity.legalName]"] == "Demo Global Ltd"
+        records = result.metadata["standardized_records"]
+        assert {record["relationship_type"] for record in records} == {"direct_parent", "ultimate_parent"}
+        direct = next(record for record in records if record["relationship_type"] == "direct_parent")
+        assert direct["record_type"] == "gleif_relationship_edge"
+        assert direct["subject_lei"] == "549300SUBJECTLEI0"
+        assert direct["subject_name"] == "Demo Global Ltd"
+        assert direct["related_lei"] == "549300PARENTDIRECT"
+        assert direct["related_name"] == "Demo Direct Parent Ltd"
+        assert direct["relationship_status"] == "reported"
+        assert direct["entity_match"]["level"] == "exact"
+        assert direct["entity_match"]["method"] == "query_subject_name_plus_source_reported_lei"
+        assert direct["entity_match"]["identifiers"]["subject_lei"] == "549300SUBJECTLEI0"
+        assert direct["entity_match"]["identifiers"]["related_lei"] == "549300PARENTDIRECT"
+        assert direct["url"] == "https://api.gleif.org/api/v1/lei-records/549300SUBJECTLEI0/relationships"
+        assert {
+            "kind": "company",
+            "name": "Demo Direct Parent Ltd",
+            "relation": "direct_parent",
+            "confidence": 0.76,
+            "source": "GLEIF",
+            "lei": "549300PARENTDIRECT",
+        } in direct["entities"]
+        assert any(
+            item["type"] == "official_public_api_relation"
+            and item["relationship_type"] == "direct_parent"
+            and item["source_url"] == "https://api.gleif.org/api/v1/lei-records/549300SUBJECTLEI0/relationships"
+            and item["entity_match_level"] == "exact"
+            for item in direct["evidence"]
+        )
+
+    @pytest.mark.asyncio
     async def test_sec_provider_supports_cik_submission_lookup(self, monkeypatch):
         source = RestApiDataSource(
             DataSourceConfig(
@@ -684,6 +765,9 @@ class TestRestApiDataSource:
                             "title": "Default screening dataset",
                             "category": "sanctions",
                             "summary": "Consolidated public screening data.",
+                            "license": "CC-BY",
+                            "license_url": "https://www.opensanctions.org/licensing/",
+                            "updated_at": "2026-06-30",
                         }
                     }
                 }
@@ -702,8 +786,17 @@ class TestRestApiDataSource:
         records = result.data["source_catalog_records"]
         assert records[0]["entity"] == "Default screening dataset"
         assert "OpenSanctions dataset coverage" in records[0]["title"]
+        assert records[0]["record_type"] == "watchlist_dataset_catalog"
+        assert records[0]["source_hint"] == "opensanctions_public_dataset_catalog"
+        assert "license=CC-BY" in records[0]["summary"]
         assert records[0]["evidence"][0]["provider"] == "OpenSanctions"
-        assert result.metadata["standardized_records"] == []
+        assert records[0]["evidence"][0]["license"] == "CC-BY"
+        assert records[0]["evidence"][0]["license_url"] == "https://www.opensanctions.org/licensing/"
+        assert records[0]["evidence"][0]["updated_at"] == "2026-06-30"
+        assert records[0]["evidence"][0]["license_review"]["status"] == "metadata_exposed"
+        assert "catalog rows are coverage evidence only" in records[0]["evidence"][0]["license_review"]["subject_screening_policy"]
+        assert result.metadata["standardized_records"][0]["entity"] == "Default screening dataset"
+        assert result.metadata["standardized_records"][0]["evidence"][0]["provider"] == "OpenSanctions"
 
     @pytest.mark.asyncio
     async def test_wikidata_provider_builds_sparql_and_maps_entity_graph_records(self, monkeypatch):
@@ -1156,11 +1249,13 @@ class TestRestApiDataSource:
 
         assert result.is_success
         assert session.calls[0]["url"] == "https://data.iadb.org/dataset/dataset-of-sanctioned-firms-and-individuals"
-        assert result.metadata["standardized_records"] == []
+        assert result.metadata["standardized_records"][0]["record_type"] == "procurement_debarment_dataset_catalog"
         records = result.data["source_catalog_records"]
         assert records[0]["entity"] == "Dataset of Sanctioned firms and individuals"
         assert "IDB sanctions dataset coverage" in records[0]["title"]
         assert "doi:10.60966/7pfpgt0f" in records[0]["summary"]
+        assert records[0]["evidence"][0]["runtime_companion"] == "idb_local_subject_index"
+        assert "catalog rows are coverage evidence only" in records[0]["evidence"][0]["subject_screening_policy"]
 
     @pytest.mark.asyncio
     async def test_world_bank_provider_maps_exact_public_debarment_match(self, monkeypatch):
@@ -1331,6 +1426,11 @@ class TestRestApiDataSource:
         records = result["standardized_records"]
         assert records[0]["entity"] == "Demo China Registry Co., Ltd."
         assert records[0]["source_hint"] == "official_china_registry"
+        assert records[0]["record_type"] == "official_registry_snapshot"
+        assert records[0]["entity_match"]["level"] == "exact"
+        assert records[0]["entity_match_level"] == "exact"
+        assert records[0]["entity_match_score"] == 1.0
+        assert records[0]["entity_match"]["identifiers"]["unified_social_credit_code"] == "91110000123456789X"
         assert records[0]["registered_address"] == "No. 1 Public Road, Beijing"
         assert records[0]["raw"]["unified_social_credit_code"] == "91110000123456789X"
         assert records[0]["evidence"][0]["type"] == "official_portal_validated_snapshot"
@@ -1374,6 +1474,9 @@ class TestRestApiDataSource:
 
         record = result["standardized_records"][0]
         assert record["source_hint"] == "official_china_credit_publicity"
+        assert record["record_type"] == "official_credit_publicity_snapshot"
+        assert record["entity_match"]["level"] == "exact"
+        assert record["entity_match_level"] == "exact"
         assert record["risk_category"] == "administrative_risk"
         assert record["severity"] == "medium"
         assert record["risk_events"][0]["risk_category"] == "administrative_risk"
@@ -1420,6 +1523,9 @@ class TestRestApiDataSource:
 
         record = result["standardized_records"][0]
         assert record["source_hint"] == "official_china_court_enforcement"
+        assert record["record_type"] == "official_court_enforcement_snapshot"
+        assert record["entity_match"]["level"] == "exact"
+        assert record["entity_match_level"] == "exact"
         assert record["risk_category"] == "court_enforcement"
         assert record["severity"] == "high"
         assert record["risk_events"][0]["severity"] == "high"
@@ -1479,7 +1585,9 @@ class TestRestApiDataSource:
 
         record = result["standardized_records"][0]
         assert record["entity"] == "Demo No Enforcement Co., Ltd."
+        assert record["record_type"] == "official_portal_no_result_snapshot"
         assert record["entity_match"]["level"] == "no_result"
+        assert record["entity_match_level"] == "no_result"
         assert record["evidence"][0]["type"] == "official_portal_no_result"
         assert result["raw"]["parse_status"] == "parsed_validated_no_result"
 
@@ -1617,6 +1725,7 @@ class TestDataSourceManager:
         assert sources["telegram_public_service_example"].custom["source_review_required"] is True
         assert {
             "gleif_lei_public_api",
+            "gleif_lei_relationship_traversal_public_api",
             "sec_edgar_public_api",
             "opensanctions_public_dataset_catalog",
             "opensanctions_local_subject_index",
@@ -1632,6 +1741,8 @@ class TestDataSourceManager:
         } <= set(sources)
         assert sources["gleif_lei_public_api"].custom["provider_type"] == "gleif_lei"
         assert "relationship" in sources["gleif_lei_public_api"].custom["controller_relevance"]
+        assert sources["gleif_lei_relationship_traversal_public_api"].custom["provider_type"] == "gleif_relationship_traversal"
+        assert "related_lei" in sources["gleif_lei_relationship_traversal_public_api"].custom["fact_promotion_gate"]
         assert sources["sec_edgar_public_api"].custom["provider_type"] == "sec_edgar"
         assert sources["sec_edgar_public_api"].custom["provenance_required"] is True
         assert sources["opensanctions_public_dataset_catalog"].custom["provider_type"] == "opensanctions_dataset_catalog"

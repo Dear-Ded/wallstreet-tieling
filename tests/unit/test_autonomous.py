@@ -54,6 +54,64 @@ def test_autonomous_authorization_can_be_revoked() -> None:
     assert not records.is_available()
 
 
+def test_enterprise_registry_standardizes_public_registry_leads() -> None:
+    from adapters.autonomous_sources import AutonomousEnterpriseRegistryLookup
+
+    adapter = AutonomousEnterpriseRegistryLookup(_make_gate())
+    result = adapter.standardize_result(
+        "Demo Holdings",
+        {
+            "query_subject_hash": "abc123",
+            "source": "creditchina.gov.cn",
+            "access_method": "standard_http_get",
+            "data_boundary": "fully_public",
+            "fields": {
+                "penalty_records_found": 1,
+                "credit_items_found": 3,
+                "page": 1,
+            },
+            "field_count": 3,
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "autonomous_enterprise_public_registry_lead"
+    assert record["source_hint"] == "autonomous_enterprise_registry"
+    assert record["entity"] == "Demo Holdings"
+    assert record["entity_match"]["level"] == "review"
+    assert record["risk_events"][0]["risk_category"] == "administrative_penalty"
+    assert record["evidence"][0]["provider"] == "creditchina.gov.cn"
+    assert record["evidence"][0]["manual_review_required"] is True
+
+
+def test_public_records_standardizes_minimized_presence_leads() -> None:
+    from adapters.autonomous_sources import AutonomousPublicRecordAggregator
+
+    adapter = AutonomousPublicRecordAggregator(_make_gate())
+    result = adapter.standardize_result(
+        "Demo Person",
+        {
+            "query_subject_hash": "person123",
+            "source": "public_records_aggregators",
+            "access_method": "standard_http_get",
+            "fields": {
+                "sources_accessed": ["fastpeoplesearch", "thatsthem"],
+                "source_count": 2,
+                "record_indicators": 8,
+            },
+        },
+    )
+
+    assert result["health"]["ok"] is True
+    record = result["standardized_records"][0]
+    assert record["record_type"] == "autonomous_public_record_presence_lead"
+    assert record["source_hint"] == "autonomous_public_records"
+    assert record["entity_match"]["level"] == "review"
+    assert record["raw"]["data_minimization"] == "detailed address/phone fields are not standardized without review"
+    assert record["evidence"][0]["data_minimization"] == "presence_and_indicator_counts_only"
+
+
 def test_credit_china_live_data() -> None:
     _require_live_autonomous()
     from adapters.autonomous_sources import AutonomousEnterpriseRegistryLookup

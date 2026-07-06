@@ -1,29 +1,33 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 - 集成多数据源工具"""
+"""WorkBuddy adapter for desktop-agent runtime delivery."""
 from __future__ import annotations
 
-import os
 import logging
+import os
 from pathlib import Path
+from typing import Any
 
 from adapters._base import OpenAICompatibleLLM
+from core.agent_tool_adapters import build_agent_tool_adapter_manifest
 from core.connector_registry import ConnectorRegistry
+from core.datasource_fixtures import build_datasource_fixture_pack
 from core.development_requirements import build_development_requirements_board
-from core.interfaces import LLMProvider, ToolProvider, ToolResult, OutputProvider, PlatformAdapter
+from core.interfaces import OutputProvider, PlatformAdapter, ToolProvider, ToolResult
+from core.investigation import build_investigation_packet
+from core.one_click_defaults import resolve_one_click_retrieval_async
 from core.release_contract import release_readiness_brief
+from core.risk_discovery_pipeline import RiskDiscoveryPipeline, offline_enforcement_fixture
+from core.risk_graph_export import export_risk_graph
 
 logger = logging.getLogger("wst.workbuddy")
 
 
-# =============================================================================
-#  WorkBuddy LLM
-# =============================================================================
-
 class WorkBuddyLLM(OpenAICompatibleLLM):
-    """WorkBuddy 内置模型 — 走 config 模块 (DEEPSEEK_API_KEY / OPENAI_API_KEY)"""
+    """WorkBuddy LLM wrapper using the repository config module."""
 
     def __init__(self, model: str | None = None):
         import api.config as cfg
+
         cfg.reload_config()
         super().__init__(
             api_key=cfg.API_KEY,
@@ -33,12 +37,8 @@ class WorkBuddyLLM(OpenAICompatibleLLM):
         )
 
 
-# =============================================================================
-#  WorkBuddy 工具（集成多数据源）
-# =============================================================================
-
 class WorkBuddyTools(ToolProvider):
-    """WorkBuddy 工具 — Host MCP / WebSearch / 多数据源 / 产品目录"""
+    """Tool routing for WorkBuddy/OpenClaw/CodeBuddy expert-team hosts."""
 
     def __init__(self):
         self._available = {
@@ -50,50 +50,18 @@ class WorkBuddyTools(ToolProvider):
             "connector_catalog",
             "release_readiness",
             "development_requirements",
+            "agent_tool_adapters",
+            "investigate_company",
+            "due_diligence",
         }
-        self._mds_tool = None  # MultiDataSourceTool 实例（懒加载）
+        self._mds_tool = None
         self._default_public_tool = None
         self._mds_config = "adapters/multi_datasource/datasources.yaml"
 
-    def _get_mds_tool(self):
-        """懒加载多数据源工具"""
-        if self._mds_tool is None:
-            try:
-                from adapters.multi_datasource_tool import SearchEngineTool
-                self._mds_tool = SearchEngineTool(config_path=self._mds_config)
-                print("✅ 搜索引擎工具已加载")
-            except Exception as e:
-                print(f"⚠️ 搜索引擎工具加载失败: {e}")
-                return None
-        return self._mds_tool
-
     def available_tools(self) -> set[str]:
-        """返回可用工具列表"""
-        return self._available
-
-    def _get_default_public_tool(self):
-        """懒加载默认公开情报工具。"""
-        if self._default_public_tool is None:
-            try:
-                from adapters.default_public_intel_tool import DefaultPublicIntelTool
-                self._default_public_tool = DefaultPublicIntelTool()
-            except Exception as e:
-                logger.warning("默认公开情报工具加载失败: %s", e)
-                return None
-        return self._default_public_tool
+        return set(self._available)
 
     async def search(self, query: str, tool_type: str, **kwargs) -> ToolResult:
-        """
-        执行工具查询
-        
-        Args:
-            query: 查询字符串
-            tool_type: 工具类型（"web" / "multi_datasource" / "mds"）
-            **kwargs: 其他参数
-            
-        Returns:
-            ToolResult 包含查询结果
-        """
         if tool_type == "connector_catalog":
             return ToolResult(
                 ok=True,
@@ -115,13 +83,25 @@ class WorkBuddyTools(ToolProvider):
                 sources=["workbuddy:development_requirements"],
             )
 
-        # WebSearch / Host MCP 工具（委托给 WorkBuddy 宿主执行）
+        if tool_type == "agent_tool_adapters":
+            return ToolResult(
+                ok=True,
+                data=build_agent_tool_adapter_manifest(),
+                sources=["workbuddy:agent_tool_adapters"],
+            )
+
+        if tool_type in {"investigate_company", "due_diligence"}:
+            return await self._investigate_company(query, tool_type, **kwargs)
+
         if tool_type in {"web", "host_mcp"}:
             return ToolResult(
                 ok=True,
-                data={"query": query, "tool_type": tool_type,
-                      "hint": "delegated_to_host",
-                      "fallback": "host_unavailable: use local datasource tools or evidence-gap output"},
+                data={
+                    "query": query,
+                    "tool_type": tool_type,
+                    "hint": "delegated_to_host",
+                    "fallback": "host_unavailable: use local datasource tools or evidence-gap output",
+                },
                 sources=[f"wb:{tool_type}"],
             )
 
@@ -130,58 +110,160 @@ class WorkBuddyTools(ToolProvider):
             if public_tool is None:
                 return ToolResult(
                     ok=False,
-                    error="默认公开情报工具未加载",
+                    error="default_public_intel tool is not loaded",
                     data={"query": query, "tool_type": tool_type},
                     sources=["workbuddy:default_public_intel:error"],
                 )
             return await public_tool.search(query, tool_type, **kwargs)
-        
-        # 多数据源工具（本地执行）
-        elif tool_type in ("multi_datasource", "mds"):
+
+        if tool_type in {"multi_datasource", "mds"}:
             mds_tool = self._get_mds_tool()
             if mds_tool is None:
                 return ToolResult(
                     ok=False,
-                    error="多数据源工具未加载",
-                    data={"query": query, "tool_type": tool_type}
+                    error="multi_datasource tool is not loaded",
+                    data={"query": query, "tool_type": tool_type},
+                    sources=["workbuddy:multi_datasource:error"],
                 )
-            
-            # 执行查询
-            sources = kwargs.get("sources")  # 指定数据源列表
+            sources = kwargs.get("sources")
             use_cache = kwargs.get("use_cache", True)
-            
-            # 🔥 强制调用逻辑（不依赖 LLM 生成工具调用）
-            # 如果 query 包含法人/实控人/关系人/公开联系方式等关键词，强制调用多数据源
-            force_keywords = ["法人", "实控人", "实际控制人", "股东", "公开联系方式", "电话", "地址"]
-            query_lower = query.lower()
-            if any(kw in query_lower for kw in force_keywords):
-                print(f"🔥 强制调用多数据源：query='{query}'")
-                logger.info("强制调用多数据源：query='%s'", query)
-            
             if sources and isinstance(sources, list):
-                # 查询指定的数据源
-                result = await mds_tool.search(query, tool_type, sources=sources, use_cache=use_cache)
-            else:
-                # 查询所有数据源
-                result = await mds_tool.search(query, tool_type, use_cache=use_cache)
-            
-            return result
-        
-        # 未知工具类型
-        else:
+                return await mds_tool.search(query, tool_type, sources=sources, use_cache=use_cache)
+            return await mds_tool.search(query, tool_type, use_cache=use_cache)
+
+        return ToolResult(
+            ok=False,
+            error=f"unknown tool_type: {tool_type}",
+            data={"query": query, "tool_type": tool_type},
+            sources=["workbuddy:unknown_tool"],
+        )
+
+    def _get_mds_tool(self):
+        if self._mds_tool is None:
+            try:
+                from adapters.multi_datasource_tool import SearchEngineTool
+
+                self._mds_tool = SearchEngineTool(config_path=self._mds_config)
+            except Exception as exc:
+                logger.warning("multi_datasource tool load failed: %s", exc)
+                return None
+        return self._mds_tool
+
+    def _get_default_public_tool(self):
+        if self._default_public_tool is None:
+            try:
+                from adapters.default_public_intel_tool import DefaultPublicIntelTool
+
+                self._default_public_tool = DefaultPublicIntelTool()
+            except Exception as exc:
+                logger.warning("default_public_intel tool load failed: %s", exc)
+                return None
+        return self._default_public_tool
+
+    async def _investigate_company(self, query: str, tool_type: str, **kwargs) -> ToolResult:
+        company = str(
+            kwargs.get("company_name")
+            or kwargs.get("company")
+            or kwargs.get("name")
+            or query
+            or ""
+        ).strip()
+        if not company:
             return ToolResult(
                 ok=False,
-                error=f"未知工具类型: {tool_type}",
-                data={"query": query, "tool_type": tool_type}
+                error="company_name is required",
+                data={"query": query, "tool_type": tool_type},
+                sources=["workbuddy:investigate_company:validation"],
             )
 
+        fixture_pack = bool(kwargs.get("fixture_pack", False))
+        offline_fixture = bool(kwargs.get("offline_fixture", not fixture_pack))
+        config_path = str(kwargs.get("config") or "")
+        if sum(bool(item) for item in (fixture_pack, offline_fixture, config_path)) > 1:
+            return ToolResult(
+                ok=False,
+                error="config, offline_fixture, and fixture_pack are mutually exclusive",
+                data={"company": company, "tool_type": tool_type},
+                sources=["workbuddy:investigate_company:validation"],
+            )
 
-# =============================================================================
-#  WorkBuddy 输出
-# =============================================================================
+        try:
+            selected = await self._resolve_investigation_sources(
+                company=company,
+                fixture_pack=fixture_pack,
+                offline_fixture=offline_fixture,
+                config_path=config_path,
+                fanout_rounds=_clamped_int(kwargs, "fanout_rounds", 1, 0, 3),
+            )
+            result = await RiskDiscoveryPipeline().run(
+                company,
+                records=selected["records"],
+                search_engine=selected["search_engine"],
+                store_path=kwargs.get("store") or None,
+                existing_plan=selected["existing_plan"],
+                retrieval_concurrency=_clamped_int(kwargs, "retrieval_concurrency", 4, 1, 20),
+                fanout_rounds=selected["fanout_rounds"],
+                max_fanout_tasks=_clamped_int(kwargs, "max_fanout_tasks", 24, 0, 80),
+                query_timeout_seconds=_clamped_float(kwargs, "query_timeout_seconds", 20.0, 0.1, 120.0),
+            )
+            packet = build_investigation_packet(
+                export_risk_graph(result).to_dict(),
+                input_text=company,
+                mode=str(kwargs.get("mode") or kwargs.get("depth") or "standard"),
+            ).to_dict()
+            return ToolResult(
+                ok=True,
+                data=packet,
+                sources=["workbuddy:investigate_company"],
+            )
+        except Exception as exc:
+            logger.exception("WorkBuddy investigate_company failed")
+            return ToolResult(
+                ok=False,
+                error=str(exc),
+                data={"company": company, "tool_type": tool_type},
+                sources=["workbuddy:investigate_company:error"],
+            )
+
+    async def _resolve_investigation_sources(
+        self,
+        *,
+        company: str,
+        fixture_pack: bool,
+        offline_fixture: bool,
+        config_path: str,
+        fanout_rounds: int,
+    ) -> dict[str, Any]:
+        records = None
+        search_engine = None
+        if fixture_pack:
+            records = build_datasource_fixture_pack(company).all_records()
+        elif offline_fixture:
+            records = offline_enforcement_fixture(company)
+        elif config_path:
+            from adapters.multi_datasource import SearchEngine
+
+            await SearchEngine.initialize(config_path)
+            search_engine = SearchEngine
+
+        selected = await resolve_one_click_retrieval_async(
+            company=company,
+            records=records,
+            search_engine=search_engine,
+            existing_plan=None,
+            fanout_rounds=fanout_rounds,
+            default_enabled=not bool(config_path or records),
+        )
+        return {
+            "records": selected.records,
+            "search_engine": selected.search_engine,
+            "existing_plan": selected.existing_plan,
+            "fanout_rounds": selected.fanout_rounds,
+        }
+
 
 class WorkBuddyOutput(OutputProvider):
-    """WorkBuddy 输出 — 写入 skill 的 output/ 目录"""
+    """Write WorkBuddy output files under the repository output directory."""
 
     def __init__(self):
         self._root = Path(__file__).resolve().parent.parent / "output"
@@ -195,13 +277,23 @@ class WorkBuddyOutput(OutputProvider):
         return path
 
 
-# =============================================================================
-#  工厂函数
-# =============================================================================
-
 def create_adapter(model: str | None = None) -> PlatformAdapter:
     return PlatformAdapter(
         llm=WorkBuddyLLM(model=model),
         tools=WorkBuddyTools(),
         output=WorkBuddyOutput(),
     )
+
+
+def _clamped_int(data: dict[str, object], key: str, default: int, low: int, high: int) -> int:
+    try:
+        return max(low, min(int(data.get(key, default)), high))
+    except (ValueError, TypeError):
+        return default
+
+
+def _clamped_float(data: dict[str, object], key: str, default: float, low: float, high: float) -> float:
+    try:
+        return max(low, min(float(data.get(key, default)), high))
+    except (ValueError, TypeError):
+        return default
