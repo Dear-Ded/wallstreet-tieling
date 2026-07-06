@@ -45,6 +45,7 @@ TRACKED_PRIVATE_PATTERNS = [
     ".colab/*",
     ".pytest_cache/*",
     "AGENT_COORDINATION_BOARD.md",
+    "demo/*",
     "*.db",
     "*.db.backup",
     "*.sqlite",
@@ -61,12 +62,16 @@ TRACKED_PRIVATE_PATTERNS = [
     _join("docs/PERSONA", "_OFFICE_CHAT", "_BRANCH.md"),
     _join("docs/WORKBUDDY", "_CURRENT_COMMAND.md"),
     _join("docs/WORKBUDDY", "_UI_QUALITY", "_DIRECTIVE.md"),
+    "docs/WORKBUDDY_OFFICE_CHAT_BACKLOG.md",
+    "docs/deepseek/*",
+    "docs/workbuddy/*",
     "docs/COMPREHENSIVE_AUDIT_REPORT_*.md",
     "docs/FINAL_DELIVERY_REPORT_*.md",
     _join("audit_reports/REASON", "IX_*.md"),
     _join("audit_reports/AUDIT", "_AUTONOMOUS_*.md"),
     "gen_ci.py",
     "overview.md",
+    "sessions/*",
     "send_message_to_product_ai.py",
 ]
 PACKAGE_FILE_DENYLIST = [
@@ -76,8 +81,11 @@ PACKAGE_FILE_DENYLIST = [
     "audit_reports/",
     "browser-profile/",
     "browser_profiles/",
+    "demo/",
     "deliverables/",
+    "docs/deepseek/",
     "docs/PRIVATE_DEV_HANDOFF.md",
+    "docs/workbuddy/",
     "output/",
     "outputs/",
     "sessions/",
@@ -196,6 +204,7 @@ def test_public_repo_does_not_ship_private_contact_or_local_paths() -> None:
 
 def test_public_repo_does_not_track_private_runtime_artifacts() -> None:
     tracked = _git_ls_files()
+    top_level_private_files = {"test_optimized_cache.py"}
 
     hits = [
         path
@@ -203,6 +212,7 @@ def test_public_repo_does_not_track_private_runtime_artifacts() -> None:
         for pattern in TRACKED_PRIVATE_PATTERNS
         if (ROOT / path).exists() and Path(path).match(pattern)
     ]
+    hits.extend(path for path in tracked if path in top_level_private_files and (ROOT / path).exists())
 
     assert hits == []
 

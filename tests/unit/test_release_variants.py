@@ -604,6 +604,7 @@ def test_package_scripts_and_mcp_manifest_stay_aligned():
     assert "docs/OFFICE_TASK_MODE_HANDOFF.md" in package["files"]
     assert "docs/OPEN_AGENT_COMPATIBILITY.md" in package["files"]
     assert "docs/PLUGIN_MARKET_READINESS.md" in package["files"]
+    assert "docs/RELEASE_PORTAL.md" in package["files"]
 
     server = manifest["mcpServers"]["wallstreet-tieling"]
     assert server["command"] == "npx"
@@ -1147,6 +1148,7 @@ def test_npm_pack_dry_run_contains_agent_delivery_files_and_excludes_runtime_art
         "docs/DESKTOP_AGENT_HOSTS.md",
         "docs/OFFICE_TASK_MODE_HANDOFF.md",
         "docs/OPEN_AGENT_COMPATIBILITY.md",
+        "docs/RELEASE_PORTAL.md",
         "deploy/mcp-server.json",
         "release/variants.yaml",
         "skills/wallstreet-tieling/SKILL.md",

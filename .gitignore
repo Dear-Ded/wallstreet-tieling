@@ -14,6 +14,8 @@ __pycache__/
 *.pyc
 output/
 deliverables/
+demo/
+sessions/
 config.yaml
 config/datasources_qyyjt.yaml
 *.sqlite
@@ -43,7 +45,11 @@ audit_reports/
 AGENT_COORDINATION_BOARD.md
 docs/COMPREHENSIVE_AUDIT_REPORT_*.md
 docs/FINAL_DELIVERY_REPORT_*.md
+docs/WORKBUDDY_OFFICE_CHAT_BACKLOG.md
+docs/deepseek/
+docs/workbuddy/
 gen_ci.py
 overview.md
 send_message_to_product_ai.py
+test_optimized_cache.py
 package-lock.json
