@@ -368,3 +368,12 @@ def test_npm_package_privacy_scan_contract_is_packaged() -> None:
     assert "SECRET_PATTERNS" in scanner
     assert "MOJIBAKE_MARKERS" in scanner
     assert "mojibake_marker" in scanner
+
+
+def test_pages_deploy_uses_single_source_branch_and_concurrency() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "deploy.yml").read_text(encoding="utf-8")
+
+    assert "branches: [main]" in workflow
+    assert "branches: [master]" not in workflow
+    assert "group: github-pages" in workflow
+    assert "cancel-in-progress: false" in workflow
