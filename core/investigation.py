@@ -36,6 +36,7 @@ from .investigation_report_card import (
 )
 from .product_intelligence import ProductIntelligenceEngine
 from .public_web_profile_bridge import build_public_web_profiles as _bridge_public_web_profiles_from_evidence
+from .report_delivery_targets import build_report_delivery_targets
 from .subject_profile_aggregator import SubjectProfileAggregator, SubjectProfileReport as AggregatorReport
 
 
@@ -1066,6 +1067,7 @@ def _report_export_bundle(
         for card in operational_handoff.get("cards", [])
         if isinstance(card, dict)
     ]
+    report_targets = build_report_delivery_targets()
     agent_decision_digest = _packet_agent_decision_digest(
         one_click_readiness=one_click_readiness,
         summary=summary,
@@ -1084,6 +1086,7 @@ def _report_export_bundle(
         chart_manifest=print_package.get("chart_manifest") if isinstance(print_package, dict) else [],
         source_provenance_appendix=print_package.get("source_provenance_appendix") if isinstance(print_package, dict) else {},
         relationship_capital_appendix=print_package.get("relationship_capital_appendix") if isinstance(print_package, dict) else {},
+        report_targets=report_targets,
     )
     premium_html = _premium_html_profile(
         html_filename=html_filename,
@@ -1110,6 +1113,7 @@ def _report_export_bundle(
         "current_release": "desktop_agent_packet_exports",
         "formats": ["markdown", "json_packet", "portable_html", "premium_html", "print_package", "directory_bundle"],
         "agent_decision_digest": agent_decision_digest,
+        "report_delivery_targets": report_targets,
         "markdown": {
             "filename": markdown_filename,
             "mime_type": "text/markdown; charset=utf-8",
@@ -1125,6 +1129,7 @@ def _report_export_bundle(
             "first_screen_handoff_card_count": len(first_screen_handoff_cards),
             "first_screen_handoff_source": "report_exports.print_package.operational_handoff.cards",
             "delivery_checklist_source": "report_exports.print_package.delivery_checklist",
+            "report_delivery_targets_source": "report_exports.report_delivery_targets",
             "image_evidence_source": "report_exports.print_package.image_evidence_inventory",
             "premium_profile": premium_html,
             "content_policy": "contains first-screen handoff cards, delivery checklist, visual evidence panels, source provenance appendix, relationship/capital appendix, image evidence summary, and the full Markdown report in a printable escaped preformatted block; no findings are dropped",
@@ -1160,6 +1165,14 @@ def _report_export_bundle(
                 "agent_handoff.verification_recipe_present",
                 "agent_handoff.verifier_output_fields_present",
                 "agent_handoff.acceptance_closure_present",
+                "agent_handoff.source_preflight_present",
+                "agent_handoff.source_preflight_contract_valid",
+                "agent_handoff.manifest_summary_source_preflight_present",
+                "agent_handoff.manifest_summary_source_preflight_valid",
+                "agent_handoff.deep_autopilot_plan_present",
+                "agent_handoff.deep_autopilot_source_runbook_present",
+                "agent_handoff.continuation_entrypoints_valid",
+                "agent_handoff.source_runbook_valid",
                 "agent_handoff.qyyjt_public_origin_present",
                 "agent_handoff.source_resilience_present",
                 "agent_handoff.relationship_graph_audit_present",
@@ -1192,6 +1205,14 @@ def _report_export_bundle(
                     "agent_handoff.verification_recipe_present",
                     "agent_handoff.verifier_output_fields_present",
                     "agent_handoff.acceptance_closure_present",
+                    "agent_handoff.source_preflight_present",
+                    "agent_handoff.source_preflight_contract_valid",
+                    "agent_handoff.manifest_summary_source_preflight_present",
+                    "agent_handoff.manifest_summary_source_preflight_valid",
+                    "agent_handoff.deep_autopilot_plan_present",
+                    "agent_handoff.deep_autopilot_source_runbook_present",
+                    "agent_handoff.continuation_entrypoints_valid",
+                    "agent_handoff.source_runbook_valid",
                     "agent_handoff.qyyjt_public_origin_present",
                     "agent_handoff.source_resilience_present",
                     "agent_handoff.relationship_graph_audit_present",
@@ -1402,6 +1423,7 @@ def _portable_report_html(
     chart_manifest: list[dict[str, Any]] | None = None,
     source_provenance_appendix: dict[str, Any] | None = None,
     relationship_capital_appendix: dict[str, Any] | None = None,
+    report_targets: dict[str, Any] | None = None,
 ) -> str:
     status = html.escape(str(one_click_readiness.get("status") or "unknown"))
     closure_status = html.escape(str(one_click_readiness.get("acceptance_closure_status") or "unknown"))
@@ -1427,6 +1449,7 @@ def _portable_report_html(
     image_html = _portable_image_evidence_html(image_evidence_inventory or {})
     relationship_capital_html = _portable_relationship_capital_html(relationship_capital_appendix or {})
     source_html = _portable_source_provenance_html(source_provenance_appendix or {})
+    report_targets_html = _portable_report_targets_html(report_targets or {})
     return (
         "<!doctype html>\n"
         "<html lang=\"zh-CN\">\n"
@@ -1526,6 +1549,7 @@ def _portable_report_html(
         "    <div class=\"report-layout\">\n"
         "      <div class=\"report-main\">\n"
         f"{decision_html}"
+        f"{report_targets_html}"
         f"{chart_html}"
         f"{relationship_capital_html}"
         f"{image_html}"
@@ -1605,6 +1629,46 @@ def _packet_agent_decision_digest(
         "policy": "Packet-level routing digest for API/MCP/agent hosts; export-dir agent-handoff adds bundle integrity details.",
         "execution_state": summary.get("execution_state") or "unknown",
     }
+
+
+def _portable_report_targets_html(report_targets: dict[str, Any]) -> str:
+    targets = report_targets if isinstance(report_targets, dict) else {}
+    if not targets:
+        return ""
+    outputs = [item for item in targets.get("current_release_outputs", []) if isinstance(item, dict)][:8]
+    final_targets = [item for item in targets.get("final_product_targets", []) if isinstance(item, dict)][:8]
+    persona = _dict(targets.get("persona_interaction_contract"))
+    output_rows = "\n".join(
+        "      <tr>"
+        f"<td>{html.escape(str(row.get('id') or ''))}</td>"
+        f"<td>{html.escape(str(row.get('current_status') or ''))}</td>"
+        f"<td>{html.escape(str(row.get('agent_field') or ''))}</td>"
+        f"<td>{html.escape(str(row.get('required')))}</td>"
+        "</tr>"
+        for row in outputs
+    )
+    final_rows = "\n".join(
+        "      <tr>"
+        f"<td>{html.escape(str(row.get('id') or ''))}</td>"
+        f"<td>{html.escape(str(row.get('status') or ''))}</td>"
+        f"<td>{html.escape(_short_text(str(row.get('done_when') or ''), 180))}</td>"
+        "</tr>"
+        for row in final_targets
+    )
+    role_count = html.escape(str(persona.get("role_count") or 0))
+    full_status = html.escape(str(targets.get("full_product_status") or "unknown"))
+    return (
+        "    <section class=\"delivery\" aria-label=\"report delivery targets\">\n"
+        "      <h2>Report delivery targets</h2>\n"
+        f"      <p>Full product status: <b>{full_status}</b> | persona roles: <b>{role_count}</b></p>\n"
+        "      <table><thead><tr><th>Output</th><th>Status</th><th>Agent field</th><th>Required</th></tr></thead><tbody>\n"
+        f"{output_rows}\n"
+        "      </tbody></table>\n"
+        "      <table><thead><tr><th>Final target</th><th>Status</th><th>Done when</th></tr></thead><tbody>\n"
+        f"{final_rows}\n"
+        "      </tbody></table>\n"
+        "    </section>\n"
+    )
 
 
 def _portable_decision_digest_html(digest: dict[str, Any]) -> str:

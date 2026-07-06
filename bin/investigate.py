@@ -16,6 +16,11 @@ if str(ROOT) not in sys.path:
 
 from core.datasource_fixtures import build_datasource_fixture_pack  # noqa: E402
 from core.connector_registry import ConnectorRegistry  # noqa: E402
+from core.autopilot import (  # noqa: E402
+    build_autopilot_execution_profile,
+    build_deep_autopilot_execution_plan,
+    build_deep_autopilot_source_runbook,
+)
 from core.development_requirements import build_development_requirements_board  # noqa: E402
 from core.investigation import (  # noqa: E402
     _packet_queue_agent_autorun,
@@ -30,6 +35,7 @@ from core.one_click_defaults import resolve_one_click_retrieval_async  # noqa: E
 from core.risk_discovery_pipeline import RiskDiscoveryPipeline, offline_enforcement_fixture  # noqa: E402
 from core.risk_graph_export import export_risk_graph  # noqa: E402
 from core.report_docx import render_print_package_docx  # noqa: E402
+from core.source_preflight import build_source_preflight  # noqa: E402
 
 
 def clamp_int(value: int, low: int, high: int) -> int:
@@ -315,6 +321,50 @@ def _agent_handoff_export(
     acceptance_closure = one_click.get("acceptance_closure_summary")
     if not isinstance(acceptance_closure, dict):
         acceptance_closure = {}
+    source_preflight = payload.get("source_preflight")
+    if not isinstance(source_preflight, dict):
+        source_preflight = one_click.get("source_preflight")
+    if not isinstance(source_preflight, dict):
+        source_preflight = build_source_preflight(None)
+    runtime_autopilot = payload.get("runtime_autopilot")
+    if not isinstance(runtime_autopilot, dict):
+        runtime_autopilot = one_click.get("runtime_autopilot")
+    if not isinstance(runtime_autopilot, dict):
+        runtime_autopilot = build_autopilot_execution_profile(
+            mode=str(payload.get("mode") or "deep"),
+            configured_source_available=bool(source_preflight.get("config_loaded")),
+            fixture_mode=bool(payload.get("fixture_mode") or payload.get("offline_fixture")),
+        ).to_dict()
+    source_failure_summary = payload.get("source_failure_summary")
+    if not isinstance(source_failure_summary, dict):
+        source_failure_summary = {}
+    qyyjt_handoff = payload.get("qyyjt_public_origin_handoff") or {}
+    deep_autopilot_execution_plan = one_click.get("deep_autopilot_execution_plan")
+    if not isinstance(deep_autopilot_execution_plan, dict):
+        deep_autopilot_execution_plan = build_deep_autopilot_execution_plan(
+            runtime_autopilot=runtime_autopilot,
+            one_click_readiness=one_click,
+            source_failure_summary=source_failure_summary,
+            monitoring_seed=monitoring_seed,
+            qyyjt_public_origin_handoff=qyyjt_handoff,
+            subject_name=str(payload.get("summary", {}).get("company") or payload.get("input") or ""),
+        )
+    deep_autopilot_source_runbook = one_click.get("deep_autopilot_source_runbook")
+    if not isinstance(deep_autopilot_source_runbook, dict):
+        deep_autopilot_source_runbook = build_deep_autopilot_source_runbook(
+            runtime_autopilot=runtime_autopilot,
+            one_click_readiness=one_click,
+            source_failure_summary=source_failure_summary,
+            monitoring_seed=monitoring_seed,
+            qyyjt_public_origin_handoff=qyyjt_handoff,
+            execution_plan=deep_autopilot_execution_plan,
+            subject_name=str(payload.get("summary", {}).get("company") or payload.get("input") or ""),
+        )
+    one_click["source_preflight"] = source_preflight
+    one_click["deep_autopilot_execution_plan"] = deep_autopilot_execution_plan
+    one_click["deep_autopilot_source_runbook"] = deep_autopilot_source_runbook
+    runtime_autopilot["execution_plan"] = deep_autopilot_execution_plan
+    runtime_autopilot["source_runbook"] = deep_autopilot_source_runbook
     relationship_graph_audit = _relationship_graph_audit_handoff(one_click)
     relationship_resolution = _relationship_resolution_handoff(enterprise_cognition)
     capital_risk_panel = _capital_risk_panel(one_click, enterprise_cognition, relationship_graph_audit)
@@ -348,6 +398,7 @@ def _agent_handoff_export(
         trust_boundaries=trust_boundaries,
         next_actions=next_actions,
         relationship_graph_audit=relationship_graph_audit,
+        source_preflight=source_preflight,
     )
     delivery_decision = _requirements_delivery_decision()
     return {
@@ -363,8 +414,11 @@ def _agent_handoff_export(
         "capital_risk_panel": capital_risk_panel,
         "source_strengthening": source_strengthening,
         "relationship_resolution": relationship_resolution,
+        "source_preflight": source_preflight,
         "trust_boundaries": trust_boundaries,
         "decision_digest": decision_digest,
+        "deep_autopilot_execution_plan": deep_autopilot_execution_plan,
+        "deep_autopilot_source_runbook": deep_autopilot_source_runbook,
         "next_actions": next_actions,
         "acceptance_closure": {
             "status": one_click.get("acceptance_closure_status") or acceptance_closure.get("status") or "unknown",
@@ -777,6 +831,7 @@ def _decision_digest(
     trust_boundaries: dict,
     next_actions: list[dict],
     relationship_graph_audit: dict,
+    source_preflight: dict | None = None,
 ) -> dict:
     """Compact routing summary for desktop agents that should not infer state from raw JSON."""
     first_action = next_actions[0] if next_actions else {}
@@ -790,6 +845,18 @@ def _decision_digest(
     ]
     blocking_count = int(one_click.get("acceptance_closure_blocking_count") or 0)
     source_ready = bool(one_click.get("source_resilience_recommended_step_ready_to_run"))
+    source_preflight = source_preflight if isinstance(source_preflight, dict) else {}
+    source_preflight_contract = (
+        source_preflight.get("no_prompt_contract")
+        if isinstance(source_preflight.get("no_prompt_contract"), dict)
+        else {}
+    )
+    deep_plan = one_click.get("deep_autopilot_execution_plan")
+    if not isinstance(deep_plan, dict):
+        deep_plan = {}
+    source_runbook = one_click.get("deep_autopilot_source_runbook")
+    if not isinstance(source_runbook, dict):
+        source_runbook = {}
     return {
         "type": "agent_decision_digest",
         "delivery_status": delivery_checklist.get("status") if isinstance(delivery_checklist, dict) else "",
@@ -802,6 +869,20 @@ def _decision_digest(
         "source_resilience_status": one_click.get("source_resilience_status") or "unknown",
         "source_resilience_ready_to_run": source_ready,
         "source_resilience_retryable": bool(one_click.get("source_resilience_retryable")),
+        "source_preflight": source_preflight,
+        "source_preflight_status": source_preflight.get("status") or "unknown",
+        "source_preflight_deep_mode_status": source_preflight.get("deep_mode_status") or "unknown",
+        "source_preflight_stop_on_missing_advanced_source": bool(
+            source_preflight_contract.get("stop_on_missing_advanced_source")
+        ),
+        "source_preflight_operator_prompt_required_during_run": bool(
+            source_preflight_contract.get("operator_prompt_required_during_run")
+        ),
+        "deep_autopilot_active": bool(deep_plan.get("active")),
+        "deep_autopilot_queue_total": int(deep_plan.get("queue_total") or 0),
+        "deep_autopilot_plan": deep_plan,
+        "deep_autopilot_source_runbook": source_runbook,
+        "deep_autopilot_automatic_lane_count": int(source_runbook.get("automatic_lane_count") or 0),
         "capital_relationship_status": one_click.get("capital_relationship_status") or "unknown",
         "relationship_audit_status": relationship_graph_audit.get("status")
         if isinstance(relationship_graph_audit, dict)
@@ -849,6 +930,20 @@ def _manifest_agent_summary(agent_handoff: dict) -> dict:
     report_visibility = agent_handoff.get("report_visibility", {})
     capital_risk_panel = agent_handoff.get("capital_risk_panel", {})
     source_strengthening = agent_handoff.get("source_strengthening", {})
+    source_preflight = agent_handoff.get("source_preflight", {})
+    if not isinstance(source_preflight, dict):
+        source_preflight = {}
+    source_preflight_contract = (
+        source_preflight.get("no_prompt_contract")
+        if isinstance(source_preflight.get("no_prompt_contract"), dict)
+        else {}
+    )
+    deep_autopilot_execution_plan = agent_handoff.get("deep_autopilot_execution_plan", {})
+    if not isinstance(deep_autopilot_execution_plan, dict):
+        deep_autopilot_execution_plan = {}
+    deep_autopilot_source_runbook = agent_handoff.get("deep_autopilot_source_runbook", {})
+    if not isinstance(deep_autopilot_source_runbook, dict):
+        deep_autopilot_source_runbook = {}
     source_repair_queue = source_health.get("repair_queue", []) if isinstance(source_health, dict) else []
     capital_queue = (
         capital_relationship.get("capital_verification_queue", [])
@@ -953,6 +1048,20 @@ def _manifest_agent_summary(agent_handoff: dict) -> dict:
         "source_resilience_blocked_reason": source_resilience.get("blocked_reason")
         if isinstance(source_resilience, dict)
         else "",
+        "source_preflight": source_preflight,
+        "source_preflight_status": source_preflight.get("status") or "unknown",
+        "source_preflight_deep_mode_status": source_preflight.get("deep_mode_status") or "unknown",
+        "source_preflight_stop_on_missing_advanced_source": bool(
+            source_preflight_contract.get("stop_on_missing_advanced_source")
+        ),
+        "source_preflight_operator_prompt_required_during_run": bool(
+            source_preflight_contract.get("operator_prompt_required_during_run")
+        ),
+        "deep_autopilot_execution_plan": deep_autopilot_execution_plan,
+        "deep_autopilot_source_runbook": deep_autopilot_source_runbook,
+        "deep_autopilot_active": bool(deep_autopilot_execution_plan.get("active")),
+        "deep_autopilot_queue_total": int(deep_autopilot_execution_plan.get("queue_total") or 0),
+        "deep_autopilot_automatic_lane_count": int(deep_autopilot_source_runbook.get("automatic_lane_count") or 0),
         "relationship_audit_status": relationship_audit.get("status") if isinstance(relationship_audit, dict) else "",
         "relationship_resolution": {
             "type": relationship_resolution.get("type", "relationship_resolution_handoff")

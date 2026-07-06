@@ -291,7 +291,13 @@ def build_agent_tool_adapter_manifest() -> dict[str, Any]:
         },
         "default_host_id": "codex",
         "host_ids": [row["host_id"] for row in adapters],
-        "required_smoke_commands": _dedupe(row["smoke_command"] for row in adapters if row["smoke_command"]),
+        "required_smoke_commands": _dedupe(
+            [
+                *(row["smoke_command"] for row in adapters if row["smoke_command"]),
+                "npm run release:agent-smoke",
+                "npm run agent:install-smoke",
+            ]
+        ),
         "minimum_pass_gates": [
             "release_readiness returns desktop_agent_alpha_release_candidate",
             "objective_audit has no failed_requirements before the thread goal is marked complete",
@@ -392,6 +398,8 @@ def _adapter_row(host_id: str, variant: dict[str, Any], override: dict[str, Any]
             "lead-only rows remain leads until admission gates pass",
             "continuous monitoring is not current-release delivery",
             "polished immersive HTML is not required for desktop-agent alpha",
+            "polished immersive HTML is not required to certify desktop-agent alpha, but remains a final-product requirement",
+            "desktop-agent alpha must not reduce anthropomorphic role interaction or report output completeness",
         ],
         "next_gate": list(variant.get("next_gate") or []),
     }

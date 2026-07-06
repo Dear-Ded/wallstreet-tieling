@@ -136,8 +136,8 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert closure["document"] == "docs/DESKTOP_AGENT_ALPHA_DELIVERY.md"
     assert closure["baseline_sequence"] == [
         "release_readiness",
-        "delivery_audit",
         "connector_catalog",
+        "source_preflight",
         "development_requirements",
         "agent_tool_adapters",
         "investigate_company",
@@ -554,14 +554,14 @@ def test_package_scripts_and_mcp_manifest_stay_aligned():
 
     scripts = package["scripts"]
     assert scripts["mcp"] == "node lib/mcp-server.js"
-    assert scripts["api"] == "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-python.ps1 api/server.py"
-    assert scripts["api:smoke"] == "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-python.ps1 tools/api-smoke.py"
+    assert scripts["api"] == "node tools/run-python.js api/server.py"
+    assert scripts["api:smoke"] == "node tools/run-python.js tools/api-smoke.py"
     assert scripts["codex:mcp-smoke"] == "node tools/codex-mcp-smoke.js"
     assert scripts["agent:host-smoke"] == "node tools/agent-host-smoke.js"
     assert scripts["release:preflight"] == "node bin/cli.js --release-preflight"
     assert scripts["delivery:audit"] == "node bin/cli.js --delivery-audit"
     assert scripts["objective:audit"] == "node bin/cli.js --objective-audit"
-    assert scripts["release:privacy-scan"] == "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-python.ps1 tools/package-privacy-scan.py --json"
+    assert scripts["release:privacy-scan"] == "node tools/run-python.js tools/package-privacy-scan.py --json"
     assert scripts["acceptance"] == "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-acceptance.ps1"
     acceptance_text = (PROJECT_ROOT / "tools" / "run-acceptance.ps1").read_text(encoding="utf-8")
     assert "qyyjt_public_origin_handoff" in acceptance_text

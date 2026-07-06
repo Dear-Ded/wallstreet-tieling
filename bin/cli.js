@@ -16,6 +16,40 @@ const ROOT = path.join(__dirname, '..');
 const skillPath = path.join(ROOT, 'SKILL.md');
 const pkg = require(path.join(ROOT, 'package.json'));
 const PYTHON_OUTPUT_MAX_BUFFER = 16 * 1024 * 1024;
+const REPORT_BUNDLE_VERIFIER_OUTPUT_FIELDS = [
+  'ok',
+  'checked_count',
+  'agent_handoff.checked',
+  'agent_handoff.schema_valid',
+  'agent_handoff.decision_digest_present',
+  'agent_handoff.delivery_checklist_present',
+  'agent_handoff.bundle_integrity_present',
+  'agent_handoff.bundle_verification_present',
+  'agent_handoff.bundle_verification_ready_to_run',
+  'agent_handoff.bundle_ready_to_verify',
+  'agent_handoff.report_visibility_present',
+  'agent_handoff.premium_html_report_visibility_present',
+  'agent_handoff.image_evidence_inventory_present',
+  'agent_handoff.capital_risk_panel_present',
+  'agent_handoff.capital_relationship_crosswalk_present',
+  'agent_handoff.relationship_resolution_present',
+  'agent_handoff.source_strengthening_present',
+  'agent_handoff.source_strengthening_runtime_companion_present',
+  'agent_handoff.verification_recipe_present',
+  'agent_handoff.verifier_output_fields_present',
+  'agent_handoff.acceptance_closure_present',
+  'agent_handoff.source_preflight_present',
+  'agent_handoff.source_preflight_contract_valid',
+  'agent_handoff.manifest_summary_source_preflight_present',
+  'agent_handoff.manifest_summary_source_preflight_valid',
+  'agent_handoff.deep_autopilot_plan_present',
+  'agent_handoff.deep_autopilot_source_runbook_present',
+  'agent_handoff.continuation_entrypoints_valid',
+  'agent_handoff.source_runbook_valid',
+  'agent_handoff.qyyjt_public_origin_present',
+  'agent_handoff.source_resilience_present',
+  'agent_handoff.relationship_graph_audit_present'
+];
 const HOST_IDS = [
   'universal',
   'codex',
@@ -650,63 +684,14 @@ function writeOfflineFixtureFallback(args, company) {
         type: 'report_export_directory_bundle',
         runtime_entrypoint: 'bin/investigate.py --export-dir',
         integrity_verifier_entrypoint: 'bin/verify_report_bundle.py <export-dir>',
-        verifier_output_fields: [
-          'ok',
-          'agent_handoff.checked',
-          'agent_handoff.schema_valid',
-          'agent_handoff.decision_digest_present',
-          'agent_handoff.delivery_checklist_present',
-          'agent_handoff.bundle_integrity_present',
-          'agent_handoff.bundle_verification_present',
-          'agent_handoff.bundle_verification_ready_to_run',
-          'agent_handoff.bundle_ready_to_verify',
-          'agent_handoff.report_visibility_present',
-          'agent_handoff.premium_html_report_visibility_present',
-          'agent_handoff.image_evidence_inventory_present',
-          'agent_handoff.capital_risk_panel_present',
-          'agent_handoff.capital_relationship_crosswalk_present',
-          'agent_handoff.relationship_resolution_present',
-          'agent_handoff.source_strengthening_present',
-          'agent_handoff.source_strengthening_runtime_companion_present',
-          'agent_handoff.verification_recipe_present',
-          'agent_handoff.verifier_output_fields_present',
-          'agent_handoff.acceptance_closure_present',
-          'agent_handoff.qyyjt_public_origin_present',
-          'agent_handoff.source_resilience_present',
-          'agent_handoff.relationship_graph_audit_present'
-        ],
+        verifier_output_fields: REPORT_BUNDLE_VERIFIER_OUTPUT_FIELDS,
         verification_recipe: {
           type: 'report_bundle_verification_recipe',
           command: 'python bin/verify_report_bundle.py <export-dir>',
           expected_exit_code: 0,
           success_condition: 'ok=true and agent_handoff.schema_valid=true and agent_handoff.bundle_ready_to_verify=true',
           failure_routing: 'Open report-export-manifest.json and agent-handoff.json; repair missing files, hash mismatches, or handoff schema failures before delivery.',
-          required_output_fields: [
-            'ok',
-            'checked_count',
-            'agent_handoff.checked',
-            'agent_handoff.schema_valid',
-            'agent_handoff.decision_digest_present',
-            'agent_handoff.delivery_checklist_present',
-            'agent_handoff.bundle_integrity_present',
-            'agent_handoff.bundle_verification_present',
-            'agent_handoff.bundle_verification_ready_to_run',
-            'agent_handoff.bundle_ready_to_verify',
-            'agent_handoff.report_visibility_present',
-            'agent_handoff.premium_html_report_visibility_present',
-            'agent_handoff.image_evidence_inventory_present',
-            'agent_handoff.capital_risk_panel_present',
-            'agent_handoff.capital_relationship_crosswalk_present',
-            'agent_handoff.relationship_resolution_present',
-            'agent_handoff.source_strengthening_present',
-            'agent_handoff.source_strengthening_runtime_companion_present',
-            'agent_handoff.verification_recipe_present',
-            'agent_handoff.verifier_output_fields_present',
-            'agent_handoff.acceptance_closure_present',
-            'agent_handoff.qyyjt_public_origin_present',
-            'agent_handoff.source_resilience_present',
-            'agent_handoff.relationship_graph_audit_present'
-          ]
+          required_output_fields: REPORT_BUNDLE_VERIFIER_OUTPUT_FIELDS
         },
         manifest_filename: files.manifest,
         manifest_fields: ['files', 'file_manifest', 'unavailable_outputs', 'delivery_checklist', 'agent_summary', 'report_exports'],
@@ -720,6 +705,10 @@ function writeOfflineFixtureFallback(args, company) {
             'bundle_integrity',
             'bundle_verification',
             'delivery_checklist',
+            'source_preflight',
+            'runtime_autopilot',
+            'deep_autopilot_execution_plan',
+            'deep_autopilot_source_runbook',
             'report_visibility',
             'capital_risk_panel',
             'relationship_resolution',
@@ -733,7 +722,7 @@ function writeOfflineFixtureFallback(args, company) {
             'capital_and_relationship'
           ],
           content:
-            'delivery files, delivery decision, bundle integrity, bundle verification recipe, verifier output fields, delivery checklist, report visibility, image evidence inventory, capital risk panel, relationship resolution verification queue, source strengthening work orders, trust boundaries, decision digest, next actions, acceptance closure, control path verification queue, relationship graph audit summary, source recovery execution queue, and Python runtime recovery'
+            'delivery files, delivery decision, bundle integrity, bundle verification recipe, verifier output fields, source_preflight, runtime_autopilot, deep autopilot plan/runbook, delivery checklist, report visibility, image evidence inventory, capital risk panel, relationship resolution verification queue, source strengthening work orders, trust boundaries, decision digest, next actions, acceptance closure, control path verification queue, relationship graph audit summary, source recovery execution queue, and Python runtime recovery'
         },
         stdout_preserved: true
       },
@@ -766,6 +755,17 @@ function writeOfflineFixtureFallback(args, company) {
     enrichedAgentHandoff.relationship_resolution = buildNodeFallbackRelationshipResolution();
     enrichedAgentHandoff.source_strengthening = buildNodeFallbackSourceStrengthening();
     enrichedAgentHandoff.source_health = buildNodeFallbackSourceHealth();
+    enrichedAgentHandoff.source_preflight = sourcePreflightFallback();
+    enrichedAgentHandoff.runtime_autopilot = buildNodeFallbackRuntimeAutopilot(enrichedAgentHandoff.source_preflight);
+    enrichedAgentHandoff.deep_autopilot_execution_plan = buildNodeFallbackDeepAutopilotExecutionPlan(
+      enrichedAgentHandoff.runtime_autopilot
+    );
+    enrichedAgentHandoff.deep_autopilot_source_runbook = buildNodeFallbackDeepAutopilotSourceRunbook(
+      enrichedAgentHandoff.runtime_autopilot,
+      enrichedAgentHandoff.deep_autopilot_execution_plan
+    );
+    enrichedAgentHandoff.runtime_autopilot.execution_plan = enrichedAgentHandoff.deep_autopilot_execution_plan;
+    enrichedAgentHandoff.runtime_autopilot.source_runbook = enrichedAgentHandoff.deep_autopilot_source_runbook;
     enrichedAgentHandoff.qyyjt_public_origin = buildNodeFallbackQyyjtPublicOrigin(
       packet.qyyjt_public_origin_handoff,
       oneClick
@@ -798,7 +798,7 @@ function buildNodeFallbackAgentHandoff(company, files, oneClick, monitoringSeed)
   const adapters = HOST_IDS.map((hostId) => ({
     host_id: hostId,
     current_release_supported: true,
-    tool_sequence: ['release_readiness', 'connector_catalog', 'development_requirements', 'agent_tool_adapters', 'investigate_company'],
+    tool_sequence: ['release_readiness', 'connector_catalog', 'source_preflight', 'development_requirements', 'agent_tool_adapters', 'investigate_company'],
     execution_matrix_ref: 'agent_tool_adapter_manifest.execution_matrix',
     fallback_order: ['CLI', 'REST API', 'prompt-only'],
     smoke_command: hostId === 'codex' ? 'npm run codex:mcp-smoke' : 'npm run agent:host-smoke',
@@ -806,6 +806,11 @@ function buildNodeFallbackAgentHandoff(company, files, oneClick, monitoringSeed)
       'quality_gate',
       'evidence_ledger',
       'one_click_readiness',
+      'runtime_autopilot',
+      'runtime_autopilot.execution_plan',
+      'runtime_autopilot.source_runbook',
+      'source_preflight',
+      'source_preflight.no_prompt_contract',
       'enterprise_cognition.relationship_resolution_v1',
       'enterprise_cognition.relationship_resolution_v1.resolution_summary.verification_queue',
       'qyyjt_public_origin_handoff',
@@ -815,6 +820,9 @@ function buildNodeFallbackAgentHandoff(company, files, oneClick, monitoringSeed)
       'report_exports.directory_bundle.verification_recipe',
       'report_exports.directory_bundle.verifier_output_fields',
       'report_exports.directory_bundle.agent_handoff',
+      'report_exports.directory_bundle.agent_handoff.source_preflight',
+      'report_exports.directory_bundle.agent_handoff.deep_autopilot_execution_plan',
+      'report_exports.directory_bundle.agent_handoff.deep_autopilot_source_runbook',
       'report_exports.directory_bundle.agent_handoff.report_visibility',
       'report_exports.directory_bundle.agent_handoff.source_strengthening',
       'report_exports.directory_bundle.agent_handoff.delivery_decision'
@@ -901,6 +909,10 @@ function buildNodeFallbackAgentHandoff(company, files, oneClick, monitoringSeed)
     },
     qyyjt_public_origin: {},
     source_health: {},
+    source_preflight: {},
+    runtime_autopilot: {},
+    deep_autopilot_execution_plan: {},
+    deep_autopilot_source_runbook: {},
     capital_and_relationship: {},
     decision_digest: {},
     policy: 'Fallback handoff keeps desktop-agent packaging alive when Python child processes are unavailable.'
@@ -1210,6 +1222,87 @@ function buildNodeFallbackSourceHealth() {
   };
 }
 
+function buildNodeFallbackRuntimeAutopilot(sourcePreflight) {
+  return {
+    type: 'runtime_autopilot_profile',
+    version: '0.5.0',
+    level: 'advanced_deep_autopilot',
+    mode: 'deep',
+    status: 'fallback_runtime_pending',
+    config_loaded: Boolean(sourcePreflight?.config_loaded),
+    configured_source_available: false,
+    no_prompt_contract: sourcePreflight?.no_prompt_contract || {},
+    source_policy: 'continue_with_public_origin_fallback_and_record_gap',
+    operator_work_queue_role: 'internal_autopilot_recovery_queue_not_end_user_task_list',
+    policy: 'Node fallback preserves the autopilot contract; rerun Python runtime for full source execution.'
+  };
+}
+
+function buildNodeFallbackDeepAutopilotExecutionPlan(runtimeAutopilot) {
+  return {
+    type: 'deep_autopilot_execution_plan',
+    version: '0.5.0',
+    active: true,
+    status: 'fallback_runtime_pending',
+    queue_total: 9,
+    automation_contract: {
+      subject_name_only_after_workspace_preconfiguration: true,
+      operator_work_queue_role: 'internal_autopilot_recovery_queue_not_end_user_task_list',
+      operator_prompt_required_during_run: false,
+      stop_on_missing_advanced_source: false
+    },
+    continuation_entrypoints: [
+      { tool: 'investigate_company', route: 'MCP', args: { mode: 'deep' } },
+      { tool: 'CLI', route: 'npx wallstreet-tieling --investigate "<subject>" --mode deep --export-dir <dir>' },
+      { tool: 'REST', route: 'POST /api/investigate', args: { mode: 'deep' } }
+    ],
+    runtime_level: runtimeAutopilot?.level || 'advanced_deep_autopilot',
+    next_steps: [
+      {
+        id: 'restore_python_runtime_for_deep_autopilot',
+        priority: 'P0',
+        status: 'blocked',
+        ready_to_run: false,
+        action: 'Restore Python runtime access, then rerun deep export-dir to execute configured source lanes.',
+        done_condition: 'deep-mode packet includes runtime_autopilot.execution_plan, source_runbook, source_preflight, and report bundle verifier passes.'
+      }
+    ],
+    policy: 'Do not ask the end user to choose sources after subject submission; fallback or downgrade unavailable lanes and record gaps.'
+  };
+}
+
+function buildNodeFallbackDeepAutopilotSourceRunbook(runtimeAutopilot, executionPlan) {
+  const laneIds = [
+    'domestic_registry_and_qyyjt',
+    'official_public_global_sources',
+    'sanctions_and_watchlists',
+    'authorized_commercial_sources',
+    'relationship_graph_and_control_path',
+    'capital_pressure_and_financing',
+    'goods_flow_and_supply_chain',
+    'people_flow_and_public_osint',
+    'report_generation_and_visual_outputs'
+  ];
+  return {
+    type: 'deep_autopilot_source_runbook',
+    version: '0.5.0',
+    status: 'fallback_runtime_pending',
+    automatic_lane_count: laneIds.length,
+    operator_queue_semantics: 'internal_autopilot_recovery_queue_not_end_user_task_list',
+    runtime_level: runtimeAutopilot?.level || 'advanced_deep_autopilot',
+    execution_plan_status: executionPlan?.status || 'fallback_runtime_pending',
+    lanes: laneIds.map((id, index) => ({
+      id,
+      priority: index < 3 ? 'P0' : 'P1',
+      user_prompt_required: false,
+      stop_on_failure: false,
+      fallback_policy: 'record_gap_and_continue',
+      output_contract: 'preserve evidence, source status, confidence, and next action'
+    })),
+    policy: 'Every lane is automatic after workspace preconfiguration; blocked sources become report-visible gaps instead of user prompts.'
+  };
+}
+
 function buildNodeFallbackRelationshipResolution() {
   const fallbackStep = {
     priority: 'P0',
@@ -1377,6 +1470,20 @@ function buildNodeFallbackManifestAgentSummary(agentHandoff) {
     delivery_decision: agentHandoff.delivery_decision || {},
     decision_digest: agentHandoff.decision_digest || {},
     bundle_verification: agentHandoff.bundle_verification || {},
+    source_preflight: agentHandoff.source_preflight || {},
+    source_preflight_status: agentHandoff.source_preflight?.status || 'unknown',
+    source_preflight_deep_mode_status: agentHandoff.source_preflight?.deep_mode_status || 'unknown',
+    source_preflight_stop_on_missing_advanced_source: Boolean(
+      agentHandoff.source_preflight?.no_prompt_contract?.stop_on_missing_advanced_source
+    ),
+    source_preflight_operator_prompt_required_during_run: Boolean(
+      agentHandoff.source_preflight?.no_prompt_contract?.operator_prompt_required_during_run
+    ),
+    deep_autopilot_execution_plan: agentHandoff.deep_autopilot_execution_plan || {},
+    deep_autopilot_source_runbook: agentHandoff.deep_autopilot_source_runbook || {},
+    deep_autopilot_active: Boolean(agentHandoff.deep_autopilot_execution_plan?.active),
+    deep_autopilot_queue_total: Number(agentHandoff.deep_autopilot_execution_plan?.queue_total || 0),
+    deep_autopilot_automatic_lane_count: Number(agentHandoff.deep_autopilot_source_runbook?.automatic_lane_count || 0),
     report_visibility: {
       type: agentHandoff.report_visibility?.type || 'report_visibility_handoff',
       image_evidence_inventory_present:
@@ -1609,8 +1716,8 @@ function deliveryClosureFallback() {
     document: 'docs/DESKTOP_AGENT_ALPHA_DELIVERY.md',
     baseline_sequence: [
       'release_readiness',
-      'delivery_audit',
       'connector_catalog',
+      'source_preflight',
       'development_requirements',
       'agent_tool_adapters',
       'investigate_company'
@@ -1632,6 +1739,11 @@ function deliveryClosureFallback() {
       'quality_gate',
       'evidence_ledger',
       'one_click_readiness',
+      'runtime_autopilot',
+      'runtime_autopilot.execution_plan',
+      'runtime_autopilot.source_runbook',
+      'source_preflight',
+      'source_preflight.no_prompt_contract',
       'enterprise_cognition.relationship_resolution_v1',
       'enterprise_cognition.relationship_resolution_v1.resolution_summary.verification_queue',
       'qyyjt_public_origin_handoff',
@@ -1640,11 +1752,14 @@ function deliveryClosureFallback() {
       'report_exports.portable_html.premium_profile',
       'report_exports.directory_bundle',
       'report_exports.directory_bundle.agent_handoff',
+      'report_exports.directory_bundle.agent_handoff.source_preflight',
       'report_exports.directory_bundle.agent_handoff.report_visibility',
       'report_exports.directory_bundle.agent_handoff.report_visibility.premium_html',
       'report_exports.directory_bundle.agent_handoff.capital_risk_panel',
       'report_exports.directory_bundle.agent_handoff.source_strengthening',
       'report_exports.directory_bundle.agent_handoff.delivery_decision',
+      'report_exports.directory_bundle.agent_handoff.deep_autopilot_execution_plan',
+      'report_exports.directory_bundle.agent_handoff.deep_autopilot_source_runbook',
       'qyyjt_public_origin_handoff.agent_autorun',
       'report_exports.directory_bundle.agent_handoff.report_visibility.agent_autorun',
       'report_exports.directory_bundle.agent_handoff.capital_risk_panel.agent_autorun',

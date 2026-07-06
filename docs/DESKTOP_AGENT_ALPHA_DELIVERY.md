@@ -70,7 +70,7 @@ require the Python runtime path.
 ## Delivery Readiness Matrix
 
 | Capability lane | Current alpha status | Proof source | Remaining boundary |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Desktop-agent runtime entrypoints | Ready for local packaging | `release_preflight.package_candidate_ready == true`; `npm run agent:host-smoke`; `npm run codex:mcp-smoke`; `npm run api:smoke` | Marketplace/operator screenshots and clean release publication are still separate submission work |
 | Codex primary adapter | Ready | `agent_tool_adapter_manifest.primary_host_id == codex`; packaged MCP smoke covers `release_readiness -> delivery_audit -> connector_catalog -> development_requirements -> agent_tool_adapters -> investigate_company` | Keep Codex as primary lane before WorkBuddy secondary changes |
 | WorkBuddy expert-team branch | Ready as secondary adapter | `tests/unit/test_workbuddy.py`; WorkBuddy host smoke; `workbuddy_expert_team` delivery priority is secondary | Must not rewrite core runtime architecture or source admission policy |

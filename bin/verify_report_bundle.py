@@ -110,6 +110,14 @@ def _verify_agent_handoff(manifest: dict[str, Any], manifest_path: Path) -> dict
         "verification_recipe_present": False,
         "verifier_output_fields_present": False,
         "acceptance_closure_present": False,
+        "source_preflight_present": False,
+        "source_preflight_contract_valid": False,
+        "manifest_summary_source_preflight_present": False,
+        "manifest_summary_source_preflight_valid": False,
+        "deep_autopilot_plan_present": False,
+        "deep_autopilot_source_runbook_present": False,
+        "continuation_entrypoints_valid": False,
+        "source_runbook_valid": False,
         "qyyjt_public_origin_present": False,
         "source_resilience_present": False,
         "relationship_graph_audit_present": False,
@@ -199,6 +207,64 @@ def _verify_agent_handoff(manifest: dict[str, Any], manifest_path: Path) -> dict
             if agent_summary.get("acceptance_closure_status") != acceptance_closure.get("status"):
                 failures.append({"role": "agent_summary", "reason": "agent_summary_acceptance_closure_status_mismatch"})
         _verify_agent_summary_preview(agent_summary, handoff, failures)
+
+    source_preflight = handoff.get("source_preflight")
+    result["source_preflight_present"] = isinstance(source_preflight, dict)
+    source_preflight_contract = source_preflight.get("no_prompt_contract") if isinstance(source_preflight, dict) else None
+    result["source_preflight_contract_valid"] = (
+        isinstance(source_preflight, dict)
+        and source_preflight.get("type") == "source_preflight"
+        and isinstance(source_preflight_contract, dict)
+        and source_preflight_contract.get("operator_prompt_required_during_run") is False
+        and source_preflight_contract.get("stop_on_missing_advanced_source") is False
+    )
+    if not result["source_preflight_present"]:
+        failures.append({"role": "agent_handoff", "filename": str(agent_handoff_name), "reason": "missing_source_preflight"})
+    elif not result["source_preflight_contract_valid"]:
+        failures.append({"role": "agent_handoff", "filename": str(agent_handoff_name), "reason": "invalid_source_preflight_contract"})
+    manifest_source_preflight = agent_summary.get("source_preflight") if isinstance(agent_summary, dict) else None
+    result["manifest_summary_source_preflight_present"] = isinstance(manifest_source_preflight, dict)
+    result["manifest_summary_source_preflight_valid"] = manifest_source_preflight == source_preflight
+    if not result["manifest_summary_source_preflight_present"]:
+        failures.append({"role": "agent_summary", "reason": "missing_source_preflight"})
+    elif not result["manifest_summary_source_preflight_valid"]:
+        failures.append({"role": "agent_summary", "reason": "source_preflight_mismatch"})
+
+    deep_plan = handoff.get("deep_autopilot_execution_plan")
+    result["deep_autopilot_plan_present"] = isinstance(deep_plan, dict) and deep_plan.get("type") == "deep_autopilot_execution_plan"
+    if not result["deep_autopilot_plan_present"]:
+        failures.append({"role": "agent_handoff", "filename": str(agent_handoff_name), "reason": "missing_deep_autopilot_execution_plan"})
+        deep_plan = {}
+    continuation_entrypoints = deep_plan.get("continuation_entrypoints") if isinstance(deep_plan, dict) else None
+    result["continuation_entrypoints_valid"] = (
+        isinstance(continuation_entrypoints, list)
+        and any(isinstance(item, dict) and item.get("tool") == "investigate_company" for item in continuation_entrypoints)
+    )
+    if not result["continuation_entrypoints_valid"]:
+        failures.append({"role": "agent_handoff", "filename": str(agent_handoff_name), "reason": "invalid_deep_autopilot_continuation_entrypoints"})
+
+    source_runbook = handoff.get("deep_autopilot_source_runbook")
+    result["deep_autopilot_source_runbook_present"] = (
+        isinstance(source_runbook, dict)
+        and source_runbook.get("type") == "deep_autopilot_source_runbook"
+    )
+    if not result["deep_autopilot_source_runbook_present"]:
+        failures.append({"role": "agent_handoff", "filename": str(agent_handoff_name), "reason": "missing_deep_autopilot_source_runbook"})
+        source_runbook = {}
+    lanes = source_runbook.get("lanes") if isinstance(source_runbook, dict) else None
+    result["source_runbook_valid"] = (
+        isinstance(lanes, list)
+        and len(lanes) >= 8
+        and int(source_runbook.get("automatic_lane_count") or 0) >= 8
+        and all(
+            isinstance(item, dict)
+            and item.get("user_prompt_required") is False
+            and item.get("stop_on_failure") is False
+            for item in lanes
+        )
+    )
+    if not result["source_runbook_valid"]:
+        failures.append({"role": "agent_handoff", "filename": str(agent_handoff_name), "reason": "invalid_deep_autopilot_source_runbook"})
 
     report_visibility = handoff.get("report_visibility")
     result["report_visibility_present"] = isinstance(report_visibility, dict)
@@ -381,6 +447,23 @@ def _verify_agent_handoff(manifest: dict[str, Any], manifest_path: Path) -> dict
             failures.append({"role": "report_exports.directory_bundle", "reason": "verifier_output_fields_capital_relationship_crosswalk_missing"})
         if isinstance(verifier_output_fields, list) and "agent_handoff.relationship_resolution_present" not in verifier_output_fields:
             failures.append({"role": "report_exports.directory_bundle", "reason": "verifier_output_fields_relationship_resolution_missing"})
+        for field in (
+            "agent_handoff.source_preflight_present",
+            "agent_handoff.source_preflight_contract_valid",
+            "agent_handoff.manifest_summary_source_preflight_present",
+            "agent_handoff.manifest_summary_source_preflight_valid",
+            "agent_handoff.deep_autopilot_plan_present",
+            "agent_handoff.deep_autopilot_source_runbook_present",
+            "agent_handoff.continuation_entrypoints_valid",
+            "agent_handoff.source_runbook_valid",
+        ):
+            if isinstance(verifier_output_fields, list) and field not in verifier_output_fields:
+                failures.append(
+                    {
+                        "role": "report_exports.directory_bundle",
+                        "reason": f"verifier_output_fields_{field.split('.')[-1]}_missing",
+                    }
+                )
 
     next_actions = handoff.get("next_actions", [])
     first_action = decision_digest.get("first_action", {}) if isinstance(decision_digest, dict) else {}
