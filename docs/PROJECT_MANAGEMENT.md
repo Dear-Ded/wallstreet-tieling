@@ -34,6 +34,7 @@ Use these files in this order:
 6. `docs/API_CONTRACTS.md`
 7. `release/variants.yaml`
 8. `core/development_requirements.py`
+9. `docs/WORKTREE_REVIEW_QUEUE.md`
 
 ## Work Lanes
 
@@ -67,6 +68,8 @@ branch names, or test commands. Those are agent responsibilities.
   superseded.
 - Do not remove dirty worktrees until their changes have been reviewed,
   migrated, or explicitly discarded.
+- Track dirty auxiliary worktrees in `docs/WORKTREE_REVIEW_QUEUE.md` before
+  removal. Use `npm run worktrees:audit` for the current machine-readable view.
 
 ## Definition Of Done
 
@@ -164,6 +167,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-hygiene-audit.ps
 npm run hygiene:audit
 npm run hygiene:clean:dry
 npm run hygiene:clean
+npm run worktrees:audit
+npm run worktrees:audit:json
 ```
 
 `tools/local-hygiene-clean.ps1` intentionally excludes `.codex-autonomous/`,
@@ -172,6 +177,16 @@ npm run hygiene:clean
 auxiliary worktrees. Those paths can contain coordination state, expensive
 artifacts, local authorization config, or unmerged work and must be reviewed
 before cleanup.
+
+NightPilot controller note: invoke the controller with the bundled Codex Python
+when plain `python` is unavailable or exits without output:
+
+```powershell
+& "<bundled-codex-python>" "<codex-autonomous-dev-controller>" sleep-ready
+```
+
+Do not diagnose that failure as corrupt project state until the bundled Python
+path has been tried.
 
 ## Current Post-Release State
 

@@ -43,6 +43,8 @@ Core rules:
   `npm run hygiene:clean:dry` before cleanup. Do not remove dirty auxiliary
   worktrees, `.codex-autonomous/`, `.workbuddy/`, `.colab/`, `deliverables/`,
   `audit_reports/`, `node_modules/`, or local source config without review.
+- Use `npm run worktrees:audit` and `docs/WORKTREE_REVIEW_QUEUE.md` before
+  migrating or removing auxiliary worktrees.
 - Do not stage the whole dirty tree. Review `git status --short` and stage only
   intentional files.
 

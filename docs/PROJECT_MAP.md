@@ -60,6 +60,11 @@ The current product must:
       premium full-fidelity HTML report, and a third owner-confirmed output form.
 - [ ] Public repository hygiene: keep release commits narrow, reviewed, and free
       of runtime artifacts, local paths, generated reports, or private coordination files.
+- [ ] Dirty auxiliary worktree review: use `docs/WORKTREE_REVIEW_QUEUE.md` and
+      `npm run worktrees:audit` before removing or migrating old NightPilot lanes.
+- [ ] Beautification isolation integration: use
+      `docs/BEAUTIFICATION_ISOLATION_REVIEW.md` before moving premium HTML work
+      into production report exports.
 
 ### Future Version Only
 
@@ -123,3 +128,5 @@ Current evidence is recorded in:
 - `docs/RELEASE_PORTAL.md`
 - `docs/SUPERPOWERS_FINAL_REVIEW.md`
 - `core/release_contract.py`
+- `docs/WORKTREE_REVIEW_QUEUE.md`
+- `docs/BEAUTIFICATION_ISOLATION_REVIEW.md`

@@ -61,7 +61,8 @@ Done:
 In progress:
 
 - Post-release local hygiene: remove clean stale worktrees, preserve dirty
-  auxiliary worktrees for review, and keep runtime artifacts ignored.
+  auxiliary worktrees for review, and keep runtime artifacts ignored. Current
+  queue is tracked in `docs/WORKTREE_REVIEW_QUEUE.md`.
 - Formal project management: use `docs/PROJECT_MANAGEMENT.md` as the operating
   cadence for work lanes, release gates, branch rules, and cleanup.
 - Requirement intake: use `docs/REQUIREMENT_INTAKE.md` to translate abstract
@@ -83,6 +84,10 @@ Next:
   narrow branches or archive them outside the active workspace.
 - Prepare marketplace/operator screenshots and submission assets for the
   published desktop-agent alpha.
+- Review the beautification isolation lane through
+  `docs/BEAUTIFICATION_ISOLATION_REVIEW.md`; migrate only the premium HTML
+  packet contract, verifier gates, acceptance checklist, and selected final
+  screenshots into production work.
 - Close Agent delivery gaps first: host-specific setup docs, runnable smoke
   tests, uniform packet/export fields, agent-handoff schemas, decision digest,
   delivery checklist, and report bundle verification.
