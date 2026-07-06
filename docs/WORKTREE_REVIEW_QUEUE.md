@@ -11,6 +11,19 @@ Last reviewed from main workspace: `2026-07-06`.
 
 Latest high-value migration pass: `2026-07-06`.
 
+Latest hygiene snapshot:
+
+- Primary worktree: clean.
+- Dirty auxiliary worktrees: 22.
+- Clean auxiliary worktrees: 0.
+- Stale NightPilot ready tasks: 0 after local closure of the already-completed
+  Superpowers final review task.
+- Active NightPilot continuation tasks: 3 ready post-release tasks for
+  worktree diff triage, marketplace asset readiness, and report-experience
+  production integration planning.
+- Public snapshot: `5ea8dab docs: strengthen public homepage positioning`.
+- Development branch: `afe448b docs: strengthen bilingual homepage positioning`.
+
 Health commands:
 
 ```powershell

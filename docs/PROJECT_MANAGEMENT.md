@@ -194,17 +194,42 @@ Public snapshot published:
 
 - Remote: `public`
 - Branches: `master`, `main`
-- Commit: `19470c3 chore: publish desktop agent alpha snapshot`
+- Commit: `5ea8dab docs: strengthen public homepage positioning`
 
 Development branch synchronized:
 
 - Remote: `origin`
 - Branch: `codex/security-ci-hardening`
-- Commit: `056f15d docs: polish public project homepage`
+- Commit: `afe448b docs: strengthen bilingual homepage positioning`
+
+Post-release public homepage status:
+
+- README is bilingual and public-safe.
+- The Chinese homepage narrative is now the primary product positioning layer.
+- The 13-role anthropomorphic expert team is documented as the core
+  differentiation, not a decorative feature.
+- `docs/assets/brand-card.svg` is packaged as a lightweight local homepage
+  decoration; no remote image dependency was added.
+
+NightPilot state:
+
+- Latest `sleep-ready` check reported ready for unattended run with no auth or
+  network blockers.
+- Queue size is 37 with three ready post-release tasks:
+  `p1-post-release-worktree-diff-triage`,
+  `p1-marketplace-asset-readiness-plan`, and
+  `p1-report-experience-production-integration-map`.
+- The stale `p1-superpowers-update-final-review` ready task was closed locally
+  as verified after `docs/SUPERPOWERS_FINAL_REVIEW.md`,
+  `npm run release:privacy-scan`, `npm pack --dry-run --json`, and release
+  hygiene tests proved that the review already exists.
+- NightPilot runtime state remains local-only and must not be published.
 
 Remaining local hygiene queue:
 
 - Review dirty auxiliary worktrees before removal.
+- Current hygiene audit reports the primary worktree clean and 22 dirty
+  auxiliary worktrees requiring review before removal.
 - Decide whether ignored historical `audit_reports/`, top-level scratch
   scripts, and local backup files should be archived outside the repository.
 - Keep `deliverables/` until the premium HTML/report track is explicitly
