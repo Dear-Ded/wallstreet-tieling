@@ -64,6 +64,8 @@ In progress:
   auxiliary worktrees for review, and keep runtime artifacts ignored.
 - Formal project management: use `docs/PROJECT_MANAGEMENT.md` as the operating
   cadence for work lanes, release gates, branch rules, and cleanup.
+- Requirement intake: use `docs/REQUIREMENT_INTAKE.md` to translate abstract
+  product requests into scoped plans, branches, files, and verification.
 - Deep commercial due-diligence orchestration across money, goods, people,
   legal, sanctions, ownership, and public-record dimensions.
 - Desktop-agent host parity: shared tool discovery, one-click investigation,

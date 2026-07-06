@@ -27,12 +27,13 @@ Future-only tracks:
 Use these files in this order:
 
 1. `PROJECT_TASKBOARD.md`
-2. `docs/PROJECT_MAP.md`
-3. `docs/RELEASE_PORTAL.md`
-4. `docs/DESKTOP_AGENT_ALPHA_DELIVERY.md`
-5. `docs/API_CONTRACTS.md`
-6. `release/variants.yaml`
-7. `core/development_requirements.py`
+2. `docs/REQUIREMENT_INTAKE.md`
+3. `docs/PROJECT_MAP.md`
+4. `docs/RELEASE_PORTAL.md`
+5. `docs/DESKTOP_AGENT_ALPHA_DELIVERY.md`
+6. `docs/API_CONTRACTS.md`
+7. `release/variants.yaml`
+8. `core/development_requirements.py`
 
 ## Work Lanes
 
@@ -44,6 +45,16 @@ Use these files in this order:
 | Source admission | Source registry, public/authorized adapters, resilience | `core/connector_registry.py`, `adapters/`, `docs/SEARCH_INTEGRATION_LEDGER.md` |
 | Public release | README, package list, hygiene, package dry-run | `README.md`, `package.json`, `docs/`, `tools/` |
 | Local hygiene | Worktrees, caches, runtime state, ignored outputs | local-only; do not commit generated files |
+
+## Requirement Intake
+
+The maintainer may describe goals with abstract product language rather than
+technical names. Treat that as normal input. Use `docs/REQUIREMENT_INTAKE.md`
+to translate requests into scoped lanes, files, verification, and taskboard
+updates.
+
+Do not require the maintainer to provide schemas, class names, endpoint names,
+branch names, or test commands. Those are agent responsibilities.
 
 ## Branch And Worktree Rules
 
@@ -93,6 +104,59 @@ After each release or long unattended session:
 - Keep local state out of git: `.codex-autonomous/`, `.workbuddy/`, `.colab/`,
   local source credentials, private reports, and generated artifacts.
 - Run `git worktree prune` after removing worktrees.
+- Run `powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-hygiene-audit.ps1`
+  to inspect managed local caches, logs, generated outputs, and auxiliary
+  worktrees.
+
+## Local Directory Policy
+
+| Path class | Policy |
+| --- | --- |
+| Source tree (`core/`, `adapters/`, `api/`, `bin/`, `lib/`) | Commit only reviewed runtime changes with tests. |
+| Public docs (`README.md`, `docs/`, `PROJECT_TASKBOARD.md`) | Keep public-safe, current, and linked from README where useful. |
+| Release metadata (`package.json`, `release/`, `deploy/`) | Treat as release-critical; run package dry-run after edits. |
+| Runtime state (`.codex-autonomous/`, `.workbuddy/`, `.colab/`) | Local-only. Do not commit. Keep only while useful for coordination. |
+| Generated outputs (`output/`, `outputs/`, `.tmp/`, pytest scratch dirs) | Delete after verification unless needed for an active bug. |
+| Local secrets/config (`config/datasources_qyyjt.yaml`, cookies, profiles) | Local-only. Never package or commit. |
+| Historical scratch reports (`audit_reports/`, ignored docs, backups) | Archive outside the active repository or delete after review. |
+| Auxiliary worktrees | Remove if clean and superseded; preserve if dirty until reviewed. |
+
+## Cache And Log Policy
+
+Managed local-only paths:
+
+- `.tmp/`: acceptance runs, npm package privacy workspaces, short-lived smoke
+  artifacts. Delete after release gates pass.
+- `.pytest_cache/`, `.coverage`, `__pycache__/`: test/runtime caches. Delete
+  after test sessions when doing release cleanup.
+- `output/`, `outputs/`: generated reports and local API outputs. Keep only
+  when tied to an active bug or screenshot task.
+- `tmp-events.jsonl`: local event stream scratch file. Delete after debugging.
+- `.codex-autonomous/`: NightPilot state. Keep while unattended development is
+  active; do not publish or package.
+- `.workbuddy/`, `.colab/`: local collaborator state. Keep local only.
+- `node_modules/`, `package-lock.json`: local dependency/runtime state for this
+  package. Do not include in public package contents unless intentionally
+  changing dependency policy.
+- `config/datasources_qyyjt.yaml`: local authorized-source configuration. Never
+  commit or package.
+- `audit_reports/`, ignored top-level notes, backup HTML files, and helper
+  scripts: historical local material. Archive outside the active repo or delete
+  after review.
+
+Retention default:
+
+- Release caches: delete immediately after release verification.
+- Test caches: delete after focused/full test run unless debugging a failure.
+- Local investigation outputs: keep only with an owner and active reason.
+- Dirty auxiliary worktrees: review before deletion; never bulk-delete blindly.
+
+Health command:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-hygiene-audit.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-hygiene-audit.ps1 -Json
+```
 
 ## Current Post-Release State
 

@@ -9,6 +9,7 @@ Before taking implementation work, read:
 - `CLAUDE.md`
 - `PROJECT_TASKBOARD.md`
 - `docs/PROJECT_MANAGEMENT.md`
+- `docs/REQUIREMENT_INTAKE.md`
 - `docs/PROJECT_MAP.md`
 - `docs/SEARCH_INTEGRATION_LEDGER.md`
 - `docs/API_CONTRACTS.md`
@@ -18,6 +19,13 @@ Before taking implementation work, read:
 Core rules:
 
 - Translate product-language requests into scoped engineering tasks and tests.
+- The user may describe needs with abstract, non-technical language. Agents are
+  responsible for product interpretation, planning, file selection, and
+  verification strategy.
+- Do not require the user to provide schemas, class names, endpoint names,
+  branch names, or test commands.
+- Substantial development should use a narrow branch/worktree lane unless the
+  change is documentation-only or a small follow-up.
 - Current release is desktop-agent first: Codex plugin/skill, Claude Code,
   Hermes-style desktop agents, Doubao Office Task Mode, OpenClaude-compatible
   agents, and WorkBuddy-style expert-team surfaces.

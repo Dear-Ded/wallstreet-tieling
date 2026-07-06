@@ -201,6 +201,7 @@ python -m json.tool .codex-plugin/plugin.json
 
 - [Project map](docs/PROJECT_MAP.md)
 - [Project management system](docs/PROJECT_MANAGEMENT.md)
+- [Requirement intake](docs/REQUIREMENT_INTAKE.md)
 - [Release portal](docs/RELEASE_PORTAL.md)
 - [API contracts](docs/API_CONTRACTS.md)
 - [Desktop Agent Alpha delivery](docs/DESKTOP_AGENT_ALPHA_DELIVERY.md)
@@ -222,6 +223,12 @@ release/      Desktop-agent release variant contract
 skills/       Agent skill package
 sub-skills/   Anthropomorphic expert role prompts
 tools/        Smoke tests, acceptance runner, package privacy scanner
+```
+
+Local hygiene audit:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-hygiene-audit.ps1
 ```
 
 ## License
