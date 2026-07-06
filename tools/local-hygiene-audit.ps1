@@ -7,6 +7,11 @@ $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $root
 
+function Normalize-PathForCompare {
+  param([string]$Path)
+  return ([IO.Path]::GetFullPath($Path)).TrimEnd("\", "/").Replace("\", "/")
+}
+
 function Get-PathSizeMb {
   param([string]$Path)
   if (-not (Test-Path -LiteralPath $Path)) { return 0 }
@@ -72,7 +77,9 @@ $payload = [pscustomobject]@{
   managed_paths = $pathRows
   worktrees = $worktreeRows
   dirty_worktree_count = @($worktreeRows | Where-Object { $_.dirty }).Count
-  clean_aux_worktree_count = @($worktreeRows | Where-Object { -not $_.dirty -and $_.path -ne $root }).Count
+  clean_aux_worktree_count = @($worktreeRows | Where-Object {
+    -not $_.dirty -and (Normalize-PathForCompare $_.path) -ne (Normalize-PathForCompare $root)
+  }).Count
 }
 
 if ($Json) {

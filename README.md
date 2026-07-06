@@ -2,36 +2,64 @@
 
 > 华尔街驻铁岭办事处：把一个主体名称，变成一份可追溯、可交接、可复核的深度商业尽调包。
 
+![Wallstreet Tieling brand card](docs/assets/brand-card.svg)
+
 [![Release](https://img.shields.io/badge/release-0.5.0_alpha-0f766e)](#current-release)
 [![Desktop Agents](https://img.shields.io/badge/desktop_agents-Codex%20%7C%20Claude%20Code%20%7C%20Hermes%20%7C%20OpenClaude-1f2937)](#desktop-agent-surfaces)
 [![MCP](https://img.shields.io/badge/MCP-compatible-2563eb)](deploy/mcp-server.json)
 [![License](https://img.shields.io/badge/license-MIT-111827)](LICENSE)
 
-Evidence-first enterprise intelligence, due-diligence, and risk-discovery
-toolkit for desktop agents, local operators, and MCP-compatible workflows.
+**中文** | [English](#english-overview)
 
-Wallstreet Tieling turns a company name into a provenance-preserving
-investigation packet: source routing, evidence ledger, relationship graph,
-capital-risk panel, report exports, and a 13-role anthropomorphic expert-team
-handoff surface.
+Wallstreet Tieling is an evidence-first enterprise intelligence, due-diligence,
+and risk-discovery toolkit for desktop agents, local operators, and
+MCP-compatible workflows.
 
-中文 | [English](#english-overview)
+It turns a company name into a provenance-preserving investigation packet:
+source routing, evidence ledger, relationship graph, capital-risk panel, report
+exports, and a 13-role anthropomorphic expert-team handoff surface.
 
 ## 中文简介
 
-Wallstreet Tieling / 华尔街驻铁岭办事处 是一个面向专业用户和桌面 Agent 的
-企业尽调与风险发现工具。它不是“查一下公司简介”的轻量玩具，而是围绕证据、
-来源、置信度、关系、资本风险、报告交付和 Agent 接力设计的调查工作台。
+Wallstreet Tieling / 华尔街驻铁岭办事处，是一个面向专业用户、桌面 Agent
+和本地工作流的企业尽调与风险发现运行时。它不做“查一下公司简介”的轻量回答，
+而是把一次调查拆成可执行、可复核、可交接的工作包：先找线索，再验来源，再建关系，
+最后输出报告和下一步核验队列。
 
-输入一个主体名称后，系统会生成结构化调查包：
+我们的产品气质不是“万能搜索框”，而是一个会干活的尽调班子。用户输入主体名称后，
+系统会围绕公开来源、授权来源和本地验证数据，自动组织调查路径，并把结果整理成：
 
-- 公开、授权或许可来源的查询计划与证据链。
-- 主体画像、风险事件、关系图谱、资本风险和后续核验队列。
+- 主体画像、证据台账、风险事件、关系图谱、资本风险和核验队列。
 - Markdown、JSON、便携 HTML、DOCX 元数据、目录包和 `agent-handoff.json`。
-- Codex、Claude Code、Hermes、豆包办公任务模式、OpenClaude 类开源 Agent、
-  WorkBuddy 分支和通用 MCP/CLI/API 的交付面。
+- Codex、Claude Code、Hermes、OpenClaude、豆包办公任务模式、WorkBuddy 和通用 MCP/CLI/API 的交付面。
+- 可被下一个 Agent 继续接力的结构化上下文，而不是一段看完就断的聊天记录。
 
 品牌定位很简单：**铁岭的外壳，华尔街的尽调标准；东北式不装，证据链要硬。**
+
+## 核心竞争力：拟人化专家团
+
+拟人化不是皮肤，也不是几个角色名。它是 Wallstreet Tieling 的核心生产力设计。
+系统内置 13 个专家角色，把复杂尽调拆成不同工种协同推进：有人盯来源，有人看资本，
+有人拆关系，有人查异常，有人负责把证据讲清楚。它的目标不是“更会聊天”，而是让
+Agent 像一个小型尽调团队一样分工、接力、复盘。
+
+这套机制解决三个真实问题：
+
+- **不丢上下文**：每个角色接手时都有结构化证据、待核验事项和下一步动作。
+- **不混淆判断**：事实、线索、推断、风险提示分层展示，避免把“像是”写成“就是”。
+- **不止会输出**：报告之外还保留关系图、来源健康度、验证配方和后续任务队列。
+
+一句话：不是让 AI 装成人，而是让 AI 像专业团队一样工作。
+
+## 网感版理解
+
+传统工具像“截图发群里问一句有没有懂的”，Wallstreet Tieling 更像“把人拉进作战室，
+白板、证据袋、关系网、会议纪要和下一步分工都摆好”。它保留了开源项目该有的严谨，
+但不想长成一份冷冰冰的说明书。
+
+如果说普通企业查询是“查个底”，Wallstreet Tieling 想做的是“把底稿铺开”：
+来源从哪来、关系怎么连、风险为什么被标记、哪些结论还需要人复核，都要能看见。
+我们要的是可打印、可交付、可被追问的调查成果，不是漂亮但空心的总结。
 
 ## English Overview
 
@@ -56,8 +84,8 @@ on the harder operational layer:
   verifier recipes, source-health state, and agent-autorun fields.
 - **Professional defaults**: safe public-mode behavior first; advanced or
   credentialed sources stay explicit and auditable.
-- **Personality without sloppiness**: 13 anthropomorphic expert roles can help
-  route work while preserving machine-readable fields.
+- **Personality without sloppiness**: 13 anthropomorphic expert roles route work
+  like a due-diligence desk while preserving machine-readable fields.
 
 ## Current Release
 
