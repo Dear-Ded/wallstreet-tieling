@@ -29,10 +29,10 @@ Scope: desktop-agent-first release roadmap for this repository.
 
 Done:
 
-- Public GitHub desktop-agent alpha snapshot published to `public/master` and
-  `public/main` at `19470c3 chore: publish desktop agent alpha snapshot`.
-- Main development branch `codex/security-ci-hardening` synchronized to
-  `origin` at `056f15d docs: polish public project homepage`.
+- Public GitHub desktop-agent alpha snapshot has been cleaned and synchronized
+  to `public/master` and `public/main`.
+- Main development branch `codex/security-ci-hardening` is synchronized with
+  the latest public-surface cleanup and release hygiene hardening.
 - Public homepage standardized with bilingual positioning, badges, quick start,
   capability matrix, verification gates, and project layout.
 - One-click investigation packet: CLI/API/MCP path, evidence ledger, quality
@@ -62,9 +62,8 @@ In progress:
 
 - Post-release local hygiene: remove clean stale worktrees, preserve dirty
   auxiliary worktrees for review, and keep runtime artifacts ignored. Current
-  queue is tracked in `docs/WORKTREE_REVIEW_QUEUE.md`.
-- Formal project management: use `docs/PROJECT_MANAGEMENT.md` as the operating
-  cadence for work lanes, release gates, branch rules, and cleanup.
+  evidence comes from `npm run hygiene:audit:json` and
+  `npm run worktrees:audit:json`.
 - Requirement intake: use `docs/REQUIREMENT_INTAKE.md` to translate abstract
   product requests into scoped plans, branches, files, and verification.
 - Deep commercial due-diligence orchestration across money, goods, people,
@@ -81,13 +80,12 @@ In progress:
 Next:
 
 - Review dirty auxiliary worktrees and migrate any still-useful changes into
-  narrow branches or archive them outside the active workspace.
+  the main branch or archive them outside the active workspace.
 - Prepare marketplace/operator screenshots and submission assets for the
   published desktop-agent alpha.
-- Review the beautification isolation lane through
-  `docs/BEAUTIFICATION_ISOLATION_REVIEW.md`; migrate only the premium HTML
-  packet contract, verifier gates, acceptance checklist, and selected final
-  screenshots into production work.
+- Review the beautification isolation lane with `npm run worktrees:audit:json`;
+  migrate only the premium HTML packet contract, verifier gates, acceptance
+  checklist, and selected final screenshots into production work.
 - Close Agent delivery gaps first: host-specific setup docs, runnable smoke
   tests, uniform packet/export fields, agent-handoff schemas, decision digest,
   delivery checklist, and report bundle verification.

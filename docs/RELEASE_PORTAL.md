@@ -28,6 +28,7 @@ npx wallstreet-tieling --objective-audit
 ```
 
 Operator checklist: `docs/DESKTOP_AGENT_ALPHA_DELIVERY.md`.
+Asset checklist: `docs/RELEASE_ASSET_CHECKLIST.md`.
 
 Expected current state:
 

@@ -1,6 +1,6 @@
 # Wallstreet Tieling
 
-> 华尔街驻铁岭办事处：铁岭的外壳，华尔街的尽调标准。输入一个主体名，拉起一间本地尽调办公室。
+> 华尔街驻铁岭办事处：铁岭的外壳，华尔街的尽调标准。你给一个主体名，我们把来源、关系、风险、底稿和下一步动作一起端上桌。
 
 ![Wallstreet Tieling brand card](docs/assets/brand-card.svg)
 
@@ -27,6 +27,10 @@ Wallstreet Tieling / 华尔街驻铁岭办事处，是给专业用户和桌面 A
 
 一句话：**别装，别糊，别把“像是”写成“就是”。**
 
+如果别的工具是在“查个底”，Wallstreet Tieling 想做的是“把底稿铺开”。
+不端着，不玄学，不拿一段像结论的话糊弄人。能查到的，就把证据挂上去；
+没查实的，就老老实实打成线索；还要继续追的，直接给下一步动作和接力位。
+
 输入一个主体名称后，系统会交付一份可继续推进的调查包：
 
 - 有来源、有置信度、有核验状态的证据链。
@@ -36,6 +40,10 @@ Wallstreet Tieling / 华尔街驻铁岭办事处，是给专业用户和桌面 A
   WorkBuddy expert-team surface 和通用 MCP/CLI/API 的交付面。
 
 品牌定位很简单：**东北式不装，华尔街式留痕；铁岭牌子挂门口，证据链要硬到底。**
+
+你也可以把它理解成一间开在本地的尽调办公室：门口是铁岭牌子，里面按华尔街标准归档。
+案子扔进来，出来的不该是一段漂亮废话，而是一份能打印、能复核、能交给下一个 Agent
+继续往下查的调查包。
 
 ## 核心竞争力：拟人化专家团
 
@@ -54,15 +62,14 @@ Agent 做成一个只会输出总结的搜索框，而是把它做成一间会�
 
 ## 网感版理解
 
-如果普通企业查询是“查个底”，Wallstreet Tieling 想做的是“把底稿铺开”。
-它不负责端着，不负责玄学，也不替用户装作全知；它负责把能查的、查到的、没查实的、
-需要继续追的，分层摆出来。
+这不是“AI 帮我总结一下”，这是“把案子摆到桌上，让一队人按证据链往下查”。
 
-你可以把它理解成一个开在本地的尽调办公室：门口挂着铁岭牌子，里面按华尔街标准归档。
-输入主体名，相当于把案子扔进办公室；出来的不是一段漂亮废话，而是一份能打印、能复核、
-能交给下一个 Agent 继续推进的调查包。
+普通查询工具爱给你一个像样的答案，Wallstreet Tieling 更在意给你一套能继续干活的底稿。
+看起来像结论，不算结论；挂不上来源，不算结果；经不起追问，就不能往报告里写死。
 
-这不是“AI 帮我总结一下”。这是“把案子放到桌上，让一队人按证据链往下查”。
+我们想交付的不是一个会聊天的壳，而是一套能落地的调查生产线：
+有人盯来源，有人拆关系，有人看资本，有人挑异常，有人负责把证据讲明白。
+拟人化不是装饰，而是把复杂调查拆成可协作、可复核、可接力的产品结构。
 
 ## English Overview
 
@@ -233,6 +240,7 @@ python -m json.tool .codex-plugin/plugin.json
 - [Project map](docs/PROJECT_MAP.md)
 - [Requirement intake](docs/REQUIREMENT_INTAKE.md)
 - [Release portal](docs/RELEASE_PORTAL.md)
+- [Release asset checklist](docs/RELEASE_ASSET_CHECKLIST.md)
 - [API contracts](docs/API_CONTRACTS.md)
 - [Desktop Agent Alpha delivery](docs/DESKTOP_AGENT_ALPHA_DELIVERY.md)
 - [Agent host smoke checklist](docs/AGENT_HOST_SMOKE_CHECKLIST.md)

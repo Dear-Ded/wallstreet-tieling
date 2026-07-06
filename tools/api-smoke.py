@@ -190,7 +190,7 @@ def main() -> None:
 
         objective_audit = _json(client.get("/api/objective-audit"), "GET /api/objective-audit")["data"]
         _assert(objective_audit["type"] == "objective_completion_audit", "objective-audit type mismatch")
-        _assert(objective_audit["status"] == "complete", "objective-audit must be complete after final review")
+        _assert(objective_audit["status"] == "complete", "objective-audit must be complete after release hygiene closure")
         _assert(objective_audit["completion_percent"] == 100, "objective-audit completion unexpectedly low")
         _assert(
             objective_audit["release_gate"]["delivery_audit_status"] == "pass",
@@ -201,8 +201,8 @@ def main() -> None:
         _assert(requirement_status["qyyjt_public_origin_mapping"] == "complete", "objective-audit QYYJT incomplete")
         _assert(requirement_status["desktop_agent_delivery"] == "complete", "objective-audit desktop agent delivery incomplete")
         _assert(
-            requirement_status["superpowers_final_review"] == "complete",
-            "objective-audit Superpowers final review incomplete",
+            requirement_status["public_release_hygiene"] == "complete",
+            "objective-audit public release hygiene incomplete",
         )
         _assert(objective_audit["failed_requirements"] == [], "objective-audit failed requirements must be empty")
 

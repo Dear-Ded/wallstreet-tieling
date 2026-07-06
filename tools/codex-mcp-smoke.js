@@ -125,9 +125,134 @@ function parseJson(raw, label) {
   }
 }
 
+function parseMcpToolJson(result, label) {
+  assert(!result.isError, `${label} returned MCP error content`);
+  assert(Array.isArray(result.content) && result.content.length >= 1, `${label} MCP content missing`);
+  const first = result.content[0];
+  assert(first.type === 'text' && typeof first.text === 'string', `${label} MCP text content missing`);
+  return parseJson(first.text, label);
+}
+
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
+  }
+}
+
+async function runMcpFunctionalPathSmoke() {
+  const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
+  const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio.js');
+  const exportDir = path.join(SMOKE_DIR, `mcp-export-${process.pid}`);
+  const mcpStore = path.join(SMOKE_DIR, `mcp-risk-events-${process.pid}.jsonl`);
+  let stderr = '';
+  const transport = new StdioClientTransport({
+    command: NODE,
+    args: [path.join(ROOT, 'lib', 'mcp-server.js')],
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      PYTHONUTF8: '1',
+      WST_MCP_TIMEOUT_MS: process.env.WST_MCP_TIMEOUT_MS || '120000',
+      ...(PYTHON ? { WST_PYTHON: PYTHON } : {})
+    },
+    stderr: 'pipe'
+  });
+  const stderrStream = transport.stderr;
+  if (stderrStream) {
+    stderrStream.on('data', (chunk) => {
+      stderr += chunk.toString('utf8');
+    });
+  }
+  const client = new Client({ name: 'wallstreet-tieling-codex-smoke', version: '0.5.0-smoke' });
+  try {
+    await client.connect(transport);
+    assert(stderr.includes('Wallstreet Tieling MCP server started'), 'MCP server startup trace missing');
+
+    const listed = await client.listTools();
+    const toolNames = new Set(listed.tools.map((tool) => tool.name));
+    for (const name of [
+      'load_skill',
+      'release_readiness',
+      'connector_catalog',
+      'development_requirements',
+      'agent_tool_adapters',
+      'retrieval_plan',
+      'investigate_company',
+      'aggregate_subject'
+    ]) {
+      assert(toolNames.has(name), `MCP listed tools missing ${name}`);
+    }
+    const investigateTool = listed.tools.find((tool) => tool.name === 'investigate_company');
+    const retrievalTool = listed.tools.find((tool) => tool.name === 'retrieval_plan');
+    assert(investigateTool.inputSchema.properties.export_dir, 'MCP investigate_company export_dir schema missing');
+    assert(investigateTool.inputSchema.properties.query_timeout_seconds.maximum === 120, 'MCP query timeout schema mismatch');
+    assert(retrievalTool.inputSchema.properties.limit.maximum === 200, 'MCP retrieval_plan limit schema mismatch');
+
+    const skill = await client.callTool({ name: 'load_skill', arguments: { brief: true } });
+    assert(skill.content[0].text.includes('Wallstreet Tieling'), 'MCP load_skill brief missing product name');
+
+    const mcpRetrievalPlan = parseMcpToolJson(
+      await client.callTool({
+        name: 'retrieval_plan',
+        arguments: { company_name: 'Demo Codex MCP Retrieval Co., Ltd.', limit: 4 }
+      }),
+      'mcp_retrieval_plan'
+    );
+    assert(mcpRetrievalPlan.seed_company === 'Demo Codex MCP Retrieval Co., Ltd.', 'MCP retrieval plan seed mismatch');
+    assert(mcpRetrievalPlan.tasks.length === 4, 'MCP retrieval plan limit not honored');
+    assert(mcpRetrievalPlan.tasks.every((task) => task.query && task.domain), 'MCP retrieval plan task shape mismatch');
+
+    let missingCompanyError = '';
+    try {
+      await client.callTool({ name: 'investigate_company', arguments: {} });
+    } catch (error) {
+      missingCompanyError = error.message || String(error);
+    }
+    assert(
+      missingCompanyError.includes('company_name/company/message is required'),
+      'MCP missing-subject error did not preserve actionable message'
+    );
+
+    const mcpInvestigation = parseMcpToolJson(
+      await client.callTool({
+        name: 'investigate_company',
+        arguments: {
+          company_name: 'Demo Codex MCP Functional Co., Ltd.',
+          offline_fixture: true,
+          store: mcpStore,
+          export_dir: exportDir,
+          query_timeout_seconds: 8
+        }
+      }),
+      'mcp_investigate_company'
+    );
+    assert(mcpInvestigation.type === 'investigation_packet', 'MCP investigation packet type mismatch');
+    assert(mcpInvestigation.summary?.company === 'Demo Codex MCP Functional Co., Ltd.', 'MCP investigation company mismatch');
+    assert(mcpInvestigation.enterprise_cognition?.investigation_audit_log, 'MCP investigation audit log missing');
+    assert(mcpInvestigation.source_failure_summary?.run_id, 'MCP source failure run_id trace missing');
+    assert(mcpInvestigation.report_exports?.directory_bundle?.agent_handoff?.filename === 'agent-handoff.json', 'MCP report output handoff contract missing');
+    const expectedFiles = [
+      mcpInvestigation.report_exports?.markdown?.filename,
+      mcpInvestigation.report_exports?.portable_html?.filename,
+      mcpInvestigation.report_exports?.json_packet?.filename,
+      mcpInvestigation.report_exports?.directory_bundle?.agent_handoff?.filename,
+      'report-export-manifest.json'
+    ].filter(Boolean);
+    for (const filename of expectedFiles) {
+      assert(fs.existsSync(path.join(exportDir, filename)), `MCP export output missing ${filename}`);
+    }
+    const manifest = parseJson(
+      fs.readFileSync(path.join(exportDir, 'report-export-manifest.json'), 'utf-8'),
+      'mcp_report_export_manifest'
+    );
+    assert(manifest.file_manifest?.item_count >= 4, 'MCP export manifest file_manifest missing');
+    assert(
+      manifest.agent_summary?.delivery_decision?.status,
+      'MCP export manifest delivery decision missing'
+    );
+    return { exportDir, mcpRetrievalPlan, mcpInvestigation };
+  } finally {
+    await client.close();
   }
 }
 
@@ -291,13 +416,13 @@ assert(deliveryAudit.coverage?.source_resilience?.covered === true, 'delivery_au
 assert(deliveryAudit.coverage?.report_visibility?.covered === true, 'delivery_audit report visibility coverage missing');
 const objectiveAudit = parseJson(run(['--objective-audit'], 'objective_audit'), 'objective_audit');
 assert(objectiveAudit.type === 'objective_completion_audit', 'objective_audit type mismatch');
-assert(objectiveAudit.status === 'complete', 'objective_audit must be complete after final review');
+assert(objectiveAudit.status === 'complete', 'objective_audit must be complete after release hygiene closure');
 assert(objectiveAudit.completion_percent === 100, 'objective_audit completion unexpectedly low');
 assert(objectiveAudit.release_gate?.delivery_audit_status === 'pass', 'objective_audit delivery gate mismatch');
 const objectiveStatuses = Object.fromEntries(objectiveAudit.requirements.map((item) => [item.id, item.status]));
 assert(objectiveStatuses.source_resilience === 'complete', 'objective_audit source resilience incomplete');
 assert(objectiveStatuses.qyyjt_public_origin_mapping === 'complete', 'objective_audit QYYJT incomplete');
-assert(objectiveStatuses.superpowers_final_review === 'complete', 'objective_audit Superpowers final review incomplete');
+assert(objectiveStatuses.public_release_hygiene === 'complete', 'objective_audit public release hygiene incomplete');
 assert(Array.isArray(objectiveAudit.failed_requirements) && objectiveAudit.failed_requirements.length === 0, 'objective_audit failed requirements must be empty');
 assert(
   release.runtime_delivery?.acceptance_status_counts?.proof_defined >= 7,
@@ -1101,8 +1226,33 @@ assert(
   'source_health_trend_snapshot must keep monitoring disabled'
 );
 
-console.log(JSON.stringify({
-  ok: true,
-  checked: ['connector_catalog', 'release_readiness', 'delivery_closure', 'release_preflight', 'delivery_audit', 'objective_audit', 'development_requirements', 'agent_tool_adapters', 'retrieval_plan', 'investigate_company'],
-  version: release.version
-}, null, 2));
+runMcpFunctionalPathSmoke()
+  .then((mcp) => {
+    console.log(JSON.stringify({
+      ok: true,
+      checked: [
+        'connector_catalog',
+        'release_readiness',
+        'delivery_closure',
+        'release_preflight',
+        'delivery_audit',
+        'objective_audit',
+        'development_requirements',
+        'agent_tool_adapters',
+        'retrieval_plan',
+        'investigate_company',
+        'mcp_stdio_server_startup',
+        'mcp_schema_list_tools',
+        'mcp_request_response_contract',
+        'mcp_error_reporting',
+        'mcp_audit_trace',
+        'mcp_report_output_paths'
+      ],
+      version: release.version,
+      mcp_export_dir: mcp.exportDir
+    }, null, 2));
+  })
+  .catch((error) => {
+    console.error(error.stack || error.message || String(error));
+    process.exit(1);
+  });

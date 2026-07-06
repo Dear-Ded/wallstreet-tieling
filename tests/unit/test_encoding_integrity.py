@@ -71,8 +71,11 @@ def test_mcp_server_exposes_executable_investigation_tool() -> None:
     assert "connector_catalog" in text
     assert "release_readiness" in text
     assert "development_requirements" in text
+    assert "retrieval_plan" in text
     assert "aggregate_subject" in text
     assert "investigate.py" in text
+    assert "retrieval_plan.py" in text
+    assert "export_dir" in text
     assert "source-resilience recovery step" in text
     assert "qyyjt_public_origin_handoff" in text
     assert "capital verification queue" in text
@@ -152,6 +155,7 @@ def test_claude_code_docs_reference_executable_mcp_and_catalogs() -> None:
     assert "connector_catalog" in mcp_config
     assert "release_readiness" in mcp_config
     assert "development_requirements" in mcp_config
+    assert "retrieval_plan" in mcp_config
     assert "aggregate_subject" in mcp_config
 
 
@@ -163,6 +167,10 @@ def test_codex_market_readiness_mentions_runtime_tools() -> None:
     assert "release_readiness" in text
     assert "development_requirements" in Path("tools/codex-mcp-smoke.js").read_text(encoding="utf-8")
     smoke_text = Path("tools/codex-mcp-smoke.js").read_text(encoding="utf-8")
+    assert "client.listTools" in smoke_text
+    assert "client.callTool" in smoke_text
+    assert "mcp_request_response_contract" in smoke_text
+    assert "mcp_report_output_paths" in smoke_text
     assert "relationship_evidence_backed_edge_count" in smoke_text
     assert "qyyjt_public_origin_handoff" in smoke_text
     assert "capital_verification_queue_count" in smoke_text

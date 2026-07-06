@@ -631,10 +631,12 @@ def test_package_scripts_and_mcp_manifest_stay_aligned():
         "objective_audit",
         "development_requirements",
         "agent_tool_adapters",
+        "retrieval_plan",
         "aggregate_subject",
     } <= manifest_tools
     investigate_tool = next(tool for tool in manifest["tools"] if tool["name"] == "investigate_company")
     aggregate_tool = next(tool for tool in manifest["tools"] if tool["name"] == "aggregate_subject")
+    retrieval_tool = next(tool for tool in manifest["tools"] if tool["name"] == "retrieval_plan")
     connector_tool = next(tool for tool in manifest["tools"] if tool["name"] == "connector_catalog")
     release_tool = next(tool for tool in manifest["tools"] if tool["name"] == "release_readiness")
     delivery_closure_tool = next(tool for tool in manifest["tools"] if tool["name"] == "delivery_closure")
@@ -664,6 +666,8 @@ def test_package_scripts_and_mcp_manifest_stay_aligned():
     assert "relationship graph audit summary" in investigate_tool["description"]
     assert aggregate_tool["inputSchema"]["required"] == ["subject_id"]
     assert "max_depth" in aggregate_tool["inputSchema"]["properties"]
+    assert retrieval_tool["inputSchema"]["required"] == ["company_name"]
+    assert retrieval_tool["inputSchema"]["properties"]["limit"]["maximum"] == 200
     assert "admission" in connector_tool["description"]
     assert "runtime_delivery" in release_tool["description"]
     assert "latest_acceptance_evidence" in release_tool["description"]
@@ -688,6 +692,7 @@ def test_package_scripts_and_mcp_manifest_stay_aligned():
     assert "directory_bundle.agent_handoff with delivery_files, bundle_integrity, bundle_verification, delivery_checklist, report_visibility, capital_risk_panel, source_strengthening, trust_boundaries, decision_digest, next_actions" in runtime_mcp
     assert "focused_test_command" in release_tool["description"]
     assert "query_timeout_seconds" in investigate_tool["inputSchema"]["properties"]
+    assert "export_dir" in investigate_tool["inputSchema"]["properties"]
     assert investigate_tool["inputSchema"]["properties"]["retrieval_concurrency"]["maximum"] == 20
     assert investigate_tool["inputSchema"]["properties"]["fanout_rounds"]["maximum"] == 3
     assert investigate_tool["inputSchema"]["properties"]["max_fanout_tasks"]["maximum"] == 80
@@ -1059,6 +1064,13 @@ def test_codex_mcp_smoke_covers_retrieval_plan_and_cognition_profile():
     assert "bin', 'retrieval_plan.py'" in text
     assert "'retrieval_plan'" in text
     assert "retrievalPlan.tasks.length === 5" in text
+    assert "runMcpFunctionalPathSmoke" in text
+    assert "client.listTools" in text
+    assert "client.callTool" in text
+    assert "mcp_schema_list_tools" in text
+    assert "mcp_error_reporting" in text
+    assert "mcp_report_output_paths" in text
+    assert "agent-handoff.json" in text
     assert "investigation.enterprise_cognition.investigation_report_card" in text
     assert "investigation.enterprise_cognition.subject_due_diligence_profile" in text
     assert "hasOwnProperty.call(investigation.enterprise_cognition, 'control_ownership')" in text

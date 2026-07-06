@@ -90,6 +90,7 @@ Latest local verification target:
 
 - Human-captured marketplace screenshots are still required before final
   submission.
+- Use `docs/RELEASE_ASSET_CHECKLIST.md` as the capture source of truth.
 - Screenshot content must show the manifest/skill, release readiness output,
   connector catalog output, and one offline fixture investigation packet.
 - The package must not include tokens, cookies, local browser profiles, local

@@ -240,13 +240,13 @@ assert(deliveryAudit.coverage?.source_resilience?.covered === true, 'delivery_au
 assert(deliveryAudit.coverage?.report_visibility?.covered === true, 'delivery_audit report visibility coverage missing');
 const objectiveAudit = parseJson(run(['--objective-audit'], 'objective_audit'), 'objective_audit');
 assert(objectiveAudit.type === 'objective_completion_audit', 'objective_audit type mismatch');
-assert(objectiveAudit.status === 'complete', 'objective_audit must be complete after final review');
+assert(objectiveAudit.status === 'complete', 'objective_audit must be complete after release hygiene closure');
 assert(objectiveAudit.completion_percent === 100, 'objective_audit completion unexpectedly low');
 assert(objectiveAudit.release_gate?.delivery_audit_status === 'pass', 'objective_audit delivery gate mismatch');
 const objectiveStatuses = Object.fromEntries(objectiveAudit.requirements.map((item) => [item.id, item.status]));
 assert(objectiveStatuses.source_resilience === 'complete', 'objective_audit source resilience incomplete');
 assert(objectiveStatuses.qyyjt_public_origin_mapping === 'complete', 'objective_audit QYYJT incomplete');
-assert(objectiveStatuses.superpowers_final_review === 'complete', 'objective_audit Superpowers final review incomplete');
+assert(objectiveStatuses.public_release_hygiene === 'complete', 'objective_audit public release hygiene incomplete');
 assert(Array.isArray(objectiveAudit.failed_requirements) && objectiveAudit.failed_requirements.length === 0, 'objective_audit failed requirements must be empty');
 assert(
   release.runtime_delivery?.acceptance_status_counts?.proof_defined >= 7,

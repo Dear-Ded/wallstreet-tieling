@@ -48,6 +48,9 @@ Capture these manually in the target host or package review UI:
   `evidence_ledger`, `quality_gate`, `enterprise_cognition`, and
   `report_exports`.
 
+Canonical naming, order, and capture rules live in
+`docs/RELEASE_ASSET_CHECKLIST.md`.
+
 ## Copy Boundaries
 
 Allowed:

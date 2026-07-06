@@ -40,6 +40,23 @@ function Get-Classification {
   return "needs-manual-review"
 }
 
+function Get-RecommendedAction {
+  param([string]$Classification, [int]$DirtyCount)
+
+  switch ($Classification) {
+    "primary-worktree" { return "keep-primary-clean" }
+    "remove-candidate-clean" { return "remove-worktree" }
+    "beautification-artifact-review" { return "review-for-report-ui-ideas-only" }
+    "migration-candidate-runtime-contract" { return "diff-and-merge-runtime-contract-changes" }
+    "migration-candidate-release-hygiene" { return "diff-and-merge-release-hygiene-changes" }
+    "migration-candidate-verifier" { return "diff-and-merge-verifier-changes" }
+    default {
+      if ($DirtyCount -gt 0) { return "manual-review-before-delete" }
+      return "remove-worktree"
+    }
+  }
+}
+
 $rows = foreach ($path in Get-WorktreePaths) {
   $branch = (git -C $path branch --show-current 2>$null)
   if (-not $branch) { $branch = "(detached)" }
@@ -53,6 +70,7 @@ $rows = foreach ($path in Get-WorktreePaths) {
     branch = $branch
     dirty_count = $status.Count
     classification = Get-Classification $path $name $status.Count $filesText
+    recommended_action = Get-RecommendedAction (Get-Classification $path $name $status.Count $filesText) $status.Count
     files = $files
   }
 }
@@ -60,5 +78,5 @@ $rows = foreach ($path in Get-WorktreePaths) {
 if ($Json) {
   $rows | ConvertTo-Json -Depth 5
 } else {
-  $rows | Format-Table name, branch, dirty_count, classification -AutoSize
+  $rows | Format-Table name, branch, dirty_count, classification, recommended_action -AutoSize
 }

@@ -26,6 +26,14 @@
             "type": "string",
             "description": "Company name or unified social credit identifier."
           },
+          "company": {
+            "type": "string",
+            "description": "Alias of company_name for API-style callers."
+          },
+          "message": {
+            "type": "string",
+            "description": "Natural one-line request; used when company_name/company is omitted."
+          },
           "depth": {
             "type": "string",
             "enum": [
@@ -48,6 +56,10 @@
             "type": "boolean",
             "default": false,
             "description": "Use multi-source demo fixture pack."
+          },
+          "export_dir": {
+            "type": "string",
+            "description": "Optional directory for DOCX, portable HTML, Markdown, JSON packet, agent-handoff, and manifest outputs."
           },
           "query_timeout_seconds": {
             "type": "number",
@@ -102,6 +114,37 @@
     {
       "name": "connector_catalog",
       "description": "Return datasource catalog, default-enabled connectors, production/admission decisions, routing blockers, and source policy."
+    },
+    {
+      "name": "retrieval_plan",
+      "description": "Build an evidence-first investigative retrieval plan from a single company subject before a full run. Returns seed company, graph, and bounded source/task plan.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "description": "Company name or unified social credit identifier."
+          },
+          "company": {
+            "type": "string",
+            "description": "Alias of company_name for API-style callers."
+          },
+          "message": {
+            "type": "string",
+            "description": "Natural one-line request; used when company_name/company is omitted."
+          },
+          "limit": {
+            "type": "number",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 200,
+            "description": "Limit returned retrieval tasks. 0 returns all tasks."
+          }
+        },
+        "required": [
+          "company_name"
+        ]
+      }
     },
     {
       "name": "release_readiness",
