@@ -127,9 +127,32 @@
 
 ---
 
+### 2.11 新增源（2026-10-21 凌晨迭代，全部 EXPERIMENTAL 默认关闭）
+
+**开发者足迹**（`adapters/dev_footprint_adapters.py`，全部免费无 key）：
+- `public_gitlab_user_lookup` — `GitLabUserLookup().query("user")` → id/姓名/简介/属地/公开项目数。实测 ✓
+- `public_dockerhub_user_lookup` — `DockerHubUserLookup().query("user")` → 姓名/属地/公司/主页；404 归一化为 `user_found=False`。实测 ✓（robots.txt 全放行，用合规 UA 评估）
+- `public_npm_author_search` — `NpmAuthorSearch().query("user")` → 包名/版本/月下载量，按下载量排序。实测：sindresorhus 945 包 ✓
+- `public_cratesio_search` — `CratesIoSearch().query("q")` → crate 名/描述/下载量（crates.io 政策要求 UA）。实测 ✓
+- `public_rubygems_owner_lookup` — `RubyGemsOwnerLookup().query("handle")` → gem 名/版本/下载量；未知 handle 返回纯文本，归一化为 `user_found=False`。实测 ✓
+
+**身份证明**（`adapters/keybase_adapter.py`，免费无 key）：
+- `public_keybase_identity_proofs` — `KeybaseIdentityLookup().query("user")` → 密码学证明绑定的跨平台身份（Twitter/GitHub/Reddit/HackerNews/DNS/PGP）。`proofs_summary` 是 `{平台: [proof]}` 的 dict 结构。实测：`max` 7 个证明全抓到 ✓
+
+**Key-ready 威胁情报**（`adapters/premium_keyed_adapters.py`，免费 key，就绪待 key；key 只走构造参数、不落盘不进日志）：
+- `keyed_shodan_host_intel` — `ShodanHostLookup(api_key=...).query("ip")` → 端口/服务/banner/组织/ASN/漏洞提示（免费 100/月）
+- `keyed_otx_threat_intel` — `OtxDomainLookup(api_key=...).query("domain")` → 威胁脉冲引用（key 走 header）
+- `keyed_virustotal_reputation` — `VirusTotalDomainLookup(api_key=...).query("domain")` → 多引擎恶意检出（免费 500/天，key 走 header）
+
+**已实测淘汰（新增）**：Bitbucket 用户名查询端点已废弃（404）。
+
 ## 3. 人物情报编排器
 
 `core/people_intel.py::PeopleIntelOrchestrator` 把 PEOPLE 线适配器拧成一次调用：
+
+- 注入式：`email_adapter` / `github_adapter` / `officer_adapter` / `username_adapter` / `social_adapter` / `dev_footprint_adapters={key: adapter}`（GitLab/DockerHub/npm/crates.io/Keybase/RubyGems 等，query by username）
+- 单源失败只降级该源，不抛异常；默认零运行（不注入=不查）
+- 跨源线索（只作 lead、不做身份断言）：`domain_company_consistent`、`officer_org_consistent`、`username_github_consistent`、`social_mention_signal`、`dev_footprint_hit`、`disposable_email_risk`、`role_account_note`
 
 ```python
 from core.people_intel import PeopleIntelOrchestrator, PersonQuery
@@ -157,7 +180,11 @@ graph = orch.investigate(PersonQuery(
 
 ---
 
-## 4. REST 端点
+## 4. REST 端点与 CLI
+
+- `POST /api/people-intel` — body `{"query": {...}, "sources": ["email","github","officer","username","social"]}`；`sources` 显式指定才运行对应适配器；officer 需请求体传 `opencorporates_token`（不落盘）；缺 token → 400。
+- `POST /api/domain-intel` — body `{"domain": "...", "sources": ["urlscan","hackertarget","ipapi"]}`；显式指定才运行；缺 domain → 400。
+- CLI：`bin/investigate.py "公司" --intel-domain "example.com" --intel-person "name=X|email=x@y.z|github=u|username=u"` — opt-in 情报 enrichment，挂载为 `packet['intel_enrichment']`。
 
 `POST /api/people-intel`（`api/server.py`）：
 
