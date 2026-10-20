@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -61,27 +62,40 @@ class PeopleIntelOrchestrator:
             query = PersonQuery(**{k: query.get(k) for k in
                                    ("name", "email", "username", "github_username")})
         start = time.monotonic()
-        sources: dict[str, Any] = {}
 
+        # All source calls are independent — run them in parallel.
+        # (Each adapter enforces its own per-domain rate limit; the username
+        # profiler's explicit enable() gate is unchanged.)
+        jobs: list[tuple[str, Any, tuple, dict]] = []
         if query.email and self.email_adapter is not None:
-            sources["email_intel"] = self._safe_run(
-                self.email_adapter, "query", query.email)
+            jobs.append(("email_intel", self._safe_run,
+                         (self.email_adapter, "query", query.email), {}))
         if query.github_username and self.github_adapter is not None:
-            sources["github_deep"] = self._safe_run(
-                self.github_adapter, "query", query.github_username)
+            jobs.append(("github_deep", self._safe_run,
+                         (self.github_adapter, "query", query.github_username), {}))
         if query.name and self.officer_adapter is not None:
-            sources["officer_records"] = self._safe_run(
-                self.officer_adapter, "query", query.name)
+            jobs.append(("officer_records", self._safe_run,
+                         (self.officer_adapter, "query", query.name), {}))
         if query.username and self.username_adapter is not None:
-            sources["username_footprint"] = self._safe_run_username(
-                self.username_adapter, query.username)
+            jobs.append(("username_footprint", self._safe_run_username,
+                         (self.username_adapter, query.username), {}))
         if query.name and self.social_adapter is not None:
-            sources["social_listening"] = self._safe_run(
-                self.social_adapter, "query", query.name)
+            jobs.append(("social_listening", self._safe_run,
+                         (self.social_adapter, "query", query.name), {}))
         if query.username and self.dev_footprint_adapters:
             for dev_key, dev_adapter in self.dev_footprint_adapters.items():
-                sources[f"dev_{dev_key}"] = self._safe_run(
-                    dev_adapter, "query", query.username)
+                jobs.append((f"dev_{dev_key}", self._safe_run,
+                             (dev_adapter, "query", query.username), {}))
+        sources: dict[str, Any] = {}
+        if jobs:
+            with ThreadPoolExecutor(max_workers=min(len(jobs), 8),
+                                    thread_name_prefix="wst-people") as pool:
+                future_to_key = {
+                    pool.submit(fn, *fargs, **fkwargs): key
+                    for key, fn, fargs, fkwargs in jobs
+                }
+                for future in as_completed(future_to_key):
+                    sources[future_to_key[future]] = future.result()
 
         corroborations = self._corroborate(query, sources)
         subject_hash = hashlib.sha256(

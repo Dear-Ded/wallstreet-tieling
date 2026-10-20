@@ -25,6 +25,7 @@ Design rules (per project house rules):
 from __future__ import annotations
 
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from core.people_intel import PeopleIntelOrchestrator, PersonQuery
@@ -69,11 +70,21 @@ def enrich_domain(
     sources: dict[str, Any] = {}
     risk_notes: list[str] = []
 
-    if urlscan is not None:
-        sources["urlscan"] = _safe_adapter_call(urlscan, target)
-    if hackertarget is not None:
-        sources["hackertarget"] = _safe_adapter_call(
-            hackertarget, target, endpoints=["dnslookup", "reverseiplookup"])
+    # Phase 1: urlscan + hackertarget are independent — run in parallel.
+    # (Each adapter enforces its own per-domain rate limit; parallel calls
+    # to different domains do not violate any limit.)
+    phase1: dict[str, Any] = {}
+    with ThreadPoolExecutor(max_workers=2, thread_name_prefix="wst-domain") as pool:
+        futures = {}
+        if urlscan is not None:
+            futures[pool.submit(_safe_adapter_call, urlscan, target)] = "urlscan"
+        if hackertarget is not None:
+            futures[pool.submit(_safe_adapter_call, hackertarget, target,
+                                endpoints=["dnslookup", "reverseiplookup"])] = "hackertarget"
+        for future in as_completed(futures):
+            phase1[futures[future]] = future.result()
+    sources.update(phase1)
+    # Phase 2: ipapi depends on hackertarget's A record.
     if ipapi is not None:
         ip = _first_a_record(_fields_of(sources.get("hackertarget")))
         if ip:
