@@ -481,6 +481,36 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_keybase_identity_proofs": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/keybase_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_keybase_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_keybase_adapter.py tests/unit/test_connector_registry.py -q",
+            "npm run codex:mcp-smoke",
+        ],
+        "field_contract": {
+            "record_type": "keybase_identity_proofs",
+            "source_hint": "public_keybase_identity_proofs",
+            "required_fields": ["user_found", "proof_count", "linked_platforms"],
+            "report_gate": "proofs are user-published claims with cryptographic backing; cross-platform links are leads",
+        },
+        "operator_notes": ["Free API, no credential; 2s interval."],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_keybase_identity_proofs",
+            "source_hint": "public_keybase_identity_proofs",
+            "required_config": [],
+            "record_type": "keybase_identity_proofs",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "proof records feed identity-corroboration leads; person-level facts require exact/strong match and admission tests",
+            "focused_test": "tests/unit/test_keybase_adapter.py::test_keybase_extracts_proofs",
+        },
+    },
     "public_gitlab_user_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -2759,8 +2789,27 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
             risk_flags=("explicit_enable_required", "credentialed_depth_requires_admission", "public_data_only"),
         ),
         ConnectorCapability(
-            name="public_gitlab_user_lookup",
+            name="public_keybase_identity_proofs",
             shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE, RetrievalDomain.IP_TECH),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=True,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "Keybase identity-proofs adapter (adapters.keybase_adapter).",
+                "Free no-credential API: cryptographic proofs linking a Keybase user to",
+                "their Twitter/GitHub/Reddit/HackerNews/DNS/PGP identities.",
+                "Cross-platform identity corroboration signal.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_gitlab_user_lookup",            shape=ConnectorShape.REST_API,
             access=SourceAccess.PUBLIC,
             authority=SourceAuthority.PUBLIC_WEB,
             domains=(RetrievalDomain.PEOPLE, RetrievalDomain.IP_TECH),

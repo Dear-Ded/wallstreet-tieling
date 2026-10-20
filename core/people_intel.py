@@ -197,7 +197,7 @@ class PeopleIntelOrchestrator:
                 continue
             fields = (source_result or {}).get("fields", {})
             found = (fields.get("user_found") or fields.get("total_packages")
-                     or fields.get("total_crates") or 0)
+                     or fields.get("total_crates") or fields.get("proof_count") or 0)
             try:
                 found_n = int(found)
             except (TypeError, ValueError):
