@@ -42,6 +42,7 @@
 - 红队审查修复：opencorporates 详情接口补 token+凭证门禁、email_intel 补 robots 检查、people_intel 加 `_safe_int`；MX 检查改走 DoH（去 nslookup 二进制依赖）。
 - 主流程可选接入：`bin/investigate.py` 新增 `--intel-domain` / `--intel-person`（`name=|email=|github=|username=`），opt-in 运行情报 enrichment 并挂载为 `packet['intel_enrichment']`；双 flag 真实 CLI 冒烟通过。
 - 新增 `adapters/keybase_adapter.py`：`KeybaseIdentityLookup`（免费无 key API；抓取用户密码学身份证明：Twitter/GitHub/Reddit/HackerNews/DNS/PGP 跨平台绑定声明），已接入 `dev_footprint_adapters`；连接器 `public_keybase_identity_proofs`（EXPERIMENTAL 默认关闭）。真实冒烟：`max` 7 个证明全抓到。
+- 新增 `RubyGemsOwnerLookup`（免费无 key；gem 发布记录）；Bitbucket 用户名查询端点已废弃（404），放弃。连接器 `public_rubygems_owner_lookup`。
 
 ## Unreleased — 报告可视化：SVG 图表渲染
 

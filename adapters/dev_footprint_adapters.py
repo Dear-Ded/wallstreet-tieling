@@ -253,3 +253,55 @@ class CratesIoSearch(SafeResearchAdapter):
             "crates": items,
             "data_note": "crates.io 公开包记录 — 当事人主动发布",
         }
+
+
+class RubyGemsOwnerLookup(SafeResearchAdapter):
+    """RubyGems.org public gems owned by a handle.
+
+    回答：该 RubyGems 账号发布过哪些 gem、下载量。
+    免费、无需 key：GET https://rubygems.org/api/v1/owners/{handle}/gems.json
+    """
+
+    source_domain = "rubygems.org"
+    source_type = "dev_rubygems_ownership"
+    data_boundary = "fully_public"
+    requires_credentials = False
+    requires_interaction = False
+    min_request_interval = 2.0
+
+    def _build_url(self, keyword: str, **params) -> str:
+        handle = urllib.parse.quote(keyword.strip().lower())
+        return f"https://rubygems.org/api/v1/owners/{handle}/gems.json"
+
+    def _extract_public_fields(self, raw_data: Any) -> dict[str, Any]:
+        try:
+            data = json.loads(raw_data) if isinstance(raw_data, str) else raw_data
+        except (json.JSONDecodeError, TypeError):
+            # 未知 handle 时 API 返回纯文本 "Owner could not be found."
+            return {"user_found": False}
+        if not isinstance(data, list):
+            return {"user_found": False}
+        gems: list[dict[str, Any]] = []
+        total_downloads = 0
+        for item in data[:20]:
+            if not isinstance(item, dict):
+                continue
+            downloads = item.get("downloads", 0) or 0
+            try:
+                total_downloads += int(downloads)
+            except (TypeError, ValueError):
+                pass
+            gems.append({
+                "name": item.get("name", ""),
+                "version": str(item.get("version", ""))[:20],
+                "downloads": downloads,
+                "info": str(item.get("info", ""))[:120],
+            })
+        gems.sort(key=lambda g: (g.get("downloads") or 0), reverse=True)
+        return {
+            "user_found": True,
+            "total_gems": len(data),
+            "total_downloads": total_downloads,
+            "gems": gems[:10],
+            "data_note": "RubyGems.org 公开 gem 发布记录 — 注册声明的发布足迹",
+        }

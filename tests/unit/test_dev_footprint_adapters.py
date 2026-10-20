@@ -137,3 +137,41 @@ def test_registry_lists_dev_footprint_default_off():
         assert cap is not None, name
         assert cap.default_enabled is False, name
         assert cap.status == ConnectorStatus.EXPERIMENTAL, name
+
+
+def test_rubygems_extracts_gems():
+    from adapters.dev_footprint_adapters import RubyGemsOwnerLookup
+    import json as _json
+    payload = _json.dumps([
+        {"name": "foo", "version": "1.0", "downloads": 100, "info": "a gem"},
+        {"name": "bar", "version": "2.0", "downloads": 500, "info": "b gem"},
+    ])
+    adapter = RubyGemsOwnerLookup(
+        execute_query=lambda url, headers: (200, payload, ""),
+        robots_checker=lambda domain, url: True,
+        sleeper=lambda seconds: None,
+    )
+    result = adapter.query("someone")
+    assert result["fields"]["user_found"] is True
+    assert result["fields"]["total_gems"] == 2
+    assert result["fields"]["total_downloads"] == 600
+    # 按下载量排序
+    assert result["fields"]["gems"][0]["name"] == "bar"
+
+
+def test_rubygems_unknown_handle_text_response():
+    from adapters.dev_footprint_adapters import RubyGemsOwnerLookup
+    adapter = RubyGemsOwnerLookup(
+        execute_query=lambda url, headers: (200, "Owner could not be found.", ""),
+        robots_checker=lambda domain, url: True,
+        sleeper=lambda seconds: None,
+    )
+    result = adapter.query("nobody-xyz")
+    assert result["fields"]["user_found"] is False
+
+
+def test_rubygems_registered_default_off():
+    from core.connector_registry import ConnectorRegistry
+    names = {c.name: c for c in ConnectorRegistry().list()}
+    assert "public_rubygems_owner_lookup" in names
+    assert names["public_rubygems_owner_lookup"].default_enabled is False

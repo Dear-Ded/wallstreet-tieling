@@ -481,6 +481,36 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_rubygems_owner_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/dev_footprint_adapters.py",
+            "core/connector_registry.py",
+            "tests/unit/test_dev_footprint_adapters.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_dev_footprint_adapters.py tests/unit/test_connector_registry.py -q",
+            "npm run codex:mcp-smoke",
+        ],
+        "field_contract": {
+            "record_type": "rubygems_owner_footprint",
+            "source_hint": "public_rubygems_owner_lookup",
+            "required_fields": ["user_found", "total_gems", "gems"],
+            "report_gate": "ownership is registry-claimed; verify before attributing to a person",
+        },
+        "operator_notes": ["Free API, no credential; 2s interval."],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_rubygems_owner_lookup",
+            "source_hint": "public_rubygems_owner_lookup",
+            "required_config": [],
+            "record_type": "rubygems_owner_footprint",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "publishing footprint feeds developer-activity leads; attribution claims require corroboration and admission tests",
+            "focused_test": "tests/unit/test_dev_footprint_adapters.py::test_rubygems_extracts_gems",
+        },
+    },
     "public_keybase_identity_proofs": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -2787,6 +2817,24 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "credentialed_depth_requires_admission", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_rubygems_owner_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE, RetrievalDomain.IP_TECH),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=True,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "RubyGems.org owner lookup adapter (adapters.dev_footprint_adapters).",
+                "Free no-credential API: gems published by a handle, versions, download counts.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
         ),
         ConnectorCapability(
             name="public_keybase_identity_proofs",
