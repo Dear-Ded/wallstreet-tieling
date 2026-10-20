@@ -98,9 +98,32 @@ Next:
   Markdown, JSON packet, portable HTML, manifest, agent-handoff, and verifier.
 - Add richer charts, tables, image evidence handling, and printable public-style
   report formatting.
+  - [2026-10-20, in `feat/report-svg-charts`] Charts landed: `core/report_charts.py`
+    renders dependency-free inline SVG (quality-gate dimension bars, risk
+    severity + score ring, source mix stacked bars, evidence donut) into a new
+    "风险可视化" section of the portable HTML report; `bin/verify_report_bundle.py`
+    now reports `chart_section.present`. Tables/image evidence/print styling
+    for the premium lane remain open.
 - Expand source adapters only through modular, auditable, default-off gates.
+  - [2026-10-20, in `feat/osint-acquisition`] OSINT acquisition strengthened:
+    `adapters/opencorporates_adapter.py` (OpenCorporates v0.4: company search /
+    jurisdiction+number detail / officer search; free api_token required, passed
+    at construction, never persisted) and `adapters/nominatim_geocode_adapter.py`
+    (OSM Nominatim: registry-address verification + place-nature hints, 1.1s
+    interval per usage policy, robots check uses policy-compliant UA). Three new
+    EXPERIMENTAL connectors registered, all `default_enabled=False`.
+  - [2026-10-20 晚, 同分支] PEOPLE 线迭代：`adapters/email_intel_adapter.py`
+    （MX/Gravatar/一次性邮箱/角色账号，明确排除泄露库与存活探测）与
+    `adapters/github_deep_adapter.py`（仓库足迹/公开组织归属/近期动态，
+    torvalds 真实冒烟通过）；新增 2 个 EXPERIMENTAL 连接器及配套
+    implementation pack；`tests/unit/test_people_intel_adapters.py` 8 项全过。
+  - 同分支新增 `core/people_intel.py` 人物情报编排器：PEOPLE 线适配器一次调用、
+    注入式（默认零运行）、单源失败独立降级、跨源一致性只出线索不做身份断言；
+    torvalds 真实端到端冒烟通过。
 - Keep adding product-path tests that prove runtime behavior, not only helper
   functions.
+  - [2026-10-20] `tests/unit/test_report_charts.py`: 14 tests incl. an end-to-end
+    one-click CLI product-path test asserting embedded SVG charts.
 
 ## Definition Of Done
 

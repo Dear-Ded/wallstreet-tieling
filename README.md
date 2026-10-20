@@ -36,6 +36,7 @@ Wallstreet Tieling / 华尔街驻铁岭办事处，是给专业用户和桌面 A
 - 有来源、有置信度、有核验状态的证据链。
 - 主体画像、关系图谱、资本风险、风险事件和后续核验队列。
 - Markdown、JSON、便携 HTML、DOCX 元数据、目录包和 `agent-handoff.json`。
+- 便携 HTML 内嵌 SVG 风险可视化：交付质量维度、风险严重程度、来源构成、证据构成四组图表，随包生成、打印友好。
 - Codex、Claude Code、Hermes、豆包办公任务模式、OpenClaude 类开源 Agent、
   WorkBuddy expert-team surface 和通用 MCP/CLI/API 的交付面。
 

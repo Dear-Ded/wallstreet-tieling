@@ -255,6 +255,102 @@ def analyze():
         return jsonify({"error": "编排失败，请检查日志获取详情"}), 500
 
 
+@app.route("/api/people-intel", methods=["POST"])
+def people_intel():
+    """人物情报：PEOPLE 线适配器一次调用，产出人物线索图。
+
+    请求体：{"name": ..., "email": ..., "username": ..., "github_username": ...,
+             "sources": ["email", "github", "officer", "username", "social"],
+             # 显式指定才运行，默认全不跑；social 需要 name
+             "opencorporates_token": "..."}  # officer 源需要，请求体内传递、不落盘
+    """
+    from core.people_intel import PeopleIntelOrchestrator, PersonQuery
+
+    data = request.get_json() or {}
+    query = PersonQuery(
+        name=data.get("name"),
+        email=data.get("email"),
+        username=data.get("username"),
+        github_username=data.get("github_username"),
+    )
+    if not any((query.name, query.email, query.username, query.github_username)):
+        return jsonify({"error": "缺少 name/email/username/github_username 参数"}), 400
+
+    requested = data.get("sources")
+    if requested is None:
+        requested = []
+    requested = {str(s).strip().lower() for s in requested}
+
+    kwargs: dict[str, Any] = {}
+    if "email" in requested and query.email:
+        from adapters.email_intel_adapter import EmailIntelLookup
+        kwargs["email_adapter"] = EmailIntelLookup()
+    if "github" in requested and query.github_username:
+        from adapters.github_deep_adapter import GitHubDeepEnrichment
+        kwargs["github_adapter"] = GitHubDeepEnrichment()
+    if "officer" in requested and query.name:
+        from adapters.opencorporates_adapter import OpenCorporatesOfficerLookup
+        token = str(data.get("opencorporates_token") or "").strip()
+        if not token:
+            return jsonify({"error": "officer 源需要 opencorporates_token"}), 400
+        kwargs["officer_adapter"] = OpenCorporatesOfficerLookup(api_token=token)
+    if "username" in requested and query.username:
+        from adapters.mass_profiler import MassCrossPlatformProfiler
+        profiler = MassCrossPlatformProfiler()
+        profiler.enable(h=1)  # 本次请求内显式启用；默认关闭
+        kwargs["username_adapter"] = profiler
+    if "social" in requested and query.name:
+        from adapters.social_listen_adapters import HackerNewsAlgoliaSearch
+        kwargs["social_adapter"] = HackerNewsAlgoliaSearch()
+
+    try:
+        orchestrator = PeopleIntelOrchestrator(**kwargs)
+        graph = orchestrator.investigate(query)
+        return jsonify(graph)
+    except Exception:
+        logger.exception("People-intel failed")
+        return jsonify({"error": "人物情报编排失败，请检查日志获取详情"}), 500
+
+
+@app.route("/api/domain-intel", methods=["POST"])
+def domain_intel():
+    """域名情报：基础设施公开数据一次调用，产出域名情报富化结果。
+
+    请求体：{"domain": "...",
+             "sources": ["urlscan", "hackertarget", "ipapi"]}
+             # 显式指定才运行，默认全不跑
+    """
+    from core.intel_enrichment import enrich_domain
+
+    data = request.get_json() or {}
+    domain = str(data.get("domain") or "").strip()
+    if not domain:
+        return jsonify({"error": "缺少 domain 参数"}), 400
+
+    requested = data.get("sources")
+    if requested is None:
+        requested = []
+    requested = {str(s).strip().lower() for s in requested}
+
+    kwargs: dict[str, Any] = {}
+    if "urlscan" in requested:
+        from adapters.infra_intel_adapters import UrlScanDomainLookup
+        kwargs["urlscan"] = UrlScanDomainLookup()
+    if "hackertarget" in requested:
+        from adapters.infra_intel_adapters import HackertargetInfraLookup
+        kwargs["hackertarget"] = HackertargetInfraLookup()
+    if "ipapi" in requested:
+        from adapters.infra_intel_adapters import IpApiGeolocationLookup
+        kwargs["ipapi"] = IpApiGeolocationLookup()
+
+    try:
+        result = enrich_domain(domain, **kwargs)
+        return jsonify(result)
+    except Exception:
+        logger.exception("Domain-intel failed")
+        return jsonify({"error": "域名情报富化失败，请检查日志获取详情"}), 500
+
+
 def _clamped_int(data: dict[str, Any], key: str, default: int, low: int, high: int) -> int:
     try:
         return max(low, min(int(data.get(key, default)), high))

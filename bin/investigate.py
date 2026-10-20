@@ -594,7 +594,7 @@ def _source_strengthening_handoff() -> dict:
         "mcp_tool": "connector_catalog",
         "cli": "npx wallstreet-tieling --connectors",
         "api": "GET /api/connectors",
-        "work_order_count": len(queue),
+        "work_order_count": len(top_work_orders),
         "top_work_orders": top_work_orders,
         "top_work_order": top_work_orders[0] if top_work_orders else {},
         "by_lane": by_lane,

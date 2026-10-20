@@ -83,7 +83,33 @@ def verify_report_bundle(path: str | Path) -> dict[str, Any]:
 
     handoff = _verify_agent_handoff(manifest, manifest_path)
     failures.extend(handoff["failures"])
-    return _result(not failures and bool(checked), manifest_path, checked, failures, handoff)
+    chart_section = _verify_chart_section(manifest_path, checked)
+    return _result(not failures and bool(checked), manifest_path, checked, failures, handoff, chart_section)
+
+
+def _verify_chart_section(manifest_path: Path, checked: list[dict[str, Any]]) -> dict[str, Any]:
+    """Check whether the portable HTML export embeds the SVG chart section.
+
+    Informational only: bundles produced before the chart renderer existed
+    report ``present: False`` without failing verification.
+    """
+    html_files = [row for row in checked if row.get("role") == "portable_html"]
+    if not html_files:
+        return {"type": "chart_section_verification", "checked": False, "present": False}
+    html_path = manifest_path.parent / str(html_files[0].get("filename") or "")
+    try:
+        document = html_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {"type": "chart_section_verification", "checked": False, "present": False}
+    svg_count = document.count("<svg")
+    present = 'aria-label="风险可视化"' in document and svg_count > 0
+    return {
+        "type": "chart_section_verification",
+        "checked": True,
+        "present": present,
+        "svg_count": svg_count,
+        "file": html_files[0].get("filename"),
+    }
 
 
 def _verify_agent_handoff(manifest: dict[str, Any], manifest_path: Path) -> dict[str, Any]:
@@ -815,6 +841,7 @@ def _result(
     checked: list[dict[str, Any]],
     failures: list[dict[str, str]],
     handoff: dict[str, Any] | None = None,
+    chart_section: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "type": "report_export_bundle_verification",
@@ -822,6 +849,7 @@ def _result(
         "manifest": str(manifest_path),
         "checked_count": len(checked),
         "checked": checked,
+        "chart_section": chart_section or {"type": "chart_section_verification", "checked": False, "present": False},
         "agent_handoff": handoff or {
             "type": "agent_handoff_verification",
             "checked": False,

@@ -21,6 +21,14 @@
       --warn: #a7651a;
       --danger: #a33b38;
       --ok: #21784f;
+      --chart-track: #e9dfcf;
+    }
+    .chart-group { margin-bottom: 14px; }
+    .chart-group:last-child { margin-bottom: 0; }
+    .chart-title { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+    .chart-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .chart-label { flex: 0 0 76px; font-size: 12px; color: var(--ink); }
+    .chart-row svg { flex: 1 1 auto; min-width: 0; }
       --shadow: 0 10px 26px rgba(27, 40, 30, .08);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
     }
@@ -656,6 +664,16 @@
             <div id="qualityList" class="list"></div>
           </div>
         </aside>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <h2>风险可视化</h2>
+            <span id="chartStatus" class="tag">待运行</span>
+          </div>
+          <div class="panel-body">
+            <div id="chartPanel"></div>
+          </div>
+        </aside>
       </div>
     </main>
   </div>
@@ -665,7 +683,7 @@
     const els = Object.fromEntries([
       'company','mode','run','loadCatalog','statusDot','statusText','riskScore','qualityScore','evidenceCount','p0Count',
       'verdictTag','qualityTag','briefList','actionsList','reportMarkdown','graphCanvas','evidenceRows','connectorRows',
-      'qyyjtRows','releaseList','deliveryStatus','qualityList','exportMarkdown','exportJson','exportHtml',
+      'qyyjtRows','releaseList','deliveryStatus','qualityList','chartPanel','chartStatus','exportMarkdown','exportJson','exportHtml',
       'officeGmText','officeMessages','officeActiveRoles','sentinelStatusDot','officeSentinelMsgs','officeRefreshBtn'
     ].map(id => [id, document.getElementById(id)]));
 
@@ -675,6 +693,7 @@
       risk_brief: {
         verdict_label: '演示风险待复核',
         risk_score: 72,
+        severity_counts: { critical: 0, high: 1, medium: 2, low: 1 },
         confidence_note: '内置演示包，仅用于界面预览。',
         key_findings: [
           { title: '控制权候选需要复核', severity: 'medium', why_it_matters: '公开线索指向关键人员，但仍需官方或授权数据交叉印证。' },
@@ -687,7 +706,14 @@
         blockers: [],
         warnings: ['live_sources_not_executed', 'product_depth_missing'],
         strengths: ['evidence_ledger_present', 'report_markdown_present'],
-        next_actions: ['启动本地 API 后运行真实公开路径', '补齐产品、司法、行政风险证据']
+        next_actions: ['启动本地 API 后运行真实公开路径', '补齐产品、司法、行政风险证据'],
+        dimension_scores: [
+          { dimension: 'evidence_coverage', score: 62, max: 100 },
+          { dimension: 'source_diversity', score: 55, max: 100 },
+          { dimension: 'report_completeness', score: 92, max: 100 },
+          { dimension: 'risk_detection', score: 80, max: 100 },
+          { dimension: 'data_quality', score: 70, max: 100 }
+        ]
       },
       summary: { evidence_count: 6, risk_event_count: 0 },
       evidence_ledger: [
@@ -1178,6 +1204,7 @@
       els.reportMarkdown.textContent = packet.report_markdown || '';
       renderEvidence(packet.evidence_ledger || []);
       renderGraph(packet.graph || {});
+      renderCharts(packet);
     }
 
     function exportBaseName() {
@@ -1322,6 +1349,45 @@
         div.textContent = node.name || node.id;
         els.graphCanvas.appendChild(div);
       });
+    }
+
+    const CHART_DIM_LABELS = {
+      evidence_coverage: '证据覆盖', source_diversity: '来源多样性',
+      report_completeness: '报告完整度', risk_detection: '风险检出', data_quality: '数据质量'
+    };
+    const CHART_SEV_LABELS = { critical: '严重', high: '高', medium: '中', low: '低' };
+    const CHART_SEV_COLORS = { critical: '#9f1d20', high: '#c25e2a', medium: '#b7791f', low: '#2f7d4f' };
+
+    function chartBar(label, score, max, color) {
+      const ratio = Math.max(0, Math.min(1, (Number(score) || 0) / (Number(max) || 100)));
+      const w = Math.round(220 * ratio);
+      const barColor = color || (ratio >= 0.8 ? '#2f7d4f' : ratio >= 0.5 ? '#b7791f' : '#9f1d20');
+      return `<div class="chart-row"><span class="chart-label">${escapeHtml(label)}</span>`
+        + `<svg viewBox="0 0 300 20" width="100%" height="20" aria-hidden="true">`
+        + `<rect x="0" y="2" width="220" height="16" rx="5" fill="#e9dfcf"/>`
+        + `<rect x="0" y="2" width="${w}" height="16" rx="5" fill="${barColor}"/>`
+        + `<text x="230" y="15" font-size="12" fill="#3d3a34">${escapeHtml(String(score))}</text></svg></div>`;
+    }
+
+    function renderCharts(packet) {
+      const quality = packet.quality_gate || {};
+      const risk = packet.risk_brief || {};
+      const dims = (quality.dimension_scores || []).filter(d => d && d.dimension != null);
+      const sev = risk.severity_counts || {};
+      const sevKeys = ['critical', 'high', 'medium', 'low'].filter(k => Number(sev[k]) > 0);
+      const parts = [];
+      if (dims.length) {
+        parts.push('<div class="chart-group"><div class="chart-title">交付质量维度</div>' +
+          dims.map(d => chartBar(CHART_DIM_LABELS[d.dimension] || String(d.dimension), d.score, d.max)).join('') + '</div>');
+      }
+      if (sevKeys.length || risk.risk_score != null) {
+        parts.push('<div class="chart-group"><div class="chart-title">风险信号'
+          + (risk.risk_score != null ? `（综合评分 ${escapeHtml(String(risk.risk_score))}）` : '') + '</div>' +
+          sevKeys.map(k => chartBar(CHART_SEV_LABELS[k], sev[k], Math.max(...sevKeys.map(x => Number(sev[x]) || 0), 1), CHART_SEV_COLORS[k])).join('') + '</div>');
+      }
+      els.chartPanel.innerHTML = parts.join('') || `<div class="empty">暂无图表数据</div>`;
+      els.chartStatus.textContent = parts.length ? '已渲染' : '待运行';
+      els.chartStatus.className = `tag ${parts.length ? 'ok' : ''}`;
     }
 
     function renderCatalog(catalog) {

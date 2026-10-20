@@ -13,6 +13,7 @@ from core.relationship_resolution import build_relationship_resolution
 from core.investigation_strategy import build_strategy_v2
 from core.release_gate import compute_release_decision
 from core.graph_explain import explain_graph_edges
+from core.report_charts import CHART_SECTION_CSS, build_report_chart_section
 from adapters.public_web_search_tool import reality_drill_extract
 from core.qyyjt_pledge_bridge import build_pledge_bridge, pledge_to_evidence, extract_pledge_from_fixture
 from core.qyyjt_trade_bridge import build_trade_bridge
@@ -354,6 +355,8 @@ def build_investigation_packet(
         source_provenance=source_provenance,
         risk_event_summary=risk_event_summary,
         evidence_ledger=evidence_ledger,
+        quality_gate=quality_gate,
+        risk_brief=risk_brief,
     )
 
     return InvestigationPacket(
@@ -905,7 +908,7 @@ def _packet_source_strengthening_handoff() -> dict[str, Any]:
         "type": "source_strengthening_handoff",
         "status": status,
         "catalog_tool": "connector_catalog",
-        "work_order_count": len(queue),
+        "work_order_count": len(top_work_orders),
         "top_work_orders": top_work_orders,
         "top_work_order": top_work_orders[0] if top_work_orders else {},
         "by_lane": by_lane,
@@ -1047,6 +1050,8 @@ def _report_export_bundle(
     source_provenance: dict[str, Any],
     risk_event_summary: dict[str, Any],
     evidence_ledger: list[dict[str, Any]],
+    quality_gate: dict[str, Any] | None = None,
+    risk_brief: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Describe desktop-agent report outputs without requiring the HTML workbench."""
     safe_company = _safe_report_filename(company)
@@ -1084,6 +1089,12 @@ def _report_export_bundle(
         agent_decision_digest=agent_decision_digest,
         image_evidence_inventory=print_package.get("image_evidence_inventory") if isinstance(print_package, dict) else {},
         chart_manifest=print_package.get("chart_manifest") if isinstance(print_package, dict) else [],
+        chart_packet={
+            "quality_gate": quality_gate or {},
+            "risk_brief": risk_brief or {},
+            "source_provenance": source_provenance or {},
+            "one_click_readiness": one_click_readiness or {},
+        },
         source_provenance_appendix=print_package.get("source_provenance_appendix") if isinstance(print_package, dict) else {},
         relationship_capital_appendix=print_package.get("relationship_capital_appendix") if isinstance(print_package, dict) else {},
         report_targets=report_targets,
@@ -1358,6 +1369,8 @@ def _premium_html_profile(
             "evidence darkroom",
             "source provenance appendix",
             "relationship and capital appendix",
+            "风险可视化",
+            "inline SVG risk charts",
         ],
         "design_language": [
             "cinematic paper-and-night contrast",
@@ -1375,6 +1388,7 @@ def _premium_html_profile(
             "image_evidence_inventory_visible",
             "agent_handoff_cards_visible",
             "delivery_checklist_visible",
+            "svg_risk_charts_visible",
         ],
         "forbidden_shortcuts": [
             "no_generic_purple_gradient",
@@ -1421,6 +1435,7 @@ def _portable_report_html(
     agent_decision_digest: dict[str, Any] | None = None,
     image_evidence_inventory: dict[str, Any] | None = None,
     chart_manifest: list[dict[str, Any]] | None = None,
+    chart_packet: dict[str, Any] | None = None,
     source_provenance_appendix: dict[str, Any] | None = None,
     relationship_capital_appendix: dict[str, Any] | None = None,
     report_targets: dict[str, Any] | None = None,
@@ -1446,6 +1461,7 @@ def _portable_report_html(
     delivery_html = _portable_delivery_checklist_html(delivery_checklist or {})
     decision_html = _portable_decision_digest_html(agent_decision_digest or {})
     chart_html = _portable_chart_manifest_html(chart_manifest or [])
+    chart_section_html = build_report_chart_section(chart_packet or {})
     image_html = _portable_image_evidence_html(image_evidence_inventory or {})
     relationship_capital_html = _portable_relationship_capital_html(relationship_capital_appendix or {})
     source_html = _portable_source_provenance_html(source_provenance_appendix or {})
@@ -1510,6 +1526,7 @@ def _portable_report_html(
         "    @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}\n"
         "    @media (max-width:900px){.report-layout{grid-template-columns:1fr;}h1{font-size:30px;}main{padding:24px 16px 48px;}}\n"
         "    @media print{body{background:#fff;}body:before{display:none;}main{padding:18mm;max-width:none;}header,.delivery,.visual-panel,pre.report-body{box-shadow:none;backdrop-filter:none;}header{break-after:avoid;}.report-layout{display:block;}.visual-panel{background:#fff;color:#111;border-color:#999;}.visual-panel h2{color:#111;}.visual-panel th,.visual-panel td{border-color:#ccc;color:#111;}.metric-strip div{border-color:#ccc;background:#fff;}.metric-strip b,.metric-strip span{color:#111;}.premium-qa:after{display:none;}}\n"
+        f"{CHART_SECTION_CSS}"
         "  </style>\n"
         "</head>\n"
         "<body>\n"
@@ -1536,6 +1553,7 @@ def _portable_report_html(
         f"      <div class=\"card\"><b>{capital_queue}</b><span>capital verification steps</span></div>\n"
         f"      <div class=\"card\"><b>{relationship_queue}</b><span>relationship audit steps</span></div>\n"
         "    </section>\n"
+        f"{chart_section_html}"
         "    <section class=\"visual-panel premium-qa\" aria-label=\"premium visual QA checklist\">\n"
         "      <h2>Premium HTML visual QA checklist</h2>\n"
         "      <p class=\"premium-copy\">This screen report uses component-level <code>liquid glass</code>, an <code>evidence darkroom</code> treatment, formal long-report typography, reduced-motion safety, and print-safe degradation while preserving the complete due-diligence body. It explicitly avoids generic purple gradients, decorative card piles, and any evidence truncation.</p>\n"
