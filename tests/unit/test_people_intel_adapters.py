@@ -320,3 +320,43 @@ def test_domain_intel_endpoint_empty_sources_runs_nothing():
     assert body["domain"] == "example.com"
     assert body["source_count"] == 0
     assert body["sources"] == {}
+
+
+class _StubDevAdapter:
+    def __init__(self, fields):
+        self._fields = fields
+
+    def query(self, keyword, **params):
+        return {"source_type": "stub", "fields": self._fields, "error": ""}
+
+
+def test_dev_footprint_adapters_run_and_lead():
+    from core.people_intel import PersonQuery, PeopleIntelOrchestrator
+    orch = PeopleIntelOrchestrator(
+        dev_footprint_adapters={
+            "gitlab": _StubDevAdapter({"user_found": True}),
+            "npm": _StubDevAdapter({"total_packages": 3}),
+            "crates": _StubDevAdapter({"total_crates": 0}),
+        })
+    result = orch.investigate(PersonQuery(username="someuser"))
+    assert set(result["sources"].keys()) == {"dev_gitlab", "dev_npm", "dev_crates"}
+    leads = [l["type"] for l in result["corroborations"]]
+    assert "dev_footprint_hit" in leads
+    assert result["subject_hash"]
+
+
+def test_dev_footprint_no_hit_no_lead():
+    from core.people_intel import PersonQuery, PeopleIntelOrchestrator
+    orch = PeopleIntelOrchestrator(
+        dev_footprint_adapters={"gitlab": _StubDevAdapter({"user_found": False})})
+    result = orch.investigate(PersonQuery(username="nobody12345xyz"))
+    leads = [l["type"] for l in result["corroborations"]]
+    assert "dev_footprint_hit" not in leads
+
+
+def test_dev_footprint_not_run_without_username():
+    from core.people_intel import PersonQuery, PeopleIntelOrchestrator
+    orch = PeopleIntelOrchestrator(
+        dev_footprint_adapters={"gitlab": _StubDevAdapter({"user_found": True})})
+    result = orch.investigate(PersonQuery(name="Someone"))
+    assert result["sources"] == {}

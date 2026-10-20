@@ -31,7 +31,7 @@ from core.people_intel import PeopleIntelOrchestrator, PersonQuery
 
 _ORCHESTRATOR_ADAPTER_FIELDS = frozenset({
     "email_adapter", "github_adapter", "officer_adapter", "username_adapter",
-    "social_adapter",
+    "social_adapter", "dev_footprint_adapters",
 })
 
 

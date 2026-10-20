@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -54,6 +54,7 @@ class PeopleIntelOrchestrator:
     officer_adapter: Any = None
     username_adapter: Any = None  # e.g. MassCrossPlatformProfiler (needs explicit enable())
     social_adapter: Any = None  # object with query(q); e.g. HackerNewsAlgoliaSearch
+    dev_footprint_adapters: dict[str, Any] = field(default_factory=dict)  # key -> adapter with query(username)
 
     def investigate(self, query: PersonQuery | dict[str, Any]) -> dict[str, Any]:
         if isinstance(query, dict):
@@ -77,6 +78,10 @@ class PeopleIntelOrchestrator:
         if query.name and self.social_adapter is not None:
             sources["social_listening"] = self._safe_run(
                 self.social_adapter, "query", query.name)
+        if query.username and self.dev_footprint_adapters:
+            for dev_key, dev_adapter in self.dev_footprint_adapters.items():
+                sources[f"dev_{dev_key}"] = self._safe_run(
+                    dev_adapter, "query", query.username)
 
         corroborations = self._corroborate(query, sources)
         subject_hash = hashlib.sha256(
@@ -184,6 +189,25 @@ class PeopleIntelOrchestrator:
             leads.append({
                 "type": "username_footprint_summary",
                 "detail": f"用户名 {query.username or ''} 在 {footprint_fields.get('platforms_found')} 个公开平台有档案（{footprint_fields.get('coverage_ratio', '')}）",
+            })
+        # 6) 开发者足迹：任一 dev 源命中
+        dev_hits = []
+        for source_key, source_result in sources.items():
+            if not source_key.startswith("dev_"):
+                continue
+            fields = (source_result or {}).get("fields", {})
+            found = (fields.get("user_found") or fields.get("total_packages")
+                     or fields.get("total_crates") or 0)
+            try:
+                found_n = int(found)
+            except (TypeError, ValueError):
+                found_n = 1 if found else 0
+            if found_n:
+                dev_hits.append(source_key[4:])
+        if dev_hits:
+            leads.append({
+                "type": "dev_footprint_hit",
+                "detail": f"用户名 {query.username or ''} 在开发者平台有公开足迹：{', '.join(dev_hits)}（线索，非断言）",
             })
         # 5) 社区讨论信号：公开技术社区中提及该姓名
         social_fields = (sources.get("social_listening") or {}).get("fields", {})
