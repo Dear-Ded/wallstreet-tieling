@@ -130,3 +130,29 @@ def test_enrich_person_failing_adapter_degrades():
     result = enrich_person(PersonQuery(email="a@example.com"), orchestrator=orch)
     assert result["source_count"] == 1
     assert "network down" in result["sources"]["email_intel"]["error"]
+
+
+def test_cli_intel_flags_default_off():
+    import argparse
+    import sys
+    sys.path.insert(0, "bin")
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("investigate_cli", "bin/investigate.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    parser = mod.build_parser()
+    args = parser.parse_args(["SomeCo"])
+    assert args.intel_domain == ""
+    assert args.intel_person == ""
+    assert mod._optional_intel_enrichment(args) == {}
+
+
+def test_cli_intel_person_spec_parsing():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("investigate_cli2", "bin/investigate.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    parser = mod.build_parser()
+    args = parser.parse_args(["SomeCo", "--intel-person", "name=X|email=x@y.com|github=gh|username=un"])
+    assert args.intel_person == "name=X|email=x@y.com|github=gh|username=un"
+    # _optional_intel_enrichment would hit network; only assert arg parsing here

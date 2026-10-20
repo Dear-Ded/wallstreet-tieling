@@ -40,6 +40,7 @@
 - 新增 `POST /api/domain-intel`：`{"domain","sources":["urlscan","hackertarget","ipapi"]}`，显式指定才运行。
 - 人物编排器新增 `social_adapter`（HN/StackExchange）：`social_mention_signal` 线索；`/api/people-intel` 支持 `sources:["social"]`。
 - 红队审查修复：opencorporates 详情接口补 token+凭证门禁、email_intel 补 robots 检查、people_intel 加 `_safe_int`；MX 检查改走 DoH（去 nslookup 二进制依赖）。
+- 主流程可选接入：`bin/investigate.py` 新增 `--intel-domain` / `--intel-person`（`name=|email=|github=|username=`），opt-in 运行情报 enrichment 并挂载为 `packet['intel_enrichment']`；双 flag 真实 CLI 冒烟通过。
 
 ## Unreleased — 报告可视化：SVG 图表渲染
 
