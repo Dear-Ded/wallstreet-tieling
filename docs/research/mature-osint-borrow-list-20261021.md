@@ -208,3 +208,8 @@ Maigret 证明：用户名枚举的价值不在"存在性"，而在 **profile �
 - FOFA/ZoomEye/360 是中文世界独有的基础设施数据源，西方工具用得少
 
 **结论**：不要只抄西方工具，要做"西方技术 + 中文数据源"的结合。SpiderFoot 的架构 + 企查查的数据 = 降维打击。
+
+## PentAGI 借鉴 (2026-10-21)
+- Searcher 统一接口 + 自动 fallback：`Engine()` 标识 + `RetryableError`/`FatalError` 分类，orchestrator 决定重试或 fallback
+- wallstreet-tieling 可借鉴：adapter 统一错误分类，fan-out 失败时自动降级
+- 完整 PentAGI 栈因 VM 内核限制（无 overlayfs/iptables）无法运行，镜像已拉取备用
