@@ -304,6 +304,12 @@ def _sogou_entities(article: dict[str, Any], source: str) -> list[dict[str, Any]
 
 
 def _wenshu_entities(case: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """裁判文书当事人 -> person/business 实体.
+
+    脱敏边界:文书网现行公开文书已做脱敏处理;本分支只提可公开字段
+    (当事人姓名/名称、案号、文书标题),不抽取、不透传任何身份证号、
+    住址、电话等敏感字段——即使上游 JSON 残留也不取.
+    """
     ents: list[dict[str, Any]] = []
     parties = str(case.get("parties", "") or "")
     for chunk in re.split(r"[，,；;、]", parties):
@@ -708,9 +714,9 @@ _SEED_FANOUT: dict[str, list[str]] = {
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
                       "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent", "gd_credit",
                       "gleif", "customs", "software_copyright", "hibp_breach_catalog"],
-    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation", "telegram_channel", "semanticscholar", "huggingface", "bilibili_user", "douban_user", "douyin_user", "xiaohongshu_user"],
-    "email": ["sogou_wx", "douyin", "telegram"],
-    "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl", "dnsdumpster", "threatbook"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation", "telegram_channel", "semanticscholar", "huggingface", "bilibili_user", "douban_user", "douyin_user", "xiaohongshu_user", "ens_lookup", "poap_lookup", "github_deep_extra"],
+    "email": ["sogou_wx", "douyin", "telegram", "pgp"],
+    "domain": ["icp_beian", "cert_transparency", "crtsh_contact", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl", "dnsdumpster", "threatbook"],
 }
 
 _MAX_DEPTH2_FOLLOWUPS = 6
@@ -768,6 +774,13 @@ class EntityAssociationEngine:
     douban_user: Any = None
     douyin_user: Any = None
     xiaohongshu_user: Any = None
+    # Unconventional identity lane (2026-10-21): PGP public key directory
+    pgp: Any = None
+    # Unconventional identity lane (2026-10-21): on-chain + git deep + cert contacts
+    ens_lookup: Any = None  # ENSLookup: .eth name <-> address
+    poap_lookup: Any = None  # POAPBadgeLookup: address -> attendance badges
+    github_deep_extra: Any = None  # GitHubDeepExtra: commit emails + starred taste
+    crtsh_contact: Any = None  # CrtshContactLookup: cert -> org names + contact emails
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -850,7 +863,12 @@ class EntityAssociationEngine:
             adapter = getattr(self, attr, None)
             if adapter is None:
                 continue
-            jobs.append((attr, adapter, (seed_value,), {}))
+            # person_name -> patent 走发明人定向检索 (inventor:"姓名"),
+            # 而非默认 keyword 全字段检索,避免企业/标题同名噪音.
+            # (2026-10-21 官方公示反查人 lane)
+            kwargs = {"mode": "inventor"} \
+                if (attr == "patent" and seed_type == "person_name") else {}
+            jobs.append((attr, adapter, (seed_value,), kwargs))
 
         entities: list[dict[str, Any]] = []
         per_seed_assoc: list[dict[str, Any]] = []
@@ -1143,6 +1161,61 @@ class EntityAssociationEngine:
                         if phone:
                             out.append({"type": "phone", "value": phone, "sources": ["ccgp"],
                                         "context": {"from": "ccgp_contact"}})
+                # 招投标联系人 (people-unconventional p2): 公告详情中的
+                # contacts -> person, phone -> contact 字段
+                contacts = fields.get("contacts") or []
+                for b in bids:
+                    if isinstance(b, dict) and b.get("contacts"):
+                        contacts = contacts + b["contacts"]
+                for c in contacts:
+                    if not isinstance(c, dict):
+                        continue
+                    nm = normalize_name(c.get("name") or "")
+                    ph = str(c.get("phone") or "").strip()
+                    if nm and len(nm) <= 30:
+                        out.append({"type": "person", "value": nm, "display": nm,
+                                    "sources": ["ccgp"],
+                                    "context": {"from": "ccgp_contact_person", "phone": ph}})
+                    if ph:
+                        out.append({"type": "phone", "value": ph, "sources": ["ccgp"],
+                                    "context": {"from": "ccgp_contact", "contact_name": nm}})
+                return out
+            if attr == "pgp":
+                fields = result.get("fields") or {}
+                if not fields.get("found"):
+                    return []
+                out = []
+                fp = str(fields.get("fingerprint") or "")
+                created = str(fields.get("key_created") or "")
+                seen_emails: set[str] = set()
+                for uid in (fields.get("uids") or []):
+                    if not isinstance(uid, dict):
+                        continue
+                    name = normalize_name(uid.get("name") or "")
+                    email = str(uid.get("email") or "").strip().lower()
+                    if email and email not in seen_emails:
+                        seen_emails.add(email)
+                        out.append({"type": "email", "value": email, "display": email,
+                                    "sources": ["pgp"],
+                                    "context": {"from": "pgp_uid_email",
+                                                "fingerprint": fp, "key_created": created,
+                                                "key_name": name}})
+                    # VKS 隐私设计下 UID 常只有邮箱 → 以邮箱为 person 标识
+                    label = name or email
+                    if label and len(label) <= 60:
+                        out.append({"type": "person", "value": label, "display": label,
+                                    "sources": ["pgp"],
+                                    "context": {"from": "pgp_key_holder",
+                                                "fingerprint": fp, "key_created": created,
+                                                "email": email, "name": name}})
+                for em in (fields.get("emails") or []):
+                    em = str(em).strip().lower()
+                    if em and em not in seen_emails:
+                        seen_emails.add(em)
+                        out.append({"type": "email", "value": em, "display": em,
+                                    "sources": ["pgp"],
+                                    "context": {"from": "pgp_uid_email",
+                                                "fingerprint": fp, "key_created": created}})
                 return out
             if attr == "patent":
                 fields = result.get("fields") or {}
@@ -1228,6 +1301,92 @@ class EntityAssociationEngine:
             if attr == "hunter":
                 fields = result.get("fields") or {}
                 return _hunter_entities(fields, "hunter")
+            # Unconventional identity lanes (2026-10-21):
+            # on-chain identity + git deep + cert contacts.
+            if attr == "ens_lookup":
+                fields = result.get("fields") or {}
+                if not fields.get("resolved"):
+                    return []
+                out = []
+                name = str(fields.get("name") or "").strip()
+                address = str(fields.get("address") or "").strip()
+                if name:
+                    out.append({"type": "username_profile", "value": name,
+                                "sources": ["ens_lookup"],
+                                "context": {"from": "ens_name",
+                                             "address": address,
+                                             "note": "链上自选别名，非实名"}})
+                if address:
+                    out.append({"type": "crypto_address", "value": address,
+                                "sources": ["ens_lookup"],
+                                "context": {"from": "ens_resolve",
+                                             "ens_name": name}})
+                return out
+            if attr == "poap_lookup":
+                fields = result.get("fields") or {}
+                out = []
+                for b in (fields.get("badges") or []):
+                    if not isinstance(b, dict):
+                        continue
+                    ename = str(b.get("event_name") or "").strip()
+                    if not ename:
+                        continue
+                    out.append({"type": "event_attendance", "value": ename,
+                                "sources": ["poap_lookup"],
+                                "context": {"from": "poap_badge",
+                                             "city": b.get("city", ""),
+                                             "country": b.get("country", ""),
+                                             "start_date": b.get("start_date", ""),
+                                             "note": "公开出席徽章，可转赠/代领"}})
+                return out
+            if attr == "github_deep_extra":
+                fields = result.get("fields") or {}
+                out = []
+                ce = fields.get("commit_author_emails") or {}
+                for e in (ce.get("emails") or []):
+                    if not isinstance(e, dict):
+                        continue
+                    email = str(e.get("email") or "").strip()
+                    if not email:
+                        continue
+                    out.append({"type": "email", "value": email,
+                                "sources": ["github_deep_extra"],
+                                "context": {"from": "commit_author_email",
+                                             "names": e.get("names", []),
+                                             "repos": e.get("repos", [])[:5],
+                                             "note": "git 自填元数据，可伪造"}})
+                sp = fields.get("starred_profile") or {}
+                for lang, count in list((sp.get("languages") or {}).items())[:5]:
+                    out.append({"type": "tech_interest", "value": str(lang),
+                                "sources": ["github_deep_extra"],
+                                "context": {"from": "starred_languages",
+                                             "star_count": count}})
+                return out
+            if attr == "crtsh_contact":
+                fields = result.get("fields") or {}
+                out = []
+                for o in (fields.get("org_names") or []):
+                    if not isinstance(o, dict):
+                        continue
+                    name = str(o.get("name") or "").strip()
+                    if not name:
+                        continue
+                    out.append({"type": "org", "value": name,
+                                "sources": ["crtsh_contact"],
+                                "context": {"from": "cert_subject_issuer",
+                                             "origin": o.get("origin", ""),
+                                             "note": "证书组织字段，lead 级别"}})
+                for e in (fields.get("contact_emails") or []):
+                    if not isinstance(e, dict):
+                        continue
+                    email = str(e.get("email") or "").strip()
+                    if not email:
+                        continue
+                    out.append({"type": "email", "value": email,
+                                "sources": ["crtsh_contact"],
+                                "context": {"from": "cert_contact",
+                                             "origin": e.get("origin", "")}})
+                return out
         except Exception:
             return []
         return []
@@ -2574,6 +2733,13 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
     try:
         from adapters.patent_adapter import PatentLookup
         engine.patent = PatentLookup()
+    except Exception:
+        pass
+
+    # Unconventional identity lane (2026-10-21): PGP public key directory
+    try:
+        from adapters.public_pgp_adapter import PgpKeyLookup
+        engine.pgp = PgpKeyLookup()
     except Exception:
         pass
 
