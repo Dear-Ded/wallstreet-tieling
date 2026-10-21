@@ -6,6 +6,13 @@
 
 ## Unreleased — OSINT 数据获取加强
 
+### 2026-10-21 下午 — Telegram 公开频道/群组情报源
+- 新增 `adapters/telegram_channel_adapter.py`：`TelegramChannelLookup`（SafeResearchAdapter，EXPERIMENTAL，`default_enabled=False`）。核心：`https://t.me/s/<handle>` 公开预览页免登录解析（频道名/简介/订阅数/近 20 条帖子文本+时间戳+帖子 URL+阅读量+媒体标记）；不存在或私有 handle 走 302 到 `t.me/<handle>`（无 /s/）即判为无公开预览，不盲跟。关键词仅做直接 handle 解析，无效 handle 返回结构化空结果。
+- tgstat.com 逆向挖掘（`docs/research/telegram-tgstat-reverse-20261021.md`）：前端 JS 定位到 `POST /channels/global-search`（TopSearch 类，`data={query}`），plain HTTP 复现确认**全部搜索端点登录墙**（`/channels/global-search`、`/search`、`/channels/search` 均返回 Authentication Required / Sign in to access this page），未登录、未绕验证，按证据停止。公开可用：`GET /channel/@<handle>`（200、服务端渲染、robots.txt 允许）→ 精确订阅数 + 频道简介 + 关联 handle（频道主其他公开频道，发现路线）。已落地为 opt-in 增强 `enrich_with_tgstat(handle)` / `query_channel(..., enrich=True)`，独立 5s 限速 + 独立审计记录。
+- `core/connector_registry.py` 注册 `public_telegram_channel_lookup`（field_contract + runtime_companion implementation pack，domains=PEOPLE+SOCIAL_WEB）。
+- 新增 `tests/unit/test_telegram_channel_adapter.py`（18 项）：fixture 离线覆盖 handle 归一化、URL 构建、302 判定、帖子/计数解析、tgstat 解析与失败降级、enrich 合并。真实联网冒烟：`t.me/s/durov` 20 条帖子解析正常、精确订阅数 10303163、关联 handle 5 个。
+- 红线：不登录、不碰私有群组/私聊、不绕任何验证；只做公开预览面。
+
 ### 2026-10-21 下午 — WhatsMyName Maigret 式 profile 深挖
 - 新增 `core/profile_metadata.py`：纯函数 profile 元数据解析 — 通用 fallback（og:description/meta description/标题）+ 5 个专用解析（GitHub 嵌入 JSON、微博 ajax JSON、豆瓣 signature、知乎嵌入 JSON、Gitee og+嵌入 JSON）；`profile_text()` 拼待挖掘文本喂 `core/contact_extractor`。
 - `adapters/whatsmyname_adapter.py` 扩展：`query(..., enrich_profiles=True)` 对命中站点抓取公开 profile 页（默认关闭，避免默认 692 次请求；`max_profiles=20`、`profile_interval=2.0s` 限速；robots.txt 不允许则跳过；单站失败降级）。`fields` 新增 `sites_found` + `profile_metadata`（含联系方式），同步修复引擎 `_extract` 的 whatsmyname 分支此前读不到 fields 的问题。
