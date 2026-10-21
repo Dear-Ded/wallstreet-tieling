@@ -414,6 +414,19 @@ class EntityAssociationEngine:
     zhaopin: Any = None
     zhipin: Any = None
     ccgp: Any = None
+    # New adapters (2026-10-21)
+    patent: Any = None
+    gleif: Any = None
+    customs: Any = None
+    software_copyright: Any = None
+    juhe_copyright: Any = None
+    hunter: Any = None
+    toutiao: Any = None
+    weibo_relation: Any = None
+    commoncrawl: Any = None
+    dnsdumpster: Any = None
+    threatbook: Any = None
+    gd_credit: Any = None
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -1667,3 +1680,66 @@ def _corporate_entities(record: dict[str, Any], source: str) -> list[dict[str, A
     return ents
 
     # -- family / beneficial-owner inference --------------------------------
+def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
+    """Factory: build EntityAssociationEngine with all available adapters injected.
+
+    Adapters that require credentials (API keys) are skipped unless the key
+    is provided via kwargs.
+    """
+    engine = EntityAssociationEngine()
+
+    # No-key adapters
+    try:
+        from adapters.dnsdumpster_adapter import DNSdumpsterLookup
+        engine.dnsdumpster = DNSdumpsterLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.gleif_adapter import GleifLookup
+        engine.gleif = GleifLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.commoncrawl_adapter import CommonCrawlLookup
+        engine.commoncrawl = CommonCrawlLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.patent_adapter import PatentLookup
+        engine.patent = PatentLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.toutiao_adapter import ToutiaoSearchLookup
+        engine.toutiao = ToutiaoSearchLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.customs_adapter import ZaubaCustomsLookup
+        engine.customs = ZaubaCustomsLookup()
+    except Exception:
+        pass
+
+    # Key-based adapters (only if key provided)
+    if kwargs.get("hunter_api_key"):
+        try:
+            from adapters.hunter_adapter import HunterDomainLookup
+            engine.hunter = HunterDomainLookup(api_key=kwargs["hunter_api_key"])
+        except Exception:
+            pass
+
+    if kwargs.get("threatbook_api_key"):
+        try:
+            from adapters.threatbook_adapter import ThreatBookLookup
+            engine.threatbook = ThreatBookLookup(api_key=kwargs["threatbook_api_key"])
+        except Exception:
+            pass
+
+    return engine
+
+    return engine

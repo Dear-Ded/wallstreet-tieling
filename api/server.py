@@ -320,8 +320,6 @@ def entity_associate():
              "seed_value": "...", "max_depth": 2}
     所有推断标注为 leads，置信度分级，绝不断言。
     """
-    from core.entity_association import EntityAssociationEngine
-
     data = request.get_json() or {}
     seed_type = str(data.get("seed_type") or "").strip()
     seed_value = str(data.get("seed_value") or "").strip()
@@ -331,7 +329,8 @@ def entity_associate():
         return jsonify({"error": "缺少 seed_value 参数"}), 400
 
     try:
-        engine = EntityAssociationEngine()
+        from core.entity_association import create_engine_with_all_adapters
+        engine = create_engine_with_all_adapters()
         result = engine.associate(
             {"type": seed_type, "value": seed_value},
             max_depth=int(data.get("max_depth") or 2),
