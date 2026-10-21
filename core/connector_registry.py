@@ -481,6 +481,34 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "entity_association_engine": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "core/entity_association.py",
+            "core/connector_registry.py",
+            "tests/unit/test_entity_association.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_entity_association.py -q",
+        ],
+        "field_contract": {
+            "record_type": "entity_association_record",
+            "source_hint": "entity_association_engine",
+            "required_fields": ["entities", "associations"],
+            "report_gate": "associations are leads with confidence levels, never assertions",
+        },
+        "operator_notes": ["Cross-source fan-out. Family inference marked as suspected."],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "entity_association_engine",
+            "source_hint": "entity_association_engine",
+            "required_config": [],
+            "record_type": "entity_association_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "association leads feed investigation; identity requires verification",
+            "focused_test": "tests/unit/test_entity_association.py",
+        },
+    },
     "public_weibo_search": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -3188,6 +3216,27 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "region param required by API (defaults to '全国').",
                 "ToS: real-time queries only, no caching or storage of POI data.",
                 "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="entity_association_engine",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "EntityAssociationEngine (core.entity_association).",
+                "Cross-source entity graph: phone/address/name/email seed -> associations.",
+                "Family/business control inference: surname clusters, figurehead risk, UBO.",
+                "All inferences marked as leads with confidence levels, never assertions.",
+                "Public data only, no masking of public info per operator directive.",
+                "Default-off: explicit operator enablement required.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
         ),
