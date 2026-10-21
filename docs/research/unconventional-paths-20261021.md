@@ -379,3 +379,115 @@ sitemap.txt 的读取为公开合规读取。证据 HTML 存 `/tmp/wstl-probe/`
 - 未新增 adapter / 测试 / registry 条目（见第五节判死结论）。
 - 测试计数：本节 13 次目标站 HTTP 探针；新增 focused test 0（无 adapter，
   现有测试套件不受影响）。
+
+---
+
+# 分享链 H5 + 老版本 API（商查不寻常路径之一）— 实测报告（2026-10-21）
+
+> 目标：(1) 天眼查/企查查/启信宝的分享链接（APP/小程序分享出的 H5）常对访客
+> 渲染完整公司信息——找其 URL 规律并实测免登录渲染字段。(2) 老版本 API：
+> qcc/tyc/qixin 历史 v1/v2 接口（从 GitHub spider 项目、Wayback、JS bundle
+> 历史版本里找），鉴权可能弱于现行版，逐个轻测。
+>
+> 红线（铁律）：零用户身份信息、零注册、不登录、不绕验证码、不碰付费
+> openAPI、不伪造签名。只做公开端点 plain HTTP 低频实测。
+>
+> **结论：走不通，不建 adapter。** 三家的分享链 H5 与历史 v1/v2 API，在红线
+> 内没有一条能从当前出口吐出可用公司字段。卡点全部是出口侧可复现的硬门
+> （WAF JS 挑战 / 地域封锁 / 显式鉴权拒绝），不是解析问题。
+
+实查窗口：2026-10-21 15:20–16:10（北京时间）。方法：plain curl HTTP 请求，
+手机 Safari UA（桌面 UA 复测一次），无登录、无 cookie、无签名伪造、
+无 WAF/验证码绕过。出口 IP：美国（对方页面自报 87.81.230.109 / 87.81.238.59）。
+
+## 一、分享链 H5：URL 规律
+
+全网未索引到任何一家的 `/share` 独立路径（`tianyancha.com/share`、
+`qcc.com/share`、`qixin.com/share` 均无命中）。三家 APP/小程序"分享"出去的
+实际就是各自的**规范详情页**：
+
+| 平台 | 分享/详情 URL 规律 | 规律来源 |
+|------|-------------------|----------|
+| 企查查 | `https://www.qcc.com/firm/{32位hex}.html` | Wikidata P10439 formatter URL；Global Energy Monitor、Retraction Watch 引用实例如 `f44b2e73df8264aa94c784be8a48933c`（六盘水化乐煤业有限公司） |
+| 天眼查 | `https://www.tianyancha.com/company/{数字ID}` | Wayback 归档实例 `/company-jyfx/2949131241`；robots 明确放行 `/company/*`（仅禁 `?nav=` 查询串） |
+| 启信宝 | H5 宿主为 `app-html.qixin.com`（生产 Nuxt 配置 `URL_HTML`；App Store 上架信息中隐私政策/用户协议/自动续费 H5 均挂在此 host，如 `/privacy-policy/ios`、`/user-protocol`、`/auto-renewal/app`） | qixin.com 报错页内嵌的 `window.__NUXT__.config` + FoxData 应用营销页 |
+
+**免登录渲染字段实测：三家均为零**（本出口）：
+
+| # | 探针 | 结果 |
+|---|------|------|
+| 1 | `GET www.qcc.com/firm/f44b2e73df8264aa94c784be8a48933c.html`（手机 UA） | 200，23670B，**整页是阿里云 WAF JS 挑战**（`acw_sc__v2` cookie，`renderData.l1` + 混淆 JS）。无 title、无 h1、无公司字段。桌面 UA 复测（`48b6cc86563a59e9fb7c20a05a7f1bb6`）同样 200/23670B/WAF——门在 IP 层，与 UA 无关 |
+| 2 | `GET www.tianyancha.com/company/2949131241`（手机 UA，ID 取自 Wayback 归档） | **HTTP 419**（天眼查反爬专用状态码）+ 地域封锁页："根据相关法律规定，当前所在地区暂不支持访问…当前IP：87.81.230.109，当前地区：美国" |
+| 3 | `GET www.qixin.com/robots.txt` | 无 robots.txt；直接返回 451 地域封锁页（"当前所在地区暂不支持访问"，IP 弗吉尼亚州）。`m.qixin.com/` 同样被阿里云 WAF 以 405 阻断 |
+| 4 | `GET app-html.qixin.com/privacy-policy/ios` | 200，610B——H5 host 本身可达，但仅白名单法务页面可 serving；`/robots.txt` 被 WAF 405 阻断，无从得知分享页路径 |
+
+## 二、老版本 API：清单与轻测
+
+从 GitHub spider 项目源码挖到的历史接口（均为公开仓库代码中的 endpoint
+常量，非抓包）：
+
+| 宿主 | 路径 | 版本/端 | 鉴权要求 | 2026-10-21 实测 | 判定 |
+|------|------|---------|----------|-----------------|------|
+| `appv3.qichacha.net` | `/app/v1/admin/getAccessToken`、`/app/v1/base/getNewCompanys` | 企查查 APP v1（2019，`zhaoboy9692/qccspider`） | `sign=md5(deviceId+timestamp+secretKey)`——**secretKey 在仓库中被作者隐去**（"请关注公众号留言获取"）；作者自注"企查查升级，该接口失效" | 连接失败（HTTP 000，host 已不可达） | 已死亡；且伪造 sign 本就踩红线 |
+| `xcx.qichacha.com` | `/wxa/v1/base/advancedSearchNew`、`/wxa/v1/base/getEntDetail`、`/wxa/v1/admin/getAreaList` | 企查查微信小程序 v1（2019，`bouxin/company-crawler`） | 1 小时有效 token（需 APP 登录获取）+ no-login cookie | TLS 建连后空回包；DNS 解析到 `198.18.253.142`（benchmark 段，出口黑洞） | 本出口不可达；且 token 需登录 |
+| `api9.tianyancha.com` | `/services/v3/search/sNorV3/{q}` | 天眼查小程序 v3（`TYC-XCX-WX`，`bouxin/company-crawler`） | `Authorization` + `x-auth-token` 请求头（仓库中均已打码） | 200 返回 `{"data":null,"isLogin":0,"message":"unauthorized api","state":"warn"}` | 存活但**显式拒绝未鉴权调用**，门是明的 |
+| `api.tianyancha.com` | `/services/open/...` | 付费 openAPI | 付费 key | 未探（红线：不碰付费 openAPI） | 出局 |
+| `api.qichacha.com` | `/ECIPartner/GetList` 等 167 个 | 付费 openAPI | 付费 key + `Md5(key+Timespan+SecretKey)` | 未探（红线） | 出局 |
+
+另：2018 年左右的 `Dephin/Tianyancha` 等老爬虫走的是纯 web HTML
+（`/search?key=` + 详情页），无独立 API；如今天眼查 robots 已
+`Disallow: /search*`，此路同样被 robots 判死。
+
+## 三、robots.txt 口径（adapter 若要建必须遵守）
+
+- `www.qcc.com`：`Disallow: /api*`、`/*?*`、`/*.shtml$`、`/search?key=*`、
+  `/weblogin?*`、`/mlogin*`——任何带查询串的 API 探针在此口径下都不合规；
+  `/firm/*.html` 原则放行。
+- `www.tianyancha.com`：放行 `/company/*`（禁 `?nav=`）；禁 `/search*`、
+  `/wxApi/*`、`/pagination/*`、`/snapshot*`、`/*?*`。
+- `www.qixin.com`：无 robots.txt（本出口直接 451）。
+- `app-html.qixin.com`：robots.txt 自身被 WAF 405，未知。
+
+## 四、精确卡点
+
+1. **企查查**：访客详情页被阿里云 WAF `acw_sc__v2` JS 挑战拦（IP 层，换 UA
+   无用）；解挑战=绕 bot 检测，红线禁区。老 APP v1 host 已死亡；小程序 v1
+   host 本出口不可达且要登录 token。
+2. **天眼查**：本出口（美国 IP）被地域封锁 + 419 反爬；小程序 v3 API 存活但
+   明示 `unauthorized api`；web 搜索路径被 robots 禁止。
+3. **启信宝**：全站（含 m 站）对非中国大陆 IP 地域封锁/WAF 阻断；H5 host 仅
+   白名单法务页可达，分享页路径未知且无法枚举。
+4. 共性：三家都把"弱鉴权老接口"清干净了——2019 年的 v1 全部下线或收紧到
+   登录态；当前唯一的免登录渲染面是 web 详情页，而详情页又被 WAF/地域门挡
+   在本出口之外。
+
+## 五、红线合规声明
+
+本节共 **13 次目标站 HTTP 探针**（上表探针 #1–#4 与 §二实测列），全部为
+无凭证、低频 GET（仅 1 次 API 门形态探针带查询串，其余无查询串）；
+8 次公开 web 搜索；GitHub API / raw.githubusercontent / web.archive.org
+CDX 只读公开资料。未注册、未登录、未伪造签名、未解任何挑战、未触碰付费
+接口。`/tmp` 下探针原始 HTML 为证据草稿，未入库。
+
+## 六、建议
+
+1. **不建 adapter、不改 `core/connector_registry.py`**；本报告即交付物，
+   故无 registry dict entry 提交。
+2. **换 CN 出口复测**（最可能走通）：三家详情页都被搜索引擎索引、被第三方
+   引用，说明从国内 IP 访客可渲染。需要 parent 具备条件的通道（用户浏览器
+   代管 / CN 出口）复测探针 #1、#2；若渲染出字段，adapter 可按
+   `fiftyeight_h5_adapter.py` 模式建（EXPERIMENTAL、默认关闭、遵守 §三 robots
+   口径）。
+3. **用户给一条真实分享链接**：从其手机 APP 分享一家公司给助手，捕获真实
+   分享 URL（含可能的参数），再定向测试该形态。
+4. 启信宝 H5 分享路径：拿到真实分享链接前不做枚举（WAF 会把枚举当攻击）。
+5. **不建议**：伪造 sign（红线）、解 WAF JS 挑战（绕验证，红线）、买
+   openAPI key（红线）、登录态 cookie（红线）。
+
+## 七、交付
+
+- 追加：`docs/research/unconventional-paths-20261021.md`（本节：分享链 H5 +
+  老版本 API）。
+- 未新增 adapter / 测试 / registry 条目（见第六节判死结论）。
+- 测试计数：本节 13 次目标站 HTTP 探针；新增 focused test 0（无 adapter，
+  现有测试套件不受影响）。
