@@ -481,6 +481,39 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_wenshu_case_records": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/wenshu_court_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_wenshu_court_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_wenshu_court_adapter.py tests/unit/test_connector_registry.py -q",
+            "npm run codex:mcp-smoke",
+        ],
+        "field_contract": {
+            "record_type": "wenshu_case_record",
+            "source_hint": "public_wenshu_case_records",
+            "required_fields": ["total_count", "cases"],
+            "report_gate": "case records are public judicial data; litigation presence is a risk signal, not a guilt assertion",
+        },
+        "operator_notes": [
+            "Browser-assisted: operator copies rest.q4w response JSON from browser devtools.",
+            "3s interval. No CAPTCHA bypass attempted.",
+        ],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_wenshu_case_records",
+            "source_hint": "public_wenshu_case_records",
+            "required_config": [],
+            "record_type": "wenshu_case_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "case records feed litigation-risk leads; party identity requires exact/strong match and admission tests",
+            "focused_test": "tests/unit/test_wenshu_court_adapter.py::test_parse_browser_result_extracts_cases",
+        },
+    },
     "public_amap_poi_search": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -2850,6 +2883,28 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "credentialed_depth_requires_admission", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_wenshu_case_records",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE, RetrievalDomain.IP_TECH),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "WenshuCaseLookup adapter (adapters.wenshu_court_adapter).",
+                "China Judgments Online (wenshu.court.gov.cn) - SPC official platform.",
+                "BROWSER-ASSISTED: search API requires DES-encrypted params (anti-scraping);",
+                "query() returns interaction_required with browser instructions;",
+                "parse_browser_result() structures the copied response JSON.",
+                "No credentials, no login. Case title/number/court/date/type/doc-ID extraction.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only", "browser_assisted"),
         ),
         ConnectorCapability(
             name="public_amap_poi_search",
