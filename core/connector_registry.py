@@ -505,6 +505,22 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "operator_notes": ["Key via constructor."],
         "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_threatbook_lookup", "source_hint": "public_threatbook_lookup", "required_config": ["api_key"], "record_type": "threatbook_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "reputation leads feed association", "focused_test": "tests/unit/test_threatbook_adapter.py"},
     },
+    "public_urlscan_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/urlscan_adapter.py", "core/connector_registry.py", "tests/unit/test_urlscan_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_urlscan_adapter.py -q"],
+        "field_contract": {"record_type": "urlscan_record", "source_hint": "public_urlscan_lookup", "required_fields": ["scans"], "report_gate": "submitted scans are public", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
+        "operator_notes": ["No key. Documented public API; robots.txt Disallow: /api/ targets crawlers (see adapter docstring). Rate limit 5s, small page sizes, modest use."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_urlscan_lookup", "source_hint": "public_urlscan_lookup", "required_config": [], "record_type": "urlscan_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "scan archive leads feed association", "focused_test": "tests/unit/test_urlscan_adapter.py"},
+    },
+    "public_email_pattern_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/email_pattern_adapter.py", "core/connector_registry.py", "tests/unit/test_email_pattern_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_email_pattern_adapter.py -q"],
+        "field_contract": {"record_type": "email_pattern_record", "source_hint": "public_email_pattern_lookup", "required_fields": ["candidates"], "report_gate": "pattern candidates are low-confidence leads", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
+        "operator_notes": ["No key. Offline pattern generation + DoH MX check only. All candidates confidence=low, unverified. SMTP liveness probing is a red line — never."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_email_pattern_lookup", "source_hint": "public_email_pattern_lookup", "required_config": [], "record_type": "email_pattern_record", "subject_match_levels": ["review"], "promotion_gate": "candidates feed association as low-confidence leads only", "focused_test": "tests/unit/test_email_pattern_adapter.py"},
+    },
     "public_telegram_channel_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/telegram_channel_adapter.py", "core/connector_registry.py", "tests/unit/test_telegram_channel_adapter.py"],
