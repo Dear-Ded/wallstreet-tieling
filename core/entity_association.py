@@ -373,6 +373,40 @@ def _court_notice_entities(notice: dict[str, Any], source: str) -> list[dict[str
     return ents
 
 
+def _qcc_entities(profile: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """企查查公司 profile -> business 实体 + 法定代表人 person 实体。
+
+    Expected record shape (adapters/qcc_waf_adapter.parse_firm_profile):
+        {"company_name", "legal_rep", "capital", "founded", "status", ...}
+    全部是 lead：context 标注来源与字段。
+    """
+    ents: list[dict[str, Any]] = []
+    name = str(profile.get("company_name", "") or "").strip()
+    if name:
+        ents.append({
+            "type": "business", "value": name, "display": name,
+            "sources": [source],
+            "context": {
+                "from": "qcc_company_profile",
+                "capital": profile.get("capital", ""),
+                "founded": profile.get("founded", ""),
+                "status": profile.get("status", ""),
+                "page_title": profile.get("page_title", ""),
+            },
+        })
+    rep = str(profile.get("legal_rep", "") or "").strip()
+    if rep and name:
+        ents.append({
+            "type": "person", "value": rep, "display": rep,
+            "sources": [source],
+            "context": {
+                "from": "qcc_legal_rep",
+                "company": name,
+            },
+        })
+    return ents
+
+
 def _patent_entities(patent: dict[str, Any], source: str) -> list[dict[str, Any]]:
     """Google Patents 单条专利 -> 申请人(企业) + 发明人(个人).
 
@@ -1017,6 +1051,12 @@ class EntityAssociationEngine:
                 notices = fields.get("notices") or []
                 return [e for n in notices if isinstance(n, dict)
                         for e in _court_notice_entities(n, "court_notice")]
+            if attr == "qcc":
+                fields = result.get("fields") or {}
+                profile = fields.get("profile") or {}
+                if not isinstance(profile, dict) or profile.get("blocked"):
+                    return []
+                return _qcc_entities(profile, "qcc")
             if attr == "corporate":
                 fields = result.get("fields") or {}
                 recs = fields.get("corporate_records") or []
@@ -3420,6 +3460,14 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
     try:
         from adapters.xiaohongshu_adapter import XiaohongshuNoteLookup
         engine.xiaohongshu_user = XiaohongshuNoteLookup()
+    except Exception:
+        pass
+
+    # 企查查 WAF-bypass (2026-10-21): 代理 + acw_sc__v2 纯 Python 求解；
+    # 代理地址可配（默认公开代理），走通需干净出口。
+    try:
+        from adapters.qcc_waf_adapter import QccWafBypassLookup
+        engine.qcc = QccWafBypassLookup()
     except Exception:
         pass
 

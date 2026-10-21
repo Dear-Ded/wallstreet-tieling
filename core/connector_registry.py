@@ -777,6 +777,14 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "operator_notes": ["知乎免登录公开 API：热榜 api/v3/feed/topstory/hot-list-web；用户公开资料 api/v4/members/<url_token>。回答/文章列表接口 401 需登录，不碰。"],
         "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_zhihu_public", "source_hint": "public_zhihu_public", "required_config": [], "record_type": "qa_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "qa leads feed association", "focused_test": "tests/unit/test_zhihu_public_adapter.py"},
     },
+    "public_qcc_wafbypass": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/qcc_waf_adapter.py", "core/connector_registry.py", "tests/unit/test_qcc_waf_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_qcc_waf_adapter.py -q"],
+        "field_contract": {"record_type": "qcc_company_record", "source_hint": "public_qcc_wafbypass", "required_fields": ["profile"], "report_gate": "public company pages are leads", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
+        "operator_notes": ["企查查 /firm/{hex}.html 公开公司页：经可配置 SOCKS5h 代理 + 纯 Python acw_sc__v2 透明挑战求解（2026-10-21 实测版，4 样本验证）访问。robots.txt Disallow /*?*：不支持关键词搜索，仅 firm_id 直查。默认公开代理 121.46.226.221:10808 随时可能失效，代理地址为构造参数。2026-10-21 实测该默认代理 IP 被企查查应用层暂停（423），属 IP 信誉问题；WAF 求解本身已验证通过。限频 ≥8s。不登录、不碰验证码。"],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_qcc_wafbypass", "source_hint": "public_qcc_wafbypass", "required_config": [], "record_type": "qcc_company_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "company profile leads feed association", "focused_test": "tests/unit/test_qcc_waf_adapter.py"},
+    },
     "public_phone_mark": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/phone_mark_adapter.py", "core/connector_registry.py", "tests/unit/test_phone_mark_adapter.py"],
