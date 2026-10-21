@@ -439,6 +439,8 @@ class EntityAssociationEngine:
         associations.extend(self._build_associations(entities))
         associations.extend(self._infer_family_control(entities))
         associations.extend(self._resolve_person_identity(entities))
+        # Extract contacts (QQ/WeChat/phone/email/UID) from entity contexts
+        associations.extend(self._extract_entity_contacts(entities))
         patterns = self._detect_patterns(entities, associations)
 
         entity_list = sorted(entities.values(),
@@ -1328,6 +1330,46 @@ class EntityAssociationEngine:
                     "entities": [p["display"] for p in persons],
                     "platforms": sorted(platforms),
                     "note": "lead，不是身份证明；需人工核实头像/内容",
+                })
+        return assocs
+
+    def _extract_entity_contacts(
+            self, entities: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """从实体上下文提取联系方式（QQ/微信/手机/邮箱/平台UID）。
+
+        Uses core/contact_extractor.py. Each found contact becomes an
+        association linking the person to the contact value.
+        """
+        try:
+            from core.contact_extractor import extract_contacts
+        except ImportError:
+            return []
+        assocs: list[dict[str, Any]] = []
+        for eid, e in entities.items():
+            if e["type"] != "person":
+                continue
+            ctx = e.get("context") or {}
+            # gather text from bio/description/intro fields
+            texts = []
+            for k in ("bio", "description", "intro", "signature", "about"):
+                v = ctx.get(k)
+                if v and isinstance(v, str):
+                    texts.append(v)
+            if not texts:
+                continue
+            combined = "\n".join(texts)
+            try:
+                contacts = extract_contacts(combined)
+            except Exception:
+                continue
+            for c in contacts:
+                assocs.append({
+                    "pattern": "contact_found",
+                    "contact_type": c.get("type"),
+                    "description": f"在 {e['display']} 的资料中发现{ c.get('type') }",
+                    "confidence": c.get("confidence", "weak"),
+                    "entities": [e["display"]],
+                    "note": "lead，需核实",
                 })
         return assocs
 
