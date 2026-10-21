@@ -1,0 +1,1257 @@
+#!/usr/bin/env python3
+"""Entity Association Engine.
+
+Cross-source entity association for offline-business / people due diligence:
+seed (phone | address | business_name | person_name | email)
+  -> fan-out to offline-business lane adapters
+  -> extract entities (business / person / phone / address / email)
+  -> build association graph
+  -> detect interesting patterns
+
+Design rules (per project house rules):
+- Adapters are INJECTED, never constructed here: the caller decides what is
+  enabled. Nothing runs by default.
+- Every adapter failure degrades to a per-source error entry; one source
+  never breaks the whole investigation.
+- Associations are *leads* ("same phone seen at two POIs"), never identity
+  assertions. A shared phone/address suggests a relationship; it does not
+  prove common ownership.
+- Public data only. All values come from public sources (map POI listings,
+  public shop pages, public social profiles, public court records, public
+  WeChat articles). The engine does NOT mask or redact publicly obtained
+  contact info -- masking public listings would destroy the association
+  signal this module exists to produce.
+- No credentials, no login, no CAPTCHA bypass. Adapters that need
+  interaction return interaction_required and are skipped in fan-out.
+
+Phone normalization (Chinese numbers):
+- Strip spaces, dashes, parentheses, dots.
+- Strip country prefixes: +86 / 86 / 0086.
+- Mobile: 11 digits starting with 1 -> canonical 11-digit string.
+- Landline: 0 + 2-3 digit area code + 7-8 digit number, optional ext.
+- Multi-number fields split on ;, 、, /, whitespace.
+
+Address normalization:
+- match_key: strip whitespace; drop floor/room/unit suffixes; keep street
+  number. Masked addresses (with * chars) are kept for display but
+  excluded from matching -- a masked address cannot corroborate identity.
+- display: original string, unmodified.
+
+Name normalization: strip whitespace; exact match only.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from typing import Any
+
+
+_MOBILE_RE = re.compile(r"^1[3-9]\d{9}$")
+_LANDLINE_RE = re.compile(r"^0\d{2,3}\d{7,8}(?:\d{1,6})?$")
+_MOBILE_FIND_RE = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
+_EMAIL_FIND_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+
+
+def normalize_phone(raw: Any) -> str:
+    """Canonical phone digits, or '' if not a plausible phone number."""
+    if not raw:
+        return ""
+    s = str(raw).strip()
+    s = re.split(r"(?:转|ext|EXT|分机)", s)[0]
+    digits = re.sub(r"\D", "", s)
+    if digits.startswith("0086"):
+        digits = digits[4:]
+    elif digits.startswith("86") and len(digits) > 11:
+        digits = digits[2:]
+    if _MOBILE_RE.match(digits):
+        return digits
+    if _LANDLINE_RE.match(digits):
+        return digits
+    return ""
+
+
+def split_phones(raw: Any) -> list[str]:
+    """Split a multi-number field into canonical phones (deduped, ordered)."""
+    if not raw:
+        return []
+    parts = re.split(r"[;；、/／,，|｜\s]+", str(raw))
+    out: list[str] = []
+    for p in parts:
+        n = normalize_phone(p)
+        if n and n not in out:
+            out.append(n)
+    return out
+
+
+def extract_phones_from_text(text: Any) -> list[str]:
+    """Find phone numbers inside free text (bios, article summaries)."""
+    if not text:
+        return []
+    t = str(text)
+    out: list[str] = []
+    for m in _MOBILE_FIND_RE.finditer(t):
+        n = normalize_phone(m.group(0))
+        if n and n not in out:
+            out.append(n)
+    for m in re.finditer(r"(?:\(0(\d{2,3})\)|0(\d{2,3}))[-\s]?(\d{7,8})", t):
+        area = m.group(1) or m.group(2)
+        n = normalize_phone("0" + area + m.group(3))
+        if n and n not in out:
+            out.append(n)
+    return out
+
+
+def extract_emails_from_text(text: Any) -> list[str]:
+    if not text:
+        return []
+    out: list[str] = []
+    for m in _EMAIL_FIND_RE.finditer(str(text)):
+        e = m.group(0).lower()
+        if e not in out:
+            out.append(e)
+    return out
+
+
+def normalize_address(raw: Any) -> tuple[str, str]:
+    """Return (match_key, display). match_key '' means not matchable."""
+    if not raw:
+        return "", ""
+    display = str(raw).strip()
+    if not display or len(display) < 4:
+        return "", display
+    if re.search(r"[*＊×xX]{2,}", display):
+        return "", display
+    key = re.sub(r"\s+", "", display)
+    key = re.sub(r"\d+\s*(?:层|楼)", "", key)
+    key = re.sub(r"(\d+室|\d+房|-\d{2,}|[A-Z]座)", "", key)
+    key = key.rstrip("-")
+    if len(key) < 6:
+        return "", display
+    return key, display
+
+
+def normalize_name(raw: Any) -> str:
+    if not raw:
+        return ""
+    s = re.sub(r"\s+", "", str(raw)).strip("【】[]()（）\"'“”")
+    return s
+
+
+def entity_id(entity_type: str, normalized_value: str) -> str:
+    return hashlib.sha256(
+        ("{}:{}".format(entity_type, normalized_value)).encode("utf-8")
+    ).hexdigest()[:16]
+
+
+# ---------------------------------------------------------------------------
+# Entity extractors (per source result shape)
+# ---------------------------------------------------------------------------
+
+def _poi_entities(poi: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """Extract entities from an amap/baidu POI record."""
+    ents: list[dict[str, Any]] = []
+    name = normalize_name(poi.get("name"))
+    if name:
+        ents.append({
+            "type": "business", "value": name,
+            "display": str(poi.get("name", ""))[:80],
+            "sources": [source],
+            "context": {
+                k: poi.get(k) for k in
+                ("province", "city", "district", "area", "type", "tag")
+                if poi.get(k)
+            },
+        })
+    for ph in split_phones(poi.get("tel")):
+        ents.append({
+            "type": "phone", "value": ph, "display": ph,
+            "sources": [source], "context": {"of_business": name},
+        })
+    addr_key, addr_display = normalize_address(poi.get("address"))
+    if addr_display:
+        ents.append({
+            "type": "address", "value": addr_key or addr_display,
+            "display": addr_display, "matchable": bool(addr_key),
+            "sources": [source],
+            "context": {
+                "province": poi.get("province", ""),
+                "city": poi.get("city") or poi.get("cityname", ""),
+                "district": poi.get("district") or poi.get("adname", ""),
+                "of_business": name,
+            },
+        })
+    return ents
+
+
+def _dianping_entities(shop: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    ents: list[dict[str, Any]] = []
+    if not shop.get("shop_found"):
+        return ents
+    name = normalize_name(shop.get("shop_name"))
+    if name:
+        branch = normalize_name(shop.get("branch_name"))
+        disp = "{}({})".format(name, branch) if branch else name
+        ents.append({
+            "type": "business", "value": name, "display": disp,
+            "sources": [source],
+            "context": {
+                "shop_id": shop.get("shop_id", ""),
+                "city": shop.get("city_name", ""),
+                "region": shop.get("region_name", ""),
+            },
+        })
+    for ph in split_phones(shop.get("phone")):
+        ents.append({
+            "type": "phone", "value": ph, "display": ph,
+            "sources": [source], "context": {"of_business": name},
+        })
+    addr_key, addr_display = normalize_address(shop.get("address"))
+    if addr_display:
+        ents.append({
+            "type": "address", "value": addr_key or addr_display,
+            "display": addr_display, "matchable": bool(addr_key),
+            "sources": [source], "context": {"of_business": name},
+        })
+    return ents
+
+
+def _douyin_entities(result: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    ents: list[dict[str, Any]] = []
+    fields = result.get("fields") or {}
+    profile = fields.get("profile") or {}
+    if not profile:
+        return ents
+    nick = normalize_name(profile.get("nickname"))
+    if nick:
+        ents.append({
+            "type": "business", "value": nick, "display": nick,
+            "sources": [source],
+            "context": {
+                "douyin_id": profile.get("douyin_id", ""),
+                "enterprise_verify": bool(profile.get("enterprise_verify")),
+                "verify_reason": str(profile.get("verify_reason", ""))[:80],
+                "follower_count": profile.get("follower_count"),
+            },
+        })
+    sig = str(profile.get("signature", "") or "")
+    for ph in extract_phones_from_text(sig):
+        ents.append({
+            "type": "phone", "value": ph, "display": ph,
+            "sources": [source],
+            "context": {"from": "douyin_signature", "of_account": nick},
+        })
+    for em in extract_emails_from_text(sig):
+        ents.append({
+            "type": "email", "value": em, "display": em,
+            "sources": [source],
+            "context": {"from": "douyin_signature", "of_account": nick},
+        })
+    for poi in fields.get("poi_list") or []:
+        if not isinstance(poi, dict):
+            continue
+        pname = normalize_name(poi.get("poi_name"))
+        if pname and pname != nick:
+            ents.append({
+                "type": "business", "value": pname, "display": pname,
+                "sources": [source],
+                "context": {"from": "douyin_video_poi", "account": nick},
+            })
+        akey, adisp = normalize_address(poi.get("poi_address"))
+        if adisp:
+            ents.append({
+                "type": "address", "value": akey or adisp,
+                "display": adisp, "matchable": bool(akey),
+                "sources": [source],
+                "context": {"from": "douyin_video_poi", "account": nick},
+            })
+    return ents
+
+
+def _sogou_entities(article: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    ents: list[dict[str, Any]] = []
+    text = "{} {}".format(article.get("title", ""), article.get("summary", ""))
+    for ph in extract_phones_from_text(text):
+        ents.append({
+            "type": "phone", "value": ph, "display": ph,
+            "sources": [source],
+            "context": {
+                "from": "wechat_article",
+                "article_title": str(article.get("title", ""))[:60],
+                "account": article.get("account", ""),
+            },
+        })
+    for em in extract_emails_from_text(text):
+        ents.append({
+            "type": "email", "value": em, "display": em,
+            "sources": [source],
+            "context": {
+                "from": "wechat_article",
+                "article_title": str(article.get("title", ""))[:60],
+            },
+        })
+    return ents
+
+
+def _wenshu_entities(case: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    ents: list[dict[str, Any]] = []
+    parties = str(case.get("parties", "") or "")
+    for chunk in re.split(r"[，,；;、]", parties):
+        nm = re.sub(
+            r"^(原告|被告|上诉人|被上诉人|申请人|被申请人|第三人|原审原告|原审被告)[:：\s]*",
+            "", chunk).strip()
+        nm = normalize_name(nm)
+        if not nm or len(nm) > 12 or "法院" in nm:
+            continue
+        if "公司" in nm or "店" in nm or "厂" in nm:
+            ents.append({
+                "type": "business", "value": nm, "display": nm,
+                "sources": [source],
+                "context": {
+                    "from": "court_case_party",
+                    "case_number": case.get("case_number", ""),
+                },
+            })
+        else:
+            ents.append({
+                "type": "person", "value": nm, "display": nm,
+                "sources": [source],
+                "context": {
+                    "from": "court_case_party",
+                    "case_number": case.get("case_number", ""),
+                    "case_title": str(case.get("title", ""))[:60],
+                },
+            })
+    return ents
+
+
+# ---------------------------------------------------------------------------
+# Engine
+# ---------------------------------------------------------------------------
+
+_SEED_FANOUT: dict[str, list[str]] = {
+    "phone": ["sogou_wx", "douyin", "amap", "baidu_map"],
+    "address": ["amap", "baidu_map", "dianping"],
+    "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate"],
+    "person_name": ["wenshu", "sogou_wx", "douyin"],
+    "email": ["sogou_wx", "douyin"],
+}
+
+_MAX_DEPTH2_FOLLOWUPS = 6
+
+
+@dataclass
+class EntityAssociationEngine:
+    """Cross-source entity association engine.
+
+    All adapters are injected (None = disabled). Nothing runs by default.
+    """
+
+    amap: Any = None
+    baidu_map: Any = None
+    dianping: Any = None
+    douyin: Any = None
+    sogou_wx: Any = None
+    wenshu: Any = None
+    corporate: Any = None  # corporate role adapter: query(name) -> fields.corporate_records
+    max_workers: int = 4
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    def associate(self, seed: dict[str, Any], max_depth: int = 2) -> dict[str, Any]:
+        started = time.monotonic()
+        seed_type = str(seed.get("type", "")).strip()
+        seed_value = str(seed.get("value", "")).strip()
+        if seed_type not in _SEED_FANOUT or not seed_value:
+            return {
+                "seed": seed, "entities": [], "associations": [],
+                "interesting_patterns": [], "source_results": {},
+                "error": "unsupported seed type: {!r}".format(seed_type),
+                "duration_ms": 0,
+            }
+
+        source_results: dict[str, Any] = {}
+        entities: dict[str, dict[str, Any]] = {}
+        associations: list[dict[str, Any]] = []
+
+        d1 = self._fanout(seed_type, seed_value, source_results)
+        self._merge_entities(entities, d1["entities"])
+        associations.extend(d1["associations"])
+
+        if max_depth >= 2:
+            d2 = self._depth2_followup(entities, source_results)
+            self._merge_entities(entities, d2["entities"])
+            associations.extend(d2["associations"])
+
+        associations.extend(self._build_associations(entities))
+        associations.extend(self._infer_family_control(entities))
+        patterns = self._detect_patterns(entities, associations)
+
+        entity_list = sorted(entities.values(),
+                             key=lambda e: (e["type"], e["value"]))
+        return {
+            "seed": {"type": seed_type, "value": seed_value},
+            "entities": entity_list,
+            "associations": self._dedupe_associations(associations),
+            "interesting_patterns": patterns,
+            "source_results": source_results,
+            "data_boundary": "fully_public",
+            "disclaimer": (
+                "All entities are extracted from public sources only. "
+                "Associations are investigative leads, not identity assertions. "
+                "Shared contact info suggests a possible relationship; "
+                "it does not prove common ownership or control."
+            ),
+            "duration_ms": round((time.monotonic() - started) * 1000, 1),
+        }
+
+    # -- fan-out ------------------------------------------------------
+
+    def _fanout(self, seed_type: str, seed_value: str,
+                source_results: dict[str, Any]) -> dict[str, Any]:
+        jobs: list[tuple] = []
+        for attr in _SEED_FANOUT[seed_type]:
+            adapter = getattr(self, attr, None)
+            if adapter is None:
+                continue
+            jobs.append((attr, adapter, (seed_value,), {}))
+
+        entities: list[dict[str, Any]] = []
+        per_seed_assoc: list[dict[str, Any]] = []
+        if not jobs:
+            return {"entities": entities, "associations": per_seed_assoc}
+
+        with ThreadPoolExecutor(
+                max_workers=min(self.max_workers, len(jobs))) as ex:
+            futs = {
+                ex.submit(self._safe_call, attr, adapter, args, kwargs): attr
+                for attr, adapter, args, kwargs in jobs
+            }
+            for fut in as_completed(futs):
+                attr = futs[fut]
+                try:
+                    result = fut.result()
+                except Exception as e:
+                    result = {"error": "{}: {}".format(type(e).__name__, e)}
+                source_results[attr] = _summarize_result(result)
+                if isinstance(result, dict) and not result.get("error") \
+                        and not result.get("interaction_required") \
+                        and not result.get("credentials_required"):
+                    entities.extend(self._extract(attr, result))
+
+        seed_eid = entity_id(seed_type, self._seed_norm(seed_type, seed_value))
+        for e in entities:
+            eid = entity_id(e["type"], e["value"])
+            if eid == seed_eid:
+                continue
+            rel = self._seed_relation(seed_type, e["type"])
+            if rel:
+                per_seed_assoc.append({
+                    "from": seed_eid, "to": eid, "relation": rel,
+                    "strength": "strong",
+                    "sources": sorted(set(e.get("sources", []))),
+                    "note": "seed fan-out hit",
+                })
+        return {"entities": entities, "associations": per_seed_assoc}
+
+    @staticmethod
+    def _safe_call(attr: str, adapter: Any, args: tuple,
+                   kwargs: dict) -> dict[str, Any]:
+        try:
+            if attr == "dianping":
+                kw = str(args[0]).strip()
+                if re.fullmatch(r"\d{4,}", kw) or "dianping.com/shop/" in kw:
+                    return adapter.query_by_shop_id(kw)
+                return adapter.query(kw, **kwargs)
+            return adapter.query(*args, **kwargs)
+        except Exception as e:
+            return {"error": "{}: {}".format(type(e).__name__, e)}
+
+    # -- depth 2 ------------------------------------------------------
+
+    def _depth2_followup(self, entities: dict[str, dict[str, Any]],
+                         source_results: dict[str, Any]) -> dict[str, Any]:
+        followups: list[tuple[str, str]] = []
+        seen: set[tuple[str, str]] = set()
+        for eid, e in entities.items():
+            if len(followups) >= _MAX_DEPTH2_FOLLOWUPS:
+                break
+            if e["type"] == "phone" and self.sogou_wx is not None:
+                key = ("sogou_wx", e["value"])
+                if key not in seen:
+                    seen.add(key)
+                    followups.append(("sogou_wx", e["value"]))
+            elif e["type"] == "address" and e.get("matchable"):
+                for attr in ("amap", "baidu_map"):
+                    if getattr(self, attr, None) is None:
+                        continue
+                    key = (attr, e["value"])
+                    if key not in seen:
+                        seen.add(key)
+                        followups.append((attr, e["value"]))
+                        break
+
+        out_entities: list[dict[str, Any]] = []
+        out_assoc: list[dict[str, Any]] = []
+        if not followups:
+            return {"entities": out_entities, "associations": out_assoc}
+
+        with ThreadPoolExecutor(
+                max_workers=min(self.max_workers, len(followups))) as ex:
+            futs = {
+                ex.submit(self._safe_call, attr, getattr(self, attr),
+                          (qv,), {}): (attr, qv)
+                for attr, qv in followups
+            }
+            for fut in as_completed(futs):
+                attr, qv = futs[fut]
+                try:
+                    result = fut.result()
+                except Exception as e:
+                    result = {"error": "{}: {}".format(type(e).__name__, e)}
+                source_results[attr + ":depth2"] = _summarize_result(result)
+                if isinstance(result, dict) and not result.get("error") \
+                        and not result.get("interaction_required") \
+                        and not result.get("credentials_required"):
+                    out_entities.extend(self._extract(attr, result))
+        return {"entities": out_entities, "associations": out_assoc}
+
+    # -- extraction ----------------------------------------------------
+
+    def _extract(self, attr: str, result: dict[str, Any]) -> list[dict[str, Any]]:
+        try:
+            if attr == "amap":
+                pois = (result.get("fields") or {}).get("pois") or []
+                return [e for p in pois if isinstance(p, dict)
+                        for e in _poi_entities(p, "amap")]
+            if attr == "baidu_map":
+                pois = (result.get("fields") or {}).get("pois") or []
+                return [e for p in pois if isinstance(p, dict)
+                        for e in _poi_entities(p, "baidu_map")]
+            if attr == "dianping":
+                if result.get("shop_found"):
+                    return _dianping_entities(result, "dianping")
+                return []
+            if attr == "douyin":
+                return _douyin_entities(result, "douyin")
+            if attr == "sogou_wx":
+                arts = (result.get("fields") or {}).get("articles") or []
+                return [e for a in arts if isinstance(a, dict)
+                        for e in _sogou_entities(a, "sogou_wx")]
+            if attr == "wenshu":
+                fields = result.get("fields") or {}
+                cases = fields.get("cases") or []
+                return [e for c in cases if isinstance(c, dict)
+                        for e in _wenshu_entities(c, "wenshu")]
+            if attr == "corporate":
+                fields = result.get("fields") or {}
+                recs = fields.get("corporate_records") or []
+                if isinstance(recs, dict):
+                    recs = [recs]
+                return [e for r in recs if isinstance(r, dict)
+                        for e in _corporate_entities(r, "corporate")]
+        except Exception:
+            return []
+        return []
+
+    def _merge_entities(self, entities: dict[str, dict[str, Any]],
+                        new_ents: list[dict[str, Any]]) -> None:
+        for e in new_ents:
+            eid = entity_id(e["type"], e["value"])
+            if eid in entities:
+                old = entities[eid]
+                old["sources"] = sorted(
+                    set(old.get("sources", [])) | set(e.get("sources", [])))
+                old_ctx = old.setdefault("context", {})
+                for k, v in (e.get("context") or {}).items():
+                    if k == "of_business" and v:
+                        # accumulate: one phone/address may belong to many businesses
+                        owners = old_ctx.setdefault("of_businesses", [])
+                        existing = [old_ctx.get("of_business")]
+                        for cand in [v]:
+                            if cand and cand not in existing and cand not in owners:
+                                owners.append(cand)
+                        if not old_ctx.get("of_business"):
+                            old_ctx["of_business"] = v
+                    elif k in ("role", "company") and v:
+                        # accumulate: one person may hold many roles / companies
+                        plural = {"role": "roles", "company": "companies"}[k]
+                        acc = old_ctx.setdefault(plural, [])
+                        seen_vals = [old_ctx.get(k)] + acc
+                        if v not in seen_vals:
+                            acc.append(v)
+                        if not old_ctx.get(k):
+                            old_ctx[k] = v
+                    else:
+                        old_ctx.setdefault(k, v)
+            else:
+                e["id"] = eid
+                e.setdefault("sources", [])
+                # normalize single owner into list form for uniform handling
+                ctx = e.setdefault("context", {})
+                if ctx.get("of_business") and "of_businesses" not in ctx:
+                    ctx["of_businesses"] = [ctx["of_business"]]
+                entities[eid] = e
+
+    # -- association building ------------------------------------------
+
+    def _build_associations(
+            self, entities: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        assocs: list[dict[str, Any]] = []
+        by_type: dict[str, list[dict[str, Any]]] = {}
+        for e in entities.values():
+            by_type.setdefault(e["type"], []).append(e)
+
+        businesses = by_type.get("business", [])
+        phones = by_type.get("phone", [])
+        addresses = [a for a in by_type.get("address", []) if a.get("matchable")]
+        persons = by_type.get("person", [])
+
+        phone_to_biz: dict[str, set[str]] = {}
+        for p in phones:
+            for owner in self._owners(p):
+                phone_to_biz.setdefault(p["value"], set()).add(owner)
+
+        addr_to_biz: dict[str, set[str]] = {}
+        for a in addresses:
+            for owner in self._owners(a):
+                addr_to_biz.setdefault(a["value"], set()).add(owner)
+
+        def biz_eid(name: str) -> str | None:
+            for b in businesses:
+                if b["value"] == name:
+                    return b["id"]
+            return None
+
+        for ph, biznames in phone_to_biz.items():
+            eids = [x for x in (biz_eid(n) for n in biznames) if x]
+            for i in range(len(eids)):
+                for j in range(i + 1, len(eids)):
+                    assocs.append({
+                        "from": eids[i], "to": eids[j],
+                        "relation": "same_phone", "strength": "strong",
+                        "sources": self._sources_of(entities, [eids[i], eids[j]]),
+                        "note": "shared phone {}".format(ph),
+                    })
+
+        for ak, biznames in addr_to_biz.items():
+            eids = [x for x in (biz_eid(n) for n in biznames) if x]
+            for i in range(len(eids)):
+                for j in range(i + 1, len(eids)):
+                    assocs.append({
+                        "from": eids[i], "to": eids[j],
+                        "relation": "same_address", "strength": "strong",
+                        "sources": self._sources_of(entities, [eids[i], eids[j]]),
+                        "note": "shared normalized address",
+                    })
+
+        for a in addresses:
+            for owner in self._owners(a):
+                be = biz_eid(owner)
+                if be:
+                    assocs.append({
+                        "from": be, "to": a["id"],
+                        "relation": "located_at", "strength": "exact",
+                        "sources": sorted(set(a.get("sources", []))),
+                        "note": "",
+                    })
+
+        for p in phones:
+            for owner in self._owners(p):
+                be = biz_eid(owner)
+                if be:
+                    assocs.append({
+                        "from": p["id"], "to": be,
+                        "relation": "contact_of", "strength": "strong",
+                        "sources": sorted(set(p.get("sources", []))),
+                        "note": "",
+                    })
+
+        for per in persons:
+            case_no = (per.get("context") or {}).get("case_number", "")
+            if not case_no:
+                continue
+            for b in businesses:
+                bctx = b.get("context") or {}
+                if bctx.get("from") == "court_case_party" and \
+                        bctx.get("case_number") == case_no:
+                    assocs.append({
+                        "from": per["id"], "to": b["id"],
+                        "relation": "co_party_in_case", "strength": "weak",
+                        "sources": sorted(set(per.get("sources", [])) |
+                                         set(b.get("sources", []))),
+                        "note": "same case {}".format(case_no),
+                    })
+        return assocs
+
+    @staticmethod
+    def _owners(ent: dict[str, Any]) -> list[str]:
+        """All business names linked as owner in entity context."""
+        ctx = ent.get("context") or {}
+        owners: list[str] = []
+        for cand in [ctx.get("of_business")] + list(ctx.get("of_businesses") or []):
+            if cand and cand not in owners:
+                owners.append(cand)
+        return owners
+
+    @staticmethod
+    def _sources_of(entities: dict[str, dict[str, Any]],
+                    eids: list[str]) -> list[str]:
+        s: set[str] = set()
+        for eid in eids:
+            s.update(entities.get(eid, {}).get("sources", []))
+        return sorted(s)
+
+    @staticmethod
+    def _dedupe_associations(
+            assocs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        seen: set[tuple] = set()
+        out: list[dict[str, Any]] = []
+        for a in assocs:
+            key = (a["from"], a["to"], a["relation"])
+            rkey = (a["to"], a["from"], a["relation"])
+            if key in seen or rkey in seen:
+                continue
+            seen.add(key)
+            out.append(a)
+        return out
+
+    # -- pattern detection ----------------------------------------------
+
+    def _detect_patterns(self, entities: dict[str, dict[str, Any]],
+                         assocs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        patterns: list[dict[str, Any]] = []
+        by_type: dict[str, list[dict[str, Any]]] = {}
+        for e in entities.values():
+            by_type.setdefault(e["type"], []).append(e)
+
+        phone_biz: dict[str, set[str]] = {}
+        for a in assocs:
+            if a["relation"] == "contact_of":
+                phone_biz.setdefault(a["from"], set()).add(a["to"])
+        for pid, bizs in phone_biz.items():
+            if len(bizs) >= 2 and pid in entities:
+                patterns.append({
+                    "pattern": "shared_phone_across_businesses",
+                    "description": (
+                        "同一手机号关联 {} 家企业 ({})："
+                        "可能是代办/中介/集团共用号码"
+                    ).format(len(bizs), entities[pid]["display"]),
+                    "entities": sorted(bizs) + [pid],
+                    "severity": "medium",
+                })
+
+        addr_biz: dict[str, set[str]] = {}
+        for a in assocs:
+            if a["relation"] == "located_at":
+                addr_biz.setdefault(a["to"], set()).add(a["from"])
+        for aid, bizs in addr_biz.items():
+            if len(bizs) >= 2 and aid in entities:
+                patterns.append({
+                    "pattern": "shared_address_across_businesses",
+                    "description": (
+                        "同一地址关联 {} 家企业："
+                        "可能是虚拟地址/集中办公/孵化器"
+                    ).format(len(bizs)),
+                    "entities": sorted(bizs) + [aid],
+                    "severity": "medium",
+                })
+
+        person_biz: dict[str, set[str]] = {}
+        for a in assocs:
+            if a["relation"] == "co_party_in_case":
+                person_biz.setdefault(a["from"], set()).add(a["to"])
+        for pid, bizs in person_biz.items():
+            if len(bizs) >= 2 and pid in entities:
+                patterns.append({
+                    "pattern": "person_linked_multiple_businesses",
+                    "description": (
+                        "同一自然人 ({}) 出现在 {} 家企业的案件当事人中："
+                        "关联企业线索"
+                    ).format(entities[pid]["display"], len(bizs)),
+                    "entities": sorted(bizs) + [pid],
+                    "severity": "low",
+                })
+
+        biz_with_contact: set[str] = set()
+        for a in assocs:
+            if a["relation"] in ("contact_of", "located_at"):
+                biz_with_contact.add(a["from"])
+        if len(by_type.get("business", [])) > 1:
+            for b in by_type.get("business", []):
+                if b["id"] not in biz_with_contact:
+                    patterns.append({
+                        "pattern": "business_no_contact_footprint",
+                        "description": (
+                            "企业「{}」在公开渠道未发现电话/地址："
+                            "空壳或纯线上经营信号（需结合其他证据判断）"
+                        ).format(b["display"]),
+                        "entities": [b["id"]],
+                        "severity": "low",
+                    })
+
+        # ---- family / beneficial-owner patterns ----
+        patterns.extend(self._family_patterns(entities, assocs))
+        return patterns
+
+    def _family_patterns(self, entities: dict[str, dict[str, Any]],
+                         assocs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """家族企业信号 / 疑似实控人 / 挂名风险。均为 leads，非事实断言。"""
+        patterns: list[dict[str, Any]] = []
+
+        # company -> persons with corporate roles
+        company_roles: dict[str, list[dict[str, Any]]] = {}
+        for e in entities.values():
+            if e["type"] != "person":
+                continue
+            ctx = e.get("context") or {}
+            if ctx.get("from") == "corporate_roles" and ctx.get("company"):
+                company_roles.setdefault(ctx["company"], []).append(e)
+
+        def _eid(t: str, v: str) -> str:
+            return entity_id(t, v)
+
+        for company, persons in company_roles.items():
+            comp_eid = _eid("business", company)
+            # same-surname count among role holders
+            surnames: dict[str, list[dict[str, Any]]] = {}
+            for p in persons:
+                sn = (p.get("context") or {}).get("surname") or \
+                    extract_surname(p["value"])
+                surnames.setdefault(sn, []).append(p)
+            for sn, members in surnames.items():
+                if sn and len(members) >= 2:
+                    roles = sorted({(m.get("context") or {}).get("role", "成员")
+                                    for m in members})
+                    patterns.append({
+                        "pattern": "family_business_signal",
+                        "description": (
+                            "疑似家族企业：{} 中 {} 名同姓「{}」人员担任 {}"
+                            "（{}），亲属共同经营信号"
+                        ).format(company, len(members), sn,
+                                 "、".join(roles),
+                                 "、".join(m["display"] for m in members)),
+                        "entities": [comp_eid] + [m["id"] for m in members],
+                        "severity": "medium",
+                    })
+
+        # suspected beneficial owners (not the legal rep)
+        for a in assocs:
+            if a["relation"] != "suspected_controls":
+                continue
+            pid, ceid = a["from"], a["to"]
+            if pid not in entities or ceid not in entities:
+                continue
+            # skip if this person IS the legal rep of that company
+            is_lr = any(
+                x["relation"] == "legal_rep_of" and x["from"] == pid
+                and x["to"] == ceid for x in assocs)
+            if not is_lr:
+                patterns.append({
+                    "pattern": "possible_beneficial_owner",
+                    "description": (
+                        "疑似实控人：{} 可能实际控制{}（非法定代表人）。"
+                        "{}"
+                    ).format(entities[pid]["display"],
+                             entities[ceid]["display"], a.get("note", "")),
+                    "entities": [pid, ceid],
+                    "severity": "medium",
+                })
+
+        # figurehead risk: legal_rep_of + suspected_controls on same company
+        # by a different person
+        for a in assocs:
+            if a["relation"] != "suspected_controls":
+                continue
+            ceid = a["to"]
+            lr_holders = [x["from"] for x in assocs
+                          if x["relation"] == "legal_rep_of" and x["to"] == ceid]
+            if lr_holders and a["from"] not in lr_holders \
+                    and a["from"] in entities and ceid in entities:
+                lr_name = entities[lr_holders[0]]["display"] \
+                    if lr_holders[0] in entities else "未知"
+                patterns.append({
+                    "pattern": "figurehead_risk",
+                    "description": (
+                        "挂名风险：{} 的法定代表人{}疑似挂名，"
+                        "实际控制人可能是{}。{}"
+                    ).format(entities[ceid]["display"], lr_name,
+                             entities[a["from"]]["display"],
+                             a.get("note", "")),
+                    "entities": [ceid, a["from"]] + lr_holders,
+                    "severity": "medium",
+                })
+        return patterns
+
+    # -- helpers ---------------------------------------------------------
+
+    @staticmethod
+    def _seed_norm(seed_type: str, seed_value: str) -> str:
+        if seed_type == "phone":
+            return normalize_phone(seed_value) or seed_value
+        if seed_type == "address":
+            key, _ = normalize_address(seed_value)
+            return key or seed_value
+        return normalize_name(seed_value) or seed_value.strip()
+
+    @staticmethod
+    def _seed_relation(seed_type: str, entity_type: str) -> str | None:
+        # NOTE: seed links use seed_hit_* relations (not contact_of/located_at)
+        # so pattern detection on entity-entity relations stays clean.
+        mapping = {
+            ("business_name", "phone"): "seed_hit_phone",
+            ("business_name", "address"): "seed_hit_address",
+            ("business_name", "business"): "seed_hit_business",
+            ("business_name", "person"): "seed_hit_person",
+            ("phone", "business"): "seed_hit_business",
+            ("address", "business"): "seed_hit_business",
+            ("person_name", "business"): "seed_hit_business",
+            ("person_name", "person"): "seed_hit_person",
+            ("email", "business"): "seed_hit_business",
+        }
+        return mapping.get((seed_type, entity_type))
+
+
+    @staticmethod
+    def _roles(p: dict[str, Any]) -> list[str]:
+        """All roles a person holds (accumulated across merged records)."""
+        ctx = p.get("context") or {}
+        roles: list[str] = []
+        for cand in [ctx.get("role")] + list(ctx.get("roles") or []):
+            if cand and cand not in roles:
+                roles.append(cand)
+        return roles
+
+    @staticmethod
+    def _person_companies(p: dict[str, Any]) -> list[str]:
+        ctx = p.get("context") or {}
+        out: list[str] = []
+        for cand in [ctx.get("company")] + list(ctx.get("companies") or []):
+            if cand and cand not in out:
+                out.append(cand)
+        return out
+
+    def _infer_family_control(
+            self, entities: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """家族/实控推断：同姓聚类、挂名信号、夫妻店、控制链穿透。
+
+        All outputs are leads (疑似/可能) with confidence levels, never facts.
+        """
+        assocs: list[dict[str, Any]] = []
+
+        # index persons by company from corporate_roles context
+        company_roles: dict[str, list[dict[str, Any]]] = {}
+        for e in entities.values():
+            if e["type"] != "person":
+                continue
+            ctx = e.get("context") or {}
+            if ctx.get("from") != "corporate_roles":
+                continue
+            company = ctx.get("company", "")
+            if company:
+                company_roles.setdefault(company, []).append(e)
+
+        def _biz_eid(name: str) -> str | None:
+            eid = entity_id("business", name)
+            return eid if eid in entities else None
+
+        for company, persons in company_roles.items():
+            comp_eid = _biz_eid(company)
+            if not comp_eid:
+                continue
+
+            # group by surname
+            by_surname: dict[str, list[dict[str, Any]]] = {}
+            for p in persons:
+                sn = (p.get("context") or {}).get("surname") or extract_surname(p["value"])
+                by_surname.setdefault(sn, []).append(p)
+
+            legal_rep = next(
+                (p for p in persons if "法人" in self._roles(p)), None)
+            shareholders = [p for p in persons if "股东" in self._roles(p)]
+            supervisors = [p for p in persons if "监事" in self._roles(p)]
+
+            # -- role relations (exact, factual from corporate records) --
+            if legal_rep:
+                assocs.append({
+                    "from": legal_rep["id"], "to": comp_eid,
+                    "relation": "legal_rep_of", "strength": "exact",
+                    "sources": sorted(set(legal_rep.get("sources", []))),
+                    "note": "法定代表人（公开登记信息）",
+                })
+            for sh in shareholders:
+                pct = (sh.get("context") or {}).get("share_pct")
+                note = "股东（公开登记信息）"
+                if pct is not None:
+                    note += "，持股约{}%".format(pct)
+                assocs.append({
+                    "from": sh["id"], "to": comp_eid,
+                    "relation": "shareholder_of", "strength": "exact",
+                    "sources": sorted(set(sh.get("sources", []))),
+                    "note": note,
+                })
+            for sv in supervisors:
+                assocs.append({
+                    "from": sv["id"], "to": comp_eid,
+                    "relation": "supervisor_of", "strength": "exact",
+                    "sources": sorted(set(sv.get("sources", []))),
+                    "note": "监事（公开登记信息）",
+                })
+            for p in persons:
+                proles = self._roles(p)
+                extra_roles = [r for r in proles
+                               if r not in ("法人", "股东", "监事")]
+                for role in extra_roles:
+                    assocs.append({
+                        "from": p["id"], "to": comp_eid,
+                        "relation": "executive_of", "strength": "exact",
+                        "sources": sorted(set(p.get("sources", []))),
+                        "note": "担任{}（公开登记信息）".format(role),
+                    })
+
+            # -- 1. 同姓聚类 -> possible_family_with (weak lead) --
+            for sn, members in by_surname.items():
+                if not sn or len(members) < 2:
+                    continue
+                for i in range(len(members)):
+                    for j in range(i + 1, len(members)):
+                        assocs.append({
+                            "from": members[i]["id"], "to": members[j]["id"],
+                            "relation": "possible_family_with",
+                            "strength": "weak",
+                            "sources": self._sources_of(
+                                entities, [members[i]["id"], members[j]["id"]]),
+                            "note": "疑似亲属关系：同姓「{}」，同任职于{}".format(sn, company),
+                        })
+
+            # -- 2. 挂名信号：年轻法人 + 年长同姓大股东 --
+            if legal_rep:
+                lr_ctx = legal_rep.get("context") or {}
+                lr_surname = lr_ctx.get("surname") or extract_surname(legal_rep["value"])
+                lr_age = lr_ctx.get("age_hint", "unknown")
+                lr_share = lr_ctx.get("share_pct") or 0
+                for sh in shareholders:
+                    if sh["id"] == legal_rep["id"]:
+                        continue
+                    sh_ctx = sh.get("context") or {}
+                    sh_surname = sh_ctx.get("surname") or extract_surname(sh["value"])
+                    sh_age = sh_ctx.get("age_hint", "unknown")
+                    try:
+                        sh_share = float(sh_ctx.get("share_pct") or 0)
+                    except (TypeError, ValueError):
+                        sh_share = 0
+                    if (sh_surname and sh_surname == lr_surname
+                            and lr_age == "young"
+                            and sh_age in ("middle", "old")
+                            and sh_share > (lr_share or 0)):
+                        assocs.append({
+                            "from": sh["id"], "to": comp_eid,
+                            "relation": "suspected_controls",
+                            "strength": "weak",
+                            "sources": self._sources_of(
+                                entities, [sh["id"], comp_eid]),
+                            "note": (
+                                "疑似实控人：{}（年长同姓大股东，持股约{}%）与"
+                                "年轻法人{}同姓，法人可能为挂名"
+                            ).format(sh["value"], sh_ctx.get("share_pct"),
+                                     legal_rep["value"]),
+                        })
+                        break
+
+            # -- 3. 夫妻店模式：两名异姓股东 --
+            person_sh = [s for s in shareholders]
+            if len(person_sh) == 2:
+                sn1 = (person_sh[0].get("context") or {}).get("surname") or \
+                    extract_surname(person_sh[0]["value"])
+                sn2 = (person_sh[1].get("context") or {}).get("surname") or \
+                    extract_surname(person_sh[1]["value"])
+                if sn1 and sn2 and sn1 != sn2:
+                    assocs.append({
+                        "from": person_sh[0]["id"], "to": person_sh[1]["id"],
+                        "relation": "possible_couple_business",
+                        "strength": "weak",
+                        "sources": self._sources_of(
+                            entities, [person_sh[0]["id"], person_sh[1]["id"]]),
+                        "note": "疑似夫妻店：两名异姓股东共同持股{}".format(company),
+                    })
+
+        # -- 4. 穿透持股：公司股东 -> 该公司的法人 --
+        for e in entities.values():
+            if e["type"] != "business":
+                continue
+            ctx = e.get("context") or {}
+            if ctx.get("from") != "corporate_roles" or ctx.get("role") != "股东":
+                continue
+            holding_co = e["value"]
+            target_co = ctx.get("of_company", "")
+            target_eid = _biz_eid(target_co)
+            if not target_eid:
+                continue
+            # find holding company's legal rep among persons
+            for p in entities.values():
+                if p["type"] != "person":
+                    continue
+                pctx = p.get("context") or {}
+                if (pctx.get("from") == "corporate_roles"
+                        and pctx.get("company") == holding_co
+                        and pctx.get("role") == "法人"):
+                    assocs.append({
+                        "from": p["id"], "to": target_eid,
+                        "relation": "suspected_controls",
+                        "strength": "weak",
+                        "sources": self._sources_of(entities, [p["id"], target_eid]),
+                        "note": (
+                            "疑似实控人（穿透）：{}为{}股东，"
+                            "{}为{}的法定代表人"
+                        ).format(target_co, holding_co, p["value"], holding_co),
+                    })
+
+        # -- 5. 一人多企：同一人在多家公司任职 -> 控制网 --
+        person_companies: dict[str, set[str]] = {}
+        for e in entities.values():
+            if e["type"] != "person":
+                continue
+            ctx = e.get("context") or {}
+            if ctx.get("from") == "corporate_roles":
+                for co in self._person_companies(e):
+                    person_companies.setdefault(e["id"], set()).add(co)
+        for pid, companies in person_companies.items():
+            if len(companies) >= 2:
+                for co in companies:
+                    ceid = _biz_eid(co)
+                    if ceid and ceid != pid:
+                        assocs.append({
+                            "from": pid, "to": ceid,
+                            "relation": "multi_company_role",
+                            "strength": "weak",
+                            "sources": sorted(set(entities[pid].get("sources", []))),
+                            "note": "疑似控制网节点：{}在{}家公司任职".format(
+                                entities[pid]["display"], len(companies)),
+                        })
+        return assocs
+
+
+
+def _summarize_result(result: dict[str, Any]) -> dict[str, Any]:
+    """Small, PII-free summary for source_results (no raw values)."""
+    if not isinstance(result, dict):
+        return {"status": "invalid_result"}
+    if result.get("error"):
+        return {"status": "error", "error": str(result["error"])[:120]}
+    if result.get("interaction_required"):
+        return {"status": "interaction_required"}
+    if result.get("credentials_required"):
+        return {"status": "credentials_required"}
+    fields = result.get("fields") or {}
+    summary: dict[str, Any] = {"status": "ok"}
+    for k in ("poi_count", "article_count", "post_count", "shop_found",
+              "total_count", "field_count"):
+        if k in fields or k in result:
+            summary[k] = fields.get(k, result.get(k))
+    return summary
+
+
+# ---------------------------------------------------------------------------
+# Family / beneficial-owner inference layer (家族/实控推断层)
+#
+# Background (user): many companies are family businesses; the legal
+# representative may be a figurehead while the real controller is a
+# spouse / child / relative / friend. Legal structure is surface;
+# association digging finds the real controller.
+#
+# ALL inferences here are leads, never facts. Every output uses
+# 疑似/可能 language with confidence levels (exact/strong/weak).
+# ---------------------------------------------------------------------------
+
+# common Chinese compound surnames (first-two-char surnames)
+_COMPOUND_SURNAMES = frozenset([
+    "欧阳", "司马", "上官", "皇甫", "令狐", "诸葛", "司徒", "申屠",
+    "南宫", "夏侯", "闻人", "公孙", "慕容", "长孙", "宇文", "司空",
+])
+
+
+def extract_surname(name: str) -> str:
+    """Extract Chinese surname (handles common compound surnames)."""
+    s = normalize_name(name)
+    if not s:
+        return ""
+    if len(s) >= 3 and s[:2] in _COMPOUND_SURNAMES:
+        return s[:2]
+    return s[0]
+
+
+def _corporate_entities(record: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """Extract entities from a corporate role record.
+
+    Expected record shape:
+        {
+          "company_name": "...",
+          "legal_rep": {"name": "...", "age_hint": "young|middle|old|unknown"},
+          "shareholders": [
+             {"name": "...", "kind": "person|company",
+              "share_pct": 60.0, "age_hint": "young|middle|old|unknown"},
+          ],
+          "personnel": [{"name": "...", "role": "监事|董事|经理|财务负责人"}],
+        }
+    """
+    ents: list[dict[str, Any]] = []
+    company = normalize_name(record.get("company_name"))
+    if not company:
+        return ents
+    ents.append({
+        "type": "business", "value": company, "display": company,
+        "sources": [source],
+        "context": {"from": "corporate_roles"},
+    })
+
+    def _person(name: str, role: str, extra: dict | None = None) -> None:
+        nm = normalize_name(name)
+        if not nm:
+            return
+        ctx = {"from": "corporate_roles", "company": company,
+               "companies": [company],
+               "role": role, "roles": [role],
+               "surname": extract_surname(nm)}
+        if extra:
+            ctx.update(extra)
+        ents.append({
+            "type": "person", "value": nm, "display": nm,
+            "sources": [source], "context": ctx,
+        })
+
+    lr = record.get("legal_rep") or {}
+    if isinstance(lr, dict) and lr.get("name"):
+        _person(lr["name"], "法人",
+                {"age_hint": lr.get("age_hint", "unknown")})
+
+    for sh in record.get("shareholders") or []:
+        if not isinstance(sh, dict) or not sh.get("name"):
+            continue
+        kind = sh.get("kind", "person")
+        if kind == "company":
+            cn = normalize_name(sh["name"])
+            if cn:
+                ents.append({
+                    "type": "business", "value": cn, "display": cn,
+                    "sources": [source],
+                    "context": {
+                        "from": "corporate_roles",
+                        "role": "股东", "of_company": company,
+                        "share_pct": sh.get("share_pct"),
+                    },
+                })
+        else:
+            _person(sh["name"], "股东", {
+                "share_pct": sh.get("share_pct"),
+                "age_hint": sh.get("age_hint", "unknown"),
+            })
+
+    for p in record.get("personnel") or []:
+        if not isinstance(p, dict) or not p.get("name"):
+            continue
+        _person(p["name"], p.get("role", "高管"))
+    return ents
+
+    # -- family / beneficial-owner inference --------------------------------
