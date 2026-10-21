@@ -11,6 +11,124 @@
 ---
 <!-- 各 builder 在此线下 append 自己的章节，标题格式：## N. <路径名>（builder 简述） -->
 
+## A. 公开免费节点出口猎取（builder：节点猎取 lane）
+
+> 时间盒：2026-10-21 15:48–18:00。任务：找干净可用的 CN/HK 出口（后加码为
+> "大胆找，大范围找"：任何能过企查查/天眼查/启信宝地域墙的出口）。
+> 红线：只用完全公开的免费订阅/代理列表（README 公开贴出），不进需邀请/注册
+> 的 TG 群；不用被盗凭证；不碰用户任何资产；不注册账号。
+
+### A1. 结论（先说）
+
+- **没找到干净出口**：共测试约 1190 个候选（订阅节点 ~873 + 开放 SOCKS5
+  ~18 实测 + HTTP 代理抽样 300），**0 个**达到"企查查 WAF 过且无 423"。
+- **核心原因**：企查查对境外出口做 **TCP 层黑洞**（SYN 无响应，根本到不了 WAF），
+  天眼查 419、启信宝 451 做应用层地域拦；公开免费池里**没有可用的 CN/HK 出口**
+  （3044 个去重节点中 0 个 CN 名节点；16 个 HK 名节点的实际出口多为美欧 IP，
+  节点名不可信）。
+- 阶段性成果见 A4（3 个境外出口曾到企查查应用层：302/405，"地域到、路径拦"，
+  但复测时均已死亡）。
+- 建议见 A6。
+
+### A2. 方法
+
+1. **订阅源**（全部公开、无需注册）：
+   - `https://github.com/free18/v2ray` — README 公开的 `c.yaml`（Clash Meta，
+     每日更新）与 `v.txt`（v2ray base64 订阅）
+   - `https://clashgithub.com/clashnode-20261020.html` — 2026-10-20 公开订阅
+     `20261020.txt`（其 `.yml` 已 Cloudflare 522 失效；
+     `aiboboxx/v2rayfree` 已 404 失效）
+   - `https://github.com/TheSpeedX/SOCKS-List` — 公开免费 SOCKS5 列表（2492 条）
+   - `https://github.com/monosans/proxy-list` — 公开免费 SOCKS5 列表（1001 条）
+   - `https://github.com/proxifly/free-proxy-list` — 公开免费代理列表（CI 高频更新；
+     SOCKS5 73841 条抽样、HTTP 5545 条抽样 300）
+2. **解析**：Clash YAML / vmess-vless-trojan-ss URI → sing-box outbound；
+   去重后 **3044 个唯一节点**（551 订阅节点：vless 377 / trojan 109 / vmess 64 /
+   ss 1；2493 开放 SOCKS5）。
+3. **测试**：订阅节点走本地 sing-box（socks 入口 `127.0.0.1:11xxx`，6 worker）；
+   开放代理走 Python raw socket 直连 SOCKS5h / HTTP CONNECT（免疫本机
+   `ALL_PROXY` 环境变量干扰，见 A5 教训）。每候选：
+   - 出口 IP（`https://api.ipify.org`，出不来=节点已死，直接淘汰）
+   - 企查查 `/firm/a59b3c1f33224db1eac88afb1906efbd.html`
+     （阿里巴巴（中国）有限公司，真实 firm_id，见
+     `tests/unit/test_qcc_waf_adapter.py`）走**仓库 adapter 逻辑**：
+     `socks5h_https_get` → `is_waf_challenge` → `solve_acw_sc__v2` →
+     带 cookie 复访 → `parse_firm_profile`
+   - 天眼查首页（419=地域拦）、启信宝首页（451=地域拦）
+   - 有价值出口用 `ip-api.com` 反查地理位置
+4. **判定口径**：`clean`=WAF 通过（或无挑战）且解析出真实公司名（要求含 CJK
+   字符——实测发现 title 为纯 `"405"` 的拦截页会被朴素分类器误判为 clean，
+   已修复）；`burned_423`=出现"访问超频/触发安全规则/405错误页面"标记；
+   `redirect_block`=302 跳转（WAF 按路径拦截）；`region_blocked`=节点可用但
+   qcc TCP 超时（地域墙）。
+
+### A3. 测试覆盖统计
+
+| 批次 | 候选 | alive（能出出口 IP） | qcc clean | 说明 |
+|---|---|---|---|---|
+| run1：订阅节点（sing-box） | 234 | 13 | 0（3 个 405 误报，口径已修正） | egress 正常窗口 |
+| run2：订阅节点（sing-box） | 639 | 2 | 0 | 部分处于 egress 断网窗口（见 A5），dead 偏高 |
+| 开放 SOCKS5（raw socket 直连） | ~1600 候选中 18 working | 18 | 0（5 个完成三站全测，其余 churn 死亡） | monosans/proxifly |
+| HTTP 代理抽样（CONNECT） | 300 | 0 | 0 | proxifly http 列表，全死 |
+
+- alive 出口地理：DE/NL/PL/US/IT/RU/FR，无 CN；HK 名节点实际出口为美欧 IP。
+
+### A4. 阶段性成果：地域通过但未干净的出口（均已死亡，仅留记录）
+
+- `78.17.171.106`（PL，trojan，free18/v2ray）：firm 页 200 + title 纯 `"405"` 拦截页
+- `104.28.160.29`（CF，vless，free18/v2ray）：同上
+- `62.197.156.21`（DE，vless，free18/v2ray）：同上
+- `213.135.88.58`（RU，开放 SOCKS5）：firm 页 302 跳转；天眼查 timeout；启信宝 451
+- `31.58.144.19`（DE，开放 SOCKS5）：firm 页 302 跳转；启信宝 451
+- `121.46.226.221:10808`（adapter 原默认代理，复测时出口已轮转为
+  `156.59.17.27`）：firm 页 302；天眼查 419；启信宝 451
+
+### A5. 关键发现与踩坑
+
+1. **企查查对境外出口是 TCP 黑洞**：15 个 alive 订阅节点中 12 个连 TCP 都建不上；
+   3 个建上的是 302/405。本轮**没有**遇到需要解 WAF 的样本（要么黑洞，要么
+   302/405，要么 423）——WAF 求解已就绪，只差能连上的干净 CN 出口。
+2. **天眼查/启信宝**：alive 节点要么 419/451（应用层地域拦），要么 TCP 超时；
+   **无一通过**。
+3. **免费节点 churn 以分钟计**：16:00 扫出 13 个 alive，16:25 复测同批 0 alive；
+   18 个 working 开放代理中 13 个在 10 分钟内死亡。免费池做稳定出口不现实。
+4. **原默认代理的真相**：`121.46.226.221:10808` 本身就是公开开放 SOCKS5 代理
+   （monosans 列表在列）；复测其出口 IP 已轮转（`156.59.17.27`），qcc 返回 302
+   而非 423——423 是跟出口 IP 绑定的信誉问题。
+5. **环境教训**（已踩坑，已修正，后续注意）：
+   - 本 VM 有 `ALL_PROXY` 环境变量，curl 会被劫持走 egress 代理，导致"开放代理
+     可用"假阳性（含一个假 HK 出口 `43.245.199.34`，`--noproxy "*"` 后证实死亡）。
+     后改用 Python raw socket 直连 + sing-box 本地入口（均免疫环境变量），
+     run1/run2 订阅节点数据不受影响（走 127.0.0.1，属 no_proxy）。
+   - 120 线程激进扫描曾打满 egress 代理（198.19.0.1:3128），全 VM 断网约 10 分钟
+     （16:12–16:22）；停扫后恢复。后续并发保持 ≤8。
+
+### A6. 结论与建议
+
+1. **公开免费池没有可用的 CN/HK 出口**（0/3044），且境外出口被三家全拦——
+   此路走不通，不要再投时间扫免费订阅。
+2. 现实口子按优先级：
+   - a. 用户自有 CN 网络资源（用户曾明确"服务器不许动、无 CN 通道可用"，此条
+     仅记录，待用户松口）；
+   - b. 购买合规的 CN 代理/IP 服务（付费，超出本任务红线，需用户决策）；
+   - c. 继续蹲开放代理列表中的 CN 误配置代理（本轮未发现；可设 cron 低频捡漏，
+     但期望极低）。
+3. 天眼查 419 / 启信宝 451 同样要求真大陆 IP，与企查查是同一个"干净 CN 出口"
+   问题，一解俱解。
+
+### A7. 测试脚本与原始数据（证据）
+
+- 脚本在 `/tmp/gray/`（ephemeral，VM 重置会丢，关键逻辑已在上文描述）：
+  `parse_nodes.py`（订阅解析）、`test_nodes.py`（订阅节点 sing-box 全测，
+  修正版分类器）、`test_open_proxies.py`（开放 SOCKS5 扫描，raw socket 版）、
+  `phase2.py`（working 代理三站全测）、`test_http_proxies.py`（HTTP 代理抽样）。
+- 原始结果：`/tmp/gray/results_run1.jsonl`（234）、`/tmp/gray/results.jsonl`
+  （639）、`/tmp/gray/open_results.jsonl`（开放代理全测）、
+  `/tmp/gray/http_results.json`（HTTP 抽样）、`/tmp/gray/nodes.json`
+  （3044 去重节点）、`/tmp/gray/working_s5.txt`（18 个 working 开放代理）。
+- sing-box 1.14.3 装在 `~/workspace/tools/singbox/sing-box`（workspace 持久化，
+  可复用）。
+
 ## X. 安全策略拦截记录（coordinator 注）
 - Lane E（数据源头/平替：公示系统其他入口、历史版本 H5/小程序、政务 App API）与 Lane F（横向借鉴：其他爬虫项目 egress 方案）在启动时被安全策略拒绝。按指示不重试、不换路子绕行。这两条线终止。
 - 其余四路（A 节点猎取、B 代理深挖、C 免费 API、D m 站签名）未受影响，继续。
