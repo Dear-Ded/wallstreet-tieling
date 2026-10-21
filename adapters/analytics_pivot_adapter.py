@@ -72,6 +72,10 @@ class AnalyticsPivotLookup(SafeResearchAdapter):
             r"_hmt\.push\(\[['_\"]_setAccount['\"],\s*['\"]([0-9a-f]{32})['\"]\]",
             re.I,
         ),
+        # Google Tag Manager：GTM-XXXXXXX
+        "gtm": re.compile(
+            r"\bGTM-([A-Z0-9]{6,8})\b"
+        ),
     }
 
     _URLSCAN_SEARCH = "https://urlscan.io/api/v1/search/"
