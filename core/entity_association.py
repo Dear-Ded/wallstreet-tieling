@@ -707,8 +707,8 @@ _SEED_FANOUT: dict[str, list[str]] = {
     "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate",
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
                       "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent", "gd_credit",
-                      "gleif", "customs", "software_copyright"],
-    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation", "telegram_channel"],
+                      "gleif", "customs", "software_copyright", "hibp_breach_catalog"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation", "telegram_channel", "semanticscholar", "huggingface", "bilibili_user", "douban_user", "douyin_user", "xiaohongshu_user"],
     "email": ["sogou_wx", "douyin", "telegram"],
     "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl", "dnsdumpster", "threatbook"],
 }
@@ -738,6 +738,9 @@ class EntityAssociationEngine:
     maimai: Any = None
     telegram: Any = None
     telegram_channel: Any = None
+    hibp_breach_catalog: Any = None
+    huggingface: Any = None
+    semanticscholar: Any = None  # academic lane: SemanticScholarLookup (no key)
     phone_mark: Any = None
     cert_transparency: Any = None
     analytics_pivot: Any = None
@@ -760,6 +763,11 @@ class EntityAssociationEngine:
     dnsdumpster: Any = None
     threatbook: Any = None
     gd_credit: Any = None
+    # Social user lanes (2026-10-21): person-dimension adapters
+    bilibili_user: Any = None
+    douban_user: Any = None
+    douyin_user: Any = None
+    xiaohongshu_user: Any = None
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -1048,6 +1056,62 @@ class EntityAssociationEngine:
                     return []
                 return _telegram_channel_entities(fields.get("channel") or {}, fields,
                                                   "telegram_channel")
+            if attr == "hibp_breach_catalog":
+                fields = result.get("fields") or {}
+                out = []
+                for b in fields.get("breaches") or []:
+                    if not isinstance(b, dict):
+                        continue
+                    bname = str(b.get("title") or b.get("id") or "").strip()
+                    if not bname:
+                        continue
+                    out.append({
+                        "type": "breach_signal",
+                        "value": bname,
+                        "display": bname,
+                        "sources": ["hibp_breach_catalog"],
+                        "context": {
+                            "from": "hibp_public_breach_catalog",
+                            "pwn_count": b.get("pwn_count"),
+                            "pwn_count_display": b.get("pwn_count_display"),
+                            "added_date": b.get("added_date"),
+                            "breach_date": b.get("breach_date"),
+                            "breach_url": b.get("breach_url"),
+                            "note": "公开 breach 名录命中是 lead, 非账号泄露确认",
+                        },
+                    })
+                return out
+            if attr == "huggingface":
+                fields = result.get("fields") or {}
+                return _huggingface_entities(fields, "huggingface")
+            if attr == "semanticscholar":
+                fields = result.get("fields") or {}
+                return _semanticscholar_entities(fields, "semanticscholar")
+            # Social user lanes (2026-10-21): user -> person entities.
+            # nickname/bio/location/verify go into context; bio under
+            # context["description"] so _extract_entity_contacts can mine
+            # contact info; username/location feed _resolve_person_identity.
+            if attr == "bilibili_user":
+                fields = result.get("fields") or {}
+                users = fields.get("users") or []
+                return [e for u in users if isinstance(u, dict)
+                        for e in _bilibili_user_entities(u, "bilibili_user")]
+            if attr == "douban_user":
+                fields = result.get("fields") or {}
+                profile = fields.get("profile") or {}
+                if not isinstance(profile, dict) or not profile.get("user_found"):
+                    return []
+                return _douban_user_entities(profile, fields, "douban_user")
+            if attr == "douyin_user":
+                fields = result.get("fields") or {}
+                if not fields.get("user_found"):
+                    return []
+                return _douyin_user_entities(fields, "douyin_user")
+            if attr == "xiaohongshu_user":
+                fields = result.get("fields") or {}
+                if not fields.get("user_found"):
+                    return []
+                return _xiaohongshu_user_entities(fields, "xiaohongshu_user")
             if attr in ("lagou", "zhaopin", "zhipin"):
                 fields = result.get("fields") or {}
                 out = []
@@ -2082,27 +2146,299 @@ def _telegram_channel_entities(channel: dict, fields: dict,
 
     person: 频道标题（同名公开频道是人物线索）；description/about 进 context，
     由 _extract_entity_contacts 统一从中挖联系方式。全部是 lead。
+    username_profile: tgstat 关联 handle（频道主的其他公开频道，强归一信号）。
     """
     if not isinstance(channel, dict):
         return []
+    out: list = []
     title = (channel.get("title") or "").strip()
-    if not title:
+    if title:
+        ctx = {"from": "telegram_channel",
+               "url": fields.get("preview_url") or "",
+               "subscribers": channel.get("subscribers") or channel.get("subscribers_raw") or ""}
+        desc = (channel.get("description") or "").strip()
+        if desc:
+            ctx["description"] = desc[:500]
+        texts = []
+        for p in (fields.get("posts") or [])[:10]:
+            t = (p.get("text") or "").strip() if isinstance(p, dict) else ""
+            if t:
+                texts.append(t)
+        if texts:
+            ctx["about"] = "\n".join(texts)[:2000]
+        name = normalize_name(title) or title
+        out.append({"type": "person", "value": name, "display": title,
+                    "sources": [source], "context": ctx})
+    # tgstat 关联 handle: 同一频道主的其他公开频道 -> username_profile 实体，
+    # 供跨源身份归一 (_resolve_person_identity 及图谱 username 匹配) 消费。
+    tgstat = fields.get("tgstat") or {}
+    related = tgstat.get("related_handles") or []
+    owner = (tgstat.get("handle") or "").lower()
+    for h in related:
+        handle = str(h or "").strip().lower()
+        if not handle or handle == owner:
+            continue
+        out.append({
+            "type": "username_profile",
+            "value": handle,
+            "display": f"@{handle}",
+            "sources": [source],
+            "context": {
+                "from": "tgstat_related_handle",
+                "owner_handle": owner,
+                "subscribers_exact": tgstat.get("subscribers_exact"),
+                "url": f"https://t.me/{handle}",
+                "note": "频道主的其他公开频道, 同人多频道归一的强信号, lead",
+            },
+        })
+    return out
+
+
+def _huggingface_entities(fields: dict, source: str = "huggingface") -> list:
+    """HuggingFace 公开开发者画像 -> 实体。
+
+    person: HF 用户（username 为稳定标识；fullname 无则用 username）。
+    context: username（供 _resolve_person_identity 跨平台归一）、所属组织、
+    模型数、粉丝数、简介（description 走联系方式管道统一挖联系方式）。
+    全部是 lead。
+    """
+    if not isinstance(fields, dict) or not fields.get("user_found"):
         return []
-    ctx = {"from": "telegram_channel",
-           "url": fields.get("preview_url") or "",
-           "subscribers": channel.get("subscribers") or channel.get("subscribers_raw") or ""}
-    desc = (channel.get("description") or "").strip()
+    profile = fields.get("profile") or {}
+    username = (profile.get("username") or "").strip()
+    if not username:
+        return []
+    fullname = (profile.get("fullname") or "").strip()
+    name = normalize_name(fullname) or username
+    orgs = [str(o.get("name", "")).strip()
+            for o in (profile.get("orgs") or [])
+            if isinstance(o, dict) and str(o.get("name", "")).strip()]
+    ctx = {
+        "from": "huggingface_profile",
+        "username": username,
+        "account_type": profile.get("type") or "user",
+    }
+    if orgs:
+        ctx["orgs"] = orgs
+    for key in ("num_models", "num_datasets", "num_spaces",
+                "num_followers", "created_at"):
+        if profile.get(key) not in (None, ""):
+            ctx[key] = profile.get(key)
+    desc = (profile.get("description") or "").strip()
     if desc:
         ctx["description"] = desc[:500]
-    texts = []
-    for p in (fields.get("posts") or [])[:10]:
-        t = (p.get("text") or "").strip() if isinstance(p, dict) else ""
-        if t:
-            texts.append(t)
-    if texts:
-        ctx["about"] = "\n".join(texts)[:2000]
-    name = normalize_name(title) or title
-    return [{"type": "person", "value": name, "display": title,
+    top_models = [m.get("model_id", "")
+                  for m in (fields.get("models") or [])[:5]
+                  if isinstance(m, dict) and m.get("model_id")]
+    if top_models:
+        ctx["top_models"] = top_models
+    return [{"type": "person", "value": username,
+             "display": fullname or username,
+             "sources": [source], "context": ctx}]
+
+
+def _semanticscholar_entities(fields: dict, source: str = "semanticscholar") -> list:
+    """Semantic Scholar 学者 -> 本人(个人) + 合作者(个人).
+
+    Expected fields shape (adapters/semanticscholar_adapter):
+        {"author_found", "match_level", "author": {"author_id","name",
+          "affiliations","paper_count","citation_count","h_index","url","homepage"},
+         "top_papers": [...], "co_authors": [{"name","author_id","shared_papers","paper_titles"}]}
+    本人实体 context 携带 affiliations/论文数/引用数/h-index、homepage；
+    合作者实体 relation="co_author"。全部是 lead，绝不做身份断言。
+    """
+    if not isinstance(fields, dict) or not fields.get("author_found"):
+        return []
+    author = fields.get("author") or {}
+    if not isinstance(author, dict):
+        return []
+    name = normalize_name(author.get("name")) or (author.get("name") or "").strip()
+    if not name:
+        return []
+    display_name = (author.get("name") or "").strip() or name
+    affs = [a for a in (author.get("affiliations") or []) if a]
+    desc_parts = []
+    if affs:
+        desc_parts.append("affiliations: " + "; ".join(affs))
+    if author.get("homepage"):
+        desc_parts.append("homepage: " + author["homepage"])
+    paper_titles = [p.get("title") for p in (fields.get("top_papers") or [])
+                    if isinstance(p, dict) and p.get("title")]
+    if paper_titles:
+        desc_parts.append("recent papers: " + " | ".join(paper_titles[:5]))
+    ctx = {
+        "from": "semanticscholar_author",
+        "username": name,
+        "homepage": author.get("homepage") or "",
+        "location": "; ".join(affs),
+        "affiliations": affs,
+        "paper_count": author.get("paper_count") or 0,
+        "citation_count": author.get("citation_count") or 0,
+        "h_index": author.get("h_index") or 0,
+        "author_url": author.get("url") or "",
+        "author_id": author.get("author_id") or "",
+        "match_level": fields.get("match_level") or "review",
+    }
+    # bio/homepage text for the contact-extraction pipeline (_extract_entity_contacts)
+    description = "\n".join(desc_parts).strip()
+    if description:
+        ctx["description"] = description[:1000]
+    ents = [{"type": "person", "value": name, "display": display_name,
+             "sources": [source], "context": ctx}]
+    for co in (fields.get("co_authors") or []):
+        if not isinstance(co, dict):
+            continue
+        co_name = normalize_name(co.get("name")) or (co.get("name") or "").strip()
+        if not co_name or co_name == name or len(co_name) > 60:
+            continue
+        ents.append({
+            "type": "person", "value": co_name, "display": co.get("name") or co_name,
+            "sources": [source],
+            "context": {
+                "from": "semanticscholar_coauthor",
+                "relation": "co_author",
+                "with_author": display_name,
+                "shared_papers": co.get("shared_papers") or 0,
+                "paper_titles": (co.get("paper_titles") or [])[:3],
+                "author_id": co.get("author_id") or "",
+                "match_level": fields.get("match_level") or "review",
+            },
+        })
+    return ents
+
+
+# ---------------------------------------------------------------------------
+# Social user lanes (2026-10-21): B站 / 豆瓣 / 抖音 / 小红书 user -> person.
+#
+# Each source yields person entities: nickname as the identity handle,
+# bio/intro under context["description"] (mined by _extract_entity_contacts),
+# username/location in context for _resolve_person_identity cross-platform
+# merge. Everything is a lead, never an identity assertion.
+# ---------------------------------------------------------------------------
+
+
+def _bilibili_user_entities(u: dict, source: str = "bilibili_user") -> list:
+    """B站用户 -> person。uname 为 handle；认证信息/粉丝数/等级进 context。"""
+    if not isinstance(u, dict):
+        return []
+    uname = (u.get("uname") or "").strip()
+    mid = u.get("mid")
+    if not uname and not mid:
+        return []
+    name = normalize_name(uname) or uname or str(mid)
+    ctx = {
+        "from": "bilibili_user",
+        "username": uname,
+        "platform_mid": mid,
+        "profile_url": u.get("profile_url") or "",
+    }
+    for key in ("fans", "level", "video_count", "gender", "is_upuser",
+                "official_type"):
+        if u.get(key) not in (None, ""):
+            ctx[key] = u.get(key)
+    official_desc = (u.get("official_desc") or "").strip()
+    if official_desc:
+        ctx["verified"] = official_desc
+    verify_info = (u.get("verify_info") or "").strip()
+    if verify_info:
+        ctx["verify_info"] = verify_info[:200]
+    bio = (u.get("bio") or "").strip()
+    if bio:
+        ctx["description"] = bio[:500]
+    return [{"type": "person", "value": name, "display": uname or str(mid),
+             "sources": [source], "context": ctx}]
+
+
+def _douban_user_entities(profile: dict, fields: dict,
+                          source: str = "douban_user") -> list:
+    """豆瓣用户 -> person。昵称为 handle；简介/常居地/注册时间进 context。"""
+    nickname = (profile.get("nickname") or "").strip()
+    if not nickname:
+        return []
+    name = normalize_name(nickname) or nickname
+    ctx = {
+        "from": "douban_user",
+        "username": profile.get("uid_alias") or profile.get("uid") or "",
+        "platform_user_id": profile.get("user_id_number") or "",
+        "profile_url": fields.get("profile_url") or profile.get("profile_url") or "",
+    }
+    location = (profile.get("location") or "").strip()
+    if location:
+        ctx["location"] = location
+    registered = (profile.get("registered_at") or "").strip()
+    if registered:
+        ctx["registered_at"] = registered
+    ip_loc = (profile.get("ip_location") or "").strip()
+    if ip_loc and ip_loc != "未知":
+        ctx["ip_location"] = ip_loc
+    intro = (profile.get("intro") or "").strip()
+    if intro:
+        ctx["description"] = intro[:500]
+    return [{"type": "person", "value": name, "display": nickname,
+             "sources": [source], "context": ctx}]
+
+
+def _douyin_user_entities(fields: dict, source: str = "douyin_user") -> list:
+    """抖音用户 -> person。抖音号/昵称为 handle；签名/IP属地/认证进 context。"""
+    profile = fields.get("profile") or {}
+    if not isinstance(profile, dict):
+        return []
+    nickname = (profile.get("nickname") or "").strip()
+    username = (profile.get("username") or "").strip()
+    if not nickname and not username:
+        return []
+    handle = nickname or username
+    name = normalize_name(handle) or handle
+    ctx = {
+        "from": "douyin_user",
+        "username": username,
+        "nickname": nickname,
+        "profile_url": fields.get("profile_url") or "",
+    }
+    location = (profile.get("location") or "").strip()
+    if location:
+        ctx["location"] = location
+    for key in ("follower_count", "following_count", "aweme_count",
+                "total_favorited"):
+        if profile.get(key) not in (None, ""):
+            ctx[key] = profile.get(key)
+    verified = (profile.get("verified") or "").strip()
+    if verified:
+        ctx["verified"] = verified[:200]
+    bio = (profile.get("bio") or "").strip()
+    if bio:
+        ctx["description"] = bio[:500]
+    return [{"type": "person", "value": name, "display": handle,
+             "sources": [source], "context": ctx}]
+
+
+def _xiaohongshu_user_entities(fields: dict,
+                              source: str = "xiaohongshu_user") -> list:
+    """小红书用户 -> person。昵称为 handle；简介/属地/小红书号进 context。"""
+    profile = fields.get("profile") or {}
+    if not isinstance(profile, dict):
+        return []
+    nickname = (profile.get("nickname") or "").strip()
+    if not nickname:
+        return []
+    name = normalize_name(nickname) or nickname
+    ctx = {
+        "from": "xiaohongshu_user",
+        "username": (profile.get("red_id") or "").strip(),
+        "nickname": nickname,
+        "platform_user_id": profile.get("user_id") or "",
+        "profile_url": profile.get("profile_url") or "",
+    }
+    location = (profile.get("location") or "").strip()
+    if location:
+        ctx["location"] = location
+    for key in ("fans_count", "follows_count", "notes_count", "gender"):
+        if profile.get(key) not in (None, ""):
+            ctx[key] = profile.get(key)
+    bio = (profile.get("bio") or "").strip()
+    if bio:
+        ctx["description"] = bio[:500]
+    return [{"type": "person", "value": name, "display": nickname,
              "sources": [source], "context": ctx}]
 
 
@@ -2268,6 +2604,49 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
     try:
         from adapters.telegram_channel_adapter import TelegramChannelLookup
         engine.telegram_channel = TelegramChannelLookup()
+    except Exception:
+        pass
+
+    # Social user lanes (2026-10-21): B站 / 豆瓣 / 抖音 / 小红书 user dimension
+    try:
+        from adapters.bilibili_user_adapter import BilibiliUserLookup
+        engine.bilibili_user = BilibiliUserLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.douban_user_adapter import DoubanUserLookup
+        engine.douban_user = DoubanUserLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.douyin_adapter import DouyinUserLookup
+        engine.douyin_user = DouyinUserLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.xiaohongshu_adapter import XiaohongshuNoteLookup
+        engine.xiaohongshu_user = XiaohongshuNoteLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.hibp_breach_adapter import HIBPBreachCatalog
+        engine.hibp_breach_catalog = HIBPBreachCatalog()
+    except Exception:
+        pass
+
+    try:
+        from adapters.huggingface_adapter import HuggingFaceLookup
+        engine.huggingface = HuggingFaceLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.semanticscholar_adapter import SemanticScholarLookup
+        engine.semanticscholar = SemanticScholarLookup()
     except Exception:
         pass
 
