@@ -481,6 +481,14 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_patent_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/patent_adapter.py", "core/connector_registry.py", "tests/unit/test_patent_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_patent_adapter.py -q"],
+        "field_contract": {"record_type": "patent_record", "source_hint": "public_patent_lookup", "required_fields": ["patents"], "report_gate": "inventor name collisions are leads, not identity"},
+        "operator_notes": ["Google Patents, no key."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_patent_lookup", "source_hint": "public_patent_lookup", "required_config": [], "record_type": "patent_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "patent leads feed association", "focused_test": "tests/unit/test_patent_adapter.py"},
+    },
     "public_ccgp_bid_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/ccgp_adapter.py", "core/connector_registry.py", "tests/unit/test_ccgp_adapter.py"],
@@ -3346,6 +3354,20 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "ToS: real-time queries only, no caching or storage of POI data.",
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_patent_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=("PatentLookup via Google Patents. Assignee/inventor search. Default-off.",),
             risk_flags=("explicit_enable_required", "public_data_only"),
         ),
         ConnectorCapability(
