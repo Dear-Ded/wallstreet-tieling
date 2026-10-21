@@ -481,6 +481,41 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_douyin_business_footprint": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/douyin_adapter.py",
+            "adapters/_vendor/douyin_sign/abogus.py",
+            "adapters/_vendor/douyin_sign/sm3.py",
+            "adapters/_vendor/douyin_sign/__init__.py",
+            "core/connector_registry.py",
+            "tests/unit/test_douyin_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_douyin_adapter.py tests/unit/test_connector_registry.py -q",
+        ],
+        "field_contract": {
+            "record_type": "douyin_business_record",
+            "source_hint": "public_douyin_business_footprint",
+            "required_fields": ["profile", "posts"],
+            "report_gate": "Douyin presence is a business-activity lead; follower counts are platform-reported, not audited",
+        },
+        "operator_notes": [
+            "No login, no credentials. Guest ttwid minted per session.",
+            "Name search needs browser assist; sec_uid/share-URL path is autonomous.",
+        ],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_douyin_business_footprint",
+            "source_hint": "public_douyin_business_footprint",
+            "required_config": [],
+            "record_type": "douyin_business_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "Douyin records feed offline-business leads; account identity requires exact/strong match and admission tests",
+            "focused_test": "tests/unit/test_douyin_adapter.py::test_profile_parsing",
+        },
+    },
     "public_xiaohongshu_note_search": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -2916,6 +2951,30 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "credentialed_depth_requires_admission", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_douyin_business_footprint",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "DouyinBusinessLookup adapter (adapters.douyin_adapter).",
+                "Offline storefront Douyin presence: profile, followers, videos, POI.",
+                "Autonomous: query_by_sec_uid / query_by_share_url with vendored",
+                "a_bogus signing (Apache-2.0) + official ttwid union/register (guest, no login).",
+                "Search-by-name is browser-assisted: query() returns interaction_required,",
+                "parse_browser_search() structures pasted search JSON.",
+                "Vendored signing: adapters/_vendor/douyin_sign/ (abogus.py + sm3.py).",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only",
+                        "browser_assisted_search"),
         ),
         ConnectorCapability(
             name="public_xiaohongshu_note_search",
