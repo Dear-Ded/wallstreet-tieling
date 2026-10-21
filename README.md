@@ -190,6 +190,7 @@ release_readiness -> delivery_audit -> connector_catalog -> development_requirem
 | Relationship graph | Auditable nodes, edges, verification queues, relationship resolution | `core/relationship_resolution.py` |
 | Capital risk | Capital exposure and verification queues preserved in reports | `core/risk_graph_export.py` |
 | Agent delivery | CLI, REST, MCP, Codex, Claude Code, Hermes, OpenClaude, WorkBuddy | `core/agent_tool_adapters.py` |
+| OSINT intel | 63 connectors: corporate registry, email intel, developer footprint (GitHub/GitLab/DockerHub/npm/crates.io/Keybase/RubyGems), infra intel, social listening, threat intel (key-ready); people/domain intel via REST/CLI/MCP | `adapters/`, `core/people_intel.py`, `core/intel_enrichment.py` |
 | Release gates | Preflight, delivery audit, objective audit, privacy scan, package dry-run | `core/release_contract.py` |
 
 ## Public Boundaries
