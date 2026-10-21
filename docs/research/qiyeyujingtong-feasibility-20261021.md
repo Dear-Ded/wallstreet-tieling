@@ -59,3 +59,42 @@
 
 ---
 *未建 adapter，未动 registry。本报告为 commit-only 交付。*
+
+## 六、启信宝 APP 拆包路线实测（2026-10-21 14:27–14:52，subagent a2c37de6）
+
+> 结论：**官方 APK 在本机网络位置拿不到**。下面是逐条证据，不是"失败"两个字。
+
+### 6.1 拿到的东西（真实产出）
+1. **官方下载二维码已解码**：`/tmp/qr-app.png`（qixin.com 页脚 `qr-app.Dcg0epAn.png`，CDN 直链可下）
+   → 内容 `https://app-html.qixin.com/download/message-others`。
+   解码过程本身是个小攻坚：本机无 zbar/cv2 解码库 → 从 Ubuntu 归档站手动下载
+   `libzbar0` + `libv4l-0t64` + `libv4lconvert0t64` 三个 deb、dpkg-deb 本地解压、
+   so 拷入 `/usr/lib/x86_64-linux-gnu/` + ldconfig，pyzbar 终解出。OpenCV 试过，
+   中心 logo 干扰下 detectAndDecode 识别不出。
+2. **iOS 侧包信息**（App Store lookup API，id 1030675668）：bundleId
+   `com.bertadata.qixinbao`，seller Shanghai ShengTeng Data Co.,Ltd，v10.10.00。
+   Android 包名极大概率相同。
+3. **Nuxt SSR 配置全量**（451 页内嵌）：API base `/api-proxy/web|app|ai`、
+   `https://qx-ai.qixin.com`；子域 `b.qixin.com`（企业版）、`claim.qixin.com`、
+   `app-html.qixin.com`、`app-vip.qixin.com`、`zhaobiao.qixin.com`、
+   `logger.qixin.com/analytics?t=v4`；极验 ID 四枚（LOGIN/OVERLIMIT/NOPERCEPTION/SUBMIT，
+   坐实 Geetest v4）。
+4. **存活主机**：`app.qixin.com` 存在（405）、`api.qixin.com` 200 但为 OpenResty 默认页
+   （占位、非真实 API）。
+
+### 6.2 逐条卡点（均有证据）
+| 路线 | 结果 | 证据 |
+|---|---|---|
+| 官网下载页（QR 链接） | 405 | `app-html.qixin.com/download/message-others` 及 `/download`、`/download/android`、`/app/download` 全 405（阿里云通用 405 页），与 UA 无关 |
+| 应用宝（官方安卓商店） | 查无此包 | `a.app.qq.com/o/simple.jsp?pkgname=com.bertadata.qixinbao` 返回"不存在页面"；`sj.qq.com/appdetail/com.bertadata.qixinbao` 404"页面不存在"；sj.qq.com 搜索页为 SPA，前端搜不到 |
+| 360/豌豆荚/酷安/小米/华为/OPPO/vivo/百度手机助手 | 全被墙或 JS 化 | 302 跳首页 / 567 反爬 / 404 / 空结果，无一返回包信息 |
+| APKPure/Uptodown/APKFab | 403/404 | 非官方渠道，本就只打算拿包名，也拿不到 |
+| 包名爆破（com.qixin / com.qixinbao / com.intsig.qixinbao 等） | 全 404 | 仅 `com.bertadata.qixinbao` 有 iOS 实证，其余无依据，不再试 |
+| DNS 子域枚举找 APP API host | 不可用 | 本机 DNS 被劫持（任意子域均返回 198.18.0.0/15 保留段），crt.sh 502 |
+
+### 6.3 下条没试过的路（按优先级）
+1. **用户手机直传 APK**（最直接）：用户在国内应用宝/官网可正常下载，把 APK 发过来即拆。零技术障碍。
+2. **境内 IP 出口重走应用宝**：404/405 可能是地域性下架或屏蔽，境内 IP 下 `sj.qq.com/appdetail/com.bertadata.qixinbao` 值得重验一次。
+3. **iOS 端逆向**：IPA 需 Apple ID 下载；或查 App Store 的 `app-ads.txt`/Universal Links 暴露的 API host。
+4. **证书透明度恢复后**（crt.sh 502 是暂时的）：枚举 `*.qixin.com` 找真实 APP API host（如 `appapi` 系），再对口探接口。
+5. **拆已泄露路径**：`/api-proxy/app` 是 web 的 app 接口基址，若拿到境内 IP，`www.qixin.com/api-proxy/app/...` 可直接复现 web 的"app"族接口——APP 大概率同源。
