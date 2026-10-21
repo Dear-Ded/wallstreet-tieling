@@ -18,6 +18,11 @@ from core.association_graph import (
     ASSOCIATION_GRAPH_CSS,
     build_association_graph_section,
 )
+from core.enrichment_report import (
+    extract_enrichments,
+    render_enrichments_html,
+    render_enrichments_markdown,
+)
 from adapters.public_web_search_tool import reality_drill_extract
 from core.qyyjt_pledge_bridge import build_pledge_bridge, pledge_to_evidence, extract_pledge_from_fixture
 from core.qyyjt_trade_bridge import build_trade_bridge
@@ -308,6 +313,7 @@ def build_investigation_packet(
         monitoring_seed=monitoring_seed,
         qyyjt_public_origin_handoff=qyyjt_public_origin_handoff,
         next_actions=next_actions,
+        enrichments=extract_enrichments(graph_payload),
     )
     quality_gate = evaluate_investigation_packet(
         summary=summary,
@@ -346,6 +352,7 @@ def build_investigation_packet(
         qyyjt_public_origin_handoff=qyyjt_public_origin_handoff,
         next_actions=next_actions,
         quality_gate=quality_gate,
+        enrichments=extract_enrichments(graph_payload),
     )
     report_exports = _report_export_bundle(
         company=str(graph_payload.get("company") or input_text),
@@ -361,6 +368,7 @@ def build_investigation_packet(
         evidence_ledger=evidence_ledger,
         quality_gate=quality_gate,
         risk_brief=risk_brief,
+        enrichments=extract_enrichments(graph_payload),
     )
 
     return InvestigationPacket(
@@ -1056,6 +1064,7 @@ def _report_export_bundle(
     evidence_ledger: list[dict[str, Any]],
     quality_gate: dict[str, Any] | None = None,
     risk_brief: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Describe desktop-agent report outputs without requiring the HTML workbench."""
     safe_company = _safe_report_filename(company)
@@ -1102,6 +1111,7 @@ def _report_export_bundle(
         source_provenance_appendix=print_package.get("source_provenance_appendix") if isinstance(print_package, dict) else {},
         relationship_capital_appendix=print_package.get("relationship_capital_appendix") if isinstance(print_package, dict) else {},
         report_targets=report_targets,
+        enrichments=enrichments,
     )
     premium_html = _premium_html_profile(
         html_filename=html_filename,
@@ -1443,6 +1453,7 @@ def _portable_report_html(
     source_provenance_appendix: dict[str, Any] | None = None,
     relationship_capital_appendix: dict[str, Any] | None = None,
     report_targets: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> str:
     status = html.escape(str(one_click_readiness.get("status") or "unknown"))
     closure_status = html.escape(str(one_click_readiness.get("acceptance_closure_status") or "unknown"))
@@ -1472,6 +1483,7 @@ def _portable_report_html(
     relationship_capital_html = _portable_relationship_capital_html(relationship_capital_appendix or {})
     source_html = _portable_source_provenance_html(source_provenance_appendix or {})
     report_targets_html = _portable_report_targets_html(report_targets or {})
+    enrichment_html = render_enrichments_html(enrichments or {})
     return (
         "<!doctype html>\n"
         "<html lang=\"zh-CN\">\n"
@@ -1562,6 +1574,7 @@ def _portable_report_html(
         "    </section>\n"
         f"{chart_section_html}"
         f"{assoc_graph_html}"
+        f"{enrichment_html}"
         "    <section class=\"visual-panel premium-qa\" aria-label=\"premium visual QA checklist\">\n"
         "      <h2>Premium HTML visual QA checklist</h2>\n"
         "      <p class=\"premium-copy\">This screen report uses component-level <code>liquid glass</code>, an <code>evidence darkroom</code> treatment, formal long-report typography, reduced-motion safety, and print-safe degradation while preserving the complete due-diligence body. It explicitly avoids generic purple gradients, decorative card piles, and any evidence truncation.</p>\n"
@@ -13492,6 +13505,7 @@ def _report_markdown(
     qyyjt_public_origin_handoff: dict[str, Any] | None = None,
     next_actions: list[str],
     quality_gate: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> str:
     findings = risk_brief.get("key_findings", [])
     controllers = profile_brief.get("controller_candidates", [])
@@ -15241,6 +15255,13 @@ def _report_markdown(
         lines.append("## 证据准入")
         lines.append(f"- 事实级: {facts} 条（高置信+强来源，已进入报告）")
         lines.append(f"- 线索级: {leads} 条（中低置信或单一来源，需核验后使用）")
+
+    # ── Intel enrichment ──
+    # Render intel_enrichment / people-intel / entity-association payloads
+    # carried by the packet. Absent or empty → no section (graceful).
+    enrichment_lines = render_enrichments_markdown(enrichments or [])
+    if enrichment_lines:
+        lines.extend(enrichment_lines)
 
     lines.extend(["", "## 下一步"])
     for action in next_actions[:6]:
