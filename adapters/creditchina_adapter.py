@@ -1,4 +1,9 @@
-"""信用中国 — 政府公开行政处罚信息查询适配器。数据边界: fully_public"""
+"""信用中国 — 政府公开行政处罚信息查询适配器。数据边界: fully_public
+
+⚠️ STATUS: BROKEN (2026-10-21 实测)
+creditchina.gov.cn 对程序化访问启用 WAF (JS 质询), /search?keyword= 返回 HTTP 412。
+此 adapter 在服务端直调场景下失效, 保留仅作结构参考。如需使用, 改走浏览器环境。
+"""
 from adapters.safe_research_adapter import SafeResearchAdapter
 from typing import Any
 import re
