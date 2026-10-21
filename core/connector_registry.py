@@ -665,6 +665,22 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "operator_notes": ["Public profiles only."],
         "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_maimai_lookup", "source_hint": "public_maimai_lookup", "required_config": [], "record_type": "maimai_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "profile leads feed association", "focused_test": "tests/unit/test_maimai_adapter.py"},
     },
+    "public_fiftyeight_h5": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/fiftyeight_h5_adapter.py", "core/connector_registry.py", "tests/unit/test_fiftyeight_h5_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_fiftyeight_h5_adapter.py -q"],
+        "field_contract": {"record_type": "classifieds_record", "source_hint": "public_fiftyeight_h5", "required_fields": ["listings"], "report_gate": "classifieds listings are leads", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
+        "operator_notes": ["58同城移动端 H5 (m.58.com) 城市+频道公开信息流，免登录。robots.txt Disallow /*?*：URL 禁带 query；/sou/ 搜索路径禁用，不支持关键词搜索。详情页电话不渲染、不提取。"],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_fiftyeight_h5", "source_hint": "public_fiftyeight_h5", "required_config": [], "record_type": "classifieds_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "listing leads feed association", "focused_test": "tests/unit/test_fiftyeight_h5_adapter.py"},
+    },
+    "public_zhihu_public": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/zhihu_public_adapter.py", "core/connector_registry.py", "tests/unit/test_zhihu_public_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_zhihu_public_adapter.py -q"],
+        "field_contract": {"record_type": "qa_record", "source_hint": "public_zhihu_public", "required_fields": ["hot_items", "profile"], "report_gate": "public QA content is leads", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
+        "operator_notes": ["知乎免登录公开 API：热榜 api/v3/feed/topstory/hot-list-web；用户公开资料 api/v4/members/<url_token>。回答/文章列表接口 401 需登录，不碰。"],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_zhihu_public", "source_hint": "public_zhihu_public", "required_config": [], "record_type": "qa_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "qa leads feed association", "focused_test": "tests/unit/test_zhihu_public_adapter.py"},
+    },
     "public_phone_mark": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/phone_mark_adapter.py", "core/connector_registry.py", "tests/unit/test_phone_mark_adapter.py"],
