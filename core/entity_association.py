@@ -337,7 +337,7 @@ _SEED_FANOUT: dict[str, list[str]] = {
     "address": ["amap", "baidu_map", "dianping", "douban"],
     "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate",
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
-                      "lagou", "zhaopin", "zhipin"],
+                      "lagou", "zhaopin", "zhipin", "ccgp"],
     "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark"],
     "email": ["sogou_wx", "douyin", "telegram"],
     "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa"],
@@ -374,6 +374,7 @@ class EntityAssociationEngine:
     lagou: Any = None
     zhaopin: Any = None
     zhipin: Any = None
+    ccgp: Any = None
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -640,6 +641,21 @@ class EntityAssociationEngine:
                 if hiring:
                     out.append({"type": "hiring_signal", "value": str(hiring), "sources": [attr],
                                 "context": {"from": f"{attr}_hiring"}})
+                return out
+            if attr == "ccgp":
+                fields = result.get("fields") or {}
+                bids = fields.get("bids") or []
+                out = []
+                for b in bids:
+                    if isinstance(b, dict):
+                        supplier = b.get("supplier") or b.get("company") or ""
+                        if supplier:
+                            out.append({"type": "business", "value": supplier, "sources": ["ccgp"],
+                                        "context": {"from": "ccgp_bid", "amount": b.get("amount", "")}})
+                        phone = b.get("phone") or b.get("contact_phone") or ""
+                        if phone:
+                            out.append({"type": "phone", "value": phone, "sources": ["ccgp"],
+                                        "context": {"from": "ccgp_contact"}})
                 return out
         except Exception:
             return []
