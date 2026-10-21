@@ -1,7 +1,10 @@
 """WhatsMyName 用户名枚举 — 用户名跨站关联适配器。数据边界: fully_public
 
 WhatsMyName (github.com/WebBreacher/WhatsMyName) 是社区维护的用户名枚举数据集
-(692 站点, CC BY-SA 4.0)。给一个用户名, 检查 700+ 站点是否存在该用户。
+(692 站点, CC BY-SA 4.0)。2026-10-21 合并 sherlock-project/sherlock 数据集
+(481 站点, MIT, 去重后新增 289) 后共 981 站点。给一个用户名, 检查 ~980 站点
+是否存在该用户。sherlock 条目带 detect=message|status_code|response_url，
+见 check_site 检测语义与 adapters/_vendor/whatsmyname/merge_sherlock.py。
 
 关联深挖价值 (per user directive):
 - 用户名复用是社工学经典: 同一人在多平台用同一用户名
@@ -147,11 +150,33 @@ class WhatsMyNameLookup(SafeResearchAdapter):
     def _extract_public_fields(self, raw_data: Any) -> dict[str, Any]:
         return raw_data if isinstance(raw_data, dict) else {}
 
+    @staticmethod
+    def _record_redirects() -> tuple:
+        """Build an opener that records the final URL after redirects."""
+        import urllib.request
+
+        class _Recorder(urllib.request.HTTPRedirectHandler):
+            def __init__(self):
+                self.final_url: str | None = None
+
+            def redirect_request(self, req, fp, code, msg, headers, newurl):
+                self.final_url = newurl
+                return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+        recorder = _Recorder()
+        return urllib.request.build_opener(recorder), recorder
+
     def check_site(self, site: dict, username: str) -> dict[str, Any]:
         """检查单个站点用户名是否存在。
 
         返回: {"site": name, "found": bool|None, "url": str, "note": str}
-        found=None 表示无法判断 (search_based 或请求失败)
+        found=None 表示无法判断 (search_based、regex 不合规或请求失败)
+
+        检测语义 (site["detect"], sherlock 数据集合并 2026-10-21 引入):
+        - message:      errorMsg 任一在 body 中 => 不存在；都不在 => 存在
+        - status_code:  200 => 存在；>=400 => 不存在
+        - response_url: 最终 URL == error_url => 不存在；否则 => 存在
+        - (缺省/WMN 原生): m_string/e_string/m_code/e_code 四段式逻辑
         """
         name = site.get("name", "unknown")
         uri_template = site.get("uri_check", "")
@@ -166,12 +191,42 @@ class WhatsMyNameLookup(SafeResearchAdapter):
                 "note": site.get("note", "search_based, 需人工确认"),
             }
 
+        # regexCheck (sherlock): 用户名不合格式 => 该站不查, 不判
+        regex_check = site.get("regex_check") or ""
+        if regex_check:
+            try:
+                if not re.match(regex_check, username or ""):
+                    return {
+                        "site": name,
+                        "found": None,
+                        "url": site.get("uri_pretty", url).replace("{account}", username),
+                        "check_url": url,
+                        "category": site.get("cat", ""),
+                        "note": "regex_mismatch_skipped (site requires "
+                                f"{regex_check})",
+                    }
+            except re.error:
+                pass
+
+        detect = site.get("detect") or ""
+        need_final_url = detect == "response_url"
+        opener = recorder = None
+        if need_final_url:
+            opener, recorder = self._record_redirects()
+
         try:
             import urllib.request
             req = urllib.request.Request(url, headers=self._build_headers())
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            if opener is not None:
+                open_ctx = opener.open(req, timeout=15)
+            else:
+                open_ctx = urllib.request.urlopen(req, timeout=15)
+            with open_ctx as resp:
                 status = resp.status
                 body = resp.read().decode("utf-8", errors="replace")
+                geturl = getattr(resp, "geturl", None)
+                final_url = (recorder.final_url if recorder and recorder.final_url
+                             else (geturl() if callable(geturl) else ""))
         except Exception as e:
             # HTTPError 会带 code, 其他异常则无法判断
             status = getattr(e, "code", 0)
@@ -179,23 +234,46 @@ class WhatsMyNameLookup(SafeResearchAdapter):
                 body = e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else ""
             except Exception:
                 body = ""
+            final_url = ""
 
-        e_code = site.get("e_code")
-        e_string = site.get("e_string", "")
-        m_code = site.get("m_code")
-        m_string = site.get("m_string", "")
+        if detect == "message":
+            msgs = site.get("m_strings") or (
+                [site.get("m_string")] if site.get("m_string") else []
+            )
+            if status == 0:
+                found = None
+            else:
+                found = not any(m and m in body for m in msgs)
+        elif detect == "status_code":
+            if status == 200:
+                found = True
+            elif status >= 400:
+                found = False
+            else:
+                found = None
+        elif detect == "response_url":
+            error_url = (site.get("error_url") or "").rstrip("/")
+            if status == 0:
+                found = None
+            else:
+                found = (final_url or "").rstrip("/") != error_url
+        else:
+            e_code = site.get("e_code")
+            e_string = site.get("e_string", "")
+            m_code = site.get("m_code")
+            m_string = site.get("m_string", "")
 
-        # 判断逻辑: m_string (不存在) 优先, 其次 e_string, 最后状态码
-        # 原因: 404 页面常包含站点名等通用字符串, e_string 易误判
-        found = None
-        if m_string and m_string in body:
-            found = False
-        elif e_string and e_string in body:
-            found = True
-        elif m_code and status == m_code:
-            found = False
-        elif e_code and status == e_code:
-            found = True
+            # 判断逻辑: m_string (不存在) 优先, 其次 e_string, 最后状态码
+            # 原因: 404 页面常包含站点名等通用字符串, e_string 易误判
+            found = None
+            if m_string and m_string in body:
+                found = False
+            elif e_string and e_string in body:
+                found = True
+            elif m_code and status == m_code:
+                found = False
+            elif e_code and status == e_code:
+                found = True
 
         return {
             "site": name,

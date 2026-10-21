@@ -44,6 +44,41 @@ def test_telegram_channel_not_found():
     assert e._extract("telegram_channel", {"fields": {}}) == []
 
 
+def _fake_result_with_tgstat():
+    r = _fake_result()
+    r["fields"]["tgstat"] = {
+        "source": "tgstat.com",
+        "handle": "durov",
+        "description": "Founder of Telegram.",
+        "subscribers_exact": 10303163,
+        "related_handles": ["feed", "lean", "durov"],  # own handle must be skipped
+        "channel_url": "https://tgstat.com/channel/@durov",
+    }
+    return r
+
+
+def test_telegram_channel_extract_related_handles():
+    e = EntityAssociationEngine(telegram_channel=None)
+    ents = e._extract("telegram_channel", _fake_result_with_tgstat())
+    profiles = [x for x in ents if x["type"] == "username_profile"]
+    handles = {x["value"] for x in profiles}
+    assert handles == {"feed", "lean"}, f"own handle not skipped: {handles}"
+    for p in profiles:
+        assert p["display"] == f"@{p['value']}"
+        assert p["context"]["from"] == "tgstat_related_handle"
+        assert p["context"]["owner_handle"] == "durov"
+        assert p["context"]["subscribers_exact"] == 10303163
+        assert "telegram_channel" in p["sources"]
+    # person 实体仍在
+    assert any(x["type"] == "person" for x in ents)
+
+
+def test_telegram_channel_extract_no_tgstat_no_profiles():
+    e = EntityAssociationEngine(telegram_channel=None)
+    ents = e._extract("telegram_channel", _fake_result())
+    assert not [x for x in ents if x["type"] == "username_profile"]
+
+
 def test_telegram_channel_wired_in_fanout_and_factory():
     assert "telegram_channel" in _SEED_FANOUT["person_name"]
     eng = create_engine_with_all_adapters()
