@@ -214,3 +214,85 @@ robots.txt 逐站实取。出口为境外 egress。
 - 测试计数：新增 3（全绿）；复跑 patent/wenshu/court_notice/entity_association/
   connector_registry 相关 85 个测试全绿。
 - registry：无新增条目（三条人物线注册条目已存在；两条判死线不建 adapter）。
+
+---
+
+# 非常规渠道 p2 survey 实测记录（招投标联系人 + PGP 公钥服务器）
+
+日期：2026-10-21（lane：招投标联系人 + PGP 公钥）
+结论先行：**PGP 公钥服务器走通，已建成 `public_pgp_lookup`；招投标联系人由
+`public_ccgp_bid_lookup`（兄弟 association lane 已建）覆盖，本次补 person
+分支接线；Ubuntu keyserver 与 cebpubservice 判死。**
+
+---
+
+## 1. 招投标联系人 —— 走通（基于兄弟 lane 的 ccgp_adapter）
+
+- 基线：兄弟 lane 已建成 `adapters/ccgp_adapter.py`（`public_ccgp_bid_lookup`），
+  search.ccgp.gov.cn 关键词检索 + www.ccgp.gov.cn 详情页解析；详情页解析器
+  已提取 contacts（联系人姓名/电话）、phones、buyer、experts。
+- 本次增量（person 分支）：`core/entity_association.py` 的 `attr == "ccgp"`
+  分支追加联系人→person 实体（name→person，phone→contact 电话实体，context
+  标注 `ccgp_contact_person`），电话字段进 contact 字段。详情 shape 为
+  `parse_detail_page` 返回的 `contacts:[{name, phone}]`。
+- 电话掩码情况（实测结论）：政府采购公告是法定公开信息，字段不打码；
+  sibling adapter 文档注明"字段不打码"，联系人电话为明文。
+- 补充 survey：ccgp-beijing.gov.cn（北京政府采购网分站）详情页为静态 .htm，
+  plain HTTP 200 可抓、含"联系人/联系电话"字样，与总站详情解析器同格式，
+  可作为 ccgp_adapter 的第二目标域名；检索端仍走 search.ccgp.gov.cn。
+
+## 2. cebpubservice.com（中国招标投标公共服务平台）—— 判死
+
+- 探针：`GET https://www.cebpubservice.com/robots.txt` / `/`，浏览器 UA。
+- 实测：主页直接返回阿里云 WAF 405 拦截页（"很抱歉，由于您访问的 URL 有可能
+  对网站造成安全威胁，您的访问被阻断"），无 plain HTTP 路径；检索接口需过
+  WAF + 大概率 JS 登录墙。
+- 判定：反爬墙 → 判死，未硬闯。与兄弟 lane `unconventional-paths-20261021`
+  的 cebpubservice 判死结论一致。
+
+## 3. 各省公共资源交易平台 —— 判死（逐省面，不建通用 adapter）
+
+- 实测结论：各省平台（交易中心）多为 JS 渲染 + CA 证书/会员登录 + 附件下载
+  需登录，无统一 plain HTTP 检索面；与兄弟 lane 的省级 GSXT 判死结论同类。
+- 唯一例外面：各地政府采购网分站（如 ccgp-beijing.gov.cn）与 ccgp 总站同源
+  静态详情页，可用既有 ccgp_adapter 覆盖。
+
+## 4. PGP 公钥服务器 —— 走通，已建 `public_pgp_lookup`
+
+### 4a. keys.openpgp.org VKS v1 API —— 走通
+
+- 端点：`GET https://keys.openpgp.org/vks/v1/by-email/<urlencode(email)>`
+  / `by-fingerprint/<40|64 hex>`；文档化的公开 API，无需注册/登录。
+- robots.txt：`GET /robots.txt` 返回 404（无 disallow）→ 红线通过。
+- 实测（2026-10-21）：`by-email/dkg@fifthhorseman.net` → 200，armored 公钥块，
+  解析出 fingerprint `D477040C70C2156A5C298549BB7E9101495E6BF7`、已验证邮箱
+  `dkg@debian.org` / `dkg@fifthhorseman.net`、密钥创建时间
+  `2023-12-06T23:54:51+00:00`。未注册邮箱 → 404（期望行为）。5 秒间隔，1 次
+  真实请求验证。
+- 隐私设计注意：VKS 出于隐私只发布已验证邮箱，UID 常无姓名（这是服务端
+  行为）；person 实体以邮箱为标识，姓名有则取之。
+- 解析器：无第三方依赖的最小 OpenPGP 包解析（new/old format 定长包，
+  tag 13 User ID / tag 6 Public-Key 取创建时间），详见
+  `adapters/public_pgp_adapter.py`。
+
+### 4b. keyserver.ubuntu.com /pks/lookup —— 判死（robots.txt 红线）
+
+- 探针：`GET https://keyserver.ubuntu.com/robots.txt`。
+- 实测：对 `User-agent: *` 明确 `Disallow: /pks/`（及 /d/ /g/ /s/
+  /download/ /get/ /search/）。
+- 判定：红线"robots.txt 明确 Disallow 的路径直接停手"→ 判死，
+  `/pks/lookup?op=get&search=<q>` 即使技术可行也不用，不建 ubuntu 路径。
+
+## 交付
+
+- 代码：新增 `adapters/public_pgp_adapter.py`（SafeResearchAdapter，
+  EXPERIMENTAL，default_enabled=False，5s 限速）；`core/entity_association.py`
+  加 `attr == "pgp"` person/email 分支 + `attr == "ccgp"` 联系人 person 分支
+  + email fanout 接线 + dataclass 工厂注入（与兄弟 lane 并发编辑，全部为
+  追加式修改，已随 lane commit 5a31815 落库）。
+- 注册：`core/connector_registry.py` 新增 `public_pgp_lookup` implementation
+  pack（含 field_contract + runtime_companion）与 ConnectorCapability
+ （REST_API/PUBLIC/EXPERIMENTAL/default_enabled=False）。
+- 文档：本文（append，未覆盖兄弟 lane 内容）。
+- 测试计数：`tests/unit/test_pgp_adapter.py` 13/13 全绿（含真机单请求验证）；
+  registry/entity_association 导入校验通过。
