@@ -114,6 +114,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Opt-in: run people intel for this person as 'name=<name>|email=<e>|github=<u>|username=<u>' and attach as packet['intel_enrichment'].",
     )
+    parser.add_argument(
+        "--associate",
+        default="",
+        help="Opt-in: run entity association as 'type=<phone|address|person_name|business_name|email>|value=<v>' and attach as packet['entity_association'].",
+    )
     return parser
 
 
@@ -220,6 +225,17 @@ def _optional_intel_enrichment(args: argparse.Namespace) -> dict:
             profiler.enable(h=1)
             adapters["username_adapter"] = profiler
         enrichment["person"] = enrich_person(query, **adapters)
+    assoc_spec = getattr(args, "associate", "") or ""
+    if assoc_spec.strip():
+        fields: dict[str, str] = {}
+        for chunk in assoc_spec.split("|"):
+            if "=" in chunk:
+                key, value = chunk.split("=", 1)
+                fields[key.strip().lower()] = value.strip()
+        from core.entity_association import EntityAssociationEngine
+        engine = EntityAssociationEngine()
+        seed = {"type": fields.get("type") or "business_name", "value": fields.get("value") or ""}
+        enrichment["entity_association"] = engine.associate(seed, max_depth=2)
     return enrichment
 
 

@@ -312,6 +312,36 @@ def people_intel():
         return jsonify({"error": "人物情报编排失败，请检查日志获取详情"}), 500
 
 
+@app.route("/api/entity-associate", methods=["POST"])
+def entity_associate():
+    """实体关联：种子→跨源关联图谱→家族/实控推断。
+
+    请求体：{"seed_type": "phone|address|person_name|business_name|email",
+             "seed_value": "...", "max_depth": 2}
+    所有推断标注为 leads，置信度分级，绝不断言。
+    """
+    from core.entity_association import EntityAssociationEngine
+
+    data = request.get_json() or {}
+    seed_type = str(data.get("seed_type") or "").strip()
+    seed_value = str(data.get("seed_value") or "").strip()
+    if seed_type not in ("phone", "address", "person_name", "business_name", "email"):
+        return jsonify({"error": "seed_type 必须是 phone/address/person_name/business_name/email"}), 400
+    if not seed_value:
+        return jsonify({"error": "缺少 seed_value 参数"}), 400
+
+    try:
+        engine = EntityAssociationEngine()
+        result = engine.associate(
+            {"type": seed_type, "value": seed_value},
+            max_depth=int(data.get("max_depth") or 2),
+        )
+        return jsonify(result)
+    except Exception:
+        logger.exception("Entity-associate failed")
+        return jsonify({"error": "实体关联失败，请检查日志获取详情"}), 500
+
+
 @app.route("/api/domain-intel", methods=["POST"])
 def domain_intel():
     """域名情报：基础设施公开数据一次调用，产出域名情报富化结果。
