@@ -2154,6 +2154,18 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
     except Exception:
         pass
 
+    try:
+        from adapters.software_copyright_adapter import ZhifufuSoftLookup
+        engine.software_copyright = ZhifufuSoftLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.weibo_relation_adapter import WeiboRelationLookup
+        engine.weibo_relation = WeiboRelationLookup()
+    except Exception:
+        pass
+
     # Key-based adapters (only if key provided)
     if kwargs.get("hunter_api_key"):
         try:
@@ -2166,6 +2178,13 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
         try:
             from adapters.threatbook_adapter import ThreatBookLookup
             engine.threatbook = ThreatBookLookup(api_key=kwargs["threatbook_api_key"])
+        except Exception:
+            pass
+
+    if kwargs.get("juhe_api_key"):
+        try:
+            from adapters.software_copyright_adapter import JuheCopyrightLookup
+            engine.juhe_copyright = JuheCopyrightLookup(api_key=kwargs["juhe_api_key"])
         except Exception:
             pass
 

@@ -6,6 +6,16 @@
 
 ## Unreleased — OSINT 数据获取加强
 
+### 2026-10-21 下午 — 实体关联引擎 `_extract` 全覆盖
+- 补齐 `_extract` 处理器 12 个分支：`patent`（申请人/发明人）、`gleif`（LEI 法人+母子公司）、`customs`（提单收货人/对手方/地址）、`software_copyright`/`juhe_copyright`（软著权人）、`toutiao`（作者）、`weibo_relation`（关注/粉丝）、`commoncrawl`（历史 URL host）、`dnsdumpster`（子域名/IP）、`threatbook`（IP/ASN/恶意判定）、`hunter`（企业邮箱）、`gd_credit`（企业/法定代表人/地址）；只用已有实体类型词汇。
+- `_SEED_FANOUT` 新增：`business_name` += gleif/customs/software_copyright；`person_name` += weibo_relation（juhe_copyright 仅 handler，keyed 默认不 fanout）。
+- 工厂 `create_engine_with_all_adapters` 补注入：`software_copyright`（知服服免 key）、`weibo_relation`（免 key）、`juhe_copyright`（`juhe_api_key` 提供时）。
+- 新增 `tests/unit/test_entity_extract_biz.py`（21 项）、`tests/unit/test_entity_extract_infra.py`（9 项），fixture 离线；引擎测试合计 66 项全绿。GLEIF 真实联网冒烟（Tencent → 10 个 business 实体）。注：dnsdumpster 实查被其 robots.txt（Disallow /htmld/）拦截，属适配器按设计拒绝，未绕行。
+- 爱企查结论：走不通。aiqicha.com 已整体 301 至 aiqicha.baidu.com，所有免登录入口均被百度 heicha JS 挑战+登录门拦截，robots.txt 明示 Disallow /*ajax；只写 `docs/research/aiqicha-feasibility-20261021.md`，未建适配器。
+- `adapters/phone_mark_adapter.py` 修复：切 tw.chahaoba.com 子站、固话 URL 保留横线、手动 robots 检查（17/17 测试通过）。
+
+### 2026-10-21 上午 — OSINT 数据获取加强
+
 - 新增 `adapters/opencorporates_adapter.py`：OpenCorporates v0.4 公开 API 适配器（公司名搜索 / 司法管辖区+注册号查详情 / 任职人员搜索），覆盖 130+ 司法管辖区 1.4 亿+ 公司。实测发现 v0.4 现需免费 `api_token`（官网注册），token 经构造参数传入、不落盘不进日志；无 token 时明确返回 `credentials_required`。
 - 新增 `adapters/nominatim_geocode_adapter.py`：OpenStreetMap Nominatim 地理编码适配器，核验注册地址真实性并初判地点性质（commercial/residential/unknown）。遵守 Nominatim 使用政策：1.1 秒间隔、标识性 UA、单地址核验不批量。robots.txt 检查改为带政策合规 UA 抓取（基类默认 UA 会被 403 误判为全站禁止，已在代码注释中说明依据）。
 - `core/connector_registry.py` 新增三个 EXPERIMENTAL 连接器（`public_opencorporates_company_registry`、`public_opencorporates_officer_records`、`public_nominatim_address_verification`），全部 `default_enabled=False`，符合"模块化、可审计、默认关闭"门禁。
