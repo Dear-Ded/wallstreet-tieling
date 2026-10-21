@@ -49,6 +49,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Any
 
+try:
+    from core.temporal_analysis import analyze_temporal_clusters
+    _HAS_TEMPORAL = True
+except ImportError:
+    _HAS_TEMPORAL = False
+
 
 _MOBILE_RE = re.compile(r"^1[3-9]\d{9}$")
 _LANDLINE_RE = re.compile(r"^0\d{2,3}\d{7,8}(?:\d{1,6})?$")
@@ -445,6 +451,13 @@ class EntityAssociationEngine:
 
         entity_list = sorted(entities.values(),
                              key=lambda e: (e["type"], e["value"]))
+        # Temporal analysis: find time-based patterns
+        if _HAS_TEMPORAL:
+            try:
+                temporal = analyze_temporal_clusters(entity_list)
+                patterns.extend(temporal.get("patterns", []))
+            except Exception:
+                pass
         return {
             "seed": {"type": seed_type, "value": seed_value},
             "entities": entity_list,
