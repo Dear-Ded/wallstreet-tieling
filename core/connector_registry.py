@@ -481,6 +481,38 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_baidu_map_poi_search": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/baidu_map_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_baidu_map_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_baidu_map_adapter.py tests/unit/test_connector_registry.py -q",
+        ],
+        "field_contract": {
+            "record_type": "baidu_map_poi_record",
+            "source_hint": "public_baidu_map_poi_search",
+            "required_fields": ["poi_count", "pois"],
+            "report_gate": "POI records are platform-listed data; storefront existence is a lead, not a verified fact",
+        },
+        "operator_notes": [
+            "Free key from lbsyun.baidu.com; key via constructor only, never logged.",
+            "ToS: no caching/storage of POI data — real-time queries only.",
+        ],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_baidu_map_poi_search",
+            "source_hint": "public_baidu_map_poi_search",
+            "required_config": ["api_key"],
+            "record_type": "baidu_map_poi_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "POI records feed offline-business leads; storefront facts require exact/strong match and admission tests",
+            "focused_test": "tests/unit/test_baidu_map_adapter.py::test_field_extraction",
+        },
+    },
     "public_douyin_business_footprint": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -2951,6 +2983,29 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "credentialed_depth_requires_admission", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_baidu_map_poi_search",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=True,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "BaiduMapPoiLookup adapter (adapters.baidu_map_adapter).",
+                "Baidu Maps Place API v2: keyword search with scope=2 detail.",
+                "Free key from lbsyun.baidu.com (personal ~20k/day web tier).",
+                "Key injected at construction only; never persisted or logged.",
+                "Offline storefront verification: existence, address, tel, rating, hours.",
+                "region param required by API (defaults to '全国').",
+                "ToS: real-time queries only, no caching or storage of POI data.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
         ),
         ConnectorCapability(
             name="public_douyin_business_footprint",
