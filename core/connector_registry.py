@@ -481,6 +481,35 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_weibo_search": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/weibo_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_weibo_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_weibo_adapter.py tests/unit/test_connector_registry.py -q",
+        ],
+        "field_contract": {
+            "record_type": "weibo_post_record",
+            "source_hint": "public_weibo_search",
+            "required_fields": ["post_count", "posts"],
+            "report_gate": "posts are user-generated; associations are leads, not verified facts",
+        },
+        "operator_notes": ["Browser-assisted. 3s interval."],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_weibo_search",
+            "source_hint": "public_weibo_search",
+            "required_config": [],
+            "record_type": "weibo_post_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "post records feed association leads",
+            "focused_test": "tests/unit/test_weibo_adapter.py",
+        },
+    },
     "public_douban_group_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -3161,6 +3190,27 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_weibo_search",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "WeiboSearchLookup adapter (adapters.weibo_adapter).",
+                "Weibo public search: posts, author profiles, verified reasons.",
+                "BROWSER-ASSISTED: visitor pass needs browser; parse_browser_result structures JSON.",
+                "Association value: bios expose identity, posts expose relationships.",
+                "3s interval. No credentials.",
+                "Default-off: explicit operator enablement required.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only", "browser_assisted"),
         ),
         ConnectorCapability(
             name="public_douban_group_lookup",
