@@ -52,6 +52,14 @@ class PhoneMarkLookup(SafeResearchAdapter):
         cleaned = self.normalize_phone(phone)
         return f"{self._BASE}/{quote(cleaned)}"
 
+    def _build_headers(self) -> dict:
+        # Use browser UA: chahaoba 404s non-browser UAs on phone pages
+        return {
+            "User-Agent": self._UA,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+        }
+
     @staticmethod
     def normalize_phone(phone: str) -> str:
         """Strip spaces, dashes, +86 prefix → canonical form."""
