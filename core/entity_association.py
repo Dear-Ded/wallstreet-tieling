@@ -1032,11 +1032,15 @@ class EntityAssociationEngine:
                                         "context": {"from": "fofa_icp"}})
                 return out
             if attr == "whatsmyname":
-                sites = (result.get("fields") or {}).get("sites_found") or []
-                return [{"type": "username_profile", "value": s.get("site", ""),
-                         "sources": ["whatsmyname"],
-                         "context": {"from": "username_reuse", "url": s.get("url", "")}}
-                        for s in sites if isinstance(s, dict)]
+                fields = result.get("fields") or {}
+                sites = fields.get("sites_found") or []
+                out = [{"type": "username_profile", "value": s.get("site", ""),
+                        "sources": ["whatsmyname"],
+                        "context": {"from": "username_reuse", "url": s.get("url", "")}}
+                       for s in sites if isinstance(s, dict)]
+                for pm in fields.get("profile_metadata") or []:
+                    out.extend(_wmn_profile_entities(pm, "whatsmyname"))
+                return out
             if attr in ("lagou", "zhaopin", "zhipin"):
                 fields = result.get("fields") or {}
                 out = []
@@ -2004,6 +2008,64 @@ def _phonemark_entities(result: dict, source: str) -> list:
     if biz:
         out.append({"type": "business", "value": biz, "sources": [source],
                     "context": {"from": "phone_mark", "city": fields.get("city", "")}})
+    return out
+
+
+# contact 类型 -> 实体类型词汇映射（只用已有实体类型词汇）
+_WMN_CONTACT_ENTITY_TYPE = {
+    "mobile": "phone",
+    "landline": "phone",
+    "email": "email",
+    "qq": "username_profile",
+    "wechat": "username_profile",
+    "weibo_uid": "username_profile",
+    "douyin_id": "username_profile",
+    "platform_uid": "username_profile",
+    "service_number": "phone",
+}
+
+
+def _wmn_profile_entities(pm: dict, source: str = "whatsmyname") -> list:
+    """WhatsMyName profile_metadata -> 实体（Maigret 式深挖的第二跳）。
+
+    person: profile 昵称；email/phone: 联系方式实体；
+    qq/微信/平台 UID: username_profile 实体（contact_type 标注）。
+    全部是 lead：context 标注来源站点与 url。
+    """
+    if not isinstance(pm, dict):
+        return []
+    out = []
+    site = pm.get("site_name") or pm.get("site") or ""
+    url = pm.get("url") or ""
+    base_ctx = {"from": "wmn_profile", "site": site, "url": url}
+
+    display = (pm.get("display_name") or "").strip()
+    if display:
+        ctx = dict(base_ctx)
+        if pm.get("bio"):
+            ctx["bio"] = str(pm["bio"])[:200]
+        if pm.get("company"):
+            ctx["company"] = str(pm["company"])[:120]
+        if pm.get("location"):
+            ctx["location"] = str(pm["location"])[:120]
+        out.append({"type": "person", "value": display, "display": display,
+                    "sources": [source], "context": ctx})
+
+    for c in pm.get("contacts") or []:
+        if not isinstance(c, dict):
+            continue
+        ctype, value = c.get("type"), (c.get("value") or "").strip()
+        if not ctype or not value:
+            continue
+        etype = _WMN_CONTACT_ENTITY_TYPE.get(ctype)
+        if not etype:
+            continue
+        ctx = dict(base_ctx)
+        ctx["contact_type"] = ctype
+        ctx["contact_confidence"] = c.get("confidence", "")
+        out.append({"type": etype, "value": value,
+                    "display": value if etype != "username_profile" else None,
+                    "sources": [source], "context": ctx})
     return out
 
 

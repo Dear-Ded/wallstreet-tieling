@@ -23,6 +23,8 @@ from typing import Any
 import json
 import os
 import re
+import time
+import urllib.robotparser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -117,6 +119,8 @@ class WhatsMyNameLookup(SafeResearchAdapter):
         self._data_path = os.path.join(
             os.path.dirname(__file__), "_vendor", "whatsmyname", "wmn-data.json"
         )
+        # robots.txt 缓存: host -> RobotFileParser (抓取层遵守站点规则)
+        self._robots_cache: dict[str, urllib.robotparser.RobotFileParser] = {}
 
     def _load_sites(self) -> list[dict]:
         """加载 WMN 数据集 + 中文站点补充。"""
@@ -202,6 +206,89 @@ class WhatsMyNameLookup(SafeResearchAdapter):
             "note": site.get("note", ""),
         }
 
+    # -- profile 元数据深挖 (Maigret 式, 默认关闭) ----------------------------
+
+    def _robots_allowed(self, url: str) -> bool:
+        """抓 profile 页前检查 robots.txt；取不到 robots 则保守放行但已尽力。"""
+        try:
+            from urllib.parse import urlparse
+            host = urlparse(url).netloc.lower()
+            if not host:
+                return False
+            if host not in self._robots_cache:
+                rp = urllib.robotparser.RobotFileParser()
+                rp.set_url(f"https://{host}/robots.txt")
+                try:
+                    rp.read()
+                except Exception:
+                    self._robots_cache[host] = None  # type: ignore
+                    return True
+                self._robots_cache[host] = rp
+            rp = self._robots_cache[host]
+            if rp is None:
+                return True
+            return rp.can_fetch("*", url)
+        except Exception:
+            return False
+
+    def _fetch_profile_html(self, url: str, timeout: int = 15) -> bytes | None:
+        import urllib.request
+        try:
+            req = urllib.request.Request(url, headers=self._build_headers())
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                if resp.status != 200:
+                    return None
+                return resp.read()
+        except Exception:
+            return None
+
+    def _enrich_profiles(
+        self,
+        found: list[dict[str, Any]],
+        username: str,
+        max_profiles: int = 20,
+        profile_interval: float = 2.0,
+    ) -> list[dict[str, Any]]:
+        """对命中站点抓取公开 profile 页并解析元数据。
+
+        只抓公开 profile 页，不登录；robots 不允许则跳过；
+        单站失败直接降级（不中断整体流程）；串行 + 固定间隔限速。
+        """
+        from core.profile_metadata import extract_profile_metadata, profile_text
+        from core.contact_extractor import extract_contacts
+
+        enriched: list[dict[str, Any]] = []
+        # search_based 不自动判断, 不抓取
+        targets = [r for r in found if r.get("url")][:max_profiles]
+        for r in targets:
+            site_name = r.get("site", "")
+            pretty = r.get("url") or ""
+            check_url = r.get("check_url") or ""
+            # 微博 ajax / API 型 check_url 直接返回结构化 JSON, 优先用它
+            enrich_url = (
+                check_url if ("ajax" in check_url or "/api" in check_url)
+                else (pretty or check_url)
+            )
+            if not enrich_url or not enrich_url.startswith("http"):
+                continue
+            if not self._robots_allowed(enrich_url):
+                continue
+            html = self._fetch_profile_html(enrich_url)
+            time.sleep(profile_interval)
+            if not html:
+                continue
+            try:
+                pm = extract_profile_metadata(html, enrich_url)
+            except Exception:
+                continue
+            pm["site_name"] = site_name  # WMN 数据集里的站点名
+            contacts = extract_contacts(
+                profile_text(pm), source_label=f"whatsmyname:{site_name}"
+            )
+            pm["contacts"] = contacts
+            enriched.append(pm)
+        return enriched
+
     def query(self, username: str, **params) -> dict[str, Any]:
         """枚举用户名 across 所有站点。
 
@@ -210,6 +297,10 @@ class WhatsMyNameLookup(SafeResearchAdapter):
             max_sites: 最大检查站点数 (默认 100, 防止过慢)
             chinese_first: 中文站点优先 (默认 True)
             workers: 并发数 (默认 10)
+            enrich_profiles: 是否对命中站点抓 profile 元数据 (默认 False;
+                显式开启才抓, 避免默认 692 次请求)
+            max_profiles: 最多深挖多少个命中站点 (默认 20)
+            profile_interval: profile 抓取间隔秒 (默认 2.0)
         """
         import time
         start = time.monotonic()
@@ -263,15 +354,29 @@ class WhatsMyNameLookup(SafeResearchAdapter):
         not_found = [r for r in results if r["found"] is False]
         unknown = [r for r in results if r["found"] is None]
 
+        # 可选深挖：profile 元数据（默认关闭，显式开启才抓取）
+        enrich_profiles = params.get("enrich_profiles", False)
+        profile_metadata: list[dict[str, Any]] = []
+        if enrich_profiles and found:
+            max_profiles = params.get("max_profiles", 20)
+            profile_interval = params.get("profile_interval", 2.0)
+            profile_metadata = self._enrich_profiles(
+                found, username,
+                max_profiles=max_profiles,
+                profile_interval=profile_interval,
+            )
+
         # 审计 (只存 hash, 不存用户名原文)
         self._record_audit(
             keyword=username,
-            url=f"whatsmyname://{len(sites)}_sites",
+            url=f"whatsmyname://{len(sites)}_sites"
+            + ("+profiles" if enrich_profiles else ""),
             status=200 if found else 404,
-            fields=["found_count", "sites_checked"],
+            fields=["found_count", "sites_checked"]
+            + (["profile_metadata"] if profile_metadata else []),
         )
 
-        return {
+        out = {
             "query_subject_hash": self._hash_query(username),
             "source_domain": self.source_domain,
             "source_type": self.source_type,
@@ -286,6 +391,12 @@ class WhatsMyNameLookup(SafeResearchAdapter):
             "needs_review": sorted(unknown, key=lambda x: x["site"]),
             "duration_ms": (time.monotonic() - start) * 1000,
         }
+        out["fields"] = {
+            "sites_found": [{"site": r["site"], "url": r["url"]} for r in found],
+        }
+        if enrich_profiles:
+            out["fields"]["profile_metadata"] = profile_metadata
+        return out
 
     def _hash_query(self, keyword: str) -> str:
         import hashlib

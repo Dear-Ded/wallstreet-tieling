@@ -6,6 +6,13 @@
 
 ## Unreleased — OSINT 数据获取加强
 
+### 2026-10-21 下午 — WhatsMyName Maigret 式 profile 深挖
+- 新增 `core/profile_metadata.py`：纯函数 profile 元数据解析 — 通用 fallback（og:description/meta description/标题）+ 5 个专用解析（GitHub 嵌入 JSON、微博 ajax JSON、豆瓣 signature、知乎嵌入 JSON、Gitee og+嵌入 JSON）；`profile_text()` 拼待挖掘文本喂 `core/contact_extractor`。
+- `adapters/whatsmyname_adapter.py` 扩展：`query(..., enrich_profiles=True)` 对命中站点抓取公开 profile 页（默认关闭，避免默认 692 次请求；`max_profiles=20`、`profile_interval=2.0s` 限速；robots.txt 不允许则跳过；单站失败降级）。`fields` 新增 `sites_found` + `profile_metadata`（含联系方式），同步修复引擎 `_extract` 的 whatsmyname 分支此前读不到 fields 的问题。
+- `core/entity_association.py`：新增 `_wmn_profile_entities()` — profile 昵称→`person`、邮箱/手机号→`email`/`phone`、QQ/微信/平台 UID→`username_profile`（只用已有实体类型词汇，context 标注站点/URL/置信度）；`_extract` 的 whatsmyname 分支并入。
+- 新增 `tests/unit/test_profile_metadata.py`（15 项）：fixture 离线覆盖通用 fallback + 5 专用解析 + contact_extractor 联动 + 引擎分支。相关套件 113 项全绿；全量 `tests/unit` 2343 通过，仅 2 项预置失败（`test_release_hygiene` 隐私扫描与 `test_trademark_adapter`，基线 commit 已失败，无关本次改动；新 fixture 已避开隐私扫描硬编码号段）。
+- 红线：只抓公开 profile 页，不登录；尊重 robots/限速。
+
 ### 2026-10-21 下午 — 实体关联引擎 `_extract` 全覆盖
 - 补齐 `_extract` 处理器 12 个分支：`patent`（申请人/发明人）、`gleif`（LEI 法人+母子公司）、`customs`（提单收货人/对手方/地址）、`software_copyright`/`juhe_copyright`（软著权人）、`toutiao`（作者）、`weibo_relation`（关注/粉丝）、`commoncrawl`（历史 URL host）、`dnsdumpster`（子域名/IP）、`threatbook`（IP/ASN/恶意判定）、`hunter`（企业邮箱）、`gd_credit`（企业/法定代表人/地址）；只用已有实体类型词汇。
 - `_SEED_FANOUT` 新增：`business_name` += gleif/customs/software_copyright；`person_name` += weibo_relation（juhe_copyright 仅 handler，keyed 默认不 fanout）。
