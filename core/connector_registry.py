@@ -481,6 +481,14 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_ccgp_bid_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/ccgp_adapter.py", "core/connector_registry.py", "tests/unit/test_ccgp_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_ccgp_adapter.py -q"],
+        "field_contract": {"record_type": "ccgp_record", "source_hint": "public_ccgp_bid_lookup", "required_fields": ["bids"], "report_gate": "procurement is mandatory disclosure"},
+        "operator_notes": ["10s search interval, 3s detail."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_ccgp_bid_lookup", "source_hint": "public_ccgp_bid_lookup", "required_config": [], "record_type": "ccgp_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "bid leads feed association", "focused_test": "tests/unit/test_ccgp_adapter.py"},
+    },
     "public_lagou_company": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/lagou_adapter.py", "core/connector_registry.py", "tests/unit/test_recruitment_adapters.py"],
@@ -3338,6 +3346,20 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "ToS: real-time queries only, no caching or storage of POI data.",
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_ccgp_bid_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=("CcgpBidLookup. Government procurement: supplier/phone/amount. Default-off.",),
             risk_flags=("explicit_enable_required", "public_data_only"),
         ),
         ConnectorCapability(
