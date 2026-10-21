@@ -89,3 +89,22 @@ def test_data_boundary_and_rate_limit():
     assert a.data_boundary == "fully_public"
     assert a.requires_credentials is False
     assert a.min_request_interval == 3.0
+
+
+def test_parse_profile_self_claimed_kinship():
+    """简介亲属自述 -> self_claimed_kinship（review 级线索）. (亲属关系 lane)"""
+    html = FIXTURE_PROFILE_HTML.replace(
+        '<div id="intro_display">Less is more</div>',
+        '<div id="intro_display">张三的妻子，爱好摄影</div>',
+    )
+    profile = DoubanUserLookup.parse_profile_page(html, "lisi")
+    claimed = profile.get("self_claimed_kinship") or []
+    assert len(claimed) == 1
+    assert claimed[0]["person_b"] == "张三"
+    assert claimed[0]["relation_kind"] == "spouse"
+    assert claimed[0]["evidence_level"] == "review"
+
+
+def test_parse_profile_no_self_claimed_kinship():
+    profile = DoubanUserLookup.parse_profile_page(FIXTURE_PROFILE_HTML, "ahbei")
+    assert "self_claimed_kinship" not in profile

@@ -18,7 +18,7 @@ Verified 2026-10-21 (overseas egress, US datacenter):
 
 Fields extracted: nickname, uid (URL slug), user_id_number, intro (个人简介),
 location (常居地), registered_at (加入时间), ip_location (often "未知"),
-avatar URL, profile_url.
+avatar URL, profile_url, self_claimed_kinship (简介亲属自述，review 级线索).
 
 Not touched: anything behind login (私信, 关注列表分页 beyond public,
 blacklist etc.). Only the single public profile page.
@@ -195,6 +195,16 @@ class DoubanUserLookup(SafeResearchAdapter):
             intro = cls._strip(m.group(1))
             if intro:
                 out["intro"] = intro[:2000]
+                # 亲属关系 lane（2026-10-21）：简介中的亲属自述（如"张三的妻子"），
+                # 低置信度（evidence_level=review），仅作线索。
+                try:
+                    from core.kinship_extract import extract_self_claimed_kinship
+                    claimed = extract_self_claimed_kinship(
+                        intro, profile_name=out.get("nickname"))
+                    if claimed:
+                        out["self_claimed_kinship"] = claimed
+                except Exception:
+                    pass
 
         # avatar
         m = re.search(

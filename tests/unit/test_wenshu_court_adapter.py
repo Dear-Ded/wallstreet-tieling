@@ -109,3 +109,34 @@ def test_audit_trail_recorded():
     trail = adapter.audit.get_trail()
     assert len(trail) == 1
     assert trail[0]["source_domain"] == "wenshu.court.gov.cn"
+
+
+def test_parse_doc_text_extracts_kinship():
+    """parse_doc_text(): 文书全文 -> 亲属关系表述（strong）. (亲属关系 lane)"""
+    adapter = _make_adapter()
+    doc = (
+        "原告张三与被告李四系夫妻关系，双方于 2020 年登记结婚。"
+        "婚生子张小明现年 5 岁。"
+    )
+    result = adapter.parse_doc_text(doc, focus_name="张三", case_number="(2024)沪01民1号")
+    stmts = result["kinship_statements"]
+    assert result["statement_count"] >= 1
+    kinds = {(s["person_a"], s["person_b"], s["relation_kind"]) for s in stmts}
+    assert ("张三", "李四", "spouse") in kinds
+    assert all(s["evidence_level"] == "strong" for s in stmts)
+    assert all("裁判文书" in s["source_ref"] for s in stmts)
+
+
+def test_parse_doc_text_no_kinship():
+    adapter = _make_adapter()
+    result = adapter.parse_doc_text("本院认为，合同合法有效，应予履行。")
+    assert result["kinship_statements"] == []
+    assert result["statement_count"] == 0
+
+
+def test_extract_kinship_from_doc_text_static():
+    stmts = WenshuCaseLookup.extract_kinship_from_doc_text(
+        "王五系赵六之子。", focus_name="王五")
+    assert len(stmts) == 1
+    assert stmts[0]["relation_kind"] == "parent_child"
+    assert stmts[0]["evidence_level"] == "strong"

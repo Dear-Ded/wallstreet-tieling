@@ -296,3 +296,288 @@ robots.txt 逐站实取。出口为境外 egress。
 - 文档：本文（append，未覆盖兄弟 lane 内容）。
 - 测试计数：`tests/unit/test_pgp_adapter.py` 13/13 全绿（含真机单请求验证）；
   registry/entity_association 导入校验通过。
+
+---
+
+# 非常规渠道 P2 survey 实测记录（非常规关联人发现 lane）
+
+日期：2026-10-21（lane：个人侧非常规渠道 — 非常规关联人发现）
+结论先行：**8 条路径中 6 条走通（4 条关系层扩展 + 2 条新建 adapter），
+3 条判死（WHOIS 反查 / 豆瓣友邻 / B站互关），1 条部分判死（文书 agent_of）。
+新闻聚合 lane 已判死（见本文档新闻聚合节），新闻共现改走通用 contract。**
+
+实查窗口：2026-10-21 15:25–16:00（北京时间）。方法：plain curl / adapter
+单次低频实测（桌面 Chrome UA、无登录、无 cookie、无签名伪造），请求间隔
+≥2s；robots.txt 逐站实取。出口为境外 egress。
+
+铁律遵守：零用户身份信息、零注册、不登录、不绕验证码、不碰付费墙、
+不伪造身份、不查泄露库内容、不做 SMTP 探测、不钓鱼、只做公开面。
+robots.txt 明确 Disallow 的路径直接停手（本次无命中 Disallow 的走通项）。
+
+## 一、走通路径（6）
+
+### 1. 裁判文书共同当事人 person↔person —— 走通（关系层扩展）
+
+- 基线：`public_wenshu_case_records`（browser-assisted）已在 fanout；
+  `_wenshu_entities` 已从 cases[].parties/case_number 抽取当事人 person 实体；
+  引擎已有 person→business 的 `co_party_in_case`（weak）。
+- 本次增量：同一 case_number 的 person↔person 配对 → `co_party_in_case`
+ （weak，note 带案号）。无需新 adapter。
+- `agent_of`（代理律师/代理人）：**判死**。证据：搜索列表 API
+  `/website/parse/rest.q4w` 的当事人字段（s17）只有当事人名称字符串，
+  无代理人字段；代理人信息只在文书全文，需逐 doc 页浏览器人工打开——
+  不建。
+
+### 2. 新闻/名单共现 —— 走通（关系层；新闻 adapter 判死后改走通用 contract）
+
+- 兄弟 lane 结论（本文档新闻聚合节）：Google News RSS（robots Disallow /）、
+  Bing 新闻（反爬）、百度新闻（验证码）全部判死 → `public_news_lookup`
+  不会建成。
+- 本次增量（不重复造新闻 adapter）：
+  - 新增 `co_mentioned_in`（person↔person，review）：同一公开报道/名单
+    共现，强制带来源 URL + 标题。消费通用 contract
+    `{"title","url","persons":[...]}`（`_news_cooccurrence_entities`），
+    任何能产出该 contract 的报道/名单源均可接入。
+  - 另补齐学术共现：Semantic Scholar 的 co_authors 实体此前只有 context
+    标记、无关系构建；新增 `co_author`（person↔person，strong，
+    note 带共享论文标题）。该 adapter 免 key 可用（既有）。
+- 现状：toutiao/sogou/maimai 既有抽取均为单作者记录，不产生共现对；
+  共现对等待未来报道源接入 contract。
+
+### 3. 专利共同发明人 —— 走通（关系层扩展，adapter 实测通过）
+
+- 实测：`PatentLookup.query("华为技术有限公司", mode="assignee")`
+  单次请求返回 total 23214，inventor/assignee/publication_number 完整。
+- 本次增量：同一 publication_number 的 patent_inventor 配对 →
+  `co_inventor`（strong，note 带专利号+标题+Google Patents URL）。
+  无需新 adapter（兄弟 lane 已补 inventor 定向 fanout）。
+
+### 4. 招投标联合体 —— 走通（关系层；parser + relation kind，不碰 fetching）
+
+- 边界：招投标 fetching 由兄弟 lane 在建，本 lane 只做"联合体成员关系"层，
+  不重复造 adapter、不改 `adapters/ccgp_adapter.py`。
+- 本次增量：
+  - 纯函数 `parse_consortium_members(text)`：解析"联合体：A公司（牵头人）、
+    B公司" / "联合体成员：A、B" / "以联合体形式投标…"三种常见表述，
+    识别牵头人角色；不足 2 家返回 []（fixture 实测通过）。
+  - `_consortium_entities` 消费 contract
+    `{"members":[{"name","role"}],"url","title"}`（公告获取方后续可接入）。
+  - `consortium_member_of`（business↔business，strong，法定公告，
+    note 带公告标题+URL）。
+
+### 5. GitHub 共同贡献者 —— 走通（新建 adapter）
+
+- 实测：`GET /repos/octocat/Hello-World/contributors?per_page=3`
+  免 key 返回 200（login/contributions/type/html_url）；
+  `torvalds/linux` 返回 403 "The history or contributor list is too large…"
+ （文档化限制，非封禁）→ 优雅降级 `repo_too_large`。
+  匿名 60 req/h → 限频 5s、per_page ≤ 100。
+- 新建 `adapters/github_contributors_adapter.py`
+ （`GithubContributorsLookup`，SafeResearchAdapter，EXPERIMENTAL，
+  default_enabled=False；registry `public_github_contributors_lookup`）。
+- 关联：`co_contributor`（username_profile↔username_profile，review，
+  note 带仓库 URL；Bot 账号标注并排除配对）。与兄弟 lane 的
+  `public_github_deep_extra`（commit 邮箱/star 画像）无字段重复。
+- 引擎接线：新 seed 类型 `github_repo`（"owner/repo"）→ fanout；
+  工厂 `create_engine_with_all_adapters` 注入。
+
+### 6. 微博互关 —— 走通（关系层扩展；weibo_relation 深度已够）
+
+- 基线核查：`WeiboRelationLookup`（browser-assisted）parse 结果已含
+  `follow_me`/`following`/profile_url/verified_reason；深度足够，无需新 adapter。
+- 本次增量：`_weibo_relation_entities` 的 context 补上
+  follow_me/following；`_extract` 从 pagination.containerid
+  （`231051_-_followers_-_<uid>`）解析 seed 用户建 seed person 实体；
+  双方互关 → `mutual_follow`（person↔person，review，
+  note 带 profile_url）。
+
+### 7. 链上交易对手 —— 走通（新建 adapter；Etherscan 官方判死）
+
+- 实测：
+  - `GET https://eth.blockscout.com/api/v2/addresses/<addr>/transactions`
+    免 key 返回 200，每页 50 笔（cursor 分页，v2 不支持 limit 参数），
+    字段 from.hash/to.hash/timestamp 齐全；robots.txt 对 /api 无 Disallow
+    （`User-agent: * Allow: /`，仅封 /auth/*、/account/*）。
+  - ENS：`api.ensideas.com/ens/resolve/vitalik.eth` 免 key 200
+    （与兄弟 lane 的 `public_ens_lookup` 同源，双向验证已由该 lane 完成）。
+  - Etherscan 官方 API 现需 API key（注册）→ 按红线判死，不用。
+- 新建 `adapters/blockscout_adapter.py`（`BlockscoutAddressLookup`，
+  SafeResearchAdapter，EXPERIMENTAL，default_enabled=False；
+  registry `public_blockscout_lookup`）。单次 query 最多 2 请求
+  （ENS 解析 + 交易第一页），限频 5s；只读第一页（50 笔），
+  合约创建/自转/零地址跳过，对手方按出现次数 Top-20。
+- 关联：`onchain_counterparty`（evm_address↔evm_address，weak，
+  note 带交易次数/方向/起止时间+浏览器链接）。与兄弟 lane 的
+  `public_ens_lookup`（名↔址解析）无字段重复。
+- 引擎接线：新 seed 类型 `evm_address`（0x 地址或 xxx.eth）→ fanout；
+  新实体类型 `evm_address`；工厂注入。
+
+## 二、判死路径（3+1）
+
+### D1. WHOIS/注册人共现 —— 判死
+
+- `GET https://rdap.verisign.com/com/v1/domain/baidu.com` → 200，
+  但 entities 仅含 registrar，registrant 组织/邮箱全部脱敏（GDPR 后常态）。
+- `https://rdap.cnnic.cn/rdap/domain/baidu.cn` → 连接失败（当前 egress
+  不可达）。
+- 结论：无免 key 的 reverse-whois（按注册邮箱/组织查域名）公开面；
+  同 IP 域名聚合已有 `HackertargetInfraLookup` reverseiplookup 覆盖，
+  不重复。不建 adapter。
+
+### D2. 豆瓣友邻 /people/<uid>/contacts —— 判死
+
+- `GET https://www.douban.com/people/ahbei/contacts`（桌面 UA）→ **403**
+ （反爬；profile 页可匿名读但 contacts 页拒绝）。
+- robots.txt（User-agent: *）未 Disallow `/people/*/contacts`，
+  但服务端 403 即停手（判死口径：服务端拒绝 = 不可用）。
+  兄弟 lane 已判死豆瓣书影音扩展（robots 明确 Disallow），豆瓣维持现有
+  user adapter 3s 间隔不动。不建。
+
+### D3. B站互关 —— 判死
+
+- `GET https://api.bilibili.com/x/relation/followings?vmid=2&pn=1&ps=3`
+  → HTTP 200 但 `{"code":-352}`（B站风控拦截码）。
+- 境外 egress 下关系链 API 不可用 → 判死，不建。
+
+### D4. 文书 agent_of（代理律师） —— 判死（见 §一.1）
+
+## 三、交付
+
+- 代码：
+  - 新增 `adapters/github_contributors_adapter.py`、
+    `adapters/blockscout_adapter.py`（SafeResearchAdapter，
+    EXPERIMENTAL，min_request_interval 5.0）。
+  - `core/entity_association.py`（追加式）：新 seed 类型
+    `github_repo`/`evm_address` + fanout；新引擎字段
+    `github_contributors`/`blockscout` + `_extract` 分支 + 工厂注入；
+    新 relation kind 7 个（co_inventor / co_author / co_mentioned_in /
+    mutual_follow / co_contributor / onchain_counterparty /
+    consortium_member_of）+ co_party_in_case 扩展至 person↔person；
+    新 extractor（github/blockscout/共现/联合体）+ `parse_consortium_members`；
+    weibo context 补 follow_me/following。
+  - `core/connector_registry.py`（追加式）：`public_github_contributors_lookup`、
+    `public_blockscout_lookup`（field_contract + runtime_companion，
+    experimental/default_enabled=False）。
+- 测试：
+  - `tests/unit/test_github_contributors_adapter.py` 9 个、
+    `tests/unit/test_blockscout_adapter.py` 9 个、
+    `tests/unit/test_entity_association_unconventional.py` 17 个，
+    全绿（35 个）。
+  - 回归：含兄弟 lane 相关（keybase/weibo/patent/semanticscholar/
+    entity_extract_*）共 94 个全绿；全量 tests/unit 后台复跑中。
+- 判死项：D1–D4 不建 adapter，证据见上。
+- Commit only，不 push。
+
+---
+
+# 非常规渠道 P2 survey 实测记录（亲属关系 lane：公开披露证据升级）
+
+日期：2026-10-21（lane：亲属关系）
+结论先行：**巨潮资讯公告路径走通（金标准，已建 adapter）；裁判文书亲属表述走通（browser-assisted 扩展）；**
+**亲属表述抽取层建成（core/kinship_extract.py，公告/文书/报道/自曝四源共享）；**
+**社交自曝走通（豆瓣简介扩展，review 级）；实时新闻/讣告源判死（兄弟 lane 已判死三源，无红线内替代）；**
+**推理层升级完成（kinship_* relation kind + exact/strong/review 分级 + 措辞 guard）。**
+
+红线遵守：只做公开面；户籍/婚姻登记等非公开政务数据未碰；无登录、无验证码绕行、
+无付费墙、无泄露库；cninfo robots.txt 返回错误页（非明确 Disallow）→ 按基类语义允许。
+
+## 1. 招股书/年报/上市公司公告 —— 走通（已建 adapter：`public_cninfo_kinship_lookup`）
+
+- 探针：`POST http://www.cninfo.com.cn/new/hisAnnouncement/query`
+  （pageNum/pageSize/column=szse/tabName=fulltext/searchkey=关键词），免登录无 key。
+- 实测：searchkey=一致行动人 → 200，totalAnnouncement=24150，含 adjunctUrl；
+  PDF 经 `http://static.cninfo.com.cn/<adjunctUrl>` 免登录下载，文字版 PDF，
+  pdftotext 可提正文（4 页/149 行，中文正常）。
+- 抽取目标实证：简式权益变动报告书含"一致行动关系说明"节，
+  家族式披露标准表述如"张三与李四系夫妻关系"/"王五系赵六之子"可被结构化抽取。
+- Adapter（`adapters/cninfo_kinship_adapter.py`，`CninfoKinshipLookup`）：
+  query(人名/公司名) → 公告搜索 → 标题加权排序（权益变动/收购/年度报告优先）→
+  前 N 篇 PDF（默认 2）下载 + pdftotext 正文抽取 → kinship_statements
+  （evidence_level="exact"，quote 原文引用 + 公告标题/日期/pdf_url 来源标注）。
+  pdftotext 缺失/扫描版 PDF 优雅降级（pdf_note 记因，公告元数据仍作线索）。
+  5 秒间隔（巨潮限频，保守）。EXPERIMENTAL，default_enabled=False。
+- 接线：`core/entity_association.py` 新增 `_extract` 分支（person 实体 +
+  kinship_statement 上下文）+ person_name fanout + 工厂注入；
+  `core/connector_registry.py` 注册（field_contract + runtime_companion +
+  ConnectorCapability）。
+
+## 2. 裁判文书亲属表述 —— 走通（扩展既有 browser-assisted adapter）
+
+- 基线：`public_wenshu_case_records`（`adapters/wenshu_court_adapter.py`）为
+  browser-assisted（DES 加密反爬，不绕），query() 返回 interaction_required。
+- 扩展：新增 `parse_doc_text(doc_text, focus_name, case_number)` —— 操作员在浏览器
+  打开文书全文页、粘贴正文，抽取"系夫妻关系/系父子/系兄弟"等表述，
+  evidence_level="strong"，措辞"文书载明"。不新增任何网络路径，
+  不碰验证码/DES，与既有 browser-assisted 纪律一致。
+- 判死项：文书网搜索 API 直接调用（无 DES 绕行）不可行，已在既有 adapter 中判死，
+  本 lane 不重探。
+
+## 3. 公开报道与讣告 —— 实时源判死；抽取层建成（人工粘贴文本可用）
+
+- 兄弟 lane（新闻聚合）已判死三源：Google News RSS（robots.txt 明确 Disallow /rss/）、
+  Bing 新闻（反爬 307→空壳）、百度新闻（图形验证码墙）。本 lane 不重复建
+  `public_news_lookup`，不另寻新闻源（红线内无可用替代）。
+- 交付：`core/kinship_extract.py` 的 `extract_kinship_statements()` 即"亲属表述抽取层"，
+  可作用于人工粘贴的公开报道/讣告文本（含讣告常见"其子/其女/长子/次子"回指模式），
+  evidence_level 由调用方指定（报道建议 review，讣告原文可 strong）。
+- 与兄弟 lane 无代码重复：它负责新闻源（已判死），本 lane 只做抽取层。
+
+## 4. 当事人自曝 —— 走通（豆瓣简介扩展，review 级）
+
+- Survey：豆瓣用户页 `intro_display`（个人简介）匿名可读（兄弟 lane 已验证），
+  微博简介亦有 description 字段；简介中"张三的妻子"类自述真实存在。
+- 交付：`extract_self_claimed_kinship(bio_text, profile_name)`（"X 的妻子/丈夫/儿子/女儿/…"
+  + "本人系 X 之妻"模式），evidence_level 固定 "review"（自述，低置信度）。
+- 接线：`adapters/douban_user_adapter.py` 在 intro 解析后追加
+  `self_claimed_kinship` 字段（无命中不加字段）；`core/entity_association.py`
+  的 `_douban_user_entities` 透传进 context，`_kinship_disclosure_associations`
+  生成关联（person_a 回填资料主人）。
+
+## 5. 推理层升级 —— 完成
+
+- `core/entity_association.py`：
+  - 新 relation kind：`kinship_spouse` / `kinship_parent_child` /
+    `kinship_sibling` / `kinship_inferred_family`（翁婿/叔侄/舅甥/祖孙/表亲/泛称亲属）。
+  - 新方法 `_kinship_disclosure_associations()`，在 `associate()` 中继
+    `_infer_family_control()` 之后调用；strength 直接映射 evidence_level
+    （exact/strong/review）；去重（pair+relation）。
+  - 措辞 guard：`core/kinship_extract.py::statement_note()` —— 只允许
+    "披露显示 / 文书载明 / 自述/疑似"，绝不断言（无"实锤/确认"）。
+  - 既有 `possible_family_with`（同姓聚类 weak）、`suspected_controls`、
+    `possible_couple_business` 保持不动（推理线），本 lane 为披露证据线，
+    两者正交。
+- 每条关联带来源标注（公告标题+日期+pdf_url / 文书案号 / profile_bio）与原文 quote。
+
+## 判死清单
+
+| 路径 | 判定 | 证据 |
+|---|---|---|
+| 户籍/婚姻登记等政务数据 | 红线，不碰 | 无合法公开口子 |
+| 实时新闻源（Google/Bing/百度） | 判死 | 兄弟 lane 实测：robots Disallow / 反爬 / 验证码 |
+| 文书网搜索 API 直调 | 判死（既有） | DES 加密反爬，不绕 |
+| 扫描版 PDF 公告正文 | 降级（非判死） | pdftotext 无可提文本 → pdf_note 记因，元数据仍作线索 |
+
+## 交付
+
+- 代码：
+  - 新增 `core/kinship_extract.py`（共享抽取层：结构化模式 + 松散归因 +
+    自曝模式 + statement_note 措辞 guard）。
+  - 新增 `adapters/cninfo_kinship_adapter.py`（`CninfoKinshipLookup`，
+    SafeResearchAdapter，EXPERIMENTAL，5s 间隔，default_enabled=False）。
+  - `adapters/wenshu_court_adapter.py`（追加式）：`parse_doc_text()` +
+    `extract_kinship_from_doc_text()`。
+  - `adapters/douban_user_adapter.py`（追加式）：intro 后 `self_claimed_kinship`。
+  - `core/entity_association.py`（追加式）：`cninfo_kinship` 引擎字段 +
+    person_name fanout + `_extract` 分支 + `_kinship_disclosure_associations()` +
+    `associate()` 接线 + `_douban_user_entities` 透传 + 工厂注入。
+  - `core/connector_registry.py`（追加式）：`public_cninfo_kinship_lookup`
+   （field_contract + runtime_companion + ConnectorCapability）；
+    `public_wenshu_case_records` operator_notes 追加 kinship 说明。
+- 测试：
+  - `tests/unit/test_kinship_extract.py` 22 个、
+    `tests/unit/test_cninfo_kinship_adapter.py` 8 个、
+    `tests/unit/test_entity_association_kinship.py` 10 个、
+    wenshu 追加 3 个、douban 追加 2 个，全绿（45 个）。
+  - 回归：connector_registry / entity_association_social_users / keybase /
+    douban_adapter 共 68 个全绿。
+- Commit only，不 push。

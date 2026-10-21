@@ -575,7 +575,7 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "acceptance_commands": [".venv/bin/python -m pytest tests/unit/test_cninfo_kinship_adapter.py tests/unit/test_kinship_extract.py -q"],
         "field_contract": {"record_type": "cninfo_kinship_record", "source_hint": "public_cninfo_kinship_lookup", "required_fields": ["announcements", "kinship_statements"], "report_gate": "statutory disclosure quotes are leads, never asserted facts; wording is 披露显示 only", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
         "operator_notes": ["No key. POST http://www.cninfo.com.cn/new/hisAnnouncement/query (public, no login; verified 2026-10-21). PDFs via static.cninfo.com.cn, pdftotext extraction with graceful degradation. 5s interval (conservative; cninfo rate-limits). person_name fanout: search + top-2 PDFs by default."],
-        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_cninfo_kinship_lookup", "source_hint": "public_cninfo_kinship_lookup", "required_config": [], "record_type": "cninfo_kinship_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "disclosed kinship statements feed kinship_spouse/parent_child/sibling/family associations (strength=exact)", "focused_test": "tests/unit/test_cninfo_kinship_adapter.py"},
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_cninfo_kinship_lookup", "source_hint": "public_cninfo_kinship_lookup", "required_config": [], "record_type": "cninfo_kinship_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "disclosed kinship statements feed kinship_spouse/kinship_parent_child/kinship_sibling/kinship_inferred_family associations (strength=exact)", "focused_test": "tests/unit/test_cninfo_kinship_adapter.py"},
     },
     "public_email_pattern_lookup": {
         "type": "source_strengthening_implementation_pack",
@@ -1309,6 +1309,7 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "operator_notes": [
             "Browser-assisted: operator copies rest.q4w response JSON from browser devtools.",
             "3s interval. No CAPTCHA bypass attempted.",
+            "2026-10-21 kinship lane: parse_doc_text() extracts kinship statements from pasted full judgment text (evidence_level=strong, wording 文书载明); shares core/kinship_extract.py.",
         ],
         "runtime_companion": {
             "type": "source_strengthening_runtime_companion",

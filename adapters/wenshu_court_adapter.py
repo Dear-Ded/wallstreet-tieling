@@ -13,6 +13,12 @@
    进行结构化提取
 
 公开数据,无需登录,无需凭证。3 秒间隔。
+
+**亲属关系抽取扩展（2026-10-21，亲属关系 lane）**:
+本适配器保持 browser-assisted（不绕 DES 加密/验证码）。操作员在浏览器中
+打开文书全文页后，将正文粘贴给 `parse_doc_text()`，抽取"系夫妻关系 /
+系父子 / 系兄弟"等文书载明的亲属表述（evidence_level="strong"），
+共享 `core/kinship_extract.py` 抽取层。措辞一律"文书载明"，绝不断言。
 """
 
 from __future__ import annotations
@@ -23,6 +29,7 @@ import time
 from typing import Any
 
 from adapters.safe_research_adapter import SafeResearchAdapter
+from core.kinship_extract import extract_kinship_statements
 
 
 class WenshuCaseLookup(SafeResearchAdapter):
@@ -136,4 +143,45 @@ class WenshuCaseLookup(SafeResearchAdapter):
             "total_count": result.get("count", len(cases)),
             "cases": cases,
             "data_note": "中国裁判文书网公开数据,案件信息仅供参考",
+        }
+
+    # -- 亲属关系抽取（2026-10-21 亲属关系 lane） --------------------------
+
+    @staticmethod
+    def extract_kinship_from_doc_text(
+            doc_text: str, focus_name: str | None = None,
+            source_ref: str = "") -> list[dict[str, Any]]:
+        """文书全文 -> kinship statements（文书载明，evidence_level="strong"）。
+
+        纯函数，离线可测。doc_text 由操作员从浏览器中文书全文页复制粘贴。
+        """
+        return extract_kinship_statements(
+            doc_text, focus_name=focus_name,
+            evidence_level="strong", source_ref=source_ref)
+
+    def parse_doc_text(self, doc_text: str, focus_name: str | None = None,
+                       case_number: str = "") -> dict[str, Any]:
+        """解析操作员粘贴的文书全文，抽取亲属关系表述。
+
+        Args:
+            doc_text: 文书全文（浏览器复制）。
+            focus_name: 当事人姓名（可选），用于归因锚点。
+            case_number: 案号（可选），记入来源标注。
+
+        Returns:
+            {"kinship_statements": [...], "data_note": ...}
+        """
+        statements = self.extract_kinship_from_doc_text(
+            doc_text, focus_name=focus_name,
+            source_ref="裁判文书{}".format(case_number) if case_number else "裁判文书")
+        return {
+            "source_domain": self.source_domain,
+            "source_type": self.source_type,
+            "kinship_statements": statements,
+            "statement_count": len(statements),
+            "data_note": (
+                "文书载明的亲属关系表述（evidence_level=strong）："
+                "命中为原文引用，仍属线索，需结合其他来源核实；"
+                "未命中不代表无亲属关系。"
+            ),
         }
