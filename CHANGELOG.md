@@ -191,3 +191,20 @@
 ## v1.0.0
 
 - 初始版本：12 人团队协作 + 五层数据源矩阵
+
+### 2026-10-21 上午 — 实体关联引擎 + 97 连接器（feat/osint-acquisition）
+
+**核心：实体关联引擎** `core/entity_association.py`：
+- `associate(seed)` 多跳关联：phone/address/business/person/email/domain 种子，depth-2 有界追查
+- 家族/实控推断：同姓聚类、挂名法人、夫妻店、穿透持股、控制网（全标注"疑似"+置信度）
+- 跨平台身份归一：同用户名+同地点=高置信度同一人
+- 联系方式提取：QQ/微信/手机/邮箱/平台UID 自动提取（`core/contact_extractor.py`）
+- 三调用面：REST `/api/entity-associate`、CLI `--associate`、MCP `entity_associate`
+
+**新增连接器 25 个**（72→97）：
+- 线下商业：高德POI、百度POI、大众点评、抖音、快手、B站、小红书、文书网、搜狗微信
+- 企业深度：ICP备案（工信部直连）、商标、专利（Google Patents）、软著、海关（Zauba）、GLEIF、政府采购（CCGP）、法院公告、广东信用
+- 个人深挖：豆瓣、微博、微博关系链、脉脉、查號吧、Telegram、WhatsMyName、FOFA、拉勾、智联、BOSS直聘、头条号、Hunter.io
+- 基础设施：证书透明度、Analytics ID pivot、Common Crawl、DNSdumpster（在途）、微步（在途）
+
+**死路**（实测）：Bing `ip:` 已死；gsxt/zxgk/creditchina/爱企查/58/知乎/贴吧/LinkedIn 均 blocked。
