@@ -481,6 +481,14 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_hunter_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/hunter_adapter.py", "core/connector_registry.py", "tests/unit/test_hunter_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_hunter_adapter.py -q"],
+        "field_contract": {"record_type": "hunter_record", "source_hint": "public_hunter_lookup", "required_fields": ["emails"], "report_gate": "emails are public"},
+        "operator_notes": ["Key via constructor."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_hunter_lookup", "source_hint": "public_hunter_lookup", "required_config": ["api_key"], "record_type": "hunter_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "email leads feed association", "focused_test": "tests/unit/test_hunter_adapter.py"},
+    },
     "public_gleif_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/gleif_adapter.py", "core/connector_registry.py", "tests/unit/test_gleif_adapter.py"],
@@ -3394,6 +3402,20 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "ToS: real-time queries only, no caching or storage of POI data.",
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_hunter_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=("HunterDomainLookup. Company emails. Key via constructor. Default-off.",),
             risk_flags=("explicit_enable_required", "public_data_only"),
         ),
         ConnectorCapability(
