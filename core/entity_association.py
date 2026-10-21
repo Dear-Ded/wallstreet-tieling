@@ -369,7 +369,7 @@ _SEED_FANOUT: dict[str, list[str]] = {
     "address": ["amap", "baidu_map", "dianping", "douban"],
     "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate",
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
-                      "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent"],
+                      "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent", "gd_credit"],
     "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao"],
     "email": ["sogou_wx", "douyin", "telegram"],
     "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl"],
