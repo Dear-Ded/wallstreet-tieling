@@ -481,6 +481,14 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_fofa_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/fofa_adapter.py", "core/connector_registry.py", "tests/unit/test_fofa_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_fofa_adapter.py -q"],
+        "field_contract": {"record_type": "fofa_record", "source_hint": "public_fofa_lookup", "required_fields": ["assets"], "report_gate": "co-hosted assets are strong operator leads"},
+        "operator_notes": ["Key via constructor. Free ~100/day."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_fofa_lookup", "source_hint": "public_fofa_lookup", "required_config": ["email", "api_key"], "record_type": "fofa_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "FOFA leads feed association", "focused_test": "tests/unit/test_fofa_adapter.py"},
+    },
     "public_whatsmyname_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/whatsmyname_adapter.py", "core/connector_registry.py", "tests/unit/test_whatsmyname_adapter.py"],
@@ -3307,6 +3315,25 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_fofa_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "FofaLookup (adapters.fofa_adapter).",
+                "Chinese network mapping: domain->IP->co-hosted assets->ICP.",
+                "Key via constructor (premium_keyed). Free tier ~100/day.",
+                "Default-off.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only", "key_required"),
         ),
         ConnectorCapability(
             name="public_whatsmyname_lookup",
