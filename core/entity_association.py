@@ -336,7 +336,8 @@ _SEED_FANOUT: dict[str, list[str]] = {
     "phone": ["sogou_wx", "douyin", "amap", "baidu_map", "phone_mark", "telegram"],
     "address": ["amap", "baidu_map", "dianping", "douban"],
     "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate",
-                      "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark"],
+                      "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
+                      "lagou", "zhaopin", "zhipin"],
     "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark"],
     "email": ["sogou_wx", "douyin", "telegram"],
     "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa"],
@@ -370,6 +371,9 @@ class EntityAssociationEngine:
     analytics_pivot: Any = None
     fofa: Any = None
     whatsmyname: Any = None
+    lagou: Any = None
+    zhaopin: Any = None
+    zhipin: Any = None
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -620,6 +624,23 @@ class EntityAssociationEngine:
                          "sources": ["whatsmyname"],
                          "context": {"from": "username_reuse", "url": s.get("url", "")}}
                         for s in sites if isinstance(s, dict)]
+            if attr in ("lagou", "zhaopin", "zhipin"):
+                fields = result.get("fields") or {}
+                out = []
+                addr = fields.get("address") or fields.get("company_address") or ""
+                if addr:
+                    out.append({"type": "address", "value": addr, "sources": [attr],
+                                "context": {"from": f"{attr}_company"}})
+                phone = fields.get("phone") or fields.get("contact_phone") or ""
+                if phone:
+                    out.append({"type": "phone", "value": phone, "sources": [attr],
+                                "context": {"from": f"{attr}_company"}})
+                # hiring signal
+                hiring = fields.get("hiring_count") or fields.get("job_count") or 0
+                if hiring:
+                    out.append({"type": "hiring_signal", "value": str(hiring), "sources": [attr],
+                                "context": {"from": f"{attr}_hiring"}})
+                return out
         except Exception:
             return []
         return []
