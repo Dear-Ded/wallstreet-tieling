@@ -793,6 +793,14 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "operator_notes": ["企查查 /firm/{hex}.html 公开公司页：经可配置 SOCKS5h 代理 + 纯 Python acw_sc__v2 透明挑战求解（2026-10-21 实测版，4 样本验证）访问。robots.txt Disallow /*?*：不支持关键词搜索，仅 firm_id 直查。默认公开代理 121.46.226.221:10808 随时可能失效，代理地址为构造参数。2026-10-21 实测该默认代理 IP 被企查查应用层暂停（423），属 IP 信誉问题；WAF 求解本身已验证通过。限频 ≥8s。不登录、不碰验证码。"],
         "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_qcc_wafbypass", "source_hint": "public_qcc_wafbypass", "required_config": [], "record_type": "qcc_company_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "company profile leads feed association", "focused_test": "tests/unit/test_qcc_waf_adapter.py"},
     },
+    "public_qcc_mweb": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/qcc_mweb_adapter.py", "core/connector_registry.py", "tests/unit/test_qcc_mweb_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_qcc_mweb_adapter.py -q"],
+        "field_contract": {"record_type": "qcc_mweb_search_record", "source_hint": "public_qcc_mweb", "required_fields": ["results"], "report_gate": "public search results are leads", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
+        "operator_notes": ["企查查移动站公开搜索 API（m.qcc.com/api/search/searchMulti）：纯 Python 复现生产 JS 包的“正确途径”请求签名（HMAC-SHA512，静态推导，2026-10-21 实测版）。无登录、无 cookie、无时间戳；签名错误/缺失即 405。返回 KeyNo（可喂给 public_qcc_wafbypass 做 firm 直查）、法定代表人、注册资本等。限频 ≥10s。不登录、不碰验证码。"],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_qcc_mweb", "source_hint": "public_qcc_mweb", "required_config": [], "record_type": "qcc_mweb_search_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "search result leads feed association", "focused_test": "tests/unit/test_qcc_mweb_adapter.py"},
+    },
     "public_phone_mark": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/phone_mark_adapter.py", "core/connector_registry.py", "tests/unit/test_phone_mark_adapter.py"],

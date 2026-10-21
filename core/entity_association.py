@@ -407,6 +407,49 @@ def _qcc_entities(profile: dict[str, Any], source: str) -> list[dict[str, Any]]:
     return ents
 
 
+def _qcc_mweb_entities(results: list[dict[str, Any]], source: str) -> list[dict[str, Any]]:
+    """企查查移动站搜索结果 -> business 实体 + 法定代表人 person 实体。
+
+    Expected record shape (adapters/qcc_mweb_adapter.parse_search_results):
+        {"key_no", "name", "reg_no", "legal_rep", "capital", "founded",
+         "ent_type", "status"}
+    全部是 lead：context 标注来源与字段；key_no 可喂给
+    public_qcc_wafbypass 做 /firm/{hex}.html 直查。
+    """
+    ents: list[dict[str, Any]] = []
+    for r in results:
+        if not isinstance(r, dict):
+            continue
+        name = str(r.get("name", "") or "").strip()
+        if not name:
+            continue
+        ents.append({
+            "type": "business", "value": name, "display": name,
+            "sources": [source],
+            "context": {
+                "from": "qcc_mweb_search",
+                "key_no": r.get("key_no", ""),
+                "reg_no": r.get("reg_no", ""),
+                "legal_rep": r.get("legal_rep", ""),
+                "capital": r.get("capital", ""),
+                "founded": r.get("founded", ""),
+                "status": r.get("status", ""),
+            },
+        })
+        rep = str(r.get("legal_rep", "") or "").strip()
+        if rep:
+            ents.append({
+                "type": "person", "value": rep, "display": rep,
+                "sources": [source],
+                "context": {
+                    "from": "qcc_mweb_legal_rep",
+                    "company": name,
+                    "key_no": r.get("key_no", ""),
+                },
+            })
+    return ents
+
+
 def _patent_entities(patent: dict[str, Any], source: str) -> list[dict[str, Any]]:
     """Google Patents 单条专利 -> 申请人(企业) + 发明人(个人).
 
@@ -1057,6 +1100,12 @@ class EntityAssociationEngine:
                 if not isinstance(profile, dict) or profile.get("blocked"):
                     return []
                 return _qcc_entities(profile, "qcc")
+            if attr == "qcc_mweb":
+                fields = result.get("fields") or {}
+                results = fields.get("results") or []
+                if fields.get("blocked") or not isinstance(results, list):
+                    return []
+                return _qcc_mweb_entities(results, "qcc_mweb")
             if attr == "corporate":
                 fields = result.get("fields") or {}
                 recs = fields.get("corporate_records") or []
@@ -3468,6 +3517,15 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
     try:
         from adapters.qcc_waf_adapter import QccWafBypassLookup
         engine.qcc = QccWafBypassLookup()
+    except Exception:
+        pass
+
+    # 企查查移动站搜索 (2026-10-21): m.qcc.com searchMulti 纯 Python
+    # "正确途径"签名复现；EXPERIMENTAL，默认不启用（registry 见
+    # public_qcc_mweb）。KeyNo 可喂给 engine.qcc 做 firm 直查。
+    try:
+        from adapters.qcc_mweb_adapter import QccMwebSearch
+        engine.qcc_mweb = QccMwebSearch()
     except Exception:
         pass
 
