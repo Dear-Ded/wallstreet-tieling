@@ -553,13 +553,13 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "operator_notes": ["Public crt.sh, no auth."],
         "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_cert_transparency", "source_hint": "public_cert_transparency", "required_config": [], "record_type": "cert_transparency_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "cert leads feed association", "focused_test": "tests/unit/test_cert_transparency_adapter.py"},
     },
-    "public_icp_beian": {
+    "public_icp_beian_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/icp_beian_adapter.py", "core/connector_registry.py", "tests/unit/test_icp_beian_adapter.py"],
         "acceptance_commands": ["python -m pytest tests/unit/test_icp_beian_adapter.py -q"],
-        "field_contract": {"record_type": "icp_beian_record", "source_hint": "public_icp_beian", "required_fields": ["company_name"], "report_gate": "ICP is mandatory disclosure"},
+        "field_contract": {"record_type": "icp_beian_record", "source_hint": "public_icp_beian_lookup", "required_fields": ["company_name"], "report_gate": "ICP is mandatory disclosure"},
         "operator_notes": ["Mandatory public disclosure."],
-        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_icp_beian", "source_hint": "public_icp_beian", "required_config": [], "record_type": "icp_beian_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "ICP leads feed association", "focused_test": "tests/unit/test_icp_beian_adapter.py"},
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_icp_beian_lookup", "source_hint": "public_icp_beian_lookup", "required_config": [], "record_type": "icp_beian_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "ICP leads feed association", "focused_test": "tests/unit/test_icp_beian_adapter.py"},
     },
     "public_maimai_lookup": {
         "type": "source_strengthening_implementation_pack",
@@ -3506,7 +3506,7 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
             risk_flags=("explicit_enable_required", "public_data_only"),
         ),
         ConnectorCapability(
-            name="public_icp_beian",
+            name="public_icp_beian_lookup",
             shape=ConnectorShape.REST_API,
             access=SourceAccess.PUBLIC,
             authority=SourceAuthority.PUBLIC_WEB,
