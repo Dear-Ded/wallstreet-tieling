@@ -125,6 +125,10 @@
 
 `adapters/social_listen_adapters.py` **已落地**（2026-10-21）：`HackerNewsAlgoliaSearch`（HN 故事搜索）与 `StackExchangeSearch`（Stack Overflow 问答搜索），连接器 `public_hn_algolia_search` / `public_stackexchange_search`，EXPERIMENTAL 默认关闭，配套 implementation pack 已注册。
 
+### 2.8 东方财富 F10 上市公司档案（2026-10-21 下午）
+
+`adapters/eastmoney_f10_adapter.py` **已落地**：`EastmoneyF10Lookup`，连接器 `public_eastmoney_f10_company_profile`，EXPERIMENTAL 默认关闭，配套 implementation pack 已注册。`query("600519")` → 公司基本信息（法人代表/统一社会信用代码/注册资本/经营范围）+ 十大股东（最新报告期）；两个匿名 JSON API（CompanySurvey + datacenter-web RPT_F10_EH_HOLDERS），无 key，5s 限速。仅上市公司；公司名→代码需调用方先行解析。
+
 ---
 
 ### 2.11 新增源（2026-10-21 凌晨迭代，全部 EXPERIMENTAL 默认关闭）

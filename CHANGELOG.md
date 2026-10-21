@@ -6,6 +6,14 @@
 
 ## Unreleased — OSINT 数据获取加强
 
+### 2026-10-21 下午 — 东方财富 F10 上市公司档案（免费额度灰色路径总攻）
+- 新增 `adapters/eastmoney_f10_adapter.py`：`EastmoneyF10Lookup`（SafeResearchAdapter，EXPERIMENTAL，`default_enabled=False`）。核心：两个免登录匿名 JSON API — `emweb.securities.eastmoney.com/PC_HSF10/CompanySurvey/CompanySurveyAjax`（公司名称/证券类别/行业/交易所/法人代表/董事长/总经理/董秘/统一社会信用代码/注册资本/注册地址/经营范围/公司简介/发行上市信息）+ `datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_F10_EH_HOLDERS`（十大股东，取最新报告期）。股票代码归一化（`600519`/`SH600519`/`600519.SH` 均可；裸 6 位按 A 股编码规则推断 SH/SZ/BJ）。
+- `core/connector_registry.py` 注册 `public_eastmoney_f10_company_profile`（field_contract + runtime_companion implementation pack，domains=CORPORATE_REGISTRY+OWNERSHIP_CONTROL+PEOPLE）。
+- 新增 `tests/unit/test_eastmoney_f10_adapter.py`（9 项）：fixture 离线覆盖代码归一化、字段抽取、占位值过滤、空数据、robots 门禁、审计链完整性、查询主体哈希。真实联网冒烟：`600519` 34 字段（贵州茅台/法人陈华/统一信用代码 9152000071430580XT）、`SZ000001` 36 字段 + 十大股东 10 条（平安银行/法人谢永林/第一大股东中国平安保险(集团)股份有限公司 49.56%）。
+- robots.txt：emweb.securities.eastmoney.com 无 robots.txt（IIS 404=无规则）；datacenter-web.eastmoney.com/robots.txt 返回 JSON 错误体（非 robots 文件，无 Disallow）。5s 限速。
+- 诚实边界：仅上市公司；十大股东为定期报告披露口径非实时工商；公司名→代码需调用方先行解析（深交所 A 股列表 API 可匿名按简称检索，见 `docs/research/gray-paths-20261021.md`）。
+- 同期调研结论（详见 `docs/research/gray-paths-20261021.md`）：阿里云市场/聚合数据/腾讯云 API 市场/京东万象/APILayer/站长工具开放平台/万维易源的企业信息免费额度**全部需要注册（部分要实名/企业实名）**，按零注册铁律判死；企查查/天眼查官方开放平台需**企业实名认证**，按任务指令跳过；GitHub 泄露 key 情报（qichacha 2424 / tianyancha 88 / api.qichacha.com 硬编码 key 61 个 code search 命中）只记录不用；Telegram 按次代查市场与社工库混杂，列为灰色情报不接入；深交所 A 股列表 API（CATALOGID=1110）匿名可用已验证，留作后续。
+
 ### 2026-10-21 下午 — Telegram 公开频道/群组情报源
 - 新增 `adapters/telegram_channel_adapter.py`：`TelegramChannelLookup`（SafeResearchAdapter，EXPERIMENTAL，`default_enabled=False`）。核心：`https://t.me/s/<handle>` 公开预览页免登录解析（频道名/简介/订阅数/近 20 条帖子文本+时间戳+帖子 URL+阅读量+媒体标记）；不存在或私有 handle 走 302 到 `t.me/<handle>`（无 /s/）即判为无公开预览，不盲跟。关键词仅做直接 handle 解析，无效 handle 返回结构化空结果。
 - tgstat.com 逆向挖掘（`docs/research/telegram-tgstat-reverse-20261021.md`）：前端 JS 定位到 `POST /channels/global-search`（TopSearch 类，`data={query}`），plain HTTP 复现确认**全部搜索端点登录墙**（`/channels/global-search`、`/search`、`/channels/search` 均返回 Authentication Required / Sign in to access this page），未登录、未绕验证，按证据停止。公开可用：`GET /channel/@<handle>`（200、服务端渲染、robots.txt 允许）→ 精确订阅数 + 频道简介 + 关联 handle（频道主其他公开频道，发现路线）。已落地为 opt-in 增强 `enrich_with_tgstat(handle)` / `query_channel(..., enrich=True)`，独立 5s 限速 + 独立审计记录。

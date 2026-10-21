@@ -513,6 +513,14 @@ _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
         "operator_notes": ["No key. Documented public API; robots.txt Disallow: /api/ targets crawlers (see adapter docstring). Rate limit 5s, small page sizes, modest use."],
         "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_urlscan_lookup", "source_hint": "public_urlscan_lookup", "required_config": [], "record_type": "urlscan_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "scan archive leads feed association", "focused_test": "tests/unit/test_urlscan_adapter.py"},
     },
+    "public_eastmoney_f10_company_profile": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/eastmoney_f10_adapter.py", "core/connector_registry.py", "tests/unit/test_eastmoney_f10_adapter.py"],
+        "acceptance_commands": [".venv/bin/python -m pytest tests/unit/test_eastmoney_f10_adapter.py -q"],
+        "field_contract": {"record_type": "eastmoney_f10_record", "source_hint": "public_eastmoney_f10_company_profile", "required_fields": ["company_name", "legal_rep"], "report_gate": "listed-company public filings only; holders are periodic-disclosure figures", "data_boundary": "fully_public", "experimental": True, "default_enabled": False},
+        "operator_notes": ["No key. Anonymous Eastmoney F10 JSON APIs (CompanySurvey + datacenter-web RPT_F10_EH_HOLDERS). Stock-code input only (SH/SZ/BJ, bare 6-digit auto-prefixed). Rate limit 5s, modest use. Listed companies only — not a QCC/TYC substitute for unlisted firms."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_eastmoney_f10_company_profile", "source_hint": "public_eastmoney_f10_company_profile", "required_config": [], "record_type": "eastmoney_f10_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "listed-company profile leads feed association", "focused_test": "tests/unit/test_eastmoney_f10_adapter.py"},
+    },
     "public_github_contributors_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/github_contributors_adapter.py", "core/connector_registry.py", "core/entity_association.py", "tests/unit/test_github_contributors_adapter.py", "tests/unit/test_entity_association_unconventional.py"],
@@ -4648,5 +4656,33 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_eastmoney_f10_company_profile",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(
+                RetrievalDomain.CORPORATE_REGISTRY,
+                RetrievalDomain.OWNERSHIP_CONTROL,
+                RetrievalDomain.PEOPLE,
+            ),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=True,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "Eastmoney F10 listed-company profile adapter (adapters.eastmoney_f10_adapter).",
+                "No-credential anonymous JSON APIs: CompanySurvey (company name, legal rep, "
+                "chairman/CEO/board secretary, credit code, reg capital/address, business scope) "
+                "+ datacenter-web RPT_F10_EH_HOLDERS (top-10 shareholders, latest report date).",
+                "Listed companies (SSE/SZSE/BSE) only; stock-code input (name->code resolution "
+                "is the caller's job, e.g. via the SZSE A-share list API).",
+                "Top holders are periodic-disclosure figures, not real-time registry data.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only", "listed_companies_only",
+                        "periodic_disclosure_figures"),
         ),
     ]
