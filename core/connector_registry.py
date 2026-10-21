@@ -481,6 +481,14 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_whatsmyname_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/whatsmyname_adapter.py", "core/connector_registry.py", "tests/unit/test_whatsmyname_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_whatsmyname_adapter.py -q"],
+        "field_contract": {"record_type": "whatsmyname_record", "source_hint": "public_whatsmyname_lookup", "required_fields": ["sites_found"], "report_gate": "username reuse is lead, profile metadata is association gold"},
+        "operator_notes": ["692 sites, Chinese prioritized."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_whatsmyname_lookup", "source_hint": "public_whatsmyname_lookup", "required_config": [], "record_type": "whatsmyname_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "username leads feed association", "focused_test": "tests/unit/test_whatsmyname_adapter.py"},
+    },
     "public_cert_transparency": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/cert_transparency_adapter.py", "core/connector_registry.py", "tests/unit/test_cert_transparency_adapter.py"],
@@ -3297,6 +3305,25 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "region param required by API (defaults to '全国').",
                 "ToS: real-time queries only, no caching or storage of POI data.",
                 "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_whatsmyname_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "WhatsMyNameLookup (adapters.whatsmyname_adapter).",
+                "692-site username enumeration, Chinese sites prioritized.",
+                "Profile metadata (bio/location/company) is association gold.",
+                "Default-off.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
         ),
