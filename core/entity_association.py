@@ -333,11 +333,13 @@ def _wenshu_entities(case: dict[str, Any], source: str) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 _SEED_FANOUT: dict[str, list[str]] = {
-    "phone": ["sogou_wx", "douyin", "amap", "baidu_map"],
-    "address": ["amap", "baidu_map", "dianping"],
-    "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate"],
-    "person_name": ["wenshu", "sogou_wx", "douyin"],
-    "email": ["sogou_wx", "douyin"],
+    "phone": ["sogou_wx", "douyin", "amap", "baidu_map", "phone_mark", "telegram"],
+    "address": ["amap", "baidu_map", "dianping", "douban"],
+    "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate",
+                      "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark"],
+    "email": ["sogou_wx", "douyin", "telegram"],
+    "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx"],
 }
 
 _MAX_DEPTH2_FOLLOWUPS = 6
@@ -357,6 +359,15 @@ class EntityAssociationEngine:
     sogou_wx: Any = None
     wenshu: Any = None
     corporate: Any = None  # corporate role adapter: query(name) -> fields.corporate_records
+    icp_beian: Any = None
+    trademark: Any = None
+    weibo: Any = None
+    douban: Any = None
+    maimai: Any = None
+    telegram: Any = None
+    phone_mark: Any = None
+    cert_transparency: Any = None
+    analytics_pivot: Any = None
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -552,6 +563,36 @@ class EntityAssociationEngine:
                     recs = [recs]
                 return [e for r in recs if isinstance(r, dict)
                         for e in _corporate_entities(r, "corporate")]
+            if attr == "icp_beian":
+                return _icp_entities(result, "icp_beian")
+            if attr == "trademark":
+                return _trademark_entities(result, "trademark")
+            if attr == "weibo":
+                posts = (result.get("fields") or {}).get("posts") or []
+                return [e for p in posts if isinstance(p, dict)
+                        for e in _weibo_entities(p, "weibo")]
+            if attr == "douban":
+                groups = (result.get("fields") or {}).get("groups") or []
+                return [e for g in groups if isinstance(g, dict)
+                        for e in _douban_entities(g, "douban")]
+            if attr == "maimai":
+                arts = (result.get("fields") or {}).get("articles") or []
+                return [e for a in arts if isinstance(a, dict)
+                        for e in _maimai_entities(a, "maimai")]
+            if attr == "telegram":
+                msgs = (result.get("fields") or {}).get("messages") or []
+                return [e for m in msgs if isinstance(m, dict)
+                        for e in _telegram_entities(m, "telegram")]
+            if attr == "phone_mark":
+                return _phonemark_entities(result, "phone_mark")
+            if attr == "cert_transparency":
+                domains = (result.get("fields") or {}).get("associated_domains") or []
+                return [{"type": "domain", "value": d, "sources": ["cert_transparency"],
+                         "context": {"from": "cert_san"}} for d in domains if d]
+            if attr == "analytics_pivot":
+                domains = (result.get("fields") or {}).get("related_domains") or []
+                return [{"type": "domain", "value": d, "sources": ["analytics_pivot"],
+                         "context": {"from": "shared_analytics_id"}} for d in domains if d]
         except Exception:
             return []
         return []
@@ -1151,6 +1192,107 @@ def _summarize_result(result: dict[str, Any]) -> dict[str, Any]:
         if k in fields or k in result:
             summary[k] = fields.get(k, result.get(k))
     return summary
+
+
+# ---------------------------------------------------------------------------
+# New-source entity extractors (ICP, trademark, weibo, douban, maimai,
+# telegram, phone_mark). All extract public entities for association.
+# ---------------------------------------------------------------------------
+
+def _icp_entities(result: dict, source: str) -> list:
+    """ICP: domain -> company/individual."""
+    out = []
+    fields = result.get("fields") or {}
+    unit = fields.get("unit_name") or fields.get("company_name") or ""
+    if unit:
+        out.append({"type": "business" if "公司" in unit or "企业" in unit else "person",
+                    "value": unit, "sources": [source],
+                    "context": {"from": "icp_filing", "license": fields.get("license", "")}})
+    return out
+
+
+def _trademark_entities(result: dict, source: str) -> list:
+    """Trademark: brand -> applicant."""
+    out = []
+    fields = result.get("fields") or {}
+    applicant = fields.get("applicant") or ""
+    if applicant:
+        out.append({"type": "business" if "公司" in applicant else "person",
+                    "value": applicant, "sources": [source],
+                    "context": {"from": "trademark_applicant",
+                                "mark": fields.get("mark_name", "")}})
+    return out
+
+
+def _weibo_entities(post: dict, source: str) -> list:
+    """Weibo: author -> person, bio mentions -> business."""
+    out = []
+    author = post.get("author") or {}
+    nick = author.get("nickname") or author.get("screen_name") or ""
+    if nick:
+        out.append({"type": "person", "value": nick, "sources": [source],
+                    "context": {"from": "weibo_author",
+                                "verified": author.get("verified", False),
+                                "bio": (author.get("description") or "")[:200]}})
+    bio = author.get("description") or ""
+    # bio often contains "XX公司创始人" - extract as lead
+    if bio and ("公司" in bio or "创始人" in bio or "法人" in bio):
+        out.append({"type": "business", "value": bio[:100], "sources": [source],
+                    "context": {"from": "weibo_bio", "author": nick}})
+    return out
+
+
+def _douban_entities(group: dict, source: str) -> list:
+    """Douban: group -> topic mentions."""
+    out = []
+    name = group.get("name") or ""
+    if name:
+        out.append({"type": "business", "value": name, "sources": [source],
+                    "context": {"from": "douban_group"}})
+    return out
+
+
+def _maimai_entities(article: dict, source: str) -> list:
+    """Maimai: article author -> person + company."""
+    out = []
+    author = article.get("author") or {}
+    name = author.get("name") or ""
+    company = author.get("company") or ""
+    position = author.get("position") or ""
+    if name:
+        out.append({"type": "person", "value": name, "sources": [source],
+                    "context": {"from": "maimai_author", "company": company,
+                                "position": position}})
+    if company:
+        out.append({"type": "business", "value": company, "sources": [source],
+                    "context": {"from": "maimai_author_company", "person": name}})
+    return out
+
+
+def _telegram_entities(msg: dict, source: str) -> list:
+    """Telegram: message text -> extract phones/names as leads."""
+    out = []
+    text = msg.get("text") or ""
+    if not text:
+        return out
+    # extract phone numbers from message text
+    import re
+    phones = re.findall(r'1[3-9]\d{9}', text)
+    for p in set(phones):
+        out.append({"type": "phone", "value": p, "sources": [source],
+                    "context": {"from": "telegram_message"}})
+    return out
+
+
+def _phonemark_entities(result: dict, source: str) -> list:
+    """Phone mark: phone -> business name."""
+    out = []
+    fields = result.get("fields") or {}
+    biz = fields.get("business_name") or fields.get("company") or ""
+    if biz:
+        out.append({"type": "business", "value": biz, "sources": [source],
+                    "context": {"from": "phone_mark", "city": fields.get("city", "")}})
+    return out
 
 
 # ---------------------------------------------------------------------------
