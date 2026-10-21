@@ -471,11 +471,24 @@ class EntityAssociationEngine:
                 patterns.extend(temporal.get("patterns", []))
             except Exception:
                 pass
+        # Risk scoring: quantify patterns into a sortable risk ranking
+        try:
+            from core.risk_scorer import score_investigation as _score_inv
+            risk_scores = _score_inv({
+                "seed": {"type": seed_type, "value": seed_value},
+                "entities": entity_list,
+                "interesting_patterns": patterns,
+                "associations": associations,
+            })
+        except Exception:
+            risk_scores = {"ranked": [], "count": 0,
+                           "disclaimer": "risk scoring unavailable"}
         return {
             "seed": {"type": seed_type, "value": seed_value},
             "entities": entity_list,
             "associations": self._dedupe_associations(associations),
             "interesting_patterns": patterns,
+            "risk_scores": risk_scores,
             "source_results": source_results,
             "data_boundary": "fully_public",
             "disclaimer": (
