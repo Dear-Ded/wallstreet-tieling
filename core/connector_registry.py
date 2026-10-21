@@ -481,6 +481,38 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_sogou_wechat_articles": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/sogou_wx_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_sogou_wx_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_sogou_wx_adapter.py tests/unit/test_connector_registry.py -q",
+        ],
+        "field_contract": {
+            "record_type": "sogou_wechat_article_record",
+            "source_hint": "public_sogou_wechat_articles",
+            "required_fields": ["article_count", "articles"],
+            "report_gate": "articles are third-party content; business mentions are leads, not verified facts",
+        },
+        "operator_notes": [
+            "Cookie session: homepage visit first for SUID, then search.",
+            "3s interval between pages, max 5 pages per query.",
+        ],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_sogou_wechat_articles",
+            "source_hint": "public_sogou_wechat_articles",
+            "required_config": [],
+            "record_type": "sogou_wechat_article_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "article records feed reputation leads; business identity requires exact/strong match and admission tests",
+            "focused_test": "tests/unit/test_sogou_wx_adapter.py::test_parse_article_list_extracts_fields",
+        },
+    },
     "public_baidu_map_poi_search": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -3003,6 +3035,28 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Offline storefront verification: existence, address, tel, rating, hours.",
                 "region param required by API (defaults to '全国').",
                 "ToS: real-time queries only, no caching or storage of POI data.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_sogou_wechat_articles",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "SogouWxArticleLookup adapter (adapters.sogou_wx_adapter).",
+                "Sogou WeChat article search: public-account articles about a business.",
+                "Server-rendered HTML (type=2); homepage cookie session (SUID) first.",
+                "Fields: title, account, published_date, summary, sogou_link.",
+                "Offline-business value: reviews, opening announcements, promotions.",
+                "3s interval. No credentials, no login.",
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
