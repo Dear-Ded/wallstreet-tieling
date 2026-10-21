@@ -328,6 +328,38 @@ def _wenshu_entities(case: dict[str, Any], source: str) -> list[dict[str, Any]]:
     return ents
 
 
+def _court_notice_entities(notice: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """法院公告 -> 当事人实体 (与文书网互补:公告是程序性公开)."""
+    ents: list[dict[str, Any]] = []
+    parties = str(notice.get("parties", "") or "")
+    for chunk in re.split(r"[，,；;、|]", parties):
+        nm = normalize_name(chunk.strip())
+        if not nm or len(nm) > 30 or "法院" in nm:
+            continue
+        if "公司" in nm or "店" in nm or "厂" in nm or "社" in nm:
+            ents.append({
+                "type": "business", "value": nm, "display": nm,
+                "sources": [source],
+                "context": {
+                    "from": "court_notice_party",
+                    "notice_type": notice.get("notice_type", ""),
+                    "court": notice.get("court", ""),
+                    "publish_date": notice.get("publish_date", ""),
+                },
+            })
+        else:
+            ents.append({
+                "type": "person", "value": nm, "display": nm,
+                "sources": [source],
+                "context": {
+                    "from": "court_notice_party",
+                    "notice_type": notice.get("notice_type", ""),
+                    "court": notice.get("court", ""),
+                },
+            })
+    return ents
+
+
 # ---------------------------------------------------------------------------
 # Engine
 # ---------------------------------------------------------------------------
@@ -337,8 +369,10 @@ _SEED_FANOUT: dict[str, list[str]] = {
     "address": ["amap", "baidu_map", "dianping", "douban"],
     "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate",
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
-                      "lagou", "zhaopin", "zhipin", "ccgp"],
-    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark"],
+                      "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark",
+                    "court_notice"],
     "email": ["sogou_wx", "douyin", "telegram"],
     "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa"],
 }
@@ -359,6 +393,7 @@ class EntityAssociationEngine:
     douyin: Any = None
     sogou_wx: Any = None
     wenshu: Any = None
+    court_notice: Any = None
     corporate: Any = None  # corporate role adapter: query(name) -> fields.corporate_records
     icp_beian: Any = None
     trademark: Any = None
@@ -563,6 +598,11 @@ class EntityAssociationEngine:
                 cases = fields.get("cases") or []
                 return [e for c in cases if isinstance(c, dict)
                         for e in _wenshu_entities(c, "wenshu")]
+            if attr == "court_notice":
+                fields = result.get("fields") or {}
+                notices = fields.get("notices") or []
+                return [e for n in notices if isinstance(n, dict)
+                        for e in _court_notice_entities(n, "court_notice")]
             if attr == "corporate":
                 fields = result.get("fields") or {}
                 recs = fields.get("corporate_records") or []
