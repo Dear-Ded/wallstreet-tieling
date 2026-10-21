@@ -372,7 +372,7 @@ _SEED_FANOUT: dict[str, list[str]] = {
                       "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent"],
     "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao"],
     "email": ["sogou_wx", "douyin", "telegram"],
-    "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa", "hunter"],
+    "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl"],
 }
 
 _MAX_DEPTH2_FOLLOWUPS = 6
