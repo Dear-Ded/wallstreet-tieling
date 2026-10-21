@@ -833,9 +833,10 @@ class EntityAssociationEngine:
             contacts = by_type.get(ctype, [])
             contact_to_persons: dict[str, set[str]] = {}
             for c in contacts:
-                owner = (c.get("context") or {}).get("of_person", "")
-                if owner:
-                    contact_to_persons.setdefault(c["value"], set()).add(owner)
+                owners = (c.get("context") or {}).get("owners", [])
+                for owner in owners:
+                    if owner:
+                        contact_to_persons.setdefault(c["value"], set()).add(owner)
             for cval, person_names in contact_to_persons.items():
                 if len(person_names) >= 2:
                     # Find person eids
@@ -1414,8 +1415,15 @@ class EntityAssociationEngine:
                         entities[ceid] = {
                             "type": ctype, "value": cval, "display": cval,
                             "sources": e.get("sources", []),
-                            "context": {"from": "contact_extraction", "of_person": e["display"]},
+                            "context": {"from": "contact_extraction", "owners": [e["display"]]},
                         }
+                    else:
+                        # Add this person to owners list
+                        ctx = entities[ceid].get("context") or {}
+                        owners = ctx.get("owners", [])
+                        if e["display"] not in owners:
+                            owners.append(e["display"])
+                            ctx["owners"] = owners
                     # Association: person -> contact
                     assocs.append({
                         "pattern": "has_contact",
