@@ -379,6 +379,178 @@ sitemap.txt 的读取为公开合规读取。证据 HTML 存 `/tmp/wstl-probe/`
 - 未新增 adapter / 测试 / registry 条目（见第五节判死结论）。
 - 测试计数：本节 13 次目标站 HTTP 探针；新增 focused test 0（无 adapter，
   现有测试套件不受影响）。
+---
+
+# GitHub spider 项目技术挖掘（商查不寻常路径之一）— 实测报告（2026-10-21）
+
+> 目标：在 GitHub/技术博客找大家怎么爬企查查/天眼查/启信宝——搜
+> qcc/tianyancha/qixin spider/scraper 项目，读它们的 technique（签名算法、
+> 公开端点、H5 技巧、历史接口），用实测验证其中免登录可用的数据面。
+> 天眼查 api9 v3 就是这么发现的——继续深挖：企查查历史 API、启信宝 web
+> 接口、天眼查 suggest/老版本 v1/v2 接口。
+>
+> 红线（铁律）：零用户身份信息、零注册、不登录、不绕验证码、不碰付费
+> openAPI、不伪造身份、不查泄露库。只做公开 web 端点的 plain HTTP 低频
+> 实测；签名算法客户端复现仅限公开端点（项目已有先例：抖音 a_bogus 纯
+> Python 复现）。
+>
+> **结论：走不通，不建 adapter。** 全部已披露的社区技术都收敛到\"登录态
+> token / 用户 cookie / WAF 解挑战\"三扇门之一；免登录的 api9 v1/v2/v3
+> （含 suggest 系列）实测全部显式 `unauthorized api`；企查查历史端点已
+> 404/下线；启信宝对本出口地域封锁（451）。
+
+实查窗口：2026-10-21 15:19–16:40（北京时间）。方法：GitHub 公开仓库只读
+（connector MCP，`search_repositories`/`search_code`/`get_file_contents`），
++ 公开 web 端点 plain curl 低频单发（桌面/手机 UA，无登录、无 cookie
+维持、无签名伪造、无挑战绕过）。出口 IP：境外 egress（对方自报
+87.81.230.x，非 CN）。
+
+## 一、GitHub 项目清单（按平台）
+
+### 天眼查 spider 项目
+
+| 仓库 | 更新 | technique 摘要 |
+|------|------|----------------|
+| `CharlesPikachu/pytools`（pytools/modules/tianyancha） | 长期维护 | `api9.tianyancha.com/services/v3/search/sNorV3/{q}` + 详情 `services/v3/t/common/baseinfoV5/{id}`；请求头含 **`version: TYC-XCX-WX`**（小程序面）、`Authorization: 0###…`（session token，已打码）、`x-auth-token`（神策 analytics 追踪 id） |
+| `854771076/tyc_qcc_spider`（`天眼查.py`） | 近期 | 同 api9 v3，`Authorization` + `X_AUTH_TOKEN` 均为作者自有登录态（源码中已打码） |
+| `claireymeng/Tianyancha_Spider`（2025-01, Playwright） | 2025 | 浏览器自动化（需登录态） |
+| `YunCan-code/TianYanChaSpider`（2025-01, selenium） | 2025 | 浏览器自动化（需登录态） |
+| `imquanquan/tyc_urls`（2025-03, scrapy） | 2025 | URL 采集骨架，未见免登录数据面 |
+| 其余（pom1205、jianrongzeng、crawlerclub 等） | 2017–2023 | 旧 web HTML / selenium，均需登录或已失效 |
+
+### 企查查 spider 项目
+
+| 仓库 | 更新 | technique 摘要 |
+|------|------|----------------|
+| `854771076/tyc_qcc_spider`（`企查查.py`） | 近期 | **pid/tid + HMAC 签名**：先 `GET www.qcc.com/web/search/advance?hasState=true` 从页面正则取 `pid`/`tid`，再对请求做 `seeds_generator` 字符映射 + HMAC 签名；**但全程依赖作者自有用户 cookie**（settings 注\"一对可访问500次\"） |
+| `tenlee2012/qichacha-spider`（2024-08, scrapy-redis） | 2024 | 纯 HTML 爬虫：`g_{prov}_{p}.html` 分省列表页 → 详情页；无签名、无登录——**但今天该面已被阿里云 WAF（acw_sc__v2）锁死**（见 §二） |
+| `YzaSoLong/qichacha_spider`（2023-08, selenium） | 2023 | 远程调试 Chrome + QQ OAuth 登录（`graph.qq.com/oauth2.0` → `qichacha.com/user_callbackqq`），登录态采集 |
+| `doublezjia/qichacha-spider` 等十余个 | 2016–2022 | 旧版 web HTML 爬虫，全部过期 |
+
+### 启信宝 spider 项目
+
+- GitHub **无**以 qixinbao/qixin 为目标的 spider 仓库（`qixinbao spider`
+  检索 0 命中；`qixinbao.com` 代码检索仅命中过期域名列表噪音）。
+- 唯一相关公开技术资料：启信宝（合合信息）自有发明专利 CN 111881337 A
+  （\"请求预处理来克服签名验证的反爬虫机制\"）——**反向证据**：其服务端
+  有签名验证反爬，无公开免登录面可指望。
+
+## 二、实测证据（本节 20 次目标站 HTTP 探针）
+
+### 1. 天眼查：api9 v1/v2/v3 + suggest 全系显式拒匿名
+
+| # | 探针 | 结果 |
+|---|------|------|
+| 1 | `GET api9.tianyancha.com/services/v1/search/suggestV1?word=华为` | 200，`{\"isLogin\":0,\"message\":\"unauthorized api\",\"state\":\"warn\"}` |
+| 2 | `GET api9.tianyancha.com/services/v2/search/sNorV2/华为` | 200，同 `unauthorized api` |
+| 3 | `GET api9.tianyancha.com/services/v3/search/suggestV3/华为` | 200，同 `unauthorized api` |
+| 4 | `GET api.tianyancha.com/services/v1/search/suggestV1?word=华为`（旧 host） | **000**（host 已不可达） |
+| 5 | `GET www.tianyancha.com/tongji/华为.json`（老热搜统计接口） | 404，`{\"state\":\"error\",\"message\":\"系统异常\"}` |
+| 6 | `GET www.tianyancha.com/search/suggest.json?key=华为` | 200，`{\"state\":\"error\",\"message\":\"系统异常\"}`（端点已死） |
+| 7 | `GET www.tianyancha.com/search?key=华为` | **419**（天眼查反爬专用码）+ 地域封锁页 |
+
+**判定**：api9 接口族活着，但鉴权=登录态 token（`Authorization` 头），
+CharlesPikachu 仓库中的 token 均已打码、无可复现的公开面；
+老版本（v1 host、tongji、suggest.json）全部下线/死亡。
+
+### 2. 企查查：历史端点 404/WAF，当前 bundle 无公开 JSON 面
+
+| # | 探针 | 结果 |
+|---|------|------|
+| 8 | `GET mob.qichacha.com/app/AggregateSearchMain?input=华为`（m-web JS 包内 APP webview 接口前缀） | **404**（nginx，路径已下线） |
+| 9 | `GET www.qcc.com/web/search?key=华为` | 200，23.6 KB——**整页阿里云 WAF JS 挑战**（`acw_sc__v2` + `renderData` 混淆脚本），零企业数据 |
+| 10 | `GET www.qichacha.com/web/search?key=华为`（旧域名） | 000（TLS 建连后被重置，域名已迁） |
+| 11 | `GET www.qcc.com/web/search/advance?hasState=true`（pid/tid 签名源页面） | 200，23.6 KB——同样 WAF 挑战页，`pid`/`tid` 正则取不到 |
+| 12 | `GET www.qcc.com/` + `qcc-static.qcc.com/qcc/pc-web/prod-26.10.145/main.e1cc8c62.js`（1.35 MB 生产 bundle 静态分析） | bundle 内**无独立 JSON 搜索 API host**；搜索走页面导航 `/web/search`，AJAX 面需 WAF cookie（pid/tid 逻辑在挑战之后，不可达） |
+
+**判定**：2019 年的 APP v1（`appv3.qichacha.net`，md5 sign）与小程序 v1
+（`xcx.qichacha.com`）已在前序报告中判死（host 死亡/需登录 token）；
+当前生产面只有 WAF 后的页面流，无免登录 JSON 端点。
+
+### 3. 启信宝：边缘 451 地域封锁（本出口），web API 形态已摸清
+
+| # | 探针 | 结果 |
+|---|------|------|
+| 13 | `GET https://www.qixinbao.com/` | 000（TLS 建连后停滞——旧域名已废弃/不可达） |
+| 14 | `GET https://www.qixin.com/` | **451**，34.7 KB Nuxt 报错页：`window.__NUXT__.config` 自报 `ip: 87.81.230.25`、`provinceName: 科罗拉多州`——**边缘对非中国大陆 IP 直接地域封锁** |
+| 15 | `GET https://www.qixin.com/api-proxy/web/web/v8/ent/enterprise/getHotSearchEntList`（POST，空 body） | 同 451 报错页（API 同源代理 `/api-proxy/web` + `/web/v8/…`，同样被地域门挡在外面） |
+| 16 | `GET https://m.qixin.com/` / `/search?keyword=华为` | **405**（m 站已下线/parked） |
+
+**附带发现（静态分析，合规）**：qixin.com 生产 Nuxt 配置泄露了完整
+web API 形态——浏览器侧 `BROWSER_API_BASE_URL_WEB: "/api-proxy/web"`，
+业务路径如 `/web/v8/ent/enterprise/getEntInfo`、
+`/web/v8/ent/enterprise/getHotSearchEntList` 等数十条（bundle
+`c-cdn.qixin.com/web/_web/CgF0nkFh.js`，701 KB），另有
+`GEETEST_ID_LOGIN/OVERLIMIT/NOPERCEPTION/SUBMIT` 四个极验 captcha id。
+**这意味着：换 CN 出口后，`/api-proxy/web/web/v8/…` 是最值得复测的
+候选面**（但本出口连门都摸不到，且极验 id 说明匿名高频必触发验证）。
+
+## 三、大家怎么做的（technique 归纳）
+
+1. **天眼查**：全部走 `api9.tianyancha.com/services/v3/*`（小程序后端，
+   `TYC-XCX-WX`），鉴权=登录态 `Authorization` token。社区无人披露过
+   免登录走通的 v1/v2 老接口——老 host `api.tianyancha.com` 已死，
+   `tongji/*.json`、`search/suggest.json` 已死。
+2. **企查查**：新派（2024+）= 带用户 cookie 的 pid/tid+HMAC 签名批量
+   接口（`tyc_qcc_spider`，500 次/cookie 对）；旧派（2016–2022）= 纯
+   HTML 爬虫（`g_{prov}_{p}.html`），已被阿里云 WAF 团灭。登录派 =
+   selenium/QQ OAuth。
+3. **启信宝**：社区无公开 spider；官方专利证实有请求签名反爬；web 面为
+   同源 `/api-proxy/web` + `/web/v8/`，但对非 CN IP 边缘 451。
+4. **共性**：三家都把 2019 年的弱鉴权老接口清干净了；当前唯一\"看起来
+   免登录\"的面是 web 详情页/搜索页，而这些面在本出口被 WAF（企查查）、
+   419+地域（天眼查）、451 地域（启信宝）三重门挡住——**门在 IP/地域层，
+   不是签名层**，纯 HTTP 复现在本环境无解。
+
+## 四、精确卡点
+
+1. 天眼查 api9：`unauthorized api` 是**显式鉴权拒绝**，不是签名可绕的
+   弱门；仓库 token 均打码，无公开复现材料。
+2. 企查查：WAF `acw_sc__v2` 在**第一跳**即拦（IP 层，换 UA 无用）；
+   解挑战=绕 bot 检测，红线禁区。pid/tid 签名本身需要先拿到挑战后的
+   页面，死循环。
+3. 启信宝：451 地域封锁发生在任何业务逻辑之前；m 站 405、旧域名 TLS
+   死亡。CN 出口+匿名是否可达 `/api-proxy/web/web/v8/…` 未验证（本
+   出口无法验证）。
+4. 搜索引擎/二线站/分享链等 sibling 路径已在本文档前序章节判死，
+   不重复。
+
+## 五、红线合规声明
+
+- GitHub 侧：仅只读公开仓库（MCP `search_*`/`get_file_contents`），未
+  fork、未提 issue、未触碰任何私有内容；仓库中打码的 token/cookie/
+  secretKey **均未尝试还原或使用**。
+- 网络侧：20 次目标站探针全部为匿名单发 GET/POST（仅 1 次带空 JSON
+  body 的 API 门形态探针），无登录、无 cookie 维持、无验证码识别或
+  绕过、无付费接口调用、无签名伪造、无地域封锁绕过（含启信宝 451：
+  仅如实记录，未尝试 CN 代理突破）。
+- 静态分析：qcc/qixin 的生产 JS bundle 为公开 CDN 资源，只读 grep，
+  未做反混淆执行、无挑战求解。
+- `/tmp` 下探针原始 HTML/JS 为证据草稿，未入库。
+
+## 六、建议（给 parent 的下一步选项）
+
+1. **不建 adapter、不改 `core/connector_registry.py`**；本报告即交付物，
+   故无 registry dict entry 提交。
+2. **换 CN 出口复测**（最可能走通的一条）：启信宝
+   `https://www.qixin.com/api-proxy/web/web/v8/ent/enterprise/getHotSearchEntList`
+   与企查查 `www.qcc.com/firm/{hex}.html`（§三 robots 口径放行
+   `/firm/*.html`），从 CN IP 匿名测一次。若渲染出字段，adapter 可按
+   `fiftyeight_h5_adapter.py` 模式建（EXPERIMENTAL、默认关闭）。
+3. **用户授权的 browser-assisted**：企查查/天眼查在用户自有登录态下
+   均可正常用（`sogou_wx`/`dianping` 模式已有先例）。
+4. **预算批准后**：官方付费 openAPI（天眼查 `open.api.tianyancha.com`、
+   企查查 `api.qichacha.com`）——红线内只记录不采购。
+5. **不建议**：伪造 sign / 解 WAF JS 挑战 / 打码平台 / 买 key / 借用他人
+   登录态 cookie（全部踩红线）。
+
+## 七、交付
+
+- 追加：`docs/research/unconventional-paths-20261021.md`（本节：GitHub
+  spider 项目技术挖掘）。
+- 未新增 adapter / 测试 / registry 条目（见第六节判死结论）。
+- 测试计数：本节 20 次目标站 HTTP 探针 + 约 15 次 GitHub 公开只读 API
+  调用；新增 focused test 0（无 adapter，现有测试套件不受影响）。
 
 ---
 
