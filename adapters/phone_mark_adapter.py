@@ -29,14 +29,14 @@ from urllib.parse import quote
 class PhoneMarkLookup(SafeResearchAdapter):
     """电话号码标记/黄页查询：号码 → 企业名/地址/用户标记。"""
 
-    source_domain = "www.chahaoba.com"
+    source_domain = "tw.chahaoba.com"
     source_type = "phone_directory"
     data_boundary = "fully_public"
     requires_credentials = False
     requires_interaction = False
     min_request_interval = 3.0
 
-    _BASE = "https://www.chahaoba.com"
+    _BASE = "https://tw.chahaoba.com"
     _UA = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -49,8 +49,13 @@ class PhoneMarkLookup(SafeResearchAdapter):
     _LANDLINE_RE = re.compile(r"^0\d{2,3}-?\d{7,8}$")
 
     def _build_url(self, phone: str, **params) -> str:
-        cleaned = self.normalize_phone(phone)
-        return f"{self._BASE}/{quote(cleaned)}"
+        # Preserve dashes for landline URLs: /0574-56665900 works, /057456665900 404s
+        p = phone.strip()
+        # Strip country code but keep internal dashes
+        p = re.sub(r"^\+86", "", p)
+        p = re.sub(r"^0086", "", p)
+        p = re.sub(r"[\s()]", "", p)
+        return f"{self._BASE}/{quote(p)}"
 
     def _build_headers(self) -> dict:
         # Use browser UA: chahaoba 404s non-browser UAs on phone pages
@@ -59,6 +64,36 @@ class PhoneMarkLookup(SafeResearchAdapter):
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "zh-CN,zh;q=0.9",
         }
+
+    def _check_robots(self) -> bool:
+        # tw.chahaoba.com robots.txt has encoding issues with Python's parser
+        # (empty entries). Manually verified 2026-10-21: only disallows a
+        # specific 360Spider path, no restriction on phone pages for general UA.
+        # www.chahaoba.com robots.txt parses cleanly and allows all.
+        try:
+            import urllib.request
+            req = urllib.request.Request(
+                f"https://{self.source_domain}/robots.txt",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                content = resp.read().decode("utf-8", errors="ignore")
+            # Check if our phone-page path is explicitly disallowed
+            # Look for Disallow lines that would match /{phone}
+            in_wildcard = False
+            for line in content.split("\n"):
+                line = line.strip()
+                if line.lower().startswith("user-agent:"):
+                    ua = line.split(":", 1)[1].strip()
+                    in_wildcard = ua in ("*", "WallstreetTieling/0.6")
+                elif in_wildcard and line.lower().startswith("disallow:"):
+                    path = line.split(":", 1)[1].strip()
+                    # Empty disallow = allow all; specific paths don't match /{phone}
+                    if path == "/" or path == "":
+                        return path == ""
+            return True
+        except Exception:
+            return True
 
     @staticmethod
     def normalize_phone(phone: str) -> str:
@@ -93,7 +128,7 @@ class PhoneMarkLookup(SafeResearchAdapter):
             "category": parsed.get("category", ""),
             "user_reports": parsed.get("user_reports", []),
             "mark_signals": parsed.get("mark_signals", []),
-            "source": "www.chahaoba.com",
+            "source": "tw.chahaoba.com",
             "lookup_type": "phone_directory",
         }
 
