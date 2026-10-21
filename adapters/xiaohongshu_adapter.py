@@ -240,3 +240,160 @@ class XiaohongshuNoteLookup(SafeResearchAdapter):
             "error": reason,
             "duration_ms": (time.monotonic() - start) * 1000,
         }
+
+    # -- user dimension (2026-10-21) --------------------------------------
+    # 用户页与笔记搜索走同一 browser-assisted 骨架: 小红书用户页
+    # https://www.xiaohongshu.com/user/profile/<user_id> 在浏览器中关闭登录
+    # 弹窗后公开可见 (与笔记页同一机制, red-crawler 已验证)。query_user()
+    # 返回 interaction_required + 用户页操作指引; 操作员把用户资料 JSON
+    # (devtools Network 中 user/profile 相关响应) 传给
+    # parse_browser_user_result() 做结构化提取。
+    # 生效判断: 用户页与笔记页是同一登录弹窗遮挡机制, 同一骨架可扩展。
+
+    USER_INSTRUCTIONS = (
+        "小红书用户主页查询 (无需登录,公开内容):\n"
+        "方法 A — 手动浏览器:\n"
+        "1. 在浏览器中打开 https://www.xiaohongshu.com/explore\n"
+        "2. 如出现登录弹窗,直接关闭 (右上角 X),无需登录\n"
+        "3. 在搜索框输入用户名,切换到「用户」Tab,点进目标用户主页\n"
+        "   (URL 形如 https://www.xiaohongshu.com/user/profile/<user_id>)\n"
+        "4. 打开浏览器开发者工具 (F12) > Network,找到用户资料 API 响应\n"
+        "5. 复制 Response JSON,调用 parse_browser_user_result(response_json) 解析\n"
+        "方法 B — Playwright 自动 (参考 red-crawler):\n"
+        "1. 打开用户主页 URL,等待登录弹窗出现后用 page.click() 关闭\n"
+        "2. 抓取页面内嵌 JSON 或 API 响应,传入 parse_browser_user_result()\n"
+    )
+
+    def query_user(self, keyword: str) -> dict[str, Any]:
+        """用户主页查询: 返回 interaction_required + 用户页操作指引。"""
+        start = time.monotonic()
+        self._enforce_rate_limit()
+        self._record_audit(
+            keyword=keyword,
+            url=f"https://www.xiaohongshu.com/user/profile/{keyword}",
+            status=0,
+            fields=[],
+        )
+        return {
+            "query_subject_hash": hashlib.sha256(keyword.encode()).hexdigest()[:12],
+            "source_domain": self.source_domain,
+            "source_type": "social_user_xiaohongshu",
+            "data_boundary": self.data_boundary,
+            "response_status": 0,
+            "fields": {},
+            "field_count": 0,
+            "error": "interaction_required",
+            "interaction_instructions": self.USER_INSTRUCTIONS,
+            "duration_ms": (time.monotonic() - start) * 1000,
+        }
+
+    def parse_browser_user_result(self, response_json: str | dict) -> dict[str, Any]:
+        """解析从浏览器复制的小红书用户资料 JSON.
+
+        支持的输入形状 (Web 端 user/profile 响应常见形态, 防御式兼容):
+        1. {"data": {"basic_info": {...}}}
+        2. {"data": {"user_page": {...}}}
+        3. {"data": {...flat profile...}}
+        4. {...flat profile...}
+        字段别名: nickname/nick_name, desc/introduction, red_id/redId,
+        fans/fans_count/follower_count, follows/follow_count,
+        notes/note_count, location/constellation/career 取其一。
+        """
+        start = time.monotonic()
+        if isinstance(response_json, str):
+            try:
+                data = json.loads(response_json)
+            except (json.JSONDecodeError, ValueError):
+                return self._empty_result("invalid_json", start)
+        elif isinstance(response_json, dict):
+            data = response_json
+        else:
+            return self._empty_result("invalid_input_type", start)
+
+        profile = self._extract_user_profile(data)
+        if not profile:
+            return self._empty_result("profile_not_found", start)
+
+        result = {
+            "query_subject_hash": "",
+            "source_domain": self.source_domain,
+            "source_type": "social_user_xiaohongshu",
+            "data_boundary": self.data_boundary,
+            "response_status": 200,
+            "fields": {
+                "user_found": True,
+                "profile": profile,
+            },
+            "field_count": 2,
+            "duration_ms": (time.monotonic() - start) * 1000,
+        }
+        self._record_audit(
+            keyword="browser_user_result_parse",
+            url="https://www.xiaohongshu.com/user/profile/",
+            status=200,
+            fields=["user_found", "profile"],
+        )
+        return result
+
+    @staticmethod
+    def _extract_user_profile(data: dict) -> dict[str, Any] | None:
+        """从多种响应形状中定位用户资料对象并扁平化。"""
+        if not isinstance(data, dict):
+            return None
+        d = data.get("data") if isinstance(data.get("data"), dict) else {}
+        for cand in (
+            d.get("basic_info"),
+            d.get("user_page"),
+            d,
+            data,
+        ):
+            if isinstance(cand, dict) and (
+                cand.get("nickname") or cand.get("nick_name") or cand.get("red_id")
+            ):
+                return XiaohongshuNoteLookup._flat_user(cand)
+        return None
+
+    @staticmethod
+    def _flat_user(u: dict) -> dict[str, Any]:
+        def pick(*keys):
+            for k in keys:
+                v = u.get(k)
+                if v not in (None, ""):
+                    return v
+            return None
+
+        images = pick("images", "imageb", "image")
+        avatar = None
+        if isinstance(images, str):
+            avatar = images
+        elif isinstance(images, list) and images:
+            first = images[0]
+            avatar = first if isinstance(first, str) else (first or {}).get("url")
+        elif isinstance(images, dict):
+            avatar = images.get("url")
+        try:
+            fans = int(pick("fans", "fans_count", "follower_count") or 0)
+        except (TypeError, ValueError):
+            fans = 0
+        try:
+            follows = int(pick("follows", "follow_count", "following_count") or 0)
+        except (TypeError, ValueError):
+            follows = 0
+        try:
+            notes = int(pick("notes", "note_count", "notes_count") or 0)
+        except (TypeError, ValueError):
+            notes = 0
+        user_id = str(pick("user_id", "userid", "id") or "")
+        return {
+            "user_id": user_id,
+            "nickname": pick("nickname", "nick_name") or "",
+            "red_id": pick("red_id", "redId") or "",
+            "bio": pick("desc", "introduction", "signature") or "",
+            "location": pick("location") or "",
+            "gender": pick("gender", "sex") or "",
+            "fans_count": fans,
+            "follows_count": follows,
+            "notes_count": notes,
+            "avatar": avatar,
+            "profile_url": f"https://www.xiaohongshu.com/user/profile/{user_id}" if user_id else "",
+        }

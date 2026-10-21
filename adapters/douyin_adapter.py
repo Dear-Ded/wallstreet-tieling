@@ -311,7 +311,7 @@ class DouyinBusinessLookup(SafeResearchAdapter):
             "aweme_count": user.get("aweme_count"),
             "total_favorited": user.get("total_favorited"),
             "enterprise_verify": bool(user.get("enterprise_verify_reason")),
-            "verify_reason": user.get("enterprise_verify_reason", ""),
+            "verify_reason": user.get("enterprise_verify_reason") or user.get("verify_reason", ""),
             "ip_location": user.get("ip_location", ""),
         }
 
@@ -354,3 +354,132 @@ class DouyinBusinessLookup(SafeResearchAdapter):
                     "longitude": p.get("poi_longitude"),
                 })
         return pois
+
+
+# ---------------------------------------------------------------------------
+# User dimension (2026-10-21): DouyinUserLookup
+#
+# 按用户名搜用户: 抖音搜索需要完整的搜索签名链, 纯服务端复现不稳定
+# (见 DouyinBusinessLookup.query 的 browser-assisted 说明) —— 按用户名搜索
+# 走浏览器辅助: query() 返回 interaction_required + 操作指引, 操作员在浏览器
+# 搜完后用继承来的 parse_browser_search() 解析 devtools JSON, 拿到 sec_user_id
+# 后再调 query_user() 全自动拉取。
+#
+# 已知 sec_user_id / 分享链接 -> 全自动: 复用 DouyinBusinessLookup 的
+# query_by_sec_uid / query_by_share_url (ttwid 经官方 union/register 接口,
+# a_bogus vendored 签名; 2026-10-21 境外出口实测: ttwid 获取成功, profile
+# 接口对非法 uid 返回结构化 status_code=2, 签名链可用)。
+#
+# 输出是"人"维度的字段 (nickname/bio/粉丝/认证/IP属地), 供 entity_association
+# 生成 person 实体; 商户维度 (POI/视频列表) 仍在 DouyinBusinessLookup。
+# ---------------------------------------------------------------------------
+
+
+class DouyinUserLookup(DouyinBusinessLookup):
+    """抖音用户画像: sec_user_id/分享链接 -> 公开主页 (全自动);
+
+    按用户名搜索 -> browser-assisted (见 query() 指引 + parse_browser_search)。
+    """
+
+    source_type = "social_user_douyin"
+    min_request_interval = 3.0
+
+    # -- SafeResearchAdapter interface --------------------------------
+
+    def _build_url(self, keyword: str, **params: Any) -> str:
+        return f"https://www.douyin.com/user/{urllib.parse.quote(keyword)}"
+
+    def query(self, keyword: str, **params: Any) -> dict[str, Any]:
+        """用户维度查询。
+
+        params: sec_uid / share_url -> 全自动拉取; 都没有 -> browser-assisted
+        (按用户名在抖音搜, 复制 sec_user_id 或 devtools 搜索 JSON 后回来)。
+        """
+        sec_uid = params.pop("sec_uid", None) or params.pop("sec_user_id", None)
+        share_url = params.pop("share_url", None)
+        if sec_uid:
+            return self.query_user(sec_uid=sec_uid)
+        if share_url:
+            return self.query_user(share_url=share_url)
+        self._enforce_rate_limit()
+        self._record_audit(keyword=keyword, url=self._build_url(keyword),
+                           status=0, fields=[])
+        return {
+            "query_subject_hash": __import__("hashlib").sha256(
+                keyword.encode()).hexdigest()[:12],
+            "source_domain": self.source_domain,
+            "source_type": self.source_type,
+            "data_boundary": self.data_boundary,
+            "response_status": 0,
+            "interaction_required": True,
+            "fields": {},
+            "field_count": 0,
+            "error": "",
+            "interaction_guide": self._user_search_guide(keyword),
+            "duration_ms": 0,
+        }
+
+    @staticmethod
+    def _user_search_guide(keyword: str) -> list[str]:
+        return [
+            f"1. 浏览器/App 内搜索用户「{keyword}」, 点进目标用户主页",
+            "2. 复制地址栏 sec_user_id (user/ 后面的那串), 调 query(sec_uid=\"...\") 全自动拉取; ",
+            "   或从浏览器 devtools 复制搜索响应 JSON, 调 parse_browser_search() 解析出 sec_user_id",
+            "3. 公开字段: 抖音号/昵称/签名(常含微信/电话, 进联系方式管道)/粉丝数/获赞数/作品数/IP属地/认证",
+        ]
+
+    # -- autonomous user profile ---------------------------------------
+
+    def query_user(self, sec_uid: str | None = None,
+                   share_url: str | None = None,
+                   max_posts: int = 5) -> dict[str, Any]:
+        """已知 sec_user_id 或分享链接 -> 公开用户画像 (全自动)。"""
+        if share_url and not sec_uid:
+            resolved = self._resolve_share_url(share_url)
+            if resolved:
+                sec_uid = resolved
+            else:
+                return {
+                    "status": "share_url_resolve_failed",
+                    "interaction_required": True,
+                    "fields": {},
+                }
+        if not sec_uid:
+            return {"status": "invalid_input", "fields": {}}
+
+        raw = self.query_by_sec_uid(sec_uid, max_posts=max_posts)
+        fields = raw.get("fields") or {}
+        profile = fields.get("profile") or {}
+        if profile.get("fetch_error") and not profile.get("nickname"):
+            return {
+                "status": "fetch_failed",
+                "error": profile.get("fetch_error"),
+                "fields": {},
+            }
+        user_fields = {
+            "user_found": bool(profile.get("nickname") or profile.get("douyin_id")),
+            "profile": {
+                "username": profile.get("douyin_id", ""),
+                "nickname": profile.get("nickname", ""),
+                "bio": profile.get("signature", ""),
+                "follower_count": profile.get("follower_count"),
+                "following_count": profile.get("following_count"),
+                "aweme_count": profile.get("aweme_count"),
+                "total_favorited": profile.get("total_favorited"),
+                "location": profile.get("ip_location", ""),
+                "verified": profile.get("verify_reason", ""),
+                "sec_user_id": profile.get("sec_user_id", ""),
+            },
+            "recent_posts": [
+                {"desc": p.get("desc", ""), "create_time": p.get("create_time"),
+                 "digg_count": p.get("digg_count"),
+                 "comment_count": p.get("comment_count")}
+                for p in (fields.get("posts") or [])[:max_posts]
+            ],
+            "profile_url": f"https://www.douyin.com/user/{sec_uid}",
+        }
+        out = dict(raw)
+        out["status"] = "ok"
+        out["fields"] = user_fields
+        out["field_count"] = len(user_fields)
+        return out
