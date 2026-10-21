@@ -481,6 +481,39 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_analytics_id_pivot": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/analytics_pivot_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_analytics_pivot_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_analytics_pivot_adapter.py tests/unit/test_connector_registry.py -q",
+        ],
+        "field_contract": {
+            "record_type": "analytics_pivot_record",
+            "source_hint": "public_analytics_id_pivot",
+            "required_fields": ["ids_found", "related_domains"],
+            "report_gate": "shared analytics ID is a strong operator-association lead; domain ownership requires corroboration",
+        },
+        "operator_notes": [
+            "extract_ids(url): fetch HTML, regex-extract analytics IDs.",
+            "pivot_search(id): urlscan.io public search, no key needed.",
+            "investigate(url): full chain extract -> pivot -> related domains.",
+        ],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_analytics_id_pivot",
+            "source_hint": "public_analytics_id_pivot",
+            "required_config": [],
+            "record_type": "analytics_pivot_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "shared-ID domains feed operator-association leads; same-operator assertion requires exact match on ID + corroborating evidence",
+            "focused_test": "tests/unit/test_analytics_pivot_adapter.py::test_extract_baidu_tongji",
+        },
+    },
     "entity_association_engine": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -3215,6 +3248,27 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Offline storefront verification: existence, address, tel, rating, hours.",
                 "region param required by API (defaults to '全国').",
                 "ToS: real-time queries only, no caching or storage of POI data.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_analytics_id_pivot",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "AnalyticsPivotLookup adapter (adapters.analytics_pivot_adapter).",
+                "Extract analytics IDs from site HTML (Baidu Tongji/GA/CNZZ/51.la);",
+                "pivot via urlscan.io public search to find co-using domains.",
+                "Same analytics ID -> same operator (strong association signal).",
+                "3s interval. No credentials, no login.",
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
