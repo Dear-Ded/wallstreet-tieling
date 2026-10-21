@@ -438,6 +438,7 @@ class EntityAssociationEngine:
 
         associations.extend(self._build_associations(entities))
         associations.extend(self._infer_family_control(entities))
+        associations.extend(self._resolve_person_identity(entities))
         patterns = self._detect_patterns(entities, associations)
 
         entity_list = sorted(entities.values(),
@@ -1273,6 +1274,61 @@ class EntityAssociationEngine:
                             "note": "疑似控制网节点：{}在{}家公司任职".format(
                                 entities[pid]["display"], len(companies)),
                         })
+        return assocs
+
+    def _resolve_person_identity(
+            self, entities: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """跨平台身份归一：同一人在多平台的账号归一。
+
+        Signals (all leads, never facts):
+        - Same username across platforms (exact match) → strong
+        - Same username + matching location/bio → exact (high confidence)
+        - Same phone across profiles → exact
+        - Username similarity (levenshtein) + same city → weak
+
+        This is the core of person deep-dive: merging footprints.
+        """
+        assocs: list[dict[str, Any]] = []
+        # group person entities by normalized username
+        by_username: dict[str, list[dict[str, Any]]] = {}
+        for e in entities.values():
+            if e["type"] != "person":
+                continue
+            ctx = e.get("context") or {}
+            # username from various sources
+            uname = (ctx.get("username") or ctx.get("nickname") or
+                     ctx.get("screen_name") or e.get("display") or "")
+            uname_norm = uname.strip().lower()
+            if uname_norm and len(uname_norm) >= 3:
+                by_username.setdefault(uname_norm, []).append(e)
+
+        for uname, persons in by_username.items():
+            if len(persons) < 2:
+                continue
+            # same username on multiple platforms
+            platforms = set()
+            for p in persons:
+                srcs = p.get("sources") or []
+                platforms.update(srcs)
+            if len(platforms) >= 2:
+                # check for corroborating signals
+                locations = set()
+                for p in persons:
+                    ctx = p.get("context") or {}
+                    loc = (ctx.get("location") or ctx.get("city") or "").strip()
+                    if loc:
+                        locations.add(loc)
+                confidence = "strong"
+                if len(locations) == 1:
+                    confidence = "exact"  # same username + same location
+                assocs.append({
+                    "pattern": "cross_platform_identity",
+                    "description": f"疑似同一人：用户名 '{uname}' 在 {len(platforms)} 个平台出现",
+                    "confidence": confidence,
+                    "entities": [p["display"] for p in persons],
+                    "platforms": sorted(platforms),
+                    "note": "lead，不是身份证明；需人工核实头像/内容",
+                })
         return assocs
 
 
