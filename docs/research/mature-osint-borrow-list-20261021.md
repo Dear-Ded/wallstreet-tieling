@@ -23,7 +23,7 @@ SpiderFoot 是模块化 OSINT 自动化的标杆。publisher/subscriber 架构�
 | `sfp_github` | GitHub 用户/组织/代码搜索 | ✅ 免费 | 1行计划：github_deep 已有；照抄 sfp_github 的"搜代码中泄露的域名/邮箱"逻辑 |
 | `sfp_commoncrawl` | Common Crawl 索引查历史页面 | ✅ 免费 | 1行计划：新建 commoncrawl_adapter，用 CC Index API 查域名的历史 URL（含已删除页面） |
 | `sfp_grayhatwarfare` | grayhatwarfare.com： exposed S3 buckets 数据库 | ✅ 免费层 | 1行计划：查目标企业名的暴露存储桶（低优先级） |
-| `sfp_bingsharedip` | 同一 IP 上的其他域名（Bing `ip:` 搜索） | ✅ 免费 | 1行计划：用 Bing `ip:1.2.3.4` 查同 IP 域名 → 关联企业 |
+| `sfp_bingsharedip` | 同一 IP 上的其他域名（Bing `ip:` 搜索） | ✅ 免费 | 1行计划：用 Bing `ip:1.2.3.4` 查同 IP 域名（2026-10-21 实测已死，不建） → 关联企业 |
 
 ### 架构借鉴
 
