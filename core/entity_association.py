@@ -708,7 +708,7 @@ _SEED_FANOUT: dict[str, list[str]] = {
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
                       "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent", "gd_credit",
                       "gleif", "customs", "software_copyright"],
-    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation", "telegram_channel"],
     "email": ["sogou_wx", "douyin", "telegram"],
     "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl", "dnsdumpster", "threatbook"],
 }
@@ -737,6 +737,7 @@ class EntityAssociationEngine:
     douban: Any = None
     maimai: Any = None
     telegram: Any = None
+    telegram_channel: Any = None
     phone_mark: Any = None
     cert_transparency: Any = None
     analytics_pivot: Any = None
@@ -1041,6 +1042,12 @@ class EntityAssociationEngine:
                 for pm in fields.get("profile_metadata") or []:
                     out.extend(_wmn_profile_entities(pm, "whatsmyname"))
                 return out
+            if attr == "telegram_channel":
+                fields = result.get("fields") or {}
+                if not fields.get("channel_found"):
+                    return []
+                return _telegram_channel_entities(fields.get("channel") or {}, fields,
+                                                  "telegram_channel")
             if attr in ("lagou", "zhaopin", "zhipin"):
                 fields = result.get("fields") or {}
                 out = []
@@ -2069,6 +2076,36 @@ def _wmn_profile_entities(pm: dict, source: str = "whatsmyname") -> list:
     return out
 
 
+def _telegram_channel_entities(channel: dict, fields: dict,
+                               source: str = "telegram_channel") -> list:
+    """Telegram 公开频道 -> 实体。
+
+    person: 频道标题（同名公开频道是人物线索）；description/about 进 context，
+    由 _extract_entity_contacts 统一从中挖联系方式。全部是 lead。
+    """
+    if not isinstance(channel, dict):
+        return []
+    title = (channel.get("title") or "").strip()
+    if not title:
+        return []
+    ctx = {"from": "telegram_channel",
+           "url": fields.get("preview_url") or "",
+           "subscribers": channel.get("subscribers") or channel.get("subscribers_raw") or ""}
+    desc = (channel.get("description") or "").strip()
+    if desc:
+        ctx["description"] = desc[:500]
+    texts = []
+    for p in (fields.get("posts") or [])[:10]:
+        t = (p.get("text") or "").strip() if isinstance(p, dict) else ""
+        if t:
+            texts.append(t)
+    if texts:
+        ctx["about"] = "\n".join(texts)[:2000]
+    name = normalize_name(title) or title
+    return [{"type": "person", "value": name, "display": title,
+             "sources": [source], "context": ctx}]
+
+
 # ---------------------------------------------------------------------------
 # Family / beneficial-owner inference layer (家族/实控推断层)
 #
@@ -2225,6 +2262,12 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
     try:
         from adapters.weibo_relation_adapter import WeiboRelationLookup
         engine.weibo_relation = WeiboRelationLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.telegram_channel_adapter import TelegramChannelLookup
+        engine.telegram_channel = TelegramChannelLookup()
     except Exception:
         pass
 
