@@ -235,3 +235,105 @@ Result 含 `KeyNo`（32 hex），可直接喂给 `public_qcc_wafbypass` 做 `/fi
 - **深交所 A 股列表 API**：`http://www.szse.cn/api/report/ShowReport/data?SHOWTYPE=JSON&CATALOGID=1110&TABKEY=tab1` → 匿名 200，2906 条（板块/代码/简称/上市日期/总股本/流通股本/行业），支持 `txtDMorJC`（代码或简称）检索——**可作"公司名→代码"解析器**，与 C1 adapter 互补，留作后续。
 - **上交所 query.sse.com.cn**：`COMMON_SSE_ZP_GPLB_MCJS_JBXX_L` 实测返回 `total=0`（sqlId 未定位）；上市公司概况页 HTML 可 200 获取但数据由 JS 动态加载，未继续深挖。
 - **巨潮 topSearch**（`www.cninfo.com.cn/new/information/topSearch/query`）：实测 500，未走通。巨潮公告搜索已有 `cninfo_kinship_adapter` 覆盖（亲属关系 lane）。
+## 2. 中文免费代理源深挖 + qcc 423 批量测试（builder：代理深挖 lane）
+
+**任务**：挖 parent 没碰过的中文免费代理源 + 教育网/机构/企业误配置开放代理，
+找干净出口（qcc WAF 过且无 423）。用户 15:48 加码"大胆找，大范围找"：地域不限，
+任何能过三家地域墙的出口都要（qcc WAF 挑战出现=地域过；tyc 非 419；qixin 非 451）。
+时间盒 2026-10-21 18:00。
+
+**结论先行**：本 lane **0 个干净出口**（未达 ≥2 目标）。82,980 去重候选，
+实测存活 ~2,500 个 → 仅 2 个短暂存活（15 分钟内死亡）→ qcc 复测 1 个 423、
+1 个已死。核心发现：中文免费代理站（89ip/ip3366）是**端口扫描列表而非验证代理**；
+qcc 423 必须在 firm 页级测试（首页会漏检）。
+
+### 2.1 源清单（URL / 抓取方式 / 候选数 / 存活数 / CN 数 / 干净数）
+
+| 源 | URL | 抓取方式 | 候选 | 存活 | 干净 |
+|---|---|---|---|---|---|
+| 89ip.cn | `https://www.89ip.cn/index_{1..4}.html` | HTML 表格（IP/端口/归属地/运营商） | 160→去重107 | 0/147测 | 0 |
+| ip3366.net | `http://www.ip3366.net/free/?stype=1&page=1..8` | HTML 表格 gb2312（stype=1 国内高匿） | 188+80=268 | 0/268测 | 0 |
+| free-proxy-list.net | `https://free-proxy-list.net/` | HTML 表格（国家码/匿名度） | 300→去重134 | 0/134测 | 0 |
+| sslproxies.org | `https://www.sslproxies.org/` | HTML 表格 | 6 | 0/6测 | 0 |
+| gh monosans http | raw `proxies/http.txt` | 纯文本 IP:port | 386 | 0/326测 | 0 |
+| gh monosans socks5 | raw `proxies/socks5.txt` | 纯文本 | 1002 | 0/300测 | 0 |
+| gh thespeedx http | raw `http.txt` | 纯文本 | 2725 | 0/300测 | 0 |
+| gh thespeedx socks5 | raw `socks5.txt` | 纯文本 | 2425 | 0/300测 | 0 |
+| gh proxifly http | raw `protocols/http/data.txt` | 纯文本 | 2571 | 1/300测（15分钟后死） | 0 |
+| gh proxifly socks5 | raw `protocols/socks5/data.txt` | 纯文本 | 71600 | 未测（量太大，抽样在 http 侧已证死亡率） | - |
+| gh jetkai http | raw `online-proxies/txt/proxies-http.txt` | 纯文本 | 1702 | 0/300测 | 0 |
+| gh roosterkid | raw `HTTPS_RAW.txt` | 纯文本 | 20 | 0/20测 | 0 |
+| gh zaeem | raw `http.txt` | 纯文本 | 34 | 0/34测 | 0 |
+
+合计 **82,980 去重候选**（http 7,953 + socks5 75,027）；实测约 2,500 个（每源 ≥50，
+大源抽样 300）。教育网/机构无独立公开源，原计划"大列表按 ASN 反查"因零干净出口未触发。
+
+存活测试：`curl -x http://IP:PORT --max-time 6 <ip-echo>`（socks5 用 `--socks5-hostname`），
+echo 轮询 api.ipify/icanhazip/checkip.amazonaws/ipinfo，取出口 IP+延迟。
+
+### 2.2 挖不动 / 放弃的源（均实测）
+
+- **xicidaili.com**：ParkLogic bot 墙（`router.parklogic.com` JS 指纹），curl 不可过。
+- **data5u.com**：免费列表已下架（`/free/gngn/index.shtml` 404），只剩 VIP。
+- **ip.ihuan.me（小幻/云代理）**：`tqdl.html?num=200` 返回"提取成功"但 0 个 IP，接口已 JS 化。
+- **nimadaili.com**：站点失联。**proxylistplus.com**：Cloudflare 挑战。
+- **proxy-list.download**：502。**66ip.cn**：首页失联、API 404。
+- **89ip.cn 的 JSON 接口**：任务描述称有，实测只有 HTML 表格 + 付费 `api.html`，免费侧无公开 JSON。
+
+### 2.3 关键方法学发现（已用已知 423 代理校验）
+
+- qcc 423 测试必须在 **firm 页级**：`GET /firm/92b609750ed39f64d8597add3e26de65.html`
+  （firm_id 取自 qcc 首页真实链接）→ WAF 挑战则纯 Python 求解
+  （复用 `adapters/qcc_waf_adapter.py` 置换表/arg1 正则）→ 带 cookie 复访 →
+  命中 `访问超频/触发安全规则/verify.qcc.com/block/405错误页面/被暂停服务` 即 423。
+- **校验**：已知 423 代理 `121.46.226.221:10808`（adapter 文档记载）实测——
+  **首页干净、无 WAF 挑战，但 firm 页命中 423**。只测首页会漏检，
+  coordinator 原定义"GET qcc 首页"需修正为 firm 页。
+- tyc：`GET https://www.tianyancha.com/` 判 419；qixin：`GET https://www.qixin.com/` 判 451。
+  地理/ASN：`ip-api.com`（本轮只用到单查）。
+
+### 2.4 实测的两个"活"代理（均已死 / 423）
+
+| 代理 | 协议 | 出口 IP | 国家/ASN | 延迟 | qcc | tyc | qixin |
+|---|---|---|---|---|---|---|---|
+| 45.125.64.215:443（gh-proxifly-http） | http | 45.125.64.215 | HK / Tele Asia AS133398 | 3531ms | **423_blocked**（firm block） | 419 | ok（启信宝首页 33KB） |
+| 122.246.4.30:17981（gh-monosans-http） | http | 45.125.64.215 同段 | - | 5735ms | 未及测（15 分钟内死亡） | - | - |
+| 121.46.226.221:10808（已知，方法校验用） | http | 156.59.17.27 | HK / Zenlayer AS21859 | - | 423_blocked | 419 | ok |
+
+qcc 测试原文（45.125.64.215:443 第二次）：`('423_blocked', 'firm block|no_challenge', 11191ms)`。
+结论：免费代理出口 IP 在企查查侧基本全灭（与 parent 之前 proxyscrape 等结论一致）。
+
+### 2.5 核心根因：中文免费代理站是端口扫描列表，不是验证代理
+
+- 对 89ip.cn 当日"已验证"（15:45 时间戳）的 40 个代理**秒级复测 0/40 存活**；
+  直连其中 `121.41.97.228:80` 返回 `HTTP/1.0 404`——是 Web 服务器，根本不是代理。
+- 结论：89ip/ip3366 这类站只做端口开放扫描，不验证代理协议，列表价值≈0。
+- GitHub 大列表实测存活率约 0.25%（2/807），且存活窗口以分钟计——
+  **免费代理无法提供 durable 的干净出口**，只能做一次性机会主义使用。
+
+### 2.6 基础设施事故（16:05–16:24 出站数据面中断）
+
+- 16:01 启动 100 并发存活测试，约 4 分钟后 VM 出站数据面全断：
+  DNS 正常；TCP SYN 被中间件瞬间接受但无数据返回。
+- 三条出路全断：`hatch-egress-proxy:3128`、直连 NAT、198.19.0.1:3128；IPv6 亦断。
+  Lane A 的 sing-box 节点同时全断（VM 级故障）。`ss` 曾见 529 个 FIN-WAIT-2。
+- 疑因：100 并发 curl storm 触发网关限流（自认可能误伤）。16:15 停手退避，
+  16:24 单探测恢复。后续测试并发压到 12–35，再未复发。
+- 教训：批量测并发 ≤35、超时 6s；误伤基础设施第一时间停手是正确处置。
+
+### 2.7 ⚠️ 对 Lane A 结果的复核提醒（coordinator 必看）
+
+- Lane A（`/tmp/gray`）断网前声明 3 个 qcc-clean 出口（`results.jsonl`）：
+  `78.17.171.106`（PL trojan）、`104.28.160.29`（CF vless）、`62.197.156.21`（DE vless），
+  但三条 `qcc_detail` 均为 **`company=405`**。
+- 按其自带分类器，title 为纯 3 位数字应判 `intercept_4xx` 而非 clean；
+  "company=405" 极可能是 405 错误页被误抽为公司名——**3 个 clean 声明疑似误报**，
+  且其 `verify_*.html` 全 0 字节（断网后验证失败）。
+- **建议对这 3 个出口重验后再计入战果**，不要直接采用。
+
+### 2.8 交付物
+
+- 脚本与数据（工作区镜像，未 stage）：`~/workspace/wallstreet-tieling/.tmp-proxywork-20261021/`
+  （`candidates.jsonl` 82,980、`cn_priority.json` 295、`scrape.py`、`test.py`、`gentle.py`/`gentle2.py`）。
+  网络正常时跑 `G2_INPUT=... python3 gentle2.py live` + `python3 gentle2.py qcc` 即可复测。
+- 本章节即证据。Git：docs 章节 commit，不 push。
