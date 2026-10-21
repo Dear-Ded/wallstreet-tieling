@@ -367,6 +367,230 @@ def _court_notice_entities(notice: dict[str, Any], source: str) -> list[dict[str
     return ents
 
 
+def _patent_entities(patent: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """Google Patents 单条专利 -> 申请人(企业) + 发明人(个人).
+
+    Expected record shape (adapters/patent_adapter._parse_patent_entry):
+        {"publication_number", "title", "inventor", "assignee",
+         "filing_date", "grant_date", ...}
+    """
+    ents: list[dict[str, Any]] = []
+    assignee = normalize_name(patent.get("assignee"))
+    pub_no = patent.get("publication_number", "")
+    if assignee:
+        ents.append({
+            "type": "business", "value": assignee, "display": assignee,
+            "sources": [source],
+            "context": {
+                "from": "patent_assignee",
+                "publication_number": pub_no,
+                "patent_title": str(patent.get("title", ""))[:80],
+                "filing_date": patent.get("filing_date", ""),
+            },
+        })
+    for chunk in re.split(r"[;；、]", str(patent.get("inventor") or "")):
+        nm = normalize_name(chunk)
+        if not nm or len(nm) > 30:
+            continue
+        ents.append({
+            "type": "person", "value": nm, "display": nm,
+            "sources": [source],
+            "context": {
+                "from": "patent_inventor",
+                "company": assignee,
+                "publication_number": pub_no,
+                "patent_title": str(patent.get("title", ""))[:80],
+            },
+        })
+    return ents
+
+
+def _toutiao_entities(article: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """今日头条搜索文章 -> 作者(个人/自媒体账号).
+
+    Expected record shape (ToutiaoSearchLookup.parse_search_dom):
+        {"title", "url", "author", "publish_time"}
+    """
+    ents: list[dict[str, Any]] = []
+    author = normalize_name(article.get("author"))
+    if author and 2 <= len(author) <= 30:
+        ents.append({
+            "type": "person", "value": author, "display": author,
+            "sources": [source],
+            "context": {
+                "from": "toutiao_author",
+                "article_title": str(article.get("title", ""))[:80],
+                "article_url": article.get("url", ""),
+                "publish_time": article.get("publish_time", ""),
+            },
+        })
+    return ents
+
+
+def _gd_credit_entities(company: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """广东信用平台单条企业 -> 企业 + 法定代表人(个人) + 注册地址.
+
+    Expected shapes (adapters/gd_credit_adapter):
+        search:  {"company_name", "credit_code", "legal_rep", "address", "status", ...}
+        detail:  {"found", "company_name", "credit_code", "legal_rep", "address",
+                  "status", "registered_capital", "industry", ...}
+    """
+    ents: list[dict[str, Any]] = []
+    name = normalize_name(company.get("company_name"))
+    if not name:
+        return ents
+    ents.append({
+        "type": "business", "value": name, "display": name,
+        "sources": [source],
+        "context": {
+            "from": "gd_credit_company",
+            "credit_code": company.get("credit_code", ""),
+            "status": company.get("status", ""),
+            "registered_capital": company.get("registered_capital", ""),
+            "industry": company.get("industry", ""),
+        },
+    })
+    rep = normalize_name(company.get("legal_rep"))
+    if rep and 2 <= len(rep) <= 30:
+        ents.append({
+            "type": "person", "value": rep, "display": rep,
+            "sources": [source],
+            "context": {
+                "from": "gd_credit_company",
+                "company": name,
+                "role": "法定代表人",
+            },
+        })
+    akey, adisp = normalize_address(company.get("address"))
+    if adisp:
+        ents.append({
+            "type": "address", "value": akey or adisp, "display": adisp,
+            "matchable": bool(akey),
+            "sources": [source],
+            "context": {"from": "gd_credit_company", "of_business": name},
+        })
+    return ents
+
+
+def _gleif_entities(record: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """GLEIF LEI 记录 -> 法人企业 (+曾用名企业).
+
+    Expected record shape (adapters/gleif_adapter._parse_lei_record):
+        {"lei", "legal_name", "other_names", "jurisdiction", "legal_form",
+         "status", "legal_address", "hq_address", "registration_status", ...}
+    母子公司关联在 _extract 的 gleif 分支中单独处理.
+    """
+    ents: list[dict[str, Any]] = []
+    name = normalize_name(record.get("legal_name"))
+    if not name:
+        return ents
+    ents.append({
+        "type": "business", "value": name, "display": name,
+        "sources": [source],
+        "context": {
+            "from": "gleif_lei_record",
+            "lei": record.get("lei", ""),
+            "jurisdiction": record.get("jurisdiction", ""),
+            "legal_form": record.get("legal_form", ""),
+            "entity_status": record.get("status", ""),
+            "registration_status": record.get("registration_status", ""),
+            "hq_address": record.get("hq_address", ""),
+        },
+    })
+    for on in record.get("other_names") or []:
+        onm = normalize_name(on)
+        if onm and onm != name and 2 <= len(onm) <= 60:
+            ents.append({
+                "type": "business", "value": onm, "display": onm,
+                "sources": [source],
+                "context": {"from": "gleif_other_name", "of_legal_name": name},
+            })
+    return ents
+
+
+def _customs_entities(party: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """Zauba 海关进出口商 -> 企业.
+
+    Expected shapes (adapters/customs_adapter):
+        search party: {"name", "report_url", "shipment_count", "total_weight",
+                       "latest_shipment"}
+        detail also yields {"company_name", "address", "counterparties", ...}
+    """
+    ents: list[dict[str, Any]] = []
+    name = normalize_name(party.get("name") or party.get("company_name"))
+    if not name:
+        return ents
+    ents.append({
+        "type": "business", "value": name, "display": name,
+        "sources": [source],
+        "context": {
+            "from": "customs_party",
+            "shipment_count": party.get("shipment_count"),
+            "total_weight": party.get("total_weight", ""),
+            "latest_shipment": party.get("latest_shipment", ""),
+            "trade_category": party.get("category", ""),
+            "report_url": party.get("report_url", ""),
+        },
+    })
+    return ents
+
+
+def _soft_copyright_entities(record: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """软著记录 -> 著作权人(企业).
+
+    Expected record shape (知服服 ZhifufuSoftLookup / 聚合数据 JuheCopyrightLookup):
+        {"soft_name", "reg_no", "owner", "reg_date", "version",
+         "complete_date", "doc_id"}
+    """
+    ents: list[dict[str, Any]] = []
+    owner = normalize_name(record.get("owner"))
+    if not owner:
+        return ents
+    ents.append({
+        "type": "business", "value": owner, "display": owner,
+        "sources": [source],
+        "context": {
+            "from": "software_copyright_owner",
+            "soft_name": str(record.get("soft_name", ""))[:80],
+            "reg_no": record.get("reg_no", ""),
+            "reg_date": record.get("reg_date", ""),
+            "version": record.get("version", ""),
+        },
+    })
+    return ents
+
+
+def _weibo_relation_entities(user: dict[str, Any], source: str,
+                             relation: str) -> list[dict[str, Any]]:
+    """微博关注/粉丝单用户 -> username_profile + person.
+
+    Expected record shape (adapters/weibo_relation_adapter._extract_user):
+        {"id", "screen_name", "description", "profile_url", "verified",
+         "verified_reason", "follow_me", "following", ...}
+    """
+    ents: list[dict[str, Any]] = []
+    name = normalize_name(user.get("screen_name"))
+    if not name or len(name) > 30:
+        return ents
+    ctx = {
+        "from": "weibo_relation",
+        "relation": relation,
+        "weibo_uid": str(user.get("id") or ""),
+        "profile_url": user.get("profile_url", ""),
+        "verified": bool(user.get("verified")),
+        "verified_reason": str(user.get("verified_reason", ""))[:120],
+    }
+    ents.append({
+        "type": "username_profile", "value": name, "display": name,
+        "sources": [source], "context": dict(ctx),
+    })
+    ents.append({
+        "type": "person", "value": name, "display": name,
+        "sources": [source], "context": dict(ctx),
+    })
+    return ents
+
+
 def _dnsdumpster_entities(fields: dict[str, Any], source: str) -> list[dict[str, Any]]:
     """DNSdumpster -> 子域名 domain 实体 + distinct IP 实体 (DNS 侦察)."""
     ents: list[dict[str, Any]] = []
@@ -482,8 +706,9 @@ _SEED_FANOUT: dict[str, list[str]] = {
     "address": ["amap", "baidu_map", "dianping", "douban"],
     "business_name": ["amap", "baidu_map", "dianping", "douyin", "sogou_wx", "wenshu", "corporate",
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
-                      "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent", "gd_credit"],
-    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao"],
+                      "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent", "gd_credit",
+                      "gleif", "customs", "software_copyright"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation"],
     "email": ["sogou_wx", "douyin", "telegram"],
     "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl", "dnsdumpster", "threatbook"],
 }
@@ -844,6 +1069,78 @@ class EntityAssociationEngine:
                             out.append({"type": "phone", "value": phone, "sources": ["ccgp"],
                                         "context": {"from": "ccgp_contact"}})
                 return out
+            if attr == "patent":
+                fields = result.get("fields") or {}
+                patents = fields.get("patents") or []
+                return [e for p in patents if isinstance(p, dict)
+                        for e in _patent_entities(p, "patent")]
+            if attr == "toutiao":
+                arts = (result.get("fields") or {}).get("articles") or []
+                return [e for a in arts if isinstance(a, dict)
+                        for e in _toutiao_entities(a, "toutiao")]
+            if attr == "gd_credit":
+                fields = result.get("fields") or {}
+                if fields.get("found") and fields.get("company_name"):
+                    return _gd_credit_entities(fields, "gd_credit")
+                comps = fields.get("companies") or []
+                return [e for c in comps if isinstance(c, dict)
+                        for e in _gd_credit_entities(c, "gd_credit")]
+            if attr == "gleif":
+                fields = result.get("fields") or {}
+                out = [e for r in (fields.get("entities") or []) if isinstance(r, dict)
+                       for e in _gleif_entities(r, "gleif")]
+                parent_name = normalize_name(fields.get("direct_parent_name"))
+                if parent_name:
+                    out.append({
+                        "type": "business", "value": parent_name, "display": parent_name,
+                        "sources": ["gleif"],
+                        "context": {
+                            "from": "gleif_parent",
+                            "parent_lei": fields.get("direct_parent_lei", ""),
+                        },
+                    })
+                child_leis = fields.get("child_leis") or []
+                if child_leis:
+                    for e in out:
+                        if e["type"] == "business" and isinstance(e.get("context"), dict):
+                            e["context"].setdefault("child_leis", child_leis)
+                return out
+            if attr == "customs":
+                fields = result.get("fields") or {}
+                out = [e for p in (fields.get("parties") or []) if isinstance(p, dict)
+                       for e in _customs_entities(p, "customs")]
+                for cp in (fields.get("counterparties") or []):
+                    cn = normalize_name(cp) if isinstance(cp, str) else ""
+                    if cn and len(cn) <= 60:
+                        out.append({
+                            "type": "business", "value": cn, "display": cn,
+                            "sources": ["customs"],
+                            "context": {"from": "customs_counterparty"},
+                        })
+                addr = fields.get("address")
+                if addr:
+                    akey, adisp = normalize_address(addr)
+                    if adisp:
+                        out.append({
+                            "type": "address", "value": akey or adisp, "display": adisp,
+                            "matchable": bool(akey), "sources": ["customs"],
+                            "context": {"from": "customs_detail"},
+                        })
+                return out
+            if attr in ("software_copyright", "juhe_copyright"):
+                fields = result.get("fields") or {}
+                # zhifufu parse_browser_result / juhe query() put records at top
+                # level (no "fields" envelope); handle both.
+                records = fields.get("records") or result.get("records") or []
+                return [e for r in records if isinstance(r, dict)
+                        for e in _soft_copyright_entities(r, attr)]
+            if attr == "weibo_relation":
+                fields = result.get("fields") or {}
+                # parse_browser_result puts users at top level; handle both.
+                users = fields.get("users") or result.get("users") or []
+                relation = fields.get("relation") or result.get("relation") or "followers"
+                return [e for u in users if isinstance(u, dict)
+                        for e in _weibo_relation_entities(u, "weibo_relation", relation)]
             if attr == "dnsdumpster":
                 fields = result.get("fields") or {}
                 return _dnsdumpster_entities(fields, "dnsdumpster")
