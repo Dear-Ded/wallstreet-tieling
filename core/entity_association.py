@@ -339,7 +339,7 @@ _SEED_FANOUT: dict[str, list[str]] = {
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark"],
     "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark"],
     "email": ["sogou_wx", "douyin", "telegram"],
-    "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx"],
+    "domain": ["icp_beian", "cert_transparency", "analytics_pivot", "sogou_wx", "fofa"],
 }
 
 _MAX_DEPTH2_FOLLOWUPS = 6
@@ -368,6 +368,8 @@ class EntityAssociationEngine:
     phone_mark: Any = None
     cert_transparency: Any = None
     analytics_pivot: Any = None
+    fofa: Any = None
+    whatsmyname: Any = None
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -593,6 +595,31 @@ class EntityAssociationEngine:
                 domains = (result.get("fields") or {}).get("related_domains") or []
                 return [{"type": "domain", "value": d, "sources": ["analytics_pivot"],
                          "context": {"from": "shared_analytics_id"}} for d in domains if d]
+            if attr == "fofa":
+                fields = result.get("fields") or {}
+                assets = fields.get("assets") or []
+                out = []
+                for a in assets:
+                    if isinstance(a, dict):
+                        ip = a.get("ip") or ""
+                        host = a.get("host") or a.get("domain") or ""
+                        if host:
+                            out.append({"type": "domain", "value": host, "sources": ["fofa"],
+                                        "context": {"from": "co_hosted", "ip": ip}})
+                        if ip:
+                            out.append({"type": "ip", "value": ip, "sources": ["fofa"],
+                                        "context": {"from": "fofa_asset"}})
+                        icp = a.get("icp") or ""
+                        if icp:
+                            out.append({"type": "icp_license", "value": icp, "sources": ["fofa"],
+                                        "context": {"from": "fofa_icp"}})
+                return out
+            if attr == "whatsmyname":
+                sites = (result.get("fields") or {}).get("sites_found") or []
+                return [{"type": "username_profile", "value": s.get("site", ""),
+                         "sources": ["whatsmyname"],
+                         "context": {"from": "username_reuse", "url": s.get("url", "")}}
+                        for s in sites if isinstance(s, dict)]
         except Exception:
             return []
         return []
