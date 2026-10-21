@@ -481,6 +481,14 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_juhe_copyright_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": ["adapters/software_copyright_adapter.py", "core/connector_registry.py", "tests/unit/test_software_copyright_adapter.py"],
+        "acceptance_commands": ["python -m pytest tests/unit/test_software_copyright_adapter.py -q"],
+        "field_contract": {"record_type": "juhe_copyright_record", "source_hint": "public_juhe_copyright_lookup", "required_fields": ["records"], "report_gate": "copyright filings are public"},
+        "operator_notes": ["Key via constructor."],
+        "runtime_companion": {"type": "source_strengthening_runtime_companion", "connector": "public_juhe_copyright_lookup", "source_hint": "public_juhe_copyright_lookup", "required_config": ["api_key"], "record_type": "juhe_copyright_record", "subject_match_levels": ["exact", "strong", "review"], "promotion_gate": "copyright leads feed association", "focused_test": "tests/unit/test_software_copyright_adapter.py"},
+    },
     "public_dnsdumpster_lookup": {
         "type": "source_strengthening_implementation_pack",
         "target_files": ["adapters/dnsdumpster_adapter.py", "core/connector_registry.py", "tests/unit/test_dnsdumpster_adapter.py"],
@@ -3554,6 +3562,20 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
             standardized_records=True,
             default_enabled=False,
             notes=("CustomsLookup via Zauba. Import/export records. Default-off.",),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_juhe_copyright_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=("JuheCopyrightLookup. Key via constructor. Default-off.",),
             risk_flags=("explicit_enable_required", "public_data_only"),
         ),
         ConnectorCapability(
