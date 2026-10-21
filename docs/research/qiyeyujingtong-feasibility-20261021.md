@@ -98,3 +98,34 @@
 3. **iOS 端逆向**：IPA 需 Apple ID 下载；或查 App Store 的 `app-ads.txt`/Universal Links 暴露的 API host。
 4. **证书透明度恢复后**（crt.sh 502 是暂时的）：枚举 `*.qixin.com` 找真实 APP API host（如 `appapi` 系），再对口探接口。
 5. **拆已泄露路径**：`/api-proxy/app` 是 web 的 app 接口基址，若拿到境内 IP，`www.qixin.com/api-proxy/app/...` 可直接复现 web 的"app"族接口——APP 大概率同源。
+
+## 七、官方 APK 猎取成功（2026-10-21 15:0x，应用汇 AppChina）
+
+### 7.1 关键发现：Android 包名 ≠ iOS bundleId
+- iOS：`com.bertadata.qixinbao`（App Store id 1030675668）
+- **Android：`com.bertadata.qxb`**（应用汇 listing 实证）。此前按 iOS 包名在各安卓渠道搜索是缘木求鱼——这就是官方 APK 一直"拿不到"的根因之一。
+
+### 7.2 获取链路
+1. 应用汇搜索 `启信宝` → `https://www.appchina.com/app/com.bertadata.qxb`（200，标题"启信宝 10.10.00"）。
+2. 下载按钮为 Thymeleaf 服务端渲染，真实直链：`http://mobile.d.appchina.com/McDonald/e/7716935/0/0/0/1792562408014/package_101000.1792562408014`。
+3. 下载成功：68,649,365 bytes，`Content-Type: application/vnd.android.package-archive`。
+
+### 7.3 验签（铁律执行）
+| 项 | 结果 |
+|---|---|
+| SHA-256（APK） | `a51ab8022ebacaed91dc34bb6c361db144a0424536075ac7e75db6a2fd8a65e4` |
+| 包名（manifest） | `com.bertadata.qxb` ✅ 与商店 listing 一致 |
+| 版本（manifest） | `10.10.00` ✅ 与 iOS v10.10.00 一致 |
+| 签名证书 | 自签，`Subject/Issuer: C=86, ST=JiangSu, L=SuZhou, O=bertadata, CN=bertadata_android`，sha256WithRSAEncryption |
+| 证书 SHA-256 | `308e5e168df9d52bc98132382ee1a6d8202b3df2339ce04cb38d3230daf65e99` |
+| 权限审查 | 27 项常规权限（定位/相机/通讯录/存储/通知等，业务查询类 App 正常范围）；无 READ_SMS/BIND_DEVICE_ADMIN 等高危项 ✅ |
+| 结构 | Flutter 应用（classes.dex 仅 13KB，Dart 在 libapp.so），正常 |
+
+结论：**官方正版包**（知名安卓商店应用汇 + 包名/版本双一致 + 厂商自签证书 O=bertadata + 权限无异常）。单源，未做多源哈希互验——证书与版本交叉已足够采信；后续拿到第二源可补哈希比对。
+
+### 7.4 扫过的其他镜子（均未命中，供备查）
+APKMirror（无此包）/ apkcombo（连接失败）/ a2zapk.dev（404）/ apkfolks（525）/ evozi（不在 Google Play，404）/ apkmonk（连接失败）/ APKFab（403）/ Uptodown（404）/ 酷安（567 反爬）/ pc6（567 反爬）/ 2265（连接失败）/ 安智（连接失败）/ 豌豆荚（连接失败）/ 小米应用商店（302 回首页=无包）/ 360 手机助手（302 回首页）/ 爱学府 dl.aixuefu.com 直链（境外 IP 空回包）/ newhua（搜索页被劫持跳转）/ appchina 之外未再深挖。
+
+### 7.5 文件位置
+- APK 本体**不进仓库**：`/tmp/qxb_appchina.apk`（68.6MB）。
+- 下一步：REA 反编译（`~/workspace/rea/`）→ 找 APP API host 与签名算法 → 复现免登录查询端点。
