@@ -481,6 +481,39 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_xiaohongshu_note_search": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/xiaohongshu_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_xiaohongshu_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_xiaohongshu_adapter.py tests/unit/test_connector_registry.py -q",
+            "npm run codex:mcp-smoke",
+        ],
+        "field_contract": {
+            "record_type": "xiaohongshu_note_record",
+            "source_hint": "public_xiaohongshu_note_search",
+            "required_fields": ["note_count", "notes", "poi_mentions"],
+            "report_gate": "notes are user-generated content; merchant reputation is a lead, not a verified fact",
+        },
+        "operator_notes": [
+            "Browser-assisted: operator copies note-list JSON from browser devtools, or uses Playwright per instructions.",
+            "3s interval. No login, no CAPTCHA bypass.",
+        ],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_xiaohongshu_note_search",
+            "source_hint": "public_xiaohongshu_note_search",
+            "required_config": [],
+            "record_type": "xiaohongshu_note_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "note records feed reputation leads; merchant identity requires exact/strong match and admission tests",
+            "focused_test": "tests/unit/test_xiaohongshu_adapter.py::test_parse_search_api_shape",
+        },
+    },
     "public_wenshu_case_records": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -2883,6 +2916,29 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "credentialed_depth_requires_admission", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_xiaohongshu_note_search",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "XiaohongshuNoteLookup adapter (adapters.xiaohongshu_adapter).",
+                "Xiaohongshu merchant notes: reviews, visit reports, photos, POI mentions.",
+                "BROWSER-ASSISTED: search API requires login; query() returns",
+                "interaction_required with Playwright/manual instructions;",
+                "parse_browser_result() structures copied note-list JSON.",
+                "Public content only, no login, no credential. Follows red-crawler",
+                "approach (dismiss login popup, view public notes).",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only", "browser_assisted"),
         ),
         ConnectorCapability(
             name="public_wenshu_case_records",
