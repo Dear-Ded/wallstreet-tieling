@@ -48,6 +48,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlparse
 
 try:
     from core.temporal_analysis import analyze_temporal_clusters
@@ -363,6 +364,112 @@ def _court_notice_entities(notice: dict[str, Any], source: str) -> list[dict[str
                     "court": notice.get("court", ""),
                 },
             })
+    return ents
+
+
+def _dnsdumpster_entities(fields: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """DNSdumpster -> 子域名 domain 实体 + distinct IP 实体 (DNS 侦察)."""
+    ents: list[dict[str, Any]] = []
+    label_of: dict[str, str] = {}
+    for i in (fields.get("interesting_subdomains") or []):
+        if isinstance(i, dict) and i.get("host"):
+            label_of[str(i["host"]).strip().lower()] = str(i.get("label", ""))
+    for host in (fields.get("subdomains") or []):
+        h = str(host or "").strip().lower()
+        if not h:
+            continue
+        ctx: dict[str, Any] = {}
+        if h in label_of:
+            ctx["from"] = "interesting_subdomain"
+            ctx["label"] = label_of[h]
+        else:
+            ctx["from"] = "dnsdumpster_subdomain"
+        ents.append({
+            "type": "domain", "value": h, "display": h,
+            "sources": [source], "context": ctx,
+        })
+    for ip in (fields.get("distinct_ips") or []):
+        ip_s = str(ip or "").strip()
+        if not ip_s:
+            continue
+        ents.append({
+            "type": "ip", "value": ip_s, "display": ip_s,
+            "sources": [source],
+            "context": {"from": "dnsdumpster_ip"},
+        })
+    return ents
+
+
+def _commoncrawl_entities(fields: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """Common Crawl -> 历史 URL 去重 host (domain 实体; seed 排除由引擎负责)."""
+    ents: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for rec in (fields.get("urls") or []):
+        if not isinstance(rec, dict):
+            continue
+        url = str(rec.get("url", "") or "")
+        try:
+            host = (urlparse(url).hostname or "").strip().lower()
+        except Exception:
+            host = ""
+        if not host or host in seen:
+            continue
+        seen.add(host)
+        ents.append({
+            "type": "domain", "value": host, "display": host,
+            "sources": [source],
+            "context": {
+                "from": "cc_url",
+                "captured_at": rec.get("captured_at", ""),
+            },
+        })
+    return ents
+
+
+def _threatbook_entities(fields: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """微步 ThreatBook -> 域名当前解析 IP (ip 实体), ASN/判定进 context."""
+    if fields.get("lookup_failed") or fields.get("no_data") or fields.get("parse_error"):
+        return []
+    ents: list[dict[str, Any]] = []
+    asn = fields.get("asn") or {}
+    ctx_base: dict[str, Any] = {"from": "threatbook_current_ip"}
+    if isinstance(asn, dict):
+        if asn.get("number"):
+            ctx_base["asn_number"] = str(asn.get("number", ""))
+        if asn.get("info"):
+            ctx_base["asn_info"] = str(asn.get("info", ""))[:80]
+    for key in ("severity", "is_malicious", "scene"):
+        if fields.get(key) not in (None, ""):
+            ctx_base[key] = fields.get(key)
+    for ip in (fields.get("current_ips") or []):
+        ip_s = str(ip or "").strip()
+        if not ip_s:
+            continue
+        ents.append({
+            "type": "ip", "value": ip_s, "display": ip_s,
+            "sources": [source], "context": dict(ctx_base),
+        })
+    return ents
+
+
+def _hunter_entities(fields: dict[str, Any], source: str) -> list[dict[str, Any]]:
+    """Hunter.io -> 公开邮箱 (email 实体, 姓名/职位进 context)."""
+    ents: list[dict[str, Any]] = []
+    for e in (fields.get("emails") or []):
+        if not isinstance(e, dict):
+            continue
+        addr = str(e.get("value", "") or "").strip().lower()
+        if not addr or "@" not in addr:
+            continue
+        ctx: dict[str, Any] = {"from": "hunter_email"}
+        for key in ("first_name", "last_name", "position", "seniority", "department"):
+            v = e.get(key)
+            if v:
+                ctx[key] = v
+        ents.append({
+            "type": "email", "value": addr, "display": addr,
+            "sources": [source], "context": ctx,
+        })
     return ents
 
 
@@ -737,6 +844,18 @@ class EntityAssociationEngine:
                             out.append({"type": "phone", "value": phone, "sources": ["ccgp"],
                                         "context": {"from": "ccgp_contact"}})
                 return out
+            if attr == "dnsdumpster":
+                fields = result.get("fields") or {}
+                return _dnsdumpster_entities(fields, "dnsdumpster")
+            if attr == "commoncrawl":
+                fields = result.get("fields") or {}
+                return _commoncrawl_entities(fields, "commoncrawl")
+            if attr == "threatbook":
+                fields = result.get("fields") or {}
+                return _threatbook_entities(fields, "threatbook")
+            if attr == "hunter":
+                fields = result.get("fields") or {}
+                return _hunter_entities(fields, "hunter")
         except Exception:
             return []
         return []
