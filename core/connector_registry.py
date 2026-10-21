@@ -481,6 +481,38 @@ def _source_strengthening_implementation_pack(payload: dict[str, Any]) -> dict[s
 
 
 _SOURCE_STRENGTHENING_IMPLEMENTATION_PACKS: dict[str, dict[str, Any]] = {
+    "public_dianping_shop_lookup": {
+        "type": "source_strengthening_implementation_pack",
+        "target_files": [
+            "adapters/dianping_adapter.py",
+            "core/connector_registry.py",
+            "tests/unit/test_dianping_adapter.py",
+            "tests/unit/test_connector_registry.py",
+        ],
+        "acceptance_commands": [
+            "python -m pytest tests/unit/test_dianping_adapter.py tests/unit/test_connector_registry.py -q",
+        ],
+        "field_contract": {
+            "record_type": "dianping_shop_record",
+            "source_hint": "public_dianping_shop_lookup",
+            "required_fields": ["shop_id", "shop_found"],
+            "report_gate": "shop records are platform-listed data; existence is a lead, masked fields are platform desensitization",
+        },
+        "operator_notes": [
+            "Shop ID from m.dianping.com/shop/{id} URL.",
+            "Name search requires login; use query_by_shop_id with known ID.",
+        ],
+        "runtime_companion": {
+            "type": "source_strengthening_runtime_companion",
+            "connector": "public_dianping_shop_lookup",
+            "source_hint": "public_dianping_shop_lookup",
+            "required_config": [],
+            "record_type": "dianping_shop_record",
+            "subject_match_levels": ["exact", "strong", "review"],
+            "promotion_gate": "shop records feed offline-business leads; identity requires exact/strong match and admission tests",
+            "focused_test": "tests/unit/test_dianping_adapter.py::test_parse_shop_html_found",
+        },
+    },
     "public_sogou_wechat_articles": {
         "type": "source_strengthening_implementation_pack",
         "target_files": [
@@ -3097,6 +3129,27 @@ def default_connector_capabilities() -> list[ConnectorCapability]:
                 "Offline storefront verification: existence, address, tel, rating, hours.",
                 "region param required by API (defaults to '全国').",
                 "ToS: real-time queries only, no caching or storage of POI data.",
+                "Default-off: explicit operator enablement required per source-admission policy.",
+            ),
+            risk_flags=("explicit_enable_required", "public_data_only"),
+        ),
+        ConnectorCapability(
+            name="public_dianping_shop_lookup",
+            shape=ConnectorShape.REST_API,
+            access=SourceAccess.PUBLIC,
+            authority=SourceAuthority.PUBLIC_WEB,
+            domains=(RetrievalDomain.PEOPLE,),
+            status=ConnectorStatus.EXPERIMENTAL,
+            configurable_endpoint=False,
+            health_check=True,
+            standardized_records=True,
+            default_enabled=False,
+            notes=(
+                "DianpingShopLookup adapter (adapters.dianping_adapter).",
+                "Offline storefront verification via m.dianping.com mobile pages.",
+                "No login required for shop detail pages; search needs login.",
+                "Non-login: address/phone masked by platform (data desensitization).",
+                "Handles IncompleteRead (server-side connection cut, anti-scraping).",
                 "Default-off: explicit operator enablement required per source-admission policy.",
             ),
             risk_flags=("explicit_enable_required", "public_data_only"),
