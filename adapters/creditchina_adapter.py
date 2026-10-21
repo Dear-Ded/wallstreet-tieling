@@ -1,8 +1,10 @@
 """信用中国 — 政府公开行政处罚信息查询适配器。数据边界: fully_public
 
-⚠️ STATUS: BROKEN (2026-10-21 实测)
-creditchina.gov.cn 对程序化访问启用 WAF (JS 质询), /search?keyword= 返回 HTTP 412。
-此 adapter 在服务端直调场景下失效, 保留仅作结构参考。如需使用, 改走浏览器环境。
+⚠️ STATUS: BROKEN (2026-10-21 实测, 见 docs/research/creditchina-feasibility-20261021.md)
+creditchina.gov.cn 对程序化访问启用知道创宇 WAF JS 防, /、/search?keyword=、候选
+/api/creditinfo/search 全部返回 HTTP 412, 前端 JS bundle 拿不到, 真实 XHR 端点无法确认。
+此 adapter 在服务端直调场景下失效, 保留仅作结构参考。如需使用, 改走 browser-assisted
+(真实浏览器可自动通过 JS 防), 抓到真实 XHR 端点后再重建。
 """
 from adapters.safe_research_adapter import SafeResearchAdapter
 from typing import Any
