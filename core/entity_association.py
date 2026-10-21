@@ -828,6 +828,32 @@ class EntityAssociationEngine:
                         "note": "",
                     })
 
+        # QQ/WeChat: same contact across persons = strong link
+        for ctype in ("qq", "wechat"):
+            contacts = by_type.get(ctype, [])
+            contact_to_persons: dict[str, set[str]] = {}
+            for c in contacts:
+                owner = (c.get("context") or {}).get("of_person", "")
+                if owner:
+                    contact_to_persons.setdefault(c["value"], set()).add(owner)
+            for cval, person_names in contact_to_persons.items():
+                if len(person_names) >= 2:
+                    # Find person eids
+                    peids = []
+                    for pn in person_names:
+                        for per in persons:
+                            if per["value"] == pn:
+                                peids.append(per["id"])
+                                break
+                    for i in range(len(peids)):
+                        for j in range(i + 1, len(peids)):
+                            assocs.append({
+                                "from": peids[i], "to": peids[j],
+                                "relation": f"same_{ctype}", "strength": "strong",
+                                "sources": self._sources_of(entities, [peids[i], peids[j]]),
+                                "note": f"shared {ctype} {cval}",
+                            })
+
         for per in persons:
             case_no = (per.get("context") or {}).get("case_number", "")
             if not case_no:
@@ -1350,15 +1376,16 @@ class EntityAssociationEngine:
             self, entities: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
         """从实体上下文提取联系方式（QQ/微信/手机/邮箱/平台UID）。
 
-        Uses core/contact_extractor.py. Each found contact becomes an
-        association linking the person to the contact value.
+        Uses core/contact_extractor.py. Each found contact becomes:
+        1. An entity (qq/wechat) so cross-person matching works
+        2. An association linking the person to the contact value
         """
         try:
             from core.contact_extractor import extract_contacts
         except ImportError:
             return []
         assocs: list[dict[str, Any]] = []
-        for eid, e in entities.items():
+        for eid, e in list(entities.items()):
             if e["type"] != "person":
                 continue
             ctx = e.get("context") or {}
@@ -1376,14 +1403,36 @@ class EntityAssociationEngine:
             except Exception:
                 continue
             for c in contacts:
-                assocs.append({
-                    "pattern": "contact_found",
-                    "contact_type": c.get("type"),
-                    "description": f"在 {e['display']} 的资料中发现{ c.get('type') }",
-                    "confidence": c.get("confidence", "weak"),
-                    "entities": [e["display"]],
-                    "note": "lead，需核实",
-                })
+                ctype = c.get("type", "")
+                cval = c.get("value", "")
+                if not cval:
+                    continue
+                # Create entity for matchable contact types
+                if ctype in ("qq", "wechat"):
+                    ceid = entity_id(ctype, cval)
+                    if ceid not in entities:
+                        entities[ceid] = {
+                            "type": ctype, "value": cval, "display": cval,
+                            "sources": e.get("sources", []),
+                            "context": {"from": "contact_extraction", "of_person": e["display"]},
+                        }
+                    # Association: person -> contact
+                    assocs.append({
+                        "pattern": "has_contact",
+                        "contact_type": ctype,
+                        "description": f"{e['display']} 使用 {ctype}: {cval}",
+                        "confidence": c.get("confidence", "weak"),
+                        "entities": [e["display"], cval],
+                    })
+                else:
+                    assocs.append({
+                        "pattern": "contact_found",
+                        "contact_type": ctype,
+                        "description": f"在 {e['display']} 的资料中发现{ctype}",
+                        "confidence": c.get("confidence", "weak"),
+                        "entities": [e["display"]],
+                        "note": "lead，需核实",
+                    })
         return assocs
 
 
