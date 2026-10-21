@@ -585,6 +585,9 @@ def _weibo_relation_entities(user: dict[str, Any], source: str,
         "profile_url": user.get("profile_url", ""),
         "verified": bool(user.get("verified")),
         "verified_reason": str(user.get("verified_reason", ""))[:120],
+        # Unconventional association lane (2026-10-21): 互关判定
+        "follow_me": bool(user.get("follow_me")),
+        "following": bool(user.get("following")),
     }
     ents.append({
         "type": "username_profile", "value": name, "display": name,
@@ -714,9 +717,13 @@ _SEED_FANOUT: dict[str, list[str]] = {
                       "icp_beian", "trademark", "weibo", "douban", "maimai", "telegram", "phone_mark",
                       "lagou", "zhaopin", "zhipin", "ccgp", "court_notice", "patent", "gd_credit",
                       "gleif", "customs", "software_copyright", "hibp_breach_catalog"],
-    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation", "telegram_channel", "semanticscholar", "huggingface", "bilibili_user", "douban_user", "douyin_user", "xiaohongshu_user", "ens_lookup", "poap_lookup", "github_deep_extra"],
+    "person_name": ["wenshu", "sogou_wx", "douyin", "weibo", "maimai", "douban", "telegram", "phone_mark", "patent", "court_notice", "toutiao", "weibo_relation", "telegram_channel", "semanticscholar", "huggingface", "bilibili_user", "douban_user", "douyin_user", "xiaohongshu_user", "ens_lookup", "poap_lookup", "github_deep_extra", "keybase", "cninfo_kinship"],
     "email": ["sogou_wx", "douyin", "telegram", "pgp"],
     "domain": ["icp_beian", "cert_transparency", "crtsh_contact", "analytics_pivot", "sogou_wx", "fofa", "hunter", "commoncrawl", "dnsdumpster", "threatbook"],
+    # Unconventional association lane (2026-10-21): repo -> contributors,
+    # EVM address -> on-chain counterparties.
+    "github_repo": ["github_contributors"],
+    "evm_address": ["blockscout"],
 }
 
 _MAX_DEPTH2_FOLLOWUPS = 6
@@ -774,6 +781,11 @@ class EntityAssociationEngine:
     douban_user: Any = None
     douyin_user: Any = None
     xiaohongshu_user: Any = None
+    keybase: Any = None  # KeybaseIdentityLookup: username -> proofs + identity_deep (people-unconventional p2)
+    # Unconventional association lane (2026-10-21): github repo -> contributors,
+    # EVM address -> on-chain counterparties (both EXPERIMENTAL, default off)
+    github_contributors: Any = None
+    blockscout: Any = None
     # Unconventional identity lane (2026-10-21): PGP public key directory
     pgp: Any = None
     # Unconventional identity lane (2026-10-21): on-chain + git deep + cert contacts
@@ -781,6 +793,7 @@ class EntityAssociationEngine:
     poap_lookup: Any = None  # POAPBadgeLookup: address -> attendance badges
     github_deep_extra: Any = None  # GitHubDeepExtra: commit emails + starred taste
     crtsh_contact: Any = None  # CrtshContactLookup: cert -> org names + contact emails
+    cninfo_kinship: Any = None  # CninfoKinshipLookup: listed-company disclosure -> kinship statements (kinship lane 2026-10-21)
     max_workers: int = 4
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -811,6 +824,8 @@ class EntityAssociationEngine:
 
         associations.extend(self._build_associations(entities))
         associations.extend(self._infer_family_control(entities))
+        # 亲属关系 lane（2026-10-21）：披露/文书/自述的亲属关系升级为关联
+        associations.extend(self._kinship_disclosure_associations(entities))
         associations.extend(self._resolve_person_identity(entities))
         # Extract contacts (QQ/WeChat/phone/email/UID) from entity contexts
         associations.extend(self._extract_entity_contacts(entities))
@@ -1130,6 +1145,16 @@ class EntityAssociationEngine:
                 if not fields.get("user_found"):
                     return []
                 return _xiaohongshu_user_entities(fields, "xiaohongshu_user")
+            if attr == "keybase":
+                fields = result.get("fields") or {}
+                return _keybase_entities(fields, "keybase")
+            # Unconventional association lane (2026-10-21)
+            if attr == "github_contributors":
+                fields = result.get("fields") or {}
+                return _github_contributors_entities(fields, "github_contributors")
+            if attr == "blockscout":
+                fields = result.get("fields") or {}
+                return _blockscout_entities(fields, "blockscout")
             if attr in ("lagou", "zhaopin", "zhipin"):
                 fields = result.get("fields") or {}
                 out = []
@@ -1287,8 +1312,29 @@ class EntityAssociationEngine:
                 # parse_browser_result puts users at top level; handle both.
                 users = fields.get("users") or result.get("users") or []
                 relation = fields.get("relation") or result.get("relation") or "followers"
-                return [e for u in users if isinstance(u, dict)
+                ents = [e for u in users if isinstance(u, dict)
                         for e in _weibo_relation_entities(u, "weibo_relation", relation)]
+                # seed 用户实体：从 pagination.containerid 解析 uid
+                # (格式 231051_-_followers_-_123456)，供 mutual_follow 关联。
+                # Unconventional association lane (2026-10-21).
+                pag = fields.get("pagination") or result.get("pagination") or {}
+                cid = str(pag.get("containerid") or "")
+                m = re.search(r"231051_-_.*?_-_(\d+)", cid)
+                if m:
+                    uid = m.group(1)
+                    ents.append({
+                        "type": "person",
+                        "value": "weibo:{}".format(uid),
+                        "display": "微博用户 {}".format(uid),
+                        "sources": ["weibo_relation"],
+                        "context": {
+                            "from": "weibo_relation_seed",
+                            "weibo_uid": uid,
+                            "relation": relation,
+                            "profile_url": "https://m.weibo.cn/u/{}".format(uid),
+                        },
+                    })
+                return ents
             if attr == "dnsdumpster":
                 fields = result.get("fields") or {}
                 return _dnsdumpster_entities(fields, "dnsdumpster")
@@ -1386,6 +1432,35 @@ class EntityAssociationEngine:
                                 "sources": ["crtsh_contact"],
                                 "context": {"from": "cert_contact",
                                              "origin": e.get("origin", "")}})
+                return out
+            # Kinship lane (2026-10-21): cninfo 公告亲属关系抽取 ->
+            # person 实体（kinship statement 上下文），关联在
+            # _kinship_disclosure_associations() 中生成。
+            if attr == "cninfo_kinship":
+                fields = result.get("fields") or {}
+                out = []
+                for st in (fields.get("kinship_statements") or []):
+                    if not isinstance(st, dict):
+                        continue
+                    for key in ("person_a", "person_b"):
+                        name = str(st.get(key) or "").strip()
+                        if not name:
+                            continue
+                        out.append({
+                            "type": "person", "value": name,
+                            "sources": ["cninfo_kinship"],
+                            "context": {
+                                "from": "kinship_statement",
+                                "kinship": {
+                                    "person_a": st.get("person_a", ""),
+                                    "person_b": st.get("person_b", ""),
+                                    "relation_kind": st.get("relation_kind", ""),
+                                    "evidence_level": st.get("evidence_level", ""),
+                                    "quote": str(st.get("quote") or "")[:180],
+                                    "source_ref": str(st.get("source_ref") or "")[:200],
+                                    "pdf_url": st.get("pdf_url", ""),
+                                },
+                            }})
                 return out
         except Exception:
             return []
@@ -1546,6 +1621,192 @@ class EntityAssociationEngine:
                                          set(b.get("sources", []))),
                         "note": "same case {}".format(case_no),
                     })
+
+        # ---- Unconventional association lane (2026-10-21) ----
+        assocs.extend(self._unconventional_associations(entities))
+        return assocs
+
+    def _unconventional_associations(
+            self, entities: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """非常规关联人关系构建（全部带来源标注，置信度分级）。
+
+        新增 relation kind：
+          co_inventor / co_party_in_case(person-person) / co_author /
+          co_mentioned_in / mutual_follow / co_contributor /
+          onchain_counterparty / consortium_member_of
+        """
+        assocs: list[dict[str, Any]] = []
+        by_type: dict[str, list[dict[str, Any]]] = {}
+        for e in entities.values():
+            by_type.setdefault(e["type"], []).append(e)
+        persons = by_type.get("person", [])
+
+        def _pairwise(group: list[dict[str, Any]], relation: str,
+                      strength: str, note: str,
+                      sources: list[str] | None = None) -> None:
+            for i in range(len(group)):
+                for j in range(i + 1, len(group)):
+                    a, b = group[i], group[j]
+                    assocs.append({
+                        "from": a["id"], "to": b["id"],
+                        "relation": relation, "strength": strength,
+                        "sources": sources or self._sources_of(
+                            entities, [a["id"], b["id"]]),
+                        "note": note,
+                    })
+
+        # 1. co_party_in_case person<->person：同一案件共同当事人（weak）
+        by_case: dict[str, list[dict[str, Any]]] = {}
+        for per in persons:
+            ctx = per.get("context") or {}
+            if ctx.get("from") == "court_case_party" and ctx.get("case_number"):
+                by_case.setdefault(ctx["case_number"], []).append(per)
+        for case_no, group in by_case.items():
+            if len(group) >= 2:
+                _pairwise(group, "co_party_in_case", "weak",
+                          "same case {} (co-party, lead)".format(case_no))
+
+        # 2. co_inventor：同一专利共同发明人（strong）
+        by_patent: dict[str, list[dict[str, Any]]] = {}
+        patent_meta: dict[str, dict[str, str]] = {}
+        for per in persons:
+            ctx = per.get("context") or {}
+            if ctx.get("from") == "patent_inventor" and ctx.get("publication_number"):
+                pub = ctx["publication_number"]
+                by_patent.setdefault(pub, []).append(per)
+                patent_meta.setdefault(pub, {
+                    "title": str(ctx.get("patent_title", ""))[:60],
+                    "url": "https://patents.google.com/patent/{}/en".format(pub),
+                })
+        for pub, group in by_patent.items():
+            if len(group) >= 2:
+                meta = patent_meta[pub]
+                _pairwise(group, "co_inventor", "strong",
+                          "同为专利 {}《{}》的发明人 {}".format(
+                              pub, meta["title"], meta["url"]))
+
+        # 3. co_author：学术合著（strong；Semantic Scholar 公开合著关系）
+        main_authors = [p for p in persons
+                        if (p.get("context") or {}).get("from")
+                        == "semanticscholar_author"]
+        for co in persons:
+            ctx = co.get("context") or {}
+            if ctx.get("relation") != "co_author":
+                continue
+            with_author = str(ctx.get("with_author", ""))
+            titles = "; ".join((ctx.get("paper_titles") or [])[:3])
+            for main in main_authors:
+                if main["display"] == with_author or main["id"] == co["id"]:
+                    if main["id"] == co["id"]:
+                        continue
+                    assocs.append({
+                        "from": main["id"], "to": co["id"],
+                        "relation": "co_author", "strength": "strong",
+                        "sources": self._sources_of(
+                            entities, [main["id"], co["id"]]),
+                        "note": "学术合著（{}篇共享论文）：{}".format(
+                            ctx.get("shared_papers") or 0, titles),
+                    })
+
+        # 4. co_mentioned_in：同一公开报道/名单共现（review，带URL+标题）
+        by_url: dict[str, list[dict[str, Any]]] = {}
+        cooccur_meta: dict[str, str] = {}
+        for per in persons:
+            ctx = per.get("context") or {}
+            url = ctx.get("cooccur_url", "")
+            if url:
+                by_url.setdefault(url, []).append(per)
+                cooccur_meta.setdefault(
+                    url, str(ctx.get("cooccur_title", ""))[:80])
+        for url, group in by_url.items():
+            if len(group) >= 2:
+                _pairwise(group, "co_mentioned_in", "review",
+                          "同篇公开报道《{}》共现 {}".format(
+                              cooccur_meta[url], url))
+
+        # 5. mutual_follow：微博互关（review；seed 用户 <-> 互关用户）
+        seed_uid = ""
+        seed_ent = None
+        for per in persons:
+            ctx = per.get("context") or {}
+            if ctx.get("from") == "weibo_relation_seed" and ctx.get("weibo_uid"):
+                seed_uid = ctx["weibo_uid"]
+                seed_ent = per
+                break
+        if seed_ent is not None:
+            for per in persons:
+                ctx = per.get("context") or {}
+                if ctx.get("from") != "weibo_relation":
+                    continue
+                if ctx.get("follow_me") and ctx.get("following"):
+                    assocs.append({
+                        "from": seed_ent["id"], "to": per["id"],
+                        "relation": "mutual_follow", "strength": "review",
+                        "sources": sorted(set(seed_ent.get("sources", [])) |
+                                         set(per.get("sources", []))),
+                        "note": "微博互关（双方互相关注） {}".format(
+                            ctx.get("profile_url", "")),
+                    })
+
+        # 6. co_contributor：同一 GitHub 仓库贡献者（review；排除 Bot 配对）
+        profiles = [e for e in by_type.get("username_profile", [])
+                    if (e.get("context") or {}).get("from")
+                    == "github_contributor"]
+        by_repo: dict[str, list[dict[str, Any]]] = {}
+        for pr in profiles:
+            ctx = pr.get("context") or {}
+            repo = ctx.get("repo", "")
+            if repo and not ctx.get("is_bot"):
+                by_repo.setdefault(repo, []).append(pr)
+        for repo, group in by_repo.items():
+            if len(group) >= 2:
+                repo_url = (group[0].get("context") or {}).get("repo_url", "")
+                _pairwise(group, "co_contributor", "review",
+                          "同为 GitHub 仓库 {} 的公开贡献者 {}".format(
+                              repo, repo_url))
+
+        # 7. onchain_counterparty：链上频繁交易对手（weak）
+        evm_addrs = by_type.get("evm_address", [])
+        seed_map = {e["value"]: e for e in evm_addrs
+                    if (e.get("context") or {}).get("from")
+                    == "blockscout_seed"}
+        for cp in evm_addrs:
+            ctx = cp.get("context") or {}
+            if ctx.get("from") != "blockscout_counterparty":
+                continue
+            seed_ent = seed_map.get(ctx.get("of_address", ""))
+            if seed_ent is None:
+                continue
+            assocs.append({
+                "from": seed_ent["id"], "to": cp["id"],
+                "relation": "onchain_counterparty", "strength": "weak",
+                "sources": sorted(set(seed_ent.get("sources", [])) |
+                                 set(cp.get("sources", []))),
+                "note": "链上交易对手：近 {} 笔扫描中出现 {} 次"
+                        "（发出 {} / 收到 {}），弱关联 lead {}".format(
+                            seed_ent.get("context", {}).get(
+                                "transactions_scanned", 0),
+                            ctx.get("tx_count", 0),
+                            ctx.get("sent", 0), ctx.get("received", 0),
+                            ctx.get("explorer_url", "")),
+            })
+
+        # 8. consortium_member_of：同一中标公告联合体成员（strong，法定公告）
+        businesses = by_type.get("business", [])
+        by_ann: dict[str, list[dict[str, Any]]] = {}
+        ann_meta: dict[str, str] = {}
+        for b in businesses:
+            ctx = b.get("context") or {}
+            url = ctx.get("announcement_url", "")
+            if ctx.get("from") == "consortium_member" and url:
+                by_ann.setdefault(url, []).append(b)
+                ann_meta.setdefault(
+                    url, str(ctx.get("announcement_title", ""))[:80])
+        for url, group in by_ann.items():
+            if len(group) >= 2:
+                _pairwise(group, "consortium_member_of", "strong",
+                          "同一中标公告《{}》联合体成员 {}".format(
+                              ann_meta[url], url))
         return assocs
 
     @staticmethod
@@ -1756,6 +2017,10 @@ class EntityAssociationEngine:
         if seed_type == "address":
             key, _ = normalize_address(seed_value)
             return key or seed_value
+        if seed_type == "evm_address":
+            return seed_value.strip().lower()
+        if seed_type == "github_repo":
+            return seed_value.strip().strip("/").lower()
         return normalize_name(seed_value) or seed_value.strip()
 
     @staticmethod
@@ -1772,6 +2037,10 @@ class EntityAssociationEngine:
             ("person_name", "business"): "seed_hit_business",
             ("person_name", "person"): "seed_hit_person",
             ("email", "business"): "seed_hit_business",
+            # Unconventional association lane (2026-10-21)
+            ("github_repo", "username_profile"): "seed_hit_contributor",
+            # ("evm_address", "evm_address") intentionally unmapped:
+            # counterparties get the specific onchain_counterparty relation.
         }
         return mapping.get((seed_type, entity_type))
 
@@ -1992,6 +2261,69 @@ class EntityAssociationEngine:
                             "note": "疑似控制网节点：{}在{}家公司任职".format(
                                 entities[pid]["display"], len(companies)),
                         })
+        return assocs
+
+    def _kinship_disclosure_associations(
+            self, entities: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """亲属关系 lane（2026-10-21）：披露/文书/自述的亲属关系 -> 关联。
+
+        relation kind: kinship_spouse / kinship_parent_child /
+                       kinship_sibling / kinship_family。
+        strength 直接映射 evidence_level：exact / strong / review。
+        措辞一律"披露显示 / 文书载明 / 自述/疑似"，绝不断言为事实。
+        """
+        from core.kinship_extract import (EVIDENCE_LEVELS, RELATION_KINDS,
+                                         statement_note)
+
+        # person name -> eid 索引
+        name_to_eid: dict[str, str] = {}
+        for eid, e in entities.items():
+            if e["type"] == "person":
+                name_to_eid.setdefault(str(e.get("value") or ""), eid)
+
+        statements: list[dict[str, Any]] = []
+        for eid, e in entities.items():
+            if e["type"] != "person":
+                continue
+            ctx = e.get("context") or {}
+            if ctx.get("from") == "kinship_statement":
+                st = dict(ctx.get("kinship") or {})
+                if st.get("relation_kind"):
+                    statements.append(st)
+            elif ctx.get("from") == "douban_user":
+                # 简介亲属自述：person_a 回填资料主人
+                for st in ctx.get("self_claimed_kinship") or []:
+                    if not isinstance(st, dict):
+                        continue
+                    st = dict(st)
+                    if not st.get("person_a"):
+                        st["person_a"] = str(e.get("value") or "")
+                    statements.append(st)
+
+        assocs: list[dict[str, Any]] = []
+        seen: set[tuple[str, str, str]] = set()
+        for st in statements:
+            kind = st.get("relation_kind")
+            level = st.get("evidence_level")
+            if kind not in RELATION_KINDS or level not in EVIDENCE_LEVELS:
+                continue
+            a, b = str(st.get("person_a") or ""), str(st.get("person_b") or "")
+            eid_a, eid_b = name_to_eid.get(a), name_to_eid.get(b)
+            if not eid_a or not eid_b or eid_a == eid_b:
+                continue
+            relation = "kinship_" + kind
+            key = (min(eid_a, eid_b), max(eid_a, eid_b), relation)
+            if key in seen:
+                continue
+            seen.add(key)
+            assocs.append({
+                "from": eid_a, "to": eid_b,
+                "relation": relation, "strength": level,
+                "sources": sorted(set(
+                    (entities[eid_a].get("sources") or []) +
+                    (entities[eid_b].get("sources") or []))),
+                "note": statement_note(st),
+            })
         return assocs
 
     def _resolve_person_identity(
@@ -2533,6 +2865,11 @@ def _douban_user_entities(profile: dict, fields: dict,
     intro = (profile.get("intro") or "").strip()
     if intro:
         ctx["description"] = intro[:500]
+    # 亲属关系 lane（2026-10-21）：简介亲属自述 -> review 级线索，
+    # 关联在 _kinship_disclosure_associations() 中生成。
+    claimed = profile.get("self_claimed_kinship") or []
+    if claimed:
+        ctx["self_claimed_kinship"] = claimed
     return [{"type": "person", "value": name, "display": nickname,
              "sources": [source], "context": ctx}]
 
@@ -2599,6 +2936,294 @@ def _xiaohongshu_user_entities(fields: dict,
         ctx["description"] = bio[:500]
     return [{"type": "person", "value": name, "display": nickname,
              "sources": [source], "context": ctx}]
+
+
+def _keybase_entities(fields: dict, source: str = "keybase") -> list:
+    """Keybase 用户 -> person。full_name/username 为 handle；deep 字段进 context。
+
+    proofs 链给出跨平台账号绑定（linked_platforms/linked_identities）；
+    identity_deep 给出 Stellar/加密币地址/设备/PGP kid/签名链锚点——
+    均为用户主动公开的声明，按 leads 处理。
+    """
+    if not isinstance(fields, dict) or not fields.get("user_found"):
+        return []
+    username = (fields.get("username") or "").strip()
+    full_name = (fields.get("full_name") or "").strip()
+    handle = full_name or username
+    if not handle:
+        return []
+    name = normalize_name(handle) or handle
+    ctx = {
+        "from": "keybase",
+        "username": username,
+        "profile_url": f"https://keybase.io/{username}" if username else "",
+        "proof_count": fields.get("proof_count", 0),
+    }
+    location = (fields.get("location") or "").strip()
+    if location:
+        ctx["location"] = location
+    bio = (fields.get("bio") or "").strip()
+    if bio:
+        ctx["description"] = bio[:500]
+    linked = fields.get("linked_platforms") or []
+    if linked:
+        ctx["linked_platforms"] = list(linked)[:20]
+    identities = fields.get("linked_identities") or {}
+    if isinstance(identities, dict) and identities:
+        ctx["linked_identities"] = {k: v for k, v in list(identities.items())[:20]}
+    deep = fields.get("identity_deep") or {}
+    if isinstance(deep, dict):
+        if deep.get("stellar_account"):
+            ctx["stellar_account"] = deep["stellar_account"]
+        crypto = deep.get("crypto_addresses") or {}
+        if isinstance(crypto, dict):
+            flat = [a["address"] for items in crypto.values()
+                    if isinstance(items, list)
+                    for a in items if isinstance(a, dict) and a.get("address")]
+            if flat:
+                ctx["crypto_addresses"] = flat[:10]
+        if deep.get("device_count"):
+            ctx["keybase_device_count"] = deep["device_count"]
+        sig = deep.get("sig_chain") or {}
+        if isinstance(sig, dict) and sig.get("last_sig_id"):
+            ctx["keybase_sig_seqno"] = sig.get("last_seqno")
+    return [{"type": "person", "value": name, "display": handle,
+             "sources": [source], "context": ctx}]
+
+
+# ---------------------------------------------------------------------------
+# Unconventional association lane (2026-10-21): 非常规关联人发现
+#
+# 新增 relation kind 一览（全部带来源标注，置信度分级）:
+#   co_inventor          person<->person  同一专利的共同发明人            strong
+#   co_party_in_case     person<->person  同一案件共同当事人（已有人->企业） weak
+#   co_author            person<->person  学术合著（Semantic Scholar）     strong
+#   co_mentioned_in      person<->person  同一公开报道/名单共现（带URL）   review
+#   mutual_follow        person<->person  微博互关                        review
+#   co_contributor       username_profile<->username_profile
+#                                       同一 GitHub 仓库贡献者            review
+#   onchain_counterparty evm_address<->evm_address 链上频繁交易对手      weak
+#   consortium_member_of business<->business 同一中标公告联合体成员       strong
+# ---------------------------------------------------------------------------
+
+
+def _github_contributors_entities(fields: dict,
+                                 source: str = "github_contributors") -> list:
+    """GitHub 仓库贡献者 -> username_profile 实体。
+
+    Expected fields (adapters/github_contributors_adapter):
+        {"contributors": [{"login","contributions","type","is_bot","profile_url"}],
+         "repo"(缺省，用 repo_url 解析), "repo_url"(缺省)}
+    Bot 账号保留实体但标注 is_bot，由关联层排除配对。
+    全部是 lead。
+    """
+    if not isinstance(fields, dict):
+        return []
+    contributors = fields.get("contributors") or []
+    repo_url = str(fields.get("repo_url") or "")
+    repo = str(fields.get("repo") or "")
+    if not repo and repo_url:
+        m = re.search(r"github\.com/([^/]+/[^/]+)", repo_url)
+        if m:
+            repo = m.group(1)
+    out = []
+    for c in contributors:
+        if not isinstance(c, dict) or not c.get("login"):
+            continue
+        login = str(c["login"]).strip()
+        if not login:
+            continue
+        out.append({
+            "type": "username_profile",
+            "value": login,
+            "display": login,
+            "sources": [source],
+            "context": {
+                "from": "github_contributor",
+                "repo": repo,
+                "repo_url": repo_url or (f"https://github.com/{repo}" if repo else ""),
+                "contributions": c.get("contributions") or 0,
+                "account_type": c.get("type") or "User",
+                "is_bot": bool(c.get("is_bot")),
+                "profile_url": c.get("profile_url") or f"https://github.com/{login}",
+            },
+        })
+    return out
+
+
+def _blockscout_entities(fields: dict, source: str = "blockscout") -> list:
+    """Blockscout 地址交易对手 -> evm_address 实体（seed + 对手方）。
+
+    Expected fields (adapters/blockscout_adapter.parse_transactions):
+        {"chain","explorer","explorer_url","transactions_scanned",
+         "counterparties": [{"address","tx_count","sent","received",
+                             "first_seen","last_seen"}],
+         "address"(缺省，用 explorer_url 解析)}
+    实体类型 evm_address 为本 lane 新增；value 为小写 0x 地址。
+    全部是 lead（弱关联）。
+    """
+    if not isinstance(fields, dict):
+        return []
+    counterparties = fields.get("counterparties") or []
+    if not counterparties:
+        return []
+    explorer_url = str(fields.get("explorer_url") or "")
+    seed = str(fields.get("address") or "")
+    if not seed and explorer_url:
+        m = re.search(r"/address/(0x[0-9a-fA-F]{40})", explorer_url)
+        if m:
+            seed = m.group(1).lower()
+    seed = seed.lower()
+    out = []
+    if seed:
+        out.append({
+            "type": "evm_address", "value": seed, "display": seed,
+            "sources": [source],
+            "context": {
+                "from": "blockscout_seed",
+                "chain": fields.get("chain") or "ethereum",
+                "ens_name": fields.get("ens_name") or "",
+                "explorer_url": explorer_url,
+                "transactions_scanned": fields.get("transactions_scanned") or 0,
+            },
+        })
+    for cp in counterparties:
+        if not isinstance(cp, dict) or not cp.get("address"):
+            continue
+        addr = str(cp["address"]).strip().lower()
+        if not addr or addr == seed:
+            continue
+        out.append({
+            "type": "evm_address", "value": addr, "display": addr,
+            "sources": [source],
+            "context": {
+                "from": "blockscout_counterparty",
+                "of_address": seed,
+                "tx_count": cp.get("tx_count") or 0,
+                "sent": cp.get("sent") or 0,
+                "received": cp.get("received") or 0,
+                "first_seen": cp.get("first_seen") or "",
+                "last_seen": cp.get("last_seen") or "",
+                "explorer_url": f"https://eth.blockscout.com/address/{addr}",
+            },
+        })
+    return out
+
+
+def _news_cooccurrence_entities(records: list[dict],
+                                source: str = "news_cooccurrence") -> list:
+    """新闻/名单共现 -> person 实体（通用 contract，供各报道源接入）。
+
+    Contract（兄弟 lane 的 public_news_lookup 判死后，此 contract 保持开放，
+    任何能产出 {"title","url","persons"} 的报道/名单源均可接入）:
+        [{"title": 报道/名单标题, "url": 报道链接, "persons": [人名...]}]
+    共现实体携带 cooccur_url/cooccur_title，由关联层生成 co_mentioned_in。
+    persons 去重；单人记录仍建实体（不产生关系）。
+    """
+    out = []
+    for rec in records or []:
+        if not isinstance(rec, dict):
+            continue
+        title = str(rec.get("title") or "")[:120]
+        url = str(rec.get("url") or "")
+        if not url:
+            continue
+        seen: set[str] = set()
+        for raw in rec.get("persons") or []:
+            nm = normalize_name(raw)
+            if not nm or nm in seen or len(nm) > 30:
+                continue
+            seen.add(nm)
+            out.append({
+                "type": "person", "value": nm, "display": nm,
+                "sources": [source],
+                "context": {
+                    "from": "news_cooccurrence",
+                    "cooccur_title": title,
+                    "cooccur_url": url,
+                },
+            })
+    return out
+
+
+_CONSORTIUM_PATTERNS = [
+    # "联合体：A公司（牵头人）、B公司"
+    re.compile(r"联合体[：:]\s*([^。\n；;]+)"),
+    # "联合体成员：A公司、B公司" / "联合体成员为 A公司和B公司"
+    re.compile(r"联合体成员[：:为]?\s*([^。\n；;]+)"),
+    # "以联合体形式投标，成员包括 A公司、B公司"
+    re.compile(r"联合体[^。\n]*?(?:成员|包括|由)[：:，,、\s]*([^。\n；;]+)"),
+]
+_CONSORTIUM_SPLIT_RE = re.compile(r"[、，,；;]")
+_CONSORTIUM_NAME_RE = re.compile(
+    r"([\u4e00-\u9fa5a-zA-Z0-9（）()·\-—]{2,60}"
+    r"(?:公司|厂|所|中心|院|社|集团|企业|工作室|店|行|场|局|部))")
+_LEADER_MARK_RE = re.compile(r"[（(](?:牵头人|牵头方|牵头单位|主办方)[）)]")
+
+
+def parse_consortium_members(text: str) -> list[dict[str, str]]:
+    """从中标/投标公告文本解析联合体成员。
+
+    返回 [{"name": 企业名, "role": "leader"|"member"}]；不足 2 家返回 []。
+    纯函数：公告获取由招投标 lane 负责，本函数只做关系层解析。
+    """
+    if not text:
+        return []
+    t = str(text)
+    members: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for pat in _CONSORTIUM_PATTERNS:
+        for m in pat.finditer(t):
+            chunk = m.group(1)
+            for part in _CONSORTIUM_SPLIT_RE.split(chunk):
+                part = part.strip().strip("和与及")
+                if not part:
+                    continue
+                role = "leader" if _LEADER_MARK_RE.search(part) else "member"
+                part = _LEADER_MARK_RE.sub("", part).strip()
+                nm_m = _CONSORTIUM_NAME_RE.search(part)
+                if not nm_m:
+                    continue
+                name = normalize_name(nm_m.group(1))
+                if not name or name in seen:
+                    continue
+                seen.add(name)
+                members.append({"name": name, "role": role})
+        if len(members) >= 2:
+            break
+    return members if len(members) >= 2 else []
+
+
+def _consortium_entities(announcement: dict,
+                         source: str = "ccgp") -> list:
+    """联合体公告 -> business 实体（成员）。
+
+    Contract: {"members": [{"name","role"}], "url": 公告链接, "title": 公告标题}
+    实体携带 announcement_url，由关联层生成 consortium_member_of。
+    """
+    if not isinstance(announcement, dict):
+        return []
+    members = announcement.get("members") or []
+    url = str(announcement.get("url") or "")
+    title = str(announcement.get("title") or "")[:120]
+    out = []
+    for mb in members:
+        if not isinstance(mb, dict) or not mb.get("name"):
+            continue
+        name = normalize_name(mb["name"])
+        if not name:
+            continue
+        out.append({
+            "type": "business", "value": name, "display": name,
+            "sources": [source],
+            "context": {
+                "from": "consortium_member",
+                "consortium_role": mb.get("role") or "member",
+                "announcement_url": url,
+                "announcement_title": title,
+            },
+        })
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -2795,6 +3420,34 @@ def create_engine_with_all_adapters(**kwargs) -> "EntityAssociationEngine":
     try:
         from adapters.xiaohongshu_adapter import XiaohongshuNoteLookup
         engine.xiaohongshu_user = XiaohongshuNoteLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.keybase_adapter import KeybaseIdentityLookup
+        engine.keybase = KeybaseIdentityLookup()
+    except Exception:
+        pass
+
+    # Kinship lane (2026-10-21): 巨潮资讯公告亲属关系抽取
+    # (EXPERIMENTAL, default off at registry level)
+    try:
+        from adapters.cninfo_kinship_adapter import CninfoKinshipLookup
+        engine.cninfo_kinship = CninfoKinshipLookup()
+    except Exception:
+        pass
+
+    # Unconventional association lane (2026-10-21): EXPERIMENTAL, default off
+    # (registry default_enabled=False; callers opt in explicitly).
+    try:
+        from adapters.github_contributors_adapter import GithubContributorsLookup
+        engine.github_contributors = GithubContributorsLookup()
+    except Exception:
+        pass
+
+    try:
+        from adapters.blockscout_adapter import BlockscoutAddressLookup
+        engine.blockscout = BlockscoutAddressLookup()
     except Exception:
         pass
 

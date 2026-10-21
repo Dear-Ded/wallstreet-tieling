@@ -1,4 +1,4 @@
-"""Entity extraction for social user lanes (B站/豆瓣/抖音/小红书 -> person)."""
+"""Entity extraction for social user lanes (B站/豆瓣/抖音/小红书/Keybase -> person)."""
 
 from core.entity_association import EntityAssociationEngine
 
@@ -124,7 +124,62 @@ def test_cross_platform_identity_merge_uses_context_username():
     )
 
 
+def test_keybase_extract_person_with_deep_context():
+    e = _engine()
+    result = {"fields": {
+        "user_found": True,
+        "username": "max",
+        "full_name": "Max Krohn",
+        "location": "New York, NY",
+        "bio": "Keybase.io co-founder",
+        "proof_count": 2,
+        "linked_platforms": ["twitter", "github"],
+        "linked_identities": {"twitter": ["maxtaco"]},
+        "identity_deep": {
+            "stellar_account": "GABC123STELLAR",
+            "crypto_addresses": {
+                "bitcoin": [{"address": "1BYzrCvfbn81dfiksmD1Bdgt8pgLi1SD7Z"}],
+            },
+            "devices": [{"name": "home-desktop", "type": "desktop"}],
+            "device_count": 1,
+            "sig_chain": {"last_sig_id": "c" * 64, "last_seqno": 847},
+        },
+    }}
+    ents = e._extract("keybase", result)  # noqa: SLF001
+    assert len(ents) == 1
+    ent = ents[0]
+    assert ent["type"] == "person"
+    assert ent["display"] == "Max Krohn"
+    assert ent["sources"] == ["keybase"]
+    ctx = ent["context"]
+    assert ctx["username"] == "max"
+    assert ctx["location"] == "New York, NY"
+    assert ctx["description"] == "Keybase.io co-founder"
+    assert ctx["linked_platforms"] == ["twitter", "github"]
+    assert ctx["stellar_account"] == "GABC123STELLAR"
+    assert ctx["crypto_addresses"] == ["1BYzrCvfbn81dfiksmD1Bdgt8pgLi1SD7Z"]
+    assert ctx["keybase_device_count"] == 1
+    assert ctx["keybase_sig_seqno"] == 847
+
+
+def test_keybase_not_found_yields_nothing():
+    e = _engine()
+    ents = e._extract("keybase", {"fields": {"user_found": False}})  # noqa: SLF001
+    assert ents == []
+
+
+def test_keybase_username_only_extract_person():
+    e = _engine()
+    ents = e._extract("keybase", {"fields": {  # noqa: SLF001
+        "user_found": True, "username": "maxtaco", "proof_count": 1,
+    }})
+    assert len(ents) == 1
+    assert ents[0]["display"] == "maxtaco"
+    assert ents[0]["context"]["profile_url"] == "https://keybase.io/maxtaco"
+
+
 def test_person_name_fanout_includes_new_lanes():
     from core.entity_association import _SEED_FANOUT
-    for lane in ("bilibili_user", "douban_user", "douyin_user", "xiaohongshu_user"):
+    for lane in ("bilibili_user", "douban_user", "douyin_user", "xiaohongshu_user",
+                 "keybase"):
         assert lane in _SEED_FANOUT["person_name"]
