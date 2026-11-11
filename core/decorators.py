@@ -8,9 +8,9 @@ from __future__ import annotations
 import functools
 import logging
 import time
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Optional
 
-from .exceptions import WallStreetError, ConfigError, APIError, DataSourceError
+from .exceptions import WallStreetError
 
 logger = logging.getLogger("wst.decorators")
 

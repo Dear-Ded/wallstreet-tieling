@@ -116,7 +116,7 @@ def build_office_chat_packet(
         msgs.append(OfficeMessage("wu-de-hou", f"[质量警告] {company} 调查数据质量评分 {qg['score']}，低于可进入人工复核的阈值。请补充缺失证据。"))
 
     # 9. Sentinel
-    an_text = f"系统正常。成本在预算内。没有发现协议违规或异常故障。"
+    an_text = "系统正常。成本在预算内。没有发现协议违规或异常故障。"
     msgs.append(OfficeMessage("an-shao", an_text, msg_type="sentinel_dm"))
 
     # 10. GM summary

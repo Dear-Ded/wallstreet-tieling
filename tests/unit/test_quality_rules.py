@@ -7,7 +7,6 @@
 import sys
 from pathlib import Path
 
-import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from api.quality_rules import QualityRules, Violation, VAGUE_WORDS_TERMS

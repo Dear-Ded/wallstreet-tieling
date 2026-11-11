@@ -5559,7 +5559,7 @@ def test_e2e_dd_pipeline_all_outputs() -> None:
 
         # 10. Persona surface
         ps = pk.get("persona_surface", {})
-        assert ps.get("active_role_count", 0) >= 8, f"Should have >=8 active roles"
+        assert ps.get("active_role_count", 0) >= 8, "Should have >=8 active roles"
 
         # 11. Evidence admission breakdown
         facts = sum(1 for e in el if e.get("admission") == "fact")
@@ -5648,6 +5648,6 @@ def test_evidence_ledger_has_admission_field() -> None:
         assert len(el)>0, "Evidence ledger should not be empty"
         for item in el:
             assert "admission" in item, f"Evidence item missing admission field: {item.get('source')}"
-            assert "admission_reason" in item, f"Evidence item missing admission_reason field"
+            assert "admission_reason" in item, "Evidence item missing admission_reason field"
             assert item["admission"] in ("fact","lead","weak_lead"), f"Invalid admission: {item['admission']}"
     asyncio.run(run())

@@ -21,7 +21,6 @@ from __future__ import annotations
 import json
 import hashlib
 import hmac
-import os
 import time
 from base64 import b64encode, b64decode
 from pathlib import Path

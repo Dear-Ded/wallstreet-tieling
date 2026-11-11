@@ -1990,8 +1990,7 @@ def test_public_fallback_query_contains_government_site_filters() -> None:
 # --- Phase B: Pledge bridge ---
 
 def test_pledge_admitted_reaches_asset_solvency_profile() -> None:
-    from adapters.qyyjt_tool import _qyyjt_report_admission, _qyyjt_structured_payload, qyyjt_result_to_standardized_records
-    from core.investigation import _asset_solvency_profile_from_evidence
+    from adapters.qyyjt_tool import _qyyjt_report_admission, _qyyjt_structured_payload
     
     contract = {
         'record_type': 'equity_pledge',

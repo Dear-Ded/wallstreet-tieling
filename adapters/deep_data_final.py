@@ -22,7 +22,7 @@ from __future__ import annotations
 from adapters.safe_research_adapter import SafeResearchAdapter
 from core.user_auth_gate import UserAuthorizationGate
 from typing import Any
-import json, urllib.request, urllib.parse, time, hashlib, re
+import json, urllib.request, urllib.parse, hashlib
 
 
 # === HaveIBeenPwned — 已验证可用 (Adobe→153M accounts event) ===

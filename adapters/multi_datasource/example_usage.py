@@ -30,7 +30,7 @@ async def example_1_basic():
     
     # 处理结果
     if result.is_success:
-        print(f"\n✅ 查询成功!")
+        print("\n✅ 查询成功!")
         print(f"   数据源: {result.source_name}")
         print(f"   查询耗时: {result.query_time:.3f}秒")
         print(f"   数据: {result.data}")
@@ -53,7 +53,7 @@ def example_2_sync():
     result = SearchEngine.search_sync("jsonplaceholder", "posts/2")
     
     if result.is_success:
-        print(f"\n✅ 查询成功!")
+        print("\n✅ 查询成功!")
         print(f"   数据: {result.data}")
     else:
         print(f"\n❌ 查询失败: {result.error}")
@@ -85,7 +85,7 @@ async def example_3_cache():
     
     # 查看缓存统计
     stats = SearchEngine.cache_stats()
-    print(f"\n缓存统计:")
+    print("\n缓存统计:")
     print(f"   命中: {stats['hits']}")
     print(f"   未命中: {stats['misses']}")
     print(f"   命中率: {stats['hit_rate']:.2%}")
@@ -105,7 +105,7 @@ async def example_4_query_all():
     # 查询所有数据源
     aggregated = await SearchEngine.search_all("posts/1", concurrency=5)
     
-    print(f"\n查询结果:")
+    print("\n查询结果:")
     print(f"   成功: {aggregated.successful_count}")
     print(f"   失败: {aggregated.failed_count}")
     print(f"   成功率: {aggregated.success_rate:.2%}")
@@ -181,7 +181,7 @@ async def example_6_lifecycle():
     # =========================================================================
     print("\n[阶段 1] 系统启动...")
     await SearchEngine.initialize("datasources.yaml")
-    print(f"   ✅ 搜索引擎初始化完成")
+    print("   ✅ 搜索引擎初始化完成")
     print(f"   已加载数据源: {SearchEngine.list_sources()}")
     
     # =========================================================================

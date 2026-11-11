@@ -632,7 +632,6 @@ def objective_audit():
 @app.route("/api/office_chat")
 def office_chat_api():
     from core.office_chat import build_office_chat_packet
-    from dataclasses import asdict
     company = request.args.get("company", "Demo Company")
     try:
         ec = {}; pb = {}
@@ -1061,6 +1060,6 @@ API Key: {'已配置 ✅' if config.get_api_key() else '未配置 ⚠️'}
 测试:
   curl http://localhost:{PORT}/api/health""")
     if AUTH_TOKEN:
-        print(f'  curl -H "Authorization: Bearer $WALLSTREET_AUTH_TOKEN" ...')
+        print('  curl -H "Authorization: Bearer $WALLSTREET_AUTH_TOKEN" ...')
     print()
     app.run(host=BIND_HOST, port=PORT, debug=False)

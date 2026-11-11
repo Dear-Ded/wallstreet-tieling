@@ -15,8 +15,8 @@ from .rules import (
     ALL_USER_TEMPLATES, MODE_TEMPLATES,
     CONDITIONAL_BRANCH_RULES, SIGNAL_PRIORITY,
 )
-from .session_bus import SessionBus, Fact, RiskSignal, Contradiction, UnverifiedClaim
-from .decorators import handle_errors, log_execution, retry_on_error
+from .session_bus import SessionBus, UnverifiedClaim
+from .decorators import log_execution
 from .enterprise_cognition import EnterpriseCognitionEngine
 from .intelligence_retrieval import InvestigativeRetrievalPlanner
 from .risk_discovery_pipeline import RiskDiscoveryPipeline
@@ -25,9 +25,8 @@ from .storage_paths import runtime_state_path
 from .token_optimizer import compress_prompt
 
 # v0.5.0 api/ 层兼容 — 仅 import agent/quality 数据结构，不 import 平台相关代码
-from api.agent import DueDiligenceAgent, AgentState, AgentMemory
+from api.agent import DueDiligenceAgent, AgentState
 from api.agent_registry import AgentRegistry
-from api.personality import get_personality, get_receptionist_greeting
 from api.quality_rules import QualityRules, Violation
 
 logger = logging.getLogger("wst.engine")
@@ -424,7 +423,7 @@ class Engine:
                 transcript.append(f"[钱守正] {opening.text[:300]}")
             except Exception as e:
                 logger.error(f"团队会议: 主持人开场失败 - {e}")
-                transcript.append(f"[钱守正] (LLM调用失败，跳过此议程项)")
+                transcript.append("[钱守正] (LLM调用失败，跳过此议程项)")
 
             # 相关角色轮流发言 (仅第一个矛盾角色)
             agents = item.get("agents", [])
@@ -469,7 +468,7 @@ class Engine:
         # 会议总结
         closing = await self.adapter.llm.chat(
             system_prompt="你是钱守正。会议总结。30字以内。",
-            user_prompt=f"会议记录:\n" + "\n".join(transcript[-5:]),
+            user_prompt="会议记录:\n" + "\n".join(transcript[-5:]),
             agent_name="钱守正",
         )
         transcript.append(f"[钱守正·总结] {closing.text[:100]}")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -14,7 +14,6 @@ from .intelligence_retrieval import (
     EvidenceItem,
     InvestigationEntity,
     InvestigationRelation,
-    RetrievalDomain,
     SourceAccess,
 )
 

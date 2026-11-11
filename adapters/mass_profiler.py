@@ -7,7 +7,7 @@ from __future__ import annotations
 from adapters.safe_research_adapter import SafeResearchAdapter
 from core.user_auth_gate import UserAuthorizationGate
 from typing import Any
-import json, urllib.request, urllib.parse, time, hashlib
+import urllib.request, urllib.parse, time, hashlib
 
 
 class MassCrossPlatformProfiler(SafeResearchAdapter):

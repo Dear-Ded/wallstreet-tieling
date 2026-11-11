@@ -12,10 +12,8 @@ Multi-Module Collaboration Mechanism
 from __future__ import annotations
 
 import asyncio
-import json
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Callable, Set
 from collections import defaultdict
@@ -221,7 +219,7 @@ class CollaborationOrchestrator:
             await asyncio.gather(*tasks)
             print(f"[Orchestrator] 任务 {task_name} 已分发")
         else:
-            print(f"[Orchestrator] 警告: 没有可用的目标模块")
+            print("[Orchestrator] 警告: 没有可用的目标模块")
 
     async def broadcast_status(self):
         """广播状态"""
@@ -230,7 +228,7 @@ class CollaborationOrchestrator:
             status = self.registry.get_module_status(module_name)
             status_summary[module_name] = status.value if status else "未知"
 
-        print(f"\n[Orchestrator] 系统状态:")
+        print("\n[Orchestrator] 系统状态:")
         for name, status in status_summary.items():
             print(f"  {name}: {status}")
 

@@ -150,7 +150,7 @@ def render_summary(payload: dict) -> str:
     diagnostics = payload.get("source_diagnostics") or []
 
     lines = [
-        f"# 华尔街驻铁岭办事处调查摘要 / Investigation Summary",
+        "# 华尔街驻铁岭办事处调查摘要 / Investigation Summary",
         "",
         f"- 主体 / Subject: {payload.get('company', '')}",
         f"- 执行状态 / State: {summary.get('execution_state', 'unknown')}",

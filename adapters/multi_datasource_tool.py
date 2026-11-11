@@ -8,10 +8,9 @@ It wraps the SearchEngine and exposes it as a tool that agents can use.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from core.interfaces import ToolProvider, ToolResult
 
@@ -93,7 +92,7 @@ class SearchEngineTool(ToolProvider):
         await self._ensure_initialized()
         
         try:
-            from adapters.multi_datasource import SearchEngine, QueryRequest
+            from adapters.multi_datasource import SearchEngine
             
             # 解析参数
             sources = kwargs.get("sources")  # 指定数据源列表

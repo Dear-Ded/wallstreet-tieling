@@ -63,7 +63,7 @@ async def main():
         return 1
 
     print("=" * 70)
-    print(f"多数据源可达性检测")
+    print("多数据源可达性检测")
     print(f"配置文件: {config_path}")
     print(f"自动修复: {'是' if args.fix else '否'}")
     print("=" * 70)

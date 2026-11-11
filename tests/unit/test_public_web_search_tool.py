@@ -864,9 +864,9 @@ def test_standardized_records_include_new_extraction_signals() -> None:
     claim_text = " ".join(claims)
     # All signal types should appear
     assert "business-model" in claim_text, f"missing business-model in evidence claims: {claim_text}"
-    assert "supply-chain" in claim_text, f"missing supply-chain in claims"
-    assert "market-position" in claim_text, f"missing market-position in claims"
-    assert "capital" in claim_text, f"missing capital in claims"
+    assert "supply-chain" in claim_text, "missing supply-chain in claims"
+    assert "market-position" in claim_text, "missing market-position in claims"
+    assert "capital" in claim_text, "missing capital in claims"
     # People entities
     entities = records[0]["entities"]
     assert any(e["name"] == "Alice Zhang" and e["relation"] == "ceo" for e in entities), f"missing Alice Zhang CEO in {entities}"
@@ -1645,7 +1645,7 @@ def test_macro_empty():
 
 
 def test_public_web_extraction_claims_produce_cognition_leads():
-    from adapters.public_web_search_tool import public_web_cognition_claims, public_web_results_to_standardized_records
+    from adapters.public_web_search_tool import public_web_results_to_standardized_records
     import asyncio
     
     # Step 1: Raw public web results

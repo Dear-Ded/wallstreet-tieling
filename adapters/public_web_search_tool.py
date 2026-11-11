@@ -1043,7 +1043,7 @@ def _public_web_customer_concentration_signals(text: str) -> list[str]:
     m = re.search(r"(?:customer concentration|customer concentration ratio|client concentration|客户集中度)\D{0,40}(\d+(?:\.\d+)?)\s*%", lowered)
     if m:
         ratio = float(m.group(1)) / 100.0
-        signals.append(f"customer_concentration={ratio:.2f}" if ratio < 1 else f"customer_concentration=publicly_described")
+        signals.append(f"customer_concentration={ratio:.2f}" if ratio < 1 else "customer_concentration=publicly_described")
     if "top customer" in lowered or "top client" in lowered or "客户集中" in str(text or ""):
         if not signals:
             signals.append("customer_concentration=publicly_described")

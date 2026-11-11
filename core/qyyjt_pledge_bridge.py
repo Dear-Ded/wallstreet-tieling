@@ -1,5 +1,4 @@
 """qyyjt_pledge_bridge.py — Real QYYJT pledge/freeze/auction bridge to evidence ledger + report."""
-from typing import Any
 
 def build_pledge_bridge(pledge_rows: list | None, freeze_rows: list | None, auction_rows: list | None) -> dict:
     """Build pledge/freeze/auction bridge from QYYJT fixture rows.

@@ -17,7 +17,7 @@ from __future__ import annotations
 from core.user_auth_gate import UserAuthorizationGate
 from adapters.safe_research_adapter import SafeResearchAdapter
 from typing import Any
-import json, urllib.request, urllib.parse, time, hashlib, re
+import json, urllib.request, urllib.parse, time, hashlib
 
 
 # ================================================================
@@ -57,7 +57,7 @@ class WHOISDomainLookup(SafeResearchAdapter):
             "net": "https://rdap.verisign.com/net/v1/domain/",
             "org": "https://rdap.pir.org/org/v1/domain/",
         }
-        base = registry_rdap.get(tld, f"https://rdap.verisign.com/com/v1/domain/")
+        base = registry_rdap.get(tld, "https://rdap.verisign.com/com/v1/domain/")
         try:
             url = f"{base}{domain}"
             req = urllib.request.Request(url, headers={"User-Agent": "DueDiligence/1.0", "Accept": "application/json"})

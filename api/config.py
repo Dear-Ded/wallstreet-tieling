@@ -342,7 +342,7 @@ def print_config(show_sensitive: bool = False) -> None:
     _safe_print(json.dumps(config, indent=2, ensure_ascii=False))
     _safe_print("=" * 80)
     _safe_print(f"📁 配置文件: {_CONFIG_FILE} ({'存在' if _CONFIG_FILE.exists() else '不存在'})")
-    _safe_print(f"🔧 环境变量前缀: DEEPSEEK_ / OPENAI_ / WALLSTREET_")
+    _safe_print("🔧 环境变量前缀: DEEPSEEK_ / OPENAI_ / WALLSTREET_")
     _safe_print("=" * 80)
 
 

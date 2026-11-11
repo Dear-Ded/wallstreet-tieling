@@ -10,7 +10,7 @@ from __future__ import annotations
 from adapters.safe_research_adapter import SafeResearchAdapter
 from core.user_auth_gate import UserAuthorizationGate
 from typing import Any
-import json, urllib.request, urllib.parse, time, hashlib
+import json, urllib.request, urllib.parse, hashlib
 
 
 # ================================================================
@@ -156,7 +156,7 @@ class EnterpriseProcurementLookup(SafeResearchAdapter):
         if not self.is_available():
             return {"error": "source_not_authorized"}
         target = hashlib.sha256(company_name.encode()).hexdigest()[:12]
-        url = f"https://api.usaspending.gov/api/v2/search/spending_by_award/"
+        url = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
         body_data = json.dumps({
             "filters": {"recipient_search_text": [company_name]},
             "fields": ["Award ID", "Recipient Name", "Award Amount", "Awarding Agency"],

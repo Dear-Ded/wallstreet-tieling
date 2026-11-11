@@ -8,7 +8,7 @@ from __future__ import annotations
 from adapters.safe_research_adapter import SafeResearchAdapter
 from core.user_auth_gate import UserAuthorizationGate
 from typing import Any
-import json, urllib.request, urllib.parse, time, hashlib, re, subprocess, os, tempfile
+import json, hashlib
 
 
 # ================================================================
@@ -287,7 +287,7 @@ class OpenSourceOSINTIntegration(SafeResearchAdapter):
         """调用指定的开源OSINT工具进行公开信息查询"""
         if not self.is_available(): return {"error": "source_not_authorized"}
         if tool_name not in self.INTEGRATED_TOOLS:
-            return {"error": f"unknown_tool", "available": list(self.INTEGRATED_TOOLS.keys()), "authorized": True}
+            return {"error": "unknown_tool", "available": list(self.INTEGRATED_TOOLS.keys()), "authorized": True}
 
         target_hash = hashlib.sha256(f"{tool_name}:{target}".encode()).hexdigest()[:12]
         tool_info = self.INTEGRATED_TOOLS[tool_name]

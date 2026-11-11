@@ -16,7 +16,6 @@ import sys
 
 from . import config
 from .orchestrator import Orchestrator
-from .agent_registry import AgentRegistry
 from .personality import get_personality
 
 logging.basicConfig(

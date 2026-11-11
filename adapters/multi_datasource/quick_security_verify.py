@@ -18,11 +18,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from __init__ import (
     DataSourceConfig,
     QueryRequest,
-    QueryStatus,
     RestApiDataSource,
     DataSourceManager,
     RateLimitConfig,
-    RetryConfig,
     AuthConfig,
 )
 
@@ -76,7 +74,7 @@ print("-" * 80)
 
 import asyncio
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 # 设置日志捕获
 import io
@@ -156,7 +154,7 @@ try:
         print(f"  ✓ 通过: MAX_CONCURRENCY = {manager.MAX_CONCURRENCY}")
         passed += 1
     else:
-        print(f"  ✗ 失败: MAX_CONCURRENCY 未定义")
+        print("  ✗ 失败: MAX_CONCURRENCY 未定义")
         failed += 1
         
 except Exception as e:
@@ -177,7 +175,7 @@ try:
     print(f"  ✗ 失败: 路径遍历未被阻止: {request.query}")
     failed += 1
 except ValueError as e:
-    print(f"  ✓ 通过: 路径遍历已被阻止")
+    print("  ✓ 通过: 路径遍历已被阻止")
     print(f"      错误信息: {e}")
     passed += 1
 
@@ -202,10 +200,10 @@ try:
     
     # 验证RateLimiter已初始化
     if hasattr(source, '_rate_limiter') and source._rate_limiter is not None:
-        print(f"  ✓ 通过: RateLimiter 已初始化")
+        print("  ✓ 通过: RateLimiter 已初始化")
         passed += 1
     else:
-        print(f"  ✗ 失败: RateLimiter 未初始化")
+        print("  ✗ 失败: RateLimiter 未初始化")
         failed += 1
         
 except Exception as e:

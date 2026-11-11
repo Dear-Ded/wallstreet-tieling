@@ -28,7 +28,7 @@ from __future__ import annotations
 from adapters.safe_research_adapter import SafeResearchAdapter
 from core.user_auth_gate import UserAuthorizationGate
 from typing import Any
-import json, hashlib, time, re
+import hashlib
 
 
 class TelegramPublicAggregationAdapter(SafeResearchAdapter):

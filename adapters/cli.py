@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from adapters._base import OpenAICompatibleLLM
-from core.interfaces import LLMProvider, ToolProvider, ToolResult, OutputProvider, PlatformAdapter
+from core.interfaces import ToolProvider, ToolResult, OutputProvider, PlatformAdapter
 
 
 class StandaloneLLM(OpenAICompatibleLLM):
@@ -60,7 +60,7 @@ async def run_cli(company: str, *, mode: str = "standard", model: str | None = N
     engine = Engine(target=company, adapter=adapter, mode=mode, model=model)
 
     print(f"\n{'='*60}")
-    print(f"  华尔街驻铁岭办事处 v0.5.0")
+    print("  华尔街驻铁岭办事处 v0.5.0")
     print(f"  模式: {mode} | 模型: {adapter.llm.default_model}")
     print(f"{'='*60}\n")
 

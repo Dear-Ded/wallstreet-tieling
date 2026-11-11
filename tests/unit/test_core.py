@@ -10,10 +10,9 @@ _skill_root = Path(__file__).resolve().parent.parent.parent
 if str(_skill_root) not in sys.path:
     sys.path.insert(0, str(_skill_root))
 
-import pytest
 from core.interfaces import LLMResponse, ToolResult
-from core.session_bus import SessionBus, Fact, RiskSignal, Contradiction
-from core.roles import AUTHORITIES, RoleAuthority
+from core.session_bus import SessionBus
+from core.roles import AUTHORITIES
 from core.deep_graph import DeepGraph, Entity, EntityType, RelationType
 from core.query_cache import QueryCache
 from core.org_memory import OrgMemory

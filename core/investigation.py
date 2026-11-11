@@ -12,9 +12,8 @@ from core.entity_resolution import build_entity_resolution
 from core.relationship_resolution import build_relationship_resolution
 from core.investigation_strategy import build_strategy_v2
 from core.release_gate import compute_release_decision
-from core.graph_explain import explain_graph_edges
 from adapters.public_web_search_tool import reality_drill_extract
-from core.qyyjt_pledge_bridge import build_pledge_bridge, pledge_to_evidence, extract_pledge_from_fixture
+from core.qyyjt_pledge_bridge import build_pledge_bridge
 from core.qyyjt_trade_bridge import build_trade_bridge
 from core.source_smoke_harness import run_source_smoke
 
@@ -37,7 +36,7 @@ from .investigation_report_card import (
 from .product_intelligence import ProductIntelligenceEngine
 from .public_web_profile_bridge import build_public_web_profiles as _bridge_public_web_profiles_from_evidence
 from .report_delivery_targets import build_report_delivery_targets
-from .subject_profile_aggregator import SubjectProfileAggregator, SubjectProfileReport as AggregatorReport
+from .subject_profile_aggregator import SubjectProfileAggregator
 
 
 
@@ -13139,7 +13138,7 @@ def build_subject_relationship_graph(
         nid = f"address:{addr}"
         nodes[nid] = {"id": nid, "type": "address", "name": str(addr), "depth": 1, "entity_resolution_key": f"address:normalized:{str(addr).lower().strip()}"}
         edges.append({"from": "seed", "to": nid, "type": "located_at", "confidence": 0.9, "admission": "fact", "source": "official_registry",
-            "explanation": f"Registered address from official registry"})
+            "explanation": "Registered address from official registry"})
 
     for a in rn.get("common_addresses", [])[:3]:
         nid = f"address:common:{a}"
@@ -13179,7 +13178,6 @@ def build_subject_relationship_graph(
 def _policy_cap(key: str, default: int) -> int:
     """Read report cap from RuntimePolicy, falling back to default."""
     try:
-        from .investigation_policy import get_active_policy
         mapping = {"risk_count": 8, "watchlist": 15, "questions": 15, "rows": 20}
         return mapping.get(key, default)
     except Exception:

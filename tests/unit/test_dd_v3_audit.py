@@ -1,5 +1,4 @@
 """test_dd_v3_audit.py — Real tests for DD v3.0 capabilities."""
-import pytest
 
 def test_capability_audit_no_hardcoded_true():
     """CapabilityAudit must not hardcode everything as True."""
@@ -778,8 +777,6 @@ def test_audit_log_source_readiness_tracks_fixture():
 def test_audit_log_no_sensitive_data_comprehensive():
     """Comprehensive audit log must never contain credentials, tokens, paths."""
     from core.investigation import _build_investigation_audit_log
-    from core.due_diligence_audit import build_capability_audit
-    from core.release_gate import compute_release_decision
     ec = {
         "source_smoke_harness": {"ready_for_production": False},
         "evidence_ledger_v2": [],
@@ -1014,7 +1011,7 @@ def test_relationship_weak_lead_never_becomes_fact_graph():
     for lead in r["phase1_candidate_leads"]:
         assert lead["admission"] != "fact"
     for edge in r["phase2_admitted_edges"]:
-        assert edge["admission"] != "fact" or "reg" in edge.get("source",""), f"Fact edge must have official source"
+        assert edge["admission"] != "fact" or "reg" in edge.get("source",""), "Fact edge must have official source"
 
 def test_next_questions_generated_for_gaps():
     """Missing lanes must generate next_questions."""

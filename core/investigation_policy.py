@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -96,7 +95,6 @@ class RuntimePolicy:
 
     @classmethod
     def from_config(cls, config_path: str | Path | None = None) -> "RuntimePolicy":
-        import re
 
         config: dict[str, Any] = {}
         if config_path:

@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
