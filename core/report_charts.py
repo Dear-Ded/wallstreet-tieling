@@ -115,12 +115,13 @@ def render_dimension_bars(
         ratio = _clamp01(score / maximum)
         fill_w = round(bar_w * ratio)
         color = _score_color(score / maximum * 100.0)
+        score_label = f"{score:g}/{maximum:g}"
         parts.append(
             f'<text x="0" y="{y + 15}" font-size="12" fill="#3d3a34">{_esc(label)}</text>'
             f'<rect x="{label_width}" y="{y}" width="{bar_w}" height="{bar_height}" rx="6" fill="{_COLOR_TRACK}"/>'
             f'<rect x="{label_width}" y="{y}" width="{fill_w}" height="{bar_height}" rx="6" fill="{color}"/>'
             f'<text x="{label_width + bar_w + 8}" y="{y + 15}" font-size="12" fill="#3d3a34">'
-            f"{_esc(f'{score:g}/{maximum:g}')}</text>"
+            f"{_esc(score_label)}</text>"
         )
     parts.append("</svg>")
     return "".join(parts)
@@ -157,6 +158,7 @@ def render_severity_bars(
         score = _num(risk_score)
         color = _score_color(100.0 - min(100.0, max(0.0, score)))
         # risk_score: higher means riskier, so invert the color scale.
+        score_label = f"{score:g}"
         parts.append(
             f'<text x="0" y="{y0 + 16}" font-size="13" font-weight="bold" fill="#3d3a34">综合风险评分</text>'
             f'<circle cx="{width - 60}" cy="{y0 + 12}" r="20" fill="none" stroke="{_COLOR_TRACK}" stroke-width="8"/>'
@@ -164,7 +166,7 @@ def render_severity_bars(
             f'stroke-dasharray="{2 * 3.1416 * 20 * _clamp01(score / 100.0):.1f} 999" '
             f'transform="rotate(-90 {width - 60} {y0 + 12})" stroke-linecap="round"/>'
             f'<text x="{width - 60}" y="{y0 + 17}" font-size="13" font-weight="bold" text-anchor="middle" fill="#3d3a34">'
-            f"{_esc(f'{score:g}')}</text>"
+            f"{_esc(score_label)}</text>"
         )
         y0 += 44
     peak = max(max(counts.values()), 1)
