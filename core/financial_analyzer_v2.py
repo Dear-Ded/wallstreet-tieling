@@ -396,8 +396,15 @@ class EnhancedFinancialAnalyzer:
         if risk.risk_level == "未知":
             return FinancialHealthGrade.UNKNOWN.value
         score = 100 - risk.risk_score
-        
-        if score >= 80:
+        # Missing operating cash flow is an evidence gap: it may not be turned
+        # into a positive (excellent/good) grade. Triggered warnings (e.g. ROE
+        # of 0, which costs exactly 20 points and used to land on the 80-point
+        # "excellent" boundary) likewise rule out "excellent".
+        cash_flow_unknown = cash_flow.health_status == "未知" or cash_flow.operating_cash_flow is None
+        if score >= 65 and cash_flow_unknown:
+            return FinancialHealthGrade.UNKNOWN.value
+
+        if score >= 80 and not risk.warning_flags:
             return FinancialHealthGrade.EXCELLENT.value
         elif score >= 65:
             return FinancialHealthGrade.GOOD.value
