@@ -44,7 +44,7 @@ fallback: "切换到 Plan {letter}：{alternative}。"
    - 记录 API key 配置状态
 
 3. 扫描 Python 环境：
-   - pip list | grep -E "maigret|sherlock|holehe|phoneinfoga|ghunt|exiftool"
+   - python bin/osint_tools.py --detect（运行时检测 maigret / sherlock / holehe / phoneinfoga / socid_extractor / theHarvester / ghunt，输出版本、许可证、调用边界）
    - import 验证每个包是否可正常导入
    - 对于 CLI 工具：which <tool> 检测是否在 PATH 中
 
@@ -96,10 +96,10 @@ fallback: "切换到 Plan {letter}：{alternative}。"
 | prismfy-search | Skill 目录扫描 | 同上 | 全员 |
 | lingxi-financialsearch | Skill 目录扫描 | 同上 | 李明远 |
 | neodata-financial-search | Skill 目录扫描 | 同上 | 李明远 |
-| maigret | pip list | 已安装 | 马力全 |
-| sherlock | pip list | 已安装 | 马力全 |
-| holehe | pip list | 已安装 | 马力全 |
-| phoneinfoga | which | PATH 中 | 马力全 |
+| maigret | bin/osint_tools.py --detect | tools.maigret.installed=true | 马力全 |
+| sherlock | bin/osint_tools.py --detect | tools.sherlock.installed=true | 马力全 |
+| holehe | bin/osint_tools.py --detect | tools.holehe.installed=true（GPL，独立进程） | 马力全 |
+| phoneinfoga | bin/osint_tools.py --detect + `phoneinfoga serve` 可达 | 服务可达 | 马力全 |
 
 ### 工具注册决策树
 

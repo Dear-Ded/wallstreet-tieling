@@ -8,7 +8,7 @@ from __future__ import annotations
 from adapters.safe_research_adapter import SafeResearchAdapter
 from core.user_auth_gate import UserAuthorizationGate
 from typing import Any
-import json, urllib.request, urllib.parse, time, hashlib, re, subprocess, os, tempfile
+import json, hashlib
 
 
 # ================================================================
@@ -240,8 +240,9 @@ class OpenSourceOSINTIntegration(SafeResearchAdapter):
     集成GitHub高星开源OSINT工具进行公开身份信息跨平台验证。
     所有工具均为本地部署的开源软件,查询公开平台上的公开档案。
     
-    集成工具: Maigret(34k★ — 用户名跨3000+平台验证), Holehe(11k★ — 邮箱注册验证),
-    GHunt(19k★ — Google账户公开信息), Sherlock(85k★ — 社交平台用户名搜索)。
+    集成工具: Maigret(40k★ — 用户名跨3000+平台验证), Holehe(15k★ — 邮箱注册验证),
+    GHunt(19k★ — Google账户公开信息), Sherlock(109k★ — 社交平台用户名搜索),
+    PhoneInfoga(18k★ — 电话号码扫描)。安装状态在运行时检测，执行见 adapters/osint_tools.py。
     
     企调价值: 验证企业高管的公开身份一致性 — KYC/CDD标准流程。
     """
@@ -254,15 +255,15 @@ class OpenSourceOSINTIntegration(SafeResearchAdapter):
     min_request_interval = 10.0
 
     INTEGRATED_TOOLS = {
-        "maigret": {"github": "soxoj/maigret", "stars": "34,400+", "license": "MIT",
+        "maigret": {"github": "soxoj/maigret", "stars": "40,300+", "license": "MIT",
                      "function": "跨3000+公开平台验证用户名存在性"},
-        "holehe": {"github": "megadose/holehe", "stars": "11,500+", "license": "GPL-3.0",
+        "holehe": {"github": "megadose/holehe", "stars": "15,600+", "license": "GPL-3.0",
                     "function": "验证邮箱在120+公开服务上的注册状态"},
-        "ghunt": {"github": "mxrch/GHunt", "stars": "19,200+", "license": "AGPL-3.0",
+        "ghunt": {"github": "mxrch/GHunt", "stars": "19,800+", "license": "AGPL-3.0",
                   "function": "查询Google账户的公开信息(公开照片/Youtube/地图评论)"},
-        "sherlock": {"github": "sherlock-project/sherlock", "stars": "85,900+", "license": "MIT",
+        "sherlock": {"github": "sherlock-project/sherlock", "stars": "109,800+", "license": "MIT",
                      "function": "跨400+社交平台搜索公开用户名"},
-        "phoneinfoga": {"github": "sundowndev/phoneinfoga", "stars": "16,800+", "license": "GPL-3.0",
+        "phoneinfoga": {"github": "sundowndev/phoneinfoga", "stars": "18,500+", "license": "GPL-3.0",
                         "function": "电话号码公开归属信息查询"},
     }
 
@@ -283,32 +284,63 @@ class OpenSourceOSINTIntegration(SafeResearchAdapter):
     def is_available(self) -> bool: return self._gate.is_authorized(self._source_key)
     def enable(self, h=24): return self._gate.enable_source(self._source_key, duration_hours=h).to_dict()
 
-    def query_tool(self, tool_name: str, target: str) -> dict[str, Any]:
+    def query_tool(self, tool_name: str, target: str, **options: Any) -> dict[str, Any]:
         """调用指定的开源OSINT工具进行公开信息查询"""
         if not self.is_available(): return {"error": "source_not_authorized"}
         if tool_name not in self.INTEGRATED_TOOLS:
-            return {"error": f"unknown_tool", "available": list(self.INTEGRATED_TOOLS.keys()), "authorized": True}
+            return {"error": "unknown_tool", "available": list(self.INTEGRATED_TOOLS.keys()), "authorized": True}
 
         target_hash = hashlib.sha256(f"{tool_name}:{target}".encode()).hexdigest()[:12]
         tool_info = self.INTEGRATED_TOOLS[tool_name]
-        self._gate.log_access(self._source_key, f"osint_{tool_name}", target_hash, "queried")
-
-        return {
+        runner = self._runner()
+        detection = runner.detection["tools"].get(tool_name, {})
+        base = {
             "query_subject_hash": target_hash, "source_domain": self.source_domain,
             "source_type": self.source_type, "data_boundary": self.data_boundary,
             "authorized": True, "access_path": f"osint_{tool_name}_local_execution",
             "investigation_lane": "people",
             "investigation_purpose": f"企业高管公开身份验证 — {tool_info['function']} — FATF CDD标准",
-            "fields": {"tool_name": tool_name, "tool_github": tool_info["github"],
-                       "tool_license": tool_info["license"],
-                       "data_note": "所有查询仅针对公开平台上的公开档案信息"},
-            "field_count": 3, "response_status": 200,
+            "runtime_detection": detection,
         }
+        fields = {"tool_name": tool_name, "tool_github": tool_info["github"], "tool_license": tool_info["license"]}
+        if tool_name == "ghunt" or not (detection.get("installed") or tool_name == "phoneinfoga"):
+            reason = ("ghunt_requires_operator_login_session" if tool_name == "ghunt" and detection.get("installed")
+                      else "optional_tool_not_installed")
+            self._gate.log_access(self._source_key, f"osint_{tool_name}", target_hash, reason)
+            return {**base, "executed": False, "error": reason, "fields": fields, "field_count": len(fields),
+                    "response_status": 0, "install_hint": detection.get("install_hint", "")}
+        run = {
+            "maigret": lambda: runner.run_maigret(target, **options),
+            "sherlock": lambda: runner.run_sherlock(target, **options),
+            "holehe": lambda: runner.run_holehe(target, **options),
+            "phoneinfoga": lambda: runner.run_phoneinfoga(target, **options),
+        }[tool_name]()
+        self._gate.log_access(self._source_key, f"osint_{tool_name}", target_hash, f"status_{run.status}")
+        from adapters.osint_tools import tool_run_to_standardized_records
+
+        counts = run.counts()
+        return {**base, "executed": True, "run_status": run.status, "error": run.error or None,
+                "fields": {**fields, "tool_version": run.tool_version, "counts": counts,
+                           "claimed": [o.to_dict() for o in run.observations if o.status == "claimed"]},
+                "field_count": len(fields) + 3, "response_status": 200 if run.status == "completed" else 0,
+                "tool_run": run.to_dict(),
+                "standardized_records": tool_run_to_standardized_records(run, subject=target)}
+
+    def _runner(self):
+        if getattr(self, "_tool_runner", None) is None:
+            from adapters.osint_tools import OptionalToolRunner
+
+            self._tool_runner = OptionalToolRunner()
+        return self._tool_runner
+
+    def use_tool_runner(self, runner: Any) -> None:
+        self._tool_runner = runner
 
     def list_available_tools(self) -> dict[str, Any]:
         """列出所有可集成的开源OSINT工具"""
         return {
-            "tools": {name: {"function": info["function"], "license": info["license"], "stars": info["stars"]}
+            "tools": {name: {"function": info["function"], "license": info["license"], "stars": info["stars"],
+                             "installed": self._runner().detection["tools"].get(name, {}).get("installed", False)}
                       for name, info in self.INTEGRATED_TOOLS.items()},
             "authorized": self.is_available(),
         }

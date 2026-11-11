@@ -1,6 +1,6 @@
 # Release Portal
 
-This is the public release portal for **wallstreet-tieling 0.5.0 Alpha**.
+This is the public release portal for **wallstreet-tieling 0.6.0 Alpha**.
 
 The project is a desktop-agent-first enterprise due-diligence and risk-discovery
 toolkit. It produces evidence-bound investigation packets from public,
@@ -68,7 +68,7 @@ The source of truth for release variants is `release/variants.yaml`.
 
 Current evidence:
 
-- `npm run acceptance`: `799 passed, 9 skipped` at `2026-07-06 08:24 Asia/Shanghai`
+- `npm run acceptance`: `2691 passed, 10 skipped` at `2026-11-11 23:42 Asia/Shanghai`
 - `npm run terminology:check`: `0 findings`
 - `npm run api:smoke`: passed
 - `npm run codex:mcp-smoke`: passed

@@ -1990,8 +1990,7 @@ def test_public_fallback_query_contains_government_site_filters() -> None:
 # --- Phase B: Pledge bridge ---
 
 def test_pledge_admitted_reaches_asset_solvency_profile() -> None:
-    from adapters.qyyjt_tool import _qyyjt_report_admission, _qyyjt_structured_payload, qyyjt_result_to_standardized_records
-    from core.investigation import _asset_solvency_profile_from_evidence
+    from adapters.qyyjt_tool import _qyyjt_report_admission, _qyyjt_structured_payload
     
     contract = {
         'record_type': 'equity_pledge',
@@ -2427,27 +2426,12 @@ def test_bond_issue_bridge():
     assert p is not None
 
 
-def test_credit_profile_bridge():
-    from adapters.qyyjt_tool import _qyyjt_structured_payload
-    fc = {"record_type":"credit_profile","required_fields":["credit_type","credit_amount"]}
-    fixt = {"credit_type":"bank_loan","credit_amount":"50000000","credit_period":"12M","subject_name":"Demo Co.","source_name":"qyyjt_api","status":"active"}
-    p = _qyyjt_structured_payload("Demo Co.","credit_profile",fc,fixt,{"risk_category":"credit_pressure"})
-    assert p is not None
-
 def test_financial_statement_metric_bridge():
     from adapters.qyyjt_tool import _qyyjt_structured_payload
     fc = {"record_type":"financial_statement_metric","required_fields":["metric_name","metric_value","period"]}
     fixt = {"metric_name":"total_revenue","metric_value":"500000000","period":"2026-Q1","subject_name":"Demo Co.","source_name":"qyyjt_api"}
     p = _qyyjt_structured_payload("Demo Co.","financial_statement",fc,fixt,{"risk_category":"capital_pressure"})
     assert p is not None
-
-def test_financial_indicator_bridge():
-    from adapters.qyyjt_tool import _qyyjt_structured_payload
-    fc = {"record_type":"financial_indicator","required_fields":["indicator_name","indicator_value"]}
-    fixt = {"indicator_name":"debt_to_equity","indicator_value":"2.5","subject_name":"Demo Co.","source_name":"qyyjt_api"}
-    p = _qyyjt_structured_payload("Demo Co.","financial_indicator",fc,fixt,{"risk_category":"credit_pressure"})
-    assert p is not None
-
 
 def test_regional_credit_indicator_bridge():
     from adapters.qyyjt_tool import _qyyjt_structured_payload
@@ -2473,42 +2457,12 @@ def test_bond_default_bridge():
     assert p["relations"][0]["relation_type"] == "bond_default_event"
 
 
-def test_financing_event_bridge():
+def test_financing_event_bridge_variant2():
     from adapters.qyyjt_tool import _qyyjt_structured_payload
     fc = {"record_type":"financing_event","required_fields":["financing_type","financing_amount","financing_date"]}
     fixt = {"financing_type":"series_a","financing_amount":"50000000","financing_date":"2026-01-15","subject_name":"Demo Co.","source_name":"qyyjt_api"}
     p = _qyyjt_structured_payload("Demo Co.","financing_event",fc,fixt,{"risk_category":"capital_pressure"})
     assert p is not None
-
-def test_credit_profile_bridge():
-    from adapters.qyyjt_tool import _qyyjt_structured_payload
-    fc = {"record_type":"credit_profile","required_fields":["credit_type","credit_amount"]}
-    fixt = {"credit_type":"bank_loan","credit_amount":"50000000","credit_period":"12M","subject_name":"Demo Co.","source_name":"qyyjt_api","status":"active"}
-    p = _qyyjt_structured_payload("Demo Co.","credit_profile",fc,fixt,{"risk_category":"credit_pressure"})
-    assert p is not None
-
-def test_research_report_bridge():
-    from adapters.qyyjt_tool import _qyyjt_structured_payload
-    fc = {"record_type":"research_report_signal","required_fields":["report_title","publish_date"]}
-    fixt = {"report_title":"Demo Co. Analysis","publish_date":"2026-06-01","analyst_rating":"buy","subject_name":"Demo Co.","source_name":"qyyjt_api"}
-    p = _qyyjt_structured_payload("Demo Co.","research_report",fc,fixt,{"risk_category":"market_sentiment"})
-    assert p is not None
-
-
-def test_tax_profile_bridge():
-    from adapters.qyyjt_tool import _qyyjt_structured_payload
-    fc = {"record_type":"tax_profile","required_fields":["tax_type","tax_period","tax_amount"]}
-    fixt = {"tax_type":"corporate_income","tax_period":"2026-Q1","tax_amount":"5000000","subject_name":"Demo Co.","source_name":"qyyjt_api"}
-    p = _qyyjt_structured_payload("Demo Co.","tax",fc,fixt,{"risk_category":"operational_event"})
-    assert p is not None
-
-def test_trade_activity_bridge():
-    from adapters.qyyjt_tool import _qyyjt_structured_payload
-    fc = {"record_type":"trade_activity","required_fields":["trade_type","trade_date","trade_amount"]}
-    fixt = {"trade_type":"export","trade_date":"2026-05-01","trade_amount":"50000000","subject_name":"Demo Co.","source_name":"qyyjt_api"}
-    p = _qyyjt_structured_payload("Demo Co.","trade",fc,fixt,{"risk_category":"commercial_activity"})
-    assert p is not None
-
 
 def test_news_all_bridge():
     from adapters.qyyjt_tool import _qyyjt_structured_payload

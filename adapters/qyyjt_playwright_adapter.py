@@ -15,9 +15,7 @@ qyyjt_playwright_adapter.py — 使用 Playwright 用户授权会话接入
 
 import asyncio
 import json
-import re
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 try:
     from playwright.async_api import async_playwright, Page, BrowserContext

@@ -1,6 +1,6 @@
 # Desktop Agent Host Guide
 
-Current scope: `0.5.0 Alpha` is a desktop-agent/tooling release. The polished
+Current scope: `0.6.0 Alpha` is a desktop-agent/tooling release. The polished
 HTML product, mini-program, mobile app, and standalone desktop app are
 later-version targets.
 
@@ -84,7 +84,7 @@ private reports, and runtime state.
 Use this when a host can only receive natural-language instructions:
 
 ```text
-You are running Wallstreet Tieling 0.5.0 Alpha as a desktop-agent host. Load the
+You are running Wallstreet Tieling 0.6.0 Alpha as a desktop-agent host. Load the
 repository instructions, then use CLI/API/MCP tools when available. First run
 release_readiness, connector_catalog, development_requirements, and
 delivery_closure. For an investigation, call agent_tool_adapters to read the

@@ -1,7 +1,6 @@
 """source_smoke_harness.py — DD v3.2 Full Source Smoke Harness.
 Each source returns structured SourceSmokeResult with access issues, failure reasons, and next actions.
 """
-from typing import Any
 import time
 
 SCHEMA = ("source_name","source_type","live_status","checked_at","structure_verified","fields_enter_pipeline","failure_reason","access_issue","next_action")

@@ -1,0 +1,5 @@
+name,domain,method,frequent_rate_limit,rateLimit,exists,emailrecovery,phoneNumber,others
+github,github.com,register,False,False,True,,,
+twitter,twitter.com,register,False,False,False,,,
+instagram,instagram.com,register,True,True,False,,,
+gravatar,gravatar.com,other,False,False,True,d*****@example.invalid,,{'FullName': 'Demo Exec'}

@@ -145,7 +145,7 @@ def test_product_catalog_exposes_zero_config_and_admission_groups() -> None:
     catalog = ConnectorRegistry().product_catalog()
 
     assert catalog["type"] == "connector_catalog"
-    assert catalog["version"] == "0.5.0"
+    assert catalog["version"] == "0.6.0"
     assert "default_public_intel" in catalog["summary"]["zero_config_ready"]
     assert "public_web_search" in catalog["summary"]["zero_config_ready"]
     assert catalog["groups"]["default_enabled"]

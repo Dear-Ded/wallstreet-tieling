@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 — 真并发 Agent 编排器
+"""wallstreet-tieling v0.6.0 — 真并发 Agent 编排器
 核心升级：
 1. 每个 Agent 独立状态 + 记忆 + 情感追踪
 2. Agent 间结构化消息通信（不再是 prev_context 字符串拼贴）
@@ -9,11 +9,8 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
-import os
 import re
-import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -22,9 +19,8 @@ import aiohttp
 
 from . import config
 from .utils import slug, load_system_prompt
-from .agent import DueDiligenceAgent, AgentState, Mood, AgentMessage
+from .agent import DueDiligenceAgent, AgentState, Mood
 from .agent_registry import AgentRegistry
-from .personality import get_personality, get_receptionist_greeting
 from .quality_rules import QualityRules, Violation
 from core.context_budget import ContextBudgetManager
 from core.supervision import WuDehouSupervisor, SupervisionEvent
@@ -214,7 +210,7 @@ CONDITIONAL_BRANCH_RULES = _load_branch_rules()
 # ══════════════════════════════════════════════════════════
 
 class Orchestrator:
-    """v0.5.0 真并发 Agent 编排器（含熔断器 + 指数退避）"""
+    """v0.6.0 真并发 Agent 编排器（含熔断器 + 指数退避）"""
 
     # ── 熔断器配置 ──
     _CB_FAIL_THRESHOLD = 5      # 连续失败 N 次触发熔断
@@ -576,7 +572,7 @@ class Orchestrator:
 
         # ── 团队开工──
         print(f"\n{'='*60}")
-        print(f"  华尔街驻铁岭办事处 · v0.5.0")
+        print("  华尔街驻铁岭办事处 · v0.6.0")
         print(f"  目标: {self.target}  |  模式: {self.mode}")
         print(f"  激活: {', '.join(all_roles)}")
         print(f"{'='*60}\n")
@@ -595,7 +591,7 @@ class Orchestrator:
                     active_agents=p1_agents,
                 )
                 print(f"\n{'─'*40}")
-                print(f"  Phase 1 · 尽调调查")
+                print("  Phase 1 · 尽调调查")
                 p1_results = await self._run_phase(session, sem, p1_agents,
                                                     system_prompt, phase=1)
                 self._record_checkpoint(
@@ -634,7 +630,7 @@ class Orchestrator:
                     active_agents=p2_agents,
                 )
                 print(f"\n{'─'*40}")
-                print(f"  Phase 2 · 验证与质检")
+                print("  Phase 2 · 验证与质检")
                 # 构建上下文
                 p1_context = self._build_context(p1_results, max_chars=2000)
                 # 注入 Phase 1 上下文
@@ -671,7 +667,7 @@ class Orchestrator:
                     active_agents=p3_agents,
                 )
                 print(f"\n{'─'*40}")
-                print(f"  Phase 3 · 报告生成")
+                print("  Phase 3 · 报告生成")
                 p1_long = self._build_context(p1_results, max_chars=3000)
                 p2_context = self._build_context(p2_results, max_chars=2000)
                 for agent in p3_agents:

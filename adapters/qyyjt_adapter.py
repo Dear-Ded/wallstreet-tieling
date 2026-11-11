@@ -18,11 +18,9 @@ import asyncio
 import base64
 import json
 import logging
-import random
-import re
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -1090,7 +1088,7 @@ class QYYJTAdapter:
                 QYYJTModule.REGION_CODE,
                 [
                     f"行政区划代码 {company}",
-                    f"国家统计局 行政区划代码",
+                    "国家统计局 行政区划代码",
                 ],
                 "行政区划代码与官方入口。",
             ),

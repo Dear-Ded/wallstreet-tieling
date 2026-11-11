@@ -1,5 +1,4 @@
 """due_diligence_audit.py — DD v3.0 Capability Audit. Real checks only."""
-from typing import Any
 
 def build_capability_audit(dd_profile: dict | None, strategy: dict | None, gap_analysis: dict | None,
     graph_data: dict | None, source_readiness: dict | None, live_readiness: dict | None,

@@ -164,7 +164,7 @@ def _scan_package(package_root: Path, extra_denies: list[str]) -> list[dict[str,
         text = path.read_text(encoding="utf-8", errors="replace")
         escaped_text = text.replace("\\\\", "\\")
         for term in private_terms:
-            if term and (term in text or term in escaped_text):
+            if term and _term_present(term, text, escaped_text):
                 issues.append({"path": rel, "kind": "private_term", "match": _redact(term)})
         for pattern in SECRET_PATTERNS:
             if pattern.search(text):
@@ -184,9 +184,18 @@ def _private_terms(extra_denies: list[str]) -> list[str]:
     ]
     username = os.environ.get("USERNAME") or os.environ.get("USER")
     if username:
-        terms.append(username)
+        # A bare username is often a dictionary word ("box", "admin"); only flag it inside a home-directory path.
+        terms.extend([f"/home/{username}", f"/Users/{username}", f"\\Users\\{username}", f"C:/Users/{username}"])
     terms.extend(extra_denies)
     return [term for term in terms if term]
+
+
+def _term_present(term: str, text: str, escaped_text: str) -> bool:
+    """Paths match as substrings; bare identifiers (e.g. a username) must match as a whole word."""
+    if "/" in term or "\\" in term:
+        return term in text or term in escaped_text
+    pattern = re.compile(rf"(?<![A-Za-z0-9_.-]){re.escape(term)}(?![A-Za-z0-9_-])")
+    return bool(pattern.search(text) or pattern.search(escaped_text))
 
 
 def _redact(term: str) -> str:

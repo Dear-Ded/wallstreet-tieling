@@ -1,5 +1,5 @@
 ﻿# wallstreet-tieling configuration template
-# Version: 0.5.0
+# Version: 0.6.0
 #
 # Copy this file to config.yaml for local use.
 # Do not commit config.yaml if it contains real API keys, tokens, authorized session state,

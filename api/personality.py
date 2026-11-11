@@ -1,12 +1,11 @@
 ﻿#!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 — 13 角色拟人化人格档案
+"""wallstreet-tieling v0.6.0 — 13 角色拟人化人格档案
 每个角色的性格、口头禅、同事关系、情绪模式——赋予'活人感'。
 """
 from __future__ import annotations
 
-import random
 
-from .agent import PersonalityProfile, Mood
+from .agent import PersonalityProfile
 
 
 # ═══════════════════════════════════════════════════════════
@@ -417,7 +416,7 @@ def build_persona_surface_brief() -> dict[str, object]:
 
     return {
         "type": "persona_surface_brief",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "display_name": "13-role anthropomorphic shell",
         "role_count": len(roster),
         "groups": [

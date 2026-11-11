@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""Config 单元测试 — wallstreet-tieling v0.5.0
+"""Config 单元测试 — wallstreet-tieling v0.6.0
 
 覆盖：路径常量 / API 配置 / 角色映射 / 模式模板 / 定价 / get_api_key / reload_config
 """
@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

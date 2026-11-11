@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 统一配置中心
+"""wallstreet-tieling v0.6.0 统一配置中心
 所有模块共享的配置入口，支持环境变量覆盖和热更新。
 
 配置加载顺序（优先级从低到高）:
@@ -342,7 +342,7 @@ def print_config(show_sensitive: bool = False) -> None:
     _safe_print(json.dumps(config, indent=2, ensure_ascii=False))
     _safe_print("=" * 80)
     _safe_print(f"📁 配置文件: {_CONFIG_FILE} ({'存在' if _CONFIG_FILE.exists() else '不存在'})")
-    _safe_print(f"🔧 环境变量前缀: DEEPSEEK_ / OPENAI_ / WALLSTREET_")
+    _safe_print("🔧 环境变量前缀: DEEPSEEK_ / OPENAI_ / WALLSTREET_")
     _safe_print("=" * 80)
 
 

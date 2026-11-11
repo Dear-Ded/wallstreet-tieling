@@ -12,9 +12,18 @@ from core.entity_resolution import build_entity_resolution
 from core.relationship_resolution import build_relationship_resolution
 from core.investigation_strategy import build_strategy_v2
 from core.release_gate import compute_release_decision
-from core.graph_explain import explain_graph_edges
+from core.report_charts import CHART_SECTION_CSS, build_report_chart_section
+from core.association_graph import (
+    ASSOCIATION_GRAPH_CSS,
+    build_association_graph_section,
+)
+from core.enrichment_report import (
+    extract_enrichments,
+    render_enrichments_html,
+    render_enrichments_markdown,
+)
 from adapters.public_web_search_tool import reality_drill_extract
-from core.qyyjt_pledge_bridge import build_pledge_bridge, pledge_to_evidence, extract_pledge_from_fixture
+from core.qyyjt_pledge_bridge import build_pledge_bridge
 from core.qyyjt_trade_bridge import build_trade_bridge
 from core.source_smoke_harness import run_source_smoke
 
@@ -37,7 +46,7 @@ from .investigation_report_card import (
 from .product_intelligence import ProductIntelligenceEngine
 from .public_web_profile_bridge import build_public_web_profiles as _bridge_public_web_profiles_from_evidence
 from .report_delivery_targets import build_report_delivery_targets
-from .subject_profile_aggregator import SubjectProfileAggregator, SubjectProfileReport as AggregatorReport
+from .subject_profile_aggregator import SubjectProfileAggregator
 
 
 
@@ -181,7 +190,7 @@ def build_investigation_packet(
     *,
     input_text: str,
     mode: str = "standard",
-    version: str = "0.5.0",
+    version: str = "0.6.0",
 ) -> InvestigationPacket:
     """Build a readable investigation packet from a risk graph payload."""
     summary = _dict(graph_payload.get("summary"))
@@ -303,6 +312,7 @@ def build_investigation_packet(
         monitoring_seed=monitoring_seed,
         qyyjt_public_origin_handoff=qyyjt_public_origin_handoff,
         next_actions=next_actions,
+        enrichments=extract_enrichments(graph_payload),
     )
     quality_gate = evaluate_investigation_packet(
         summary=summary,
@@ -341,6 +351,7 @@ def build_investigation_packet(
         qyyjt_public_origin_handoff=qyyjt_public_origin_handoff,
         next_actions=next_actions,
         quality_gate=quality_gate,
+        enrichments=extract_enrichments(graph_payload),
     )
     report_exports = _report_export_bundle(
         company=str(graph_payload.get("company") or input_text),
@@ -354,6 +365,9 @@ def build_investigation_packet(
         source_provenance=source_provenance,
         risk_event_summary=risk_event_summary,
         evidence_ledger=evidence_ledger,
+        quality_gate=quality_gate,
+        risk_brief=risk_brief,
+        enrichments=extract_enrichments(graph_payload),
     )
 
     return InvestigationPacket(
@@ -905,7 +919,7 @@ def _packet_source_strengthening_handoff() -> dict[str, Any]:
         "type": "source_strengthening_handoff",
         "status": status,
         "catalog_tool": "connector_catalog",
-        "work_order_count": len(queue),
+        "work_order_count": len(top_work_orders),
         "top_work_orders": top_work_orders,
         "top_work_order": top_work_orders[0] if top_work_orders else {},
         "by_lane": by_lane,
@@ -1047,6 +1061,9 @@ def _report_export_bundle(
     source_provenance: dict[str, Any],
     risk_event_summary: dict[str, Any],
     evidence_ledger: list[dict[str, Any]],
+    quality_gate: dict[str, Any] | None = None,
+    risk_brief: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Describe desktop-agent report outputs without requiring the HTML workbench."""
     safe_company = _safe_report_filename(company)
@@ -1084,9 +1101,16 @@ def _report_export_bundle(
         agent_decision_digest=agent_decision_digest,
         image_evidence_inventory=print_package.get("image_evidence_inventory") if isinstance(print_package, dict) else {},
         chart_manifest=print_package.get("chart_manifest") if isinstance(print_package, dict) else [],
+        chart_packet={
+            "quality_gate": quality_gate or {},
+            "risk_brief": risk_brief or {},
+            "source_provenance": source_provenance or {},
+            "one_click_readiness": one_click_readiness or {},
+        },
         source_provenance_appendix=print_package.get("source_provenance_appendix") if isinstance(print_package, dict) else {},
         relationship_capital_appendix=print_package.get("relationship_capital_appendix") if isinstance(print_package, dict) else {},
         report_targets=report_targets,
+        enrichments=enrichments,
     )
     premium_html = _premium_html_profile(
         html_filename=html_filename,
@@ -1358,6 +1382,8 @@ def _premium_html_profile(
             "evidence darkroom",
             "source provenance appendix",
             "relationship and capital appendix",
+            "风险可视化",
+            "inline SVG risk charts",
         ],
         "design_language": [
             "cinematic paper-and-night contrast",
@@ -1375,6 +1401,7 @@ def _premium_html_profile(
             "image_evidence_inventory_visible",
             "agent_handoff_cards_visible",
             "delivery_checklist_visible",
+            "svg_risk_charts_visible",
         ],
         "forbidden_shortcuts": [
             "no_generic_purple_gradient",
@@ -1421,9 +1448,11 @@ def _portable_report_html(
     agent_decision_digest: dict[str, Any] | None = None,
     image_evidence_inventory: dict[str, Any] | None = None,
     chart_manifest: list[dict[str, Any]] | None = None,
+    chart_packet: dict[str, Any] | None = None,
     source_provenance_appendix: dict[str, Any] | None = None,
     relationship_capital_appendix: dict[str, Any] | None = None,
     report_targets: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> str:
     status = html.escape(str(one_click_readiness.get("status") or "unknown"))
     closure_status = html.escape(str(one_click_readiness.get("acceptance_closure_status") or "unknown"))
@@ -1446,10 +1475,14 @@ def _portable_report_html(
     delivery_html = _portable_delivery_checklist_html(delivery_checklist or {})
     decision_html = _portable_decision_digest_html(agent_decision_digest or {})
     chart_html = _portable_chart_manifest_html(chart_manifest or [])
+    chart_section_html = build_report_chart_section(chart_packet or {})
+    assoc_graph_html = build_association_graph_section(
+        (chart_packet or {}).get("entity_association"))
     image_html = _portable_image_evidence_html(image_evidence_inventory or {})
     relationship_capital_html = _portable_relationship_capital_html(relationship_capital_appendix or {})
     source_html = _portable_source_provenance_html(source_provenance_appendix or {})
     report_targets_html = _portable_report_targets_html(report_targets or {})
+    enrichment_html = render_enrichments_html(enrichments or {})
     return (
         "<!doctype html>\n"
         "<html lang=\"zh-CN\">\n"
@@ -1510,6 +1543,8 @@ def _portable_report_html(
         "    @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}\n"
         "    @media (max-width:900px){.report-layout{grid-template-columns:1fr;}h1{font-size:30px;}main{padding:24px 16px 48px;}}\n"
         "    @media print{body{background:#fff;}body:before{display:none;}main{padding:18mm;max-width:none;}header,.delivery,.visual-panel,pre.report-body{box-shadow:none;backdrop-filter:none;}header{break-after:avoid;}.report-layout{display:block;}.visual-panel{background:#fff;color:#111;border-color:#999;}.visual-panel h2{color:#111;}.visual-panel th,.visual-panel td{border-color:#ccc;color:#111;}.metric-strip div{border-color:#ccc;background:#fff;}.metric-strip b,.metric-strip span{color:#111;}.premium-qa:after{display:none;}}\n"
+        f"{CHART_SECTION_CSS}"
+        f"{ASSOCIATION_GRAPH_CSS}"
         "  </style>\n"
         "</head>\n"
         "<body>\n"
@@ -1536,6 +1571,9 @@ def _portable_report_html(
         f"      <div class=\"card\"><b>{capital_queue}</b><span>capital verification steps</span></div>\n"
         f"      <div class=\"card\"><b>{relationship_queue}</b><span>relationship audit steps</span></div>\n"
         "    </section>\n"
+        f"{chart_section_html}"
+        f"{assoc_graph_html}"
+        f"{enrichment_html}"
         "    <section class=\"visual-panel premium-qa\" aria-label=\"premium visual QA checklist\">\n"
         "      <h2>Premium HTML visual QA checklist</h2>\n"
         "      <p class=\"premium-copy\">This screen report uses component-level <code>liquid glass</code>, an <code>evidence darkroom</code> treatment, formal long-report typography, reduced-motion safety, and print-safe degradation while preserving the complete due-diligence body. It explicitly avoids generic purple gradients, decorative card piles, and any evidence truncation.</p>\n"
@@ -4845,7 +4883,7 @@ def _build_subject_due_diligence_profile(
     return {
         "company": company,
         "dd_version": "1.0",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "type": "subject_due_diligence_profile",
         "executive_summary": {
             "overall_risk": overall,
@@ -7061,11 +7099,11 @@ def _inject_fact_edges_from_evidence(graph, evidence_ledger):
             continue
         lane = ev.get("lane", "")
         if lane == "capital" and any(k in str(ev).lower() for k in ("pledge","freeze","auction")):
-            edges.append({"source": "subject_profile","from": "seed", "to": f"asset:{ev.get('evidence_id','?')}", "type": "pledged", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
+            edges.append({"from": "seed", "to": f"asset:{ev.get('evidence_id','?')}", "type": "pledged", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
         if lane == "goods" and any(k in str(ev).lower() for k in ("supplier","product")):
-            edges.append({"source": "subject_profile","from": "seed", "to": f"supplier:{ev.get('evidence_id','?')}", "source": "supply_chain_profile","type": "supplies", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
+            edges.append({"from": "seed", "to": f"supplier:{ev.get('evidence_id','?')}", "type": "supplies", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
         if lane == "people" and any(k in str(ev).lower() for k in ("controller","ubo","executive")):
-            edges.append({"source": "subject_profile","from": "seed", "to": f"person:{ev.get('evidence_id','?')}", "type": "controls", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
+            edges.append({"from": "seed", "to": f"person:{ev.get('evidence_id','?')}", "type": "controls", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
     return graph
 def _build_related_parties_bridge(subject_profile, relationship_network) -> dict:
     sp = subject_profile or {}
@@ -7950,7 +7988,6 @@ def _enterprise_cognition(
         "strategy_quality_gate": (strategy_quality_gate := _build_strategy_quality_gate(strategy_plan, srs)),
         "evidence_depth_score": (evidence_depth_score := _build_evidence_depth_score(dd_profile_data, public_capital_profile, public_goods_profile, public_people_profile, risk_events, gv2.get("graph_summary") if gv2 else None, srs)),
         "edge_explainability_v3": _build_edge_explainability_v3(dd_profile_data.get("relationship_graph") if dd_profile_data else None),
-        "graph_quality_audit_v2": _graph_quality_audit_v2(dd_profile_data.get("relationship_graph") if dd_profile_data else None),
         "graph_sanity_check": (graph_sanity := _build_graph_sanity_check(dd_profile_data.get("relationship_graph") if dd_profile_data else None, gap_analysis)),
         "live_readiness_gate": (live_readiness := _build_live_readiness_gate(srs)),
         "evidence_ledger_v2": (evidence_ledger_v2 := normalize_evidence_v2(evidence_ledger)),
@@ -7969,9 +8006,7 @@ def _enterprise_cognition(
         "release_decision": (release_decision := compute_release_decision(live_readiness, blocker_gate, realness_score, evidence_depth_score, gqa, srs)),
         "qyyjt_bridge_packet": (qyyjt_bridge_packet := _build_qyyjt_bridge_packet(evidence_ledger)),
         "investigation_report_card": {
-            "dd_version": "4.9",
             "api_visible_release_decision": release_decision.get("release_decision","unknown"),
-            "api_visible_release_score": release_decision.get("release_score",0),
             "dd_summary": {
                 "version": "5.0",
                 "release_decision": release_decision.get("release_decision","internal_alpha"),
@@ -12956,7 +12991,7 @@ def _persona_surface_for_investigation(
 
     return {
         "type": "investigation_persona_surface",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "display_name": "华尔街驻铁岭办事处 13 角色专家团",
         "role_count": len(enriched_roles),
         "active_role_count": len(active_ids),
@@ -13023,11 +13058,6 @@ def _build_investigation_audit_log(
         "gaps": enterprise_cognition.get("evidence_gaps", [])[:5],
         "sources_used": _dedupe_strings([str(e.get("source","")) for e in evidence_ledger]),
         "admission_explanations": admission_reasons[:10],
-        "report_sections": ["company_profile", "risk_events", "financial", "industry", "supply_chain", "relationship_network", "evidence_ledger", "next_steps"],
-        "source_readiness_for_audit": {"ready_for_production": (enterprise_cognition.get("source_smoke_harness") or {}).get("ready_for_production",False),"overall_status": (enterprise_cognition.get("source_smoke_harness") or {}).get("overall_status","unknown")},
-        "graph_quality_for_audit": enterprise_cognition.get("graph_quality_audit_v2",{}),
-        "pipeline_contract_status": "verified" if len(enterprise_cognition.get("evidence_ledger_v2",[]))>0 else "unverified",
-        "strategy_action_count_for_audit": (enterprise_cognition.get("investigation_strategy_v2") or {}).get("action_count",0),
         "smoke_status": {
             "public": {
                 k: {"source_name": v["source_name"], "status": v["status"], "live_verified": v["live_verified"]}
@@ -13129,7 +13159,7 @@ def build_subject_relationship_graph(
         if name:
             nid = f"person:{name}"
             nodes[nid] = {"id": nid, "type": "person", "name": str(name), "role": "controller", "depth": 1, "entity_resolution_key": f"person:normalized:{str(name).lower().strip()}:controller:subject_profile"}
-            edges.append({"source": "subject_profile","from": "seed", "to": nid, "type": "controls", "confidence": float(item.get("confidence", 0.5)),
+            edges.append({"from": "seed", "to": nid, "type": "controls", "confidence": float(item.get("confidence", 0.5)),
                 "admission": str(item.get("admission", "lead")), "source": str(item.get("evidence_source", "subject_profile")),
                 "explanation": f"Controller candidate {name} from subject_profile"})
 
@@ -13138,7 +13168,7 @@ def build_subject_relationship_graph(
         if name:
             nid = f"person:legal:{name}"
             nodes[nid] = {"id": nid, "type": "person", "name": str(name), "role": "legal_representative", "depth": 1, "entity_resolution_key": f"person:normalized:{str(name).lower().strip()}:legal_rep:subject_profile"}
-            edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "subject_profile","type": "serves_as", "confidence": float(item.get("confidence", 0.5)),
+            edges.append({"from": "seed", "to": nid, "type": "serves_as", "confidence": float(item.get("confidence", 0.5)),
                 "admission": "fact" if item.get("authority") == "official" else "lead", "source": str(item.get("evidence_source", "subject_profile")),
                 "explanation": f"Legal representative {name} from subject_profile"})
 
@@ -13146,14 +13176,14 @@ def build_subject_relationship_graph(
     if addr:
         nid = f"address:{addr}"
         nodes[nid] = {"id": nid, "type": "address", "name": str(addr), "depth": 1, "entity_resolution_key": f"address:normalized:{str(addr).lower().strip()}"}
-        edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "subject_profile","type": "located_at", "confidence": 0.9, "admission": "fact", "source": "official_registry",
-            "explanation": f"Registered address from official registry"})
+        edges.append({"from": "seed", "to": nid, "type": "located_at", "confidence": 0.9, "admission": "fact", "source": "official_registry",
+            "explanation": "Registered address from official registry"})
 
     for a in rn.get("common_addresses", [])[:3]:
         nid = f"address:common:{a}"
         if nid not in nodes:
             nodes[nid] = {"id": nid, "type": "address", "name": str(a), "depth": 1}
-            edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "public_record","type": "same_address", "confidence": 0.35, "admission": "weak_lead", "source": "public_web",
+            edges.append({"from": "seed", "to": nid, "type": "same_address", "confidence": 0.35, "admission": "weak_lead", "source": "public_web",
                 "explanation": f"Same address {a} from public web — weak lead only, NOT fact"})
 
     for item in el:
@@ -13163,14 +13193,14 @@ def build_subject_relationship_graph(
                 nid = f"company:supplier:{name}"
                 if nid not in nodes:
                     nodes[nid] = {"id": nid, "type": "supplier", "name": name, "depth": 1}
-                    edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "supply_chain_profile","type": "supplies", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
+                    edges.append({"from": "seed", "to": nid, "type": "supplies", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
                         "explanation": f"Supplier {name} from public claims, needs corroboration"})
             if "customer=" in str(claim).lower():
                 name = str(claim).split("customer=")[1].split(";")[0].strip()
                 nid = f"company:customer:{name}"
                 if nid not in nodes:
                     nodes[nid] = {"id": nid, "type": "customer", "name": name, "depth": 1}
-                    edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "supply_chain_profile","type": "buys_from", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
+                    edges.append({"from": "seed", "to": nid, "type": "buys_from", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
                         "explanation": f"Customer {name} from public claims, needs corroboration"})
 
     return {
@@ -13187,7 +13217,6 @@ def build_subject_relationship_graph(
 def _policy_cap(key: str, default: int) -> int:
     """Read report cap from RuntimePolicy, falling back to default."""
     try:
-        from .investigation_policy import get_active_policy
         mapping = {"risk_count": 8, "watchlist": 15, "questions": 15, "rows": 20}
         return mapping.get(key, default)
     except Exception:
@@ -13466,11 +13495,12 @@ def _report_markdown(
     qyyjt_public_origin_handoff: dict[str, Any] | None = None,
     next_actions: list[str],
     quality_gate: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> str:
     findings = risk_brief.get("key_findings", [])
     controllers = profile_brief.get("controller_candidates", [])
     lines = [
-        f"# 华尔街驻铁岭办事处 0.5.0 尽调快报 - {company}",
+        f"# 华尔街驻铁岭办事处 0.6.0 尽调快报 - {company}",
         "",
         f"- 模式: {mode}",
         f"- 结论: {risk_brief.get('verdict_label') or risk_brief.get('verdict')}",
@@ -15069,7 +15099,7 @@ def _report_markdown(
             )
 
     lines.extend(["", "## 后续版本目标"])
-    lines.append("- 持续监控: 当前 0.5.0 Alpha 不上线持续监控，只保留可复用基线。")
+    lines.append("- 持续监控: 当前 0.6.0 Alpha 不上线持续监控，只保留可复用基线。")
     lines.append(f"- 可沉淀为后续基线: {monitoring_seed.get('ready_for_continuous_watch')}")
     lines.append("- 后续可盯防维度: " + ", ".join(_domain_label(item) for item in monitoring_seed.get("watched_dimensions", [])))
     lines.append(f"- 后续建议频率: {_cadence_label(monitoring_seed.get('suggested_cadence'))}")
@@ -15215,6 +15245,13 @@ def _report_markdown(
         lines.append("## 证据准入")
         lines.append(f"- 事实级: {facts} 条（高置信+强来源，已进入报告）")
         lines.append(f"- 线索级: {leads} 条（中低置信或单一来源，需核验后使用）")
+
+    # ── Intel enrichment ──
+    # Render intel_enrichment / people-intel / entity-association payloads
+    # carried by the packet. Absent or empty → no section (graceful).
+    enrichment_lines = render_enrichments_markdown(enrichments or [])
+    if enrichment_lines:
+        lines.extend(enrichment_lines)
 
     lines.extend(["", "## 下一步"])
     for action in next_actions[:6]:

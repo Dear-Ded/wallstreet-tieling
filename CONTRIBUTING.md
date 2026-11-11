@@ -2,7 +2,7 @@
 
 首先，感谢你愿意为这个项目添砖加瓦 🙌
 
-## 🎯 贡献平台适配器 (v0.5.0+)
+## 🎯 贡献平台适配器 (v0.6.0+)
 
 想让 wallstreet-tieling 跑在你的平台上？只需要实现三个接口：
 
@@ -60,7 +60,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 python -c "import ast; ast.parse(open('api/wst.py').read()); print('✅ 语法通过')"
 
 # 干运行（无需 API Key）
-python api/wst.py --mode standard --target "测试企业" --dry-run
+python -m api.wst --mode standard --target "测试企业" --dry-run
 ```
 
 ---

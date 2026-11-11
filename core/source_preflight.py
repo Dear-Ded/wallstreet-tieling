@@ -42,7 +42,7 @@ def build_source_preflight(config_path: str | Path | None = None) -> dict[str, A
     configured_depth = bool(configured_authorized)
     return {
         "type": "source_preflight",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "config_path": str(config_path) if config_path else "",
         "config_loaded": bool(config),
         "status": "pass" if deep_ready else "fail",

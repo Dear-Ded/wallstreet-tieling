@@ -1,6 +1,6 @@
 # Codex Plugin Market Readiness
 
-Status: pre-submission engineering package for `v0.5.0 Alpha`.
+Status: pre-submission engineering package for `v0.6.0 Alpha`.
 
 Public copy must say the product is an alpha desktop-agent release. Do not claim
 marketplace approval, fully automated live coverage, or production-grade

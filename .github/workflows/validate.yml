@@ -18,11 +18,17 @@ jobs:
           pip install -r requirements.txt flake8
       - name: Check frontmatter
         run: |
-          head -1 SKILL.md | grep -q '^\-\-\-$' && echo "Frontmatter OK" || echo "Missing frontmatter"
+          head -1 SKILL.md | grep -q '^---$'
+          echo "Frontmatter OK"
       - name: Check sub-skills exist
         run: |
-          count=$(ls sub-skills/*.md 2>/dev/null | wc -l)
-          [ "$count" -eq 13 ] && echo "13 sub-skills OK" || echo "Expected 13, found $count"
+          count=$(find sub-skills -maxdepth 1 -name '*.md' ! -name 'aesthetic-design-system.md' | wc -l)
+          if [ "$count" -eq 13 ]; then
+            echo "13 role sub-skills OK"
+          else
+            echo "Expected 13 role sub-skills, found $count"
+            exit 1
+          fi
       - name: Check no stale public version markers
         run: |
           ! grep -Ern "12人|12 agents|50\+|v2\.0\.|v3\.0\." --include="*.md" --include="*.json" . | grep -v ".git\|CHANGELOG"
@@ -35,10 +41,12 @@ jobs:
           python -m pytest tests/unit/test_release_hygiene.py tests/unit/test_terminology_guard.py -q
       - name: Check data protocol exists
         run: |
-          test -f references/data-protocol.md && echo "Protocol OK" || echo "Missing data-protocol.md"
+          test -f references/data-protocol.md
+          echo "Protocol OK"
       - name: Check tests exist
         run: |
-          test -f tests/regression.json && echo "Tests OK" || echo "Missing tests"
+          test -f tests/regression.json
+          echo "Tests OK"
       - name: Check release contract and static workbench script
         run: |
           python -m pytest tests/unit/test_release_variants.py -q

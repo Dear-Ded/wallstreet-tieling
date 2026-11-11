@@ -1,4 +1,4 @@
-# Wallstreet Tieling Data Protocol 0.5.0
+# Wallstreet Tieling Data Protocol 0.6.0
 
 This document defines the public connector contract for Wallstreet Tieling.
 
@@ -94,7 +94,7 @@ Never treat a missing result as proof of no risk. Empty retrieval is a coverage 
 ```json
 {
   "type": "investigation_packet",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "summary": {},
   "risk_brief": {},
   "profile_brief": {},

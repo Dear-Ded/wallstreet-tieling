@@ -11,8 +11,6 @@ Financial Analysis Enhancement Module
 
 from __future__ import annotations
 
-import asyncio
-from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -26,6 +24,7 @@ class FinancialHealthGrade(str, Enum):
     FAIR = "一般"
     POOR = "较差"
     CRITICAL = "危险"
+    UNKNOWN = "未知"
 
 
 class FinancialRatio(BaseModel):
@@ -56,9 +55,9 @@ class FinancialRatio(BaseModel):
 class CashFlowAnalysis(BaseModel):
     """现金流分析"""
     
-    operating_cash_flow: float = Field(..., description="经营活动现金流")
-    investing_cash_flow: float = Field(..., description="投资活动现金流")
-    financing_cash_flow: float = Field(..., description="筹资活动现金流")
+    operating_cash_flow: Optional[float] = Field(None, description="经营活动现金流")
+    investing_cash_flow: Optional[float] = Field(None, description="投资活动现金流")
+    financing_cash_flow: Optional[float] = Field(None, description="筹资活动现金流")
     
     free_cash_flow: Optional[float] = Field(None, description="自由现金流")
     cash_flow_coverage: Optional[float] = Field(None, description="现金流覆盖倍数")
@@ -238,12 +237,14 @@ class EnhancedFinancialAnalyzer:
         gross_margin = ratios.gross_margin
         net_margin = ratios.net_margin
 
-        if top_customer_ratio is not None and top_customer_ratio >= 0.5:
+        if top_customer_ratio is None:
+            revenue_dependency = "客户集中度缺少输入，不能视为分散"
+        elif top_customer_ratio >= 0.5:
             revenue_dependency = "高度依赖单一或少数核心客户"
-        elif top_customer_ratio is not None and top_customer_ratio >= 0.3:
+        elif top_customer_ratio >= 0.3:
             revenue_dependency = "核心客户集中度偏高"
         else:
-            revenue_dependency = "未发现明显客户集中依赖"
+            revenue_dependency = "已提供的客户集中度未达到集中阈值"
 
         if gross_margin is not None and gross_margin >= 0.4:
             profit_driver = "较高毛利驱动"
@@ -278,25 +279,36 @@ class EnhancedFinancialAnalyzer:
         )
     
     def _analyze_cash_flow(self, data: Dict[str, Any]) -> CashFlowAnalysis:
-        """分析现金流"""
-        operating = data.get("operating_cash_flow", 0)
-        investing = data.get("investing_cash_flow", 0)
-        financing = data.get("financing_cash_flow", 0)
-        
-        free_cash_flow = operating + investing  # 简化计算
-        
-        # 健康状态判断
+        """分析现金流。缺失值保持为空，不用 0 冒充已观测数据。"""
+        operating = self._num(data.get("operating_cash_flow"))
+        investing = self._num(data.get("investing_cash_flow"))
+        financing = self._num(data.get("financing_cash_flow"))
+
+        if operating is None and investing is None and financing is None:
+            return CashFlowAnalysis(
+                health_status="未知",
+                warning_signals=["现金流数据缺失，不能视为健康"],
+            )
+
+        free_cash_flow = None
+        if operating is not None and investing is not None:
+            free_cash_flow = operating + investing
+
         health_status = "健康"
-        warnings = []
-        
-        if operating < 0:
+        warnings: list[str] = []
+        if operating is None:
+            health_status = "未知"
+            warnings.append("经营活动现金流缺失，不能视为健康")
+        elif operating < 0:
             health_status = "预警"
             warnings.append("经营活动现金流为负")
-        
-        if free_cash_flow < 0:
+
+        if free_cash_flow is not None and free_cash_flow < 0:
             health_status = "危险"
             warnings.append("自由现金流为负")
-        
+        elif investing is None:
+            warnings.append("投资活动现金流缺失，未计算自由现金流")
+
         return CashFlowAnalysis(
             operating_cash_flow=operating,
             investing_cash_flow=investing,
@@ -313,21 +325,31 @@ class EnhancedFinancialAnalyzer:
         industry: str
     ) -> FinancialRisk:
         """评估财务风险"""
+        if not self._has_financial_signal(data, ratios):
+            return FinancialRisk(
+                risk_level="未知",
+                risk_score=0,
+                warning_flags=["财务输入缺失，不能把空结果当成低风险"],
+                detailed_risks={},
+                recommendation="缺少可用于评分的财务输入，不能把空结果当成低风险",
+            )
+
         risk_score = 0.0
         warnings = []
         
-        # 偿债能力风险
-        if ratios.debt_to_equity and ratios.debt_to_equity > 0.7:
+        # 偿债能力风险。字段中文口径是资产负债率，0 是有效观测值。
+        if ratios.debt_to_equity is not None and ratios.debt_to_equity > 0.7:
             risk_score += 30
             warnings.append("资产负债率过高")
         
-        # 盈利能力风险
-        if ratios.roe and ratios.roe < 0.05:
+        # 盈利能力风险。ROE 为 0 时不能被真值判断吞掉。
+        if ratios.roe is not None and ratios.roe < 0.05:
             risk_score += 20
             warnings.append("净资产收益率过低")
         
         # 现金流风险
-        if data.get("operating_cash_flow", 0) < 0:
+        operating_cash_flow = self._num(data.get("operating_cash_flow"))
+        if operating_cash_flow is not None and operating_cash_flow < 0:
             risk_score += 30
             warnings.append("经营现金流为负")
 
@@ -344,13 +366,13 @@ class EnhancedFinancialAnalyzer:
         # 确定风险等级
         if risk_score >= 70:
             risk_level = "高"
-            recommendation = "建议深入调查财务风险，谨慎投资"
+            recommendation = "核验偿债、盈利质量和现金流来源；该分数不是授信或交易结论"
         elif risk_score >= 40:
             risk_level = "中"
-            recommendation = "建议关注财务风险指标变化"
+            recommendation = "核验已触发的财务风险指标是否有来源支撑"
         else:
             risk_level = "低"
-            recommendation = "财务风险可控"
+            recommendation = "当前已提供的指标未触发高风险阈值；未提供的科目仍是证据缺口"
         
         return FinancialRisk(
             risk_level=risk_level,
@@ -371,6 +393,8 @@ class EnhancedFinancialAnalyzer:
         risk: FinancialRisk
     ) -> str:
         """计算财务健康等级"""
+        if risk.risk_level == "未知":
+            return FinancialHealthGrade.UNKNOWN.value
         score = 100 - risk.risk_score
         
         if score >= 80:
@@ -389,6 +413,25 @@ class EnhancedFinancialAnalyzer:
         if hasattr(model, "model_dump"):
             return model.model_dump()
         return model.dict()
+
+    def _has_financial_signal(self, data: Dict[str, Any], ratios: FinancialRatio) -> bool:
+        candidates = [
+            data.get("operating_cash_flow"),
+            data.get("investing_cash_flow"),
+            data.get("financing_cash_flow"),
+            data.get("revenue"),
+            data.get("net_profit"),
+            ratios.roe,
+            ratios.roa,
+            ratios.gross_margin,
+            ratios.net_margin,
+            ratios.current_ratio,
+            ratios.debt_to_equity,
+            ratios.asset_turnover,
+            ratios.revenue_growth,
+            ratios.profit_growth,
+        ]
+        return any(self._num(value) is not None for value in candidates)
 
     @staticmethod
     def _num(value: Any) -> Optional[float]:

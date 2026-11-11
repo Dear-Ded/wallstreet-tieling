@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0"""
+"""wallstreet-tieling v0.6.0"""
 from __future__ import annotations
 
 import hashlib
@@ -55,7 +55,7 @@ class GlobalCache:
         self._store: dict[str, tuple[float, Any]] = {}
 
     @classmethod
-    def get(cls) -> "GlobalCache":
+    def get_instance(cls) -> "GlobalCache":
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance

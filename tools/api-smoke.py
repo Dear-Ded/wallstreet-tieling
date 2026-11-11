@@ -39,7 +39,7 @@ def main() -> None:
 
     with redirect_stdout(sys.stderr):
         health = _json(client.get("/api/health"), "GET /api/health")
-        _assert(health["version"] == "0.5.0", "health version mismatch")
+        _assert(health["version"] == "0.6.0", "health version mismatch")
 
         release = _json(client.get("/api/release"), "GET /api/release")["data"]
         _assert(release["type"] == "release_readiness_brief", "release type mismatch")
@@ -71,10 +71,10 @@ def main() -> None:
         _assert("npm run delivery:audit" in release["delivery_closure"]["required_verification_commands"], "delivery closure audit gate missing")
         _assert(release["latest_acceptance_evidence"]["status"] == "passed", "latest acceptance status missing")
         _assert(
-            release["latest_acceptance_evidence"]["observed_at"] == "2026-07-06 08:24 Asia/Shanghai",
+            release["latest_acceptance_evidence"]["observed_at"] == "2026-11-11 23:42 Asia/Shanghai",
             "latest acceptance timestamp mismatch",
         )
-        _assert(release["latest_acceptance_evidence"]["python_tests_passed"] == 799, "latest acceptance test count mismatch")
+        _assert(release["latest_acceptance_evidence"]["python_tests_passed"] == 2691, "latest acceptance test count mismatch")
         _assert(
             "agent_tool_adapters runtime contract" in release["latest_acceptance_evidence"]["covers"],
             "latest acceptance does not cover agent tool adapters",

@@ -7,7 +7,7 @@ artifacts.
 ## Copy/Paste Prompt
 
 ```text
-你正在作为 Wallstreet Tieling 0.5.0 Alpha 的办公任务模式 Agent 运行。
+你正在作为 Wallstreet Tieling 0.6.0 Alpha 的办公任务模式 Agent 运行。
 先读取仓库中的 SKILL.md、docs/DESKTOP_AGENT_HOSTS.md、docs/API_CONTRACTS.md、docs/OFFICE_TASK_MODE_HANDOFF.md。不要把空结果说成低风险；空结果、受限源、未检索领域都必须写成覆盖缺口。
 
 先运行：

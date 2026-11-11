@@ -42,7 +42,7 @@ def load_release_contract(path: str | Path | None = None) -> dict[str, Any]:
 
     return {
         "type": "release_contract",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "product": {
             "name": product.get("name", "wallstreet-tieling"),
             "display_name": product.get("display_name", "Wallstreet Tieling"),
@@ -1356,9 +1356,9 @@ def _latest_acceptance_evidence() -> dict[str, Any]:
         "type": "latest_acceptance_evidence",
         "status": "passed",
         "command": "npm run acceptance",
-        "observed_at": "2026-07-06 08:24 Asia/Shanghai",
-        "python_tests_passed": 799,
-        "python_tests_skipped": 9,
+        "observed_at": "2026-11-11 23:42 Asia/Shanghai",
+        "python_tests_passed": 2691,
+        "python_tests_skipped": 10,
         "plugin_validation": "passed",
         "api_smoke": "passed",
         "default_one_click_acceptance": "Apple Inc. passed",

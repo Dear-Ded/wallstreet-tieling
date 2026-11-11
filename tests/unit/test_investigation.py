@@ -89,7 +89,7 @@ def test_investigation_packet_contains_report_and_monitoring_seed(tmp_path) -> N
     packet = build_investigation_packet(graph, input_text=company, mode="standard").to_dict()
 
     assert packet["type"] == "investigation_packet"
-    assert packet["version"] == "0.5.0"
+    assert packet["version"] == "0.6.0"
     assert packet["one_click"] is True
     assert packet["risk_brief"]["verdict"] in {
         "high_risk_verification_required",
@@ -2770,7 +2770,7 @@ def test_investigation_report_surfaces_relationship_network_and_parks_monitoring
     assert "## 来源出处" in report
     assert "官方/授权事实" in report
     assert "## 后续版本目标" in report
-    assert "当前 0.5.0 Alpha 不上线持续监控" in report
+    assert "当前 0.6.0 Alpha 不上线持续监控" in report
     assert "## 后续版本基线" not in report
 
 
@@ -3383,7 +3383,7 @@ def test_cli_can_print_release_readiness(tmp_path) -> None:
     assert result.returncode == 0
     payload = json.loads(result.stdout)
     assert payload["type"] == "release_readiness_brief"
-    assert payload["contract"]["version"] == "0.5.0"
+    assert payload["contract"]["version"] == "0.6.0"
     assert payload["delivery_decision"]["status"] == "desktop_agent_alpha_release_candidate"
     if payload.get("execution_mode") == "node_metadata_fallback":
         assert payload["blockers"] == []
@@ -5559,7 +5559,7 @@ def test_e2e_dd_pipeline_all_outputs() -> None:
 
         # 10. Persona surface
         ps = pk.get("persona_surface", {})
-        assert ps.get("active_role_count", 0) >= 8, f"Should have >=8 active roles"
+        assert ps.get("active_role_count", 0) >= 8, "Should have >=8 active roles"
 
         # 11. Evidence admission breakdown
         facts = sum(1 for e in el if e.get("admission") == "fact")
@@ -5648,6 +5648,6 @@ def test_evidence_ledger_has_admission_field() -> None:
         assert len(el)>0, "Evidence ledger should not be empty"
         for item in el:
             assert "admission" in item, f"Evidence item missing admission field: {item.get('source')}"
-            assert "admission_reason" in item, f"Evidence item missing admission_reason field"
+            assert "admission_reason" in item, "Evidence item missing admission_reason field"
             assert item["admission"] in ("fact","lead","weak_lead"), f"Invalid admission: {item['admission']}"
     asyncio.run(run())

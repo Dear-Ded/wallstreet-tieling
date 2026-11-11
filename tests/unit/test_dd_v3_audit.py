@@ -1,5 +1,4 @@
 """test_dd_v3_audit.py — Real tests for DD v3.0 capabilities."""
-import pytest
 
 def test_capability_audit_no_hardcoded_true():
     """CapabilityAudit must not hardcode everything as True."""
@@ -778,8 +777,6 @@ def test_audit_log_source_readiness_tracks_fixture():
 def test_audit_log_no_sensitive_data_comprehensive():
     """Comprehensive audit log must never contain credentials, tokens, paths."""
     from core.investigation import _build_investigation_audit_log
-    from core.due_diligence_audit import build_capability_audit
-    from core.release_gate import compute_release_decision
     ec = {
         "source_smoke_harness": {"ready_for_production": False},
         "evidence_ledger_v2": [],
@@ -1014,7 +1011,7 @@ def test_relationship_weak_lead_never_becomes_fact_graph():
     for lead in r["phase1_candidate_leads"]:
         assert lead["admission"] != "fact"
     for edge in r["phase2_admitted_edges"]:
-        assert edge["admission"] != "fact" or "reg" in edge.get("source",""), f"Fact edge must have official source"
+        assert edge["admission"] != "fact" or "reg" in edge.get("source",""), "Fact edge must have official source"
 
 def test_next_questions_generated_for_gaps():
     """Missing lanes must generate next_questions."""
@@ -1036,12 +1033,12 @@ def test_next_questions_generated_for_gaps():
 
 # === Batch 3: Entity + Relationship Graph Trustworthiness Tests ===
 
-def test_entity_fact_requires_strong_id():
+def test_entity_fact_requires_strong_id_variant2():
     from core.entity_resolution import build_entity_resolution
     r=build_entity_resolution({"name":"Generic Co"},None)
     assert r["resolved_entities"][0]["match_confidence"]<=0.9
 
-def test_relationship_edge_has_source_and_explanation():
+def test_relationship_edge_has_source_and_explanation_variant2():
     from core.relationship_resolution import build_relationship_resolution
     g={"edges":[{"from":"A","to":"B","type":"controls","admission":"fact","explanation":"reg","source":"reg"}]}
     r=build_relationship_resolution(None,None,g)
@@ -1590,7 +1587,7 @@ def test_pledge_bridge_no_provenance_rejected():
     r = build_pledge_bridge([{}], [], [])
     assert r["rejected_count"] == 1
 
-def test_pledge_bridge_high_pressure():
+def test_pledge_bridge_high_pressure_variant2():
     from core.qyyjt_pledge_bridge import build_pledge_bridge
     r = build_pledge_bridge(
         [{"source":"q","amount":"1","pledgor":"a","pledgee":"b"}]*3,
@@ -1826,24 +1823,6 @@ def test_ev003_cross_case_drill():
         assert china["goods"] in ("covered","weak","missing"), f"Expected goods gap in at least China: china={china} apple={apple}"
     asyncio.run(main())
 
-def test_ev007_reality_drill_money():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("Apple reported record revenue of $100B in Q4 2024")
-    assert len(r["money_leads"]) >= 1
-def test_ev007_reality_drill_goods():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("Company launched new product line with patent filings")
-    assert len(r["goods_leads"]) >= 1
-def test_ev007_reality_drill_people():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("CEO Tim Cook appointed new board director")
-    assert len(r["people_leads"]) >= 1
-def test_ev007_reality_drill_empty():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("This page has no useful information")
-    assert len(r["money_leads"]) == 0 and len(r["goods_leads"]) == 0 and len(r["people_leads"]) == 0
-
-
 def test_p004_no_provenance_fact():
     """P0-004: Missing provenance must not become fact."""
     from core.evidence_ledger_v2 import normalize_evidence_v2
@@ -1966,3 +1945,9 @@ def test_bridge_summary_only_lists_runtime_backed():
         if bs.get("operational_count") == 0:
             assert operational == []
     asyncio.run(run())
+
+
+def test_classify_content_type_ip_is_whole_word_only():
+    from core.evidence_ledger_v2 import classify_content_type
+    assert classify_content_type("Shipping relationship description of the firm") == "general_web_page"
+    assert classify_content_type("IP portfolio and licensing") == "ip_product_technical"

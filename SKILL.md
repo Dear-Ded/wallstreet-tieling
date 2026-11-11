@@ -1,7 +1,7 @@
 ---
 name: wallstreet-tieling
-description: Enterprise intelligence and risk discovery system for public or user-authorized due diligence workflows. Version 0.5.0.
-version: 0.5.0
+description: Enterprise intelligence and risk discovery system for public or user-authorized due diligence workflows. Version 0.6.0.
+version: 0.6.0
 author: Dear-Ded
 license: MIT
 homepage: https://dear-ded.github.io/wallstreet-tieling/
@@ -37,7 +37,7 @@ This project is an Enterprise Intelligence & Risk Discovery System.
 - 发现风险事件和证据缺口。
 - 输出调查包、报告草稿和后续持续盯防种子。
 
-## 当前真实能力：0.5.0
+## 当前真实能力：0.6.0
 
 已落地：
 
@@ -169,7 +169,7 @@ subject that needs bounded follow-up. Preserve `quality_gate`,
 ```json
 {
   "type": "investigation_packet",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "risk_brief": {},
   "profile_brief": {},
   "evidence_ledger": [],

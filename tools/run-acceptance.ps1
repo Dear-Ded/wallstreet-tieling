@@ -102,7 +102,7 @@ function Invoke-CheckedOutput {
     return $output
 }
 
-Write-Host "== Wallstreet Tieling 0.5.0 acceptance =="
+Write-Host "== Wallstreet Tieling 0.6.0 acceptance =="
 Write-Host "Python: $python"
 Write-Host "Node: $node"
 
@@ -289,14 +289,14 @@ $packet = $packetText | ConvertFrom-Json
 if ($packet.type -ne "investigation_packet") {
     throw "Default one-click investigate command did not return an investigation_packet."
 }
-if ($packet.version -ne "0.5.0") {
-    throw "Default one-click investigate command did not return version 0.5.0."
+if ($packet.version -ne "0.6.0") {
+    throw "Default one-click investigate command did not return version 0.6.0."
 }
 if (-not $packet.evidence_ledger -or $packet.evidence_ledger.Count -lt 1) {
     throw "Default one-click investigation did not return an evidence ledger."
 }
 if (-not $packet.report_markdown -or $packet.report_markdown -notmatch "0\.5\.0") {
-    throw "Default one-click report did not include the 0.5.0 product header."
+    throw "Default one-click report did not include the 0.6.0 product header."
 }
 if ($packet.report_markdown -notmatch "operator work queue") {
     throw "Default one-click report did not include operator work queue visibility."

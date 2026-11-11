@@ -1,18 +1,18 @@
 ﻿#!/usr/bin/env python3
-"""AgentRegistry 单元测试 — wallstreet-tieling v0.5.0
+"""AgentRegistry 单元测试 — wallstreet-tieling v0.6.0
 
 覆盖：生命周期 / CRUD / 通信路由 / 状态快照 / 聊天记录 / 清理
 纯 mock 测试，不依赖真实 personality / skill 文件。
 """
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from api.agent_registry import AgentRegistry
-from api.agent import DueDiligenceAgent, AgentMessage, AgentState, Mood, PersonalityProfile
+from api.agent import AgentMessage, AgentState, PersonalityProfile
 
 
 # ══════════════════════════════════════════════════════════

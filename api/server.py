@@ -1,9 +1,9 @@
 ﻿#!/usr/bin/env python3
-"""华尔街驻铁岭办事处 API Server v0.5.0
+"""华尔街驻铁岭办事处 API Server v0.6.0
 一键启动: python api/server.py
 Docker: docker run -p 8080:8080 wallstreet-tieling
 
-v0.5.0 变更: 路由到 wst 编排引擎（统一质量门禁），移除独立 LLM 路径。
+v0.6.0 变更: 路由到 wst 编排引擎（统一质量门禁），移除独立 LLM 路径。
 """
 import importlib
 import asyncio
@@ -135,7 +135,7 @@ def log_response(response):
 def index():
     return jsonify({
         "name": "华尔街驻铁岭办事处",
-        "version": "v0.5.0",
+        "version": "v0.6.0",
         "description": "银行信贷情报专家团 API · 真并发Agent架构",
         "persona_surface": build_persona_surface_brief(),
         "endpoints": {
@@ -172,11 +172,11 @@ def health():
     return jsonify({
         "status": "ok" if has_key else "missing_api_key",
         "model": config.DEFAULT_MODEL,
-        "version": release.get("version", "0.5.0"),
+        "version": release.get("version", "0.6.0"),
         "time": time.time(),
         "checks": {
             "server": "running",
-            "dd_version": release.get("version", "0.5.0"),
+            "dd_version": release.get("version", "0.6.0"),
             "release_readiness": readiness_status,
             "desktop_agent_delivery": delivery_decision.get("status", "unknown"),
             "desktop_agent_release_candidate": bool(delivery_decision.get("desktop_agent_release_candidate")),
@@ -207,7 +207,7 @@ def get_skill():
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
-    """v0.5.0: 路由到 wst 编排引擎（完整 3-Phase + 质量门禁）"""
+    """v0.6.0: 路由到 wst 编排引擎（完整 3-Phase + 质量门禁）"""
     data = request.get_json() or {}
     target = data.get("company", data.get("message", data.get("name", "")))
     if not target:
@@ -253,6 +253,131 @@ def analyze():
     except Exception as e:
         logger.exception("Orchestration failed")
         return jsonify({"error": "编排失败，请检查日志获取详情"}), 500
+
+
+@app.route("/api/people-intel", methods=["POST"])
+def people_intel():
+    """人物情报：PEOPLE 线适配器一次调用，产出人物线索图。
+
+    请求体：{"name": ..., "email": ..., "username": ..., "github_username": ...,
+             "sources": ["email", "github", "officer", "username", "social"],
+             # 显式指定才运行，默认全不跑；social 需要 name
+             "opencorporates_token": "..."}  # officer 源需要，请求体内传递、不落盘
+    """
+    from core.people_intel import PeopleIntelOrchestrator, PersonQuery
+
+    data = request.get_json() or {}
+    query = PersonQuery(
+        name=data.get("name"),
+        email=data.get("email"),
+        username=data.get("username"),
+        github_username=data.get("github_username"),
+    )
+    if not any((query.name, query.email, query.username, query.github_username)):
+        return jsonify({"error": "缺少 name/email/username/github_username 参数"}), 400
+
+    requested = data.get("sources")
+    if requested is None:
+        requested = []
+    requested = {str(s).strip().lower() for s in requested}
+
+    kwargs: dict[str, Any] = {}
+    if "email" in requested and query.email:
+        from adapters.email_intel_adapter import EmailIntelLookup
+        kwargs["email_adapter"] = EmailIntelLookup()
+    if "github" in requested and query.github_username:
+        from adapters.github_deep_adapter import GitHubDeepEnrichment
+        kwargs["github_adapter"] = GitHubDeepEnrichment()
+    if "officer" in requested and query.name:
+        from adapters.opencorporates_adapter import OpenCorporatesOfficerLookup
+        token = str(data.get("opencorporates_token") or "").strip()
+        if not token:
+            return jsonify({"error": "officer 源需要 opencorporates_token"}), 400
+        kwargs["officer_adapter"] = OpenCorporatesOfficerLookup(api_token=token)
+    if "username" in requested and query.username:
+        from adapters.mass_profiler import MassCrossPlatformProfiler
+        profiler = MassCrossPlatformProfiler()
+        profiler.enable(h=1)  # 本次请求内显式启用；默认关闭
+        kwargs["username_adapter"] = profiler
+    if "social" in requested and query.name:
+        from adapters.social_listen_adapters import HackerNewsAlgoliaSearch
+        kwargs["social_adapter"] = HackerNewsAlgoliaSearch()
+
+    try:
+        orchestrator = PeopleIntelOrchestrator(**kwargs)
+        graph = orchestrator.investigate(query)
+        return jsonify(graph)
+    except Exception:
+        logger.exception("People-intel failed")
+        return jsonify({"error": "人物情报编排失败，请检查日志获取详情"}), 500
+
+
+@app.route("/api/entity-associate", methods=["POST"])
+def entity_associate():
+    """实体关联：种子→跨源关联图谱→家族/实控推断。
+
+    请求体：{"seed_type": "phone|address|person_name|business_name|email",
+             "seed_value": "...", "max_depth": 2}
+    所有推断标注为 leads，置信度分级，绝不断言。
+    """
+    data = request.get_json() or {}
+    seed_type = str(data.get("seed_type") or "").strip()
+    seed_value = str(data.get("seed_value") or "").strip()
+    if seed_type not in ("phone", "address", "person_name", "business_name", "email"):
+        return jsonify({"error": "seed_type 必须是 phone/address/person_name/business_name/email"}), 400
+    if not seed_value:
+        return jsonify({"error": "缺少 seed_value 参数"}), 400
+
+    try:
+        from core.entity_association import create_engine_with_all_adapters
+        engine = create_engine_with_all_adapters()
+        result = engine.associate(
+            {"type": seed_type, "value": seed_value},
+            max_depth=int(data.get("max_depth") or 2),
+        )
+        return jsonify(result)
+    except Exception:
+        logger.exception("Entity-associate failed")
+        return jsonify({"error": "实体关联失败，请检查日志获取详情"}), 500
+
+
+@app.route("/api/domain-intel", methods=["POST"])
+def domain_intel():
+    """域名情报：基础设施公开数据一次调用，产出域名情报富化结果。
+
+    请求体：{"domain": "...",
+             "sources": ["urlscan", "hackertarget", "ipapi"]}
+             # 显式指定才运行，默认全不跑
+    """
+    from core.intel_enrichment import enrich_domain
+
+    data = request.get_json() or {}
+    domain = str(data.get("domain") or "").strip()
+    if not domain:
+        return jsonify({"error": "缺少 domain 参数"}), 400
+
+    requested = data.get("sources")
+    if requested is None:
+        requested = []
+    requested = {str(s).strip().lower() for s in requested}
+
+    kwargs: dict[str, Any] = {}
+    if "urlscan" in requested:
+        from adapters.infra_intel_adapters import UrlScanDomainLookup
+        kwargs["urlscan"] = UrlScanDomainLookup()
+    if "hackertarget" in requested:
+        from adapters.infra_intel_adapters import HackertargetInfraLookup
+        kwargs["hackertarget"] = HackertargetInfraLookup()
+    if "ipapi" in requested:
+        from adapters.infra_intel_adapters import IpApiGeolocationLookup
+        kwargs["ipapi"] = IpApiGeolocationLookup()
+
+    try:
+        result = enrich_domain(domain, **kwargs)
+        return jsonify(result)
+    except Exception:
+        logger.exception("Domain-intel failed")
+        return jsonify({"error": "域名情报富化失败，请检查日志获取详情"}), 500
 
 
 def _clamped_int(data: dict[str, Any], key: str, default: int, low: int, high: int) -> int:
@@ -632,7 +757,6 @@ def objective_audit():
 @app.route("/api/office_chat")
 def office_chat_api():
     from core.office_chat import build_office_chat_packet
-    from dataclasses import asdict
     company = request.args.get("company", "Demo Company")
     try:
         ec = {}; pb = {}
@@ -1050,7 +1174,7 @@ if __name__ == "__main__":
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     print(f"""
-🏛️  华尔街驻铁岭办事处 API Server v0.5.0
+🏛️  华尔街驻铁岭办事处 API Server v0.6.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 端口: {PORT}
 绑定: {BIND_HOST}
@@ -1061,6 +1185,6 @@ API Key: {'已配置 ✅' if config.get_api_key() else '未配置 ⚠️'}
 测试:
   curl http://localhost:{PORT}/api/health""")
     if AUTH_TOKEN:
-        print(f'  curl -H "Authorization: Bearer $WALLSTREET_AUTH_TOKEN" ...')
+        print('  curl -H "Authorization: Bearer $WALLSTREET_AUTH_TOKEN" ...')
     print()
     app.run(host=BIND_HOST, port=PORT, debug=False)

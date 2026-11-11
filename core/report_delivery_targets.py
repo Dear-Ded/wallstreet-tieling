@@ -16,7 +16,7 @@ def build_report_delivery_targets() -> dict[str, Any]:
     persona = release.get("persona_surface", {})
     return {
         "type": "report_delivery_targets",
-        "version": release.get("version", "0.5.0"),
+        "version": release.get("version", "0.6.0"),
         "current_delivery": "desktop_agent_alpha",
         "full_product_status": release.get("delivery_decision", {}).get("full_product_status", "not_final_release_ready"),
         "status": "alpha_report_contract_ready",

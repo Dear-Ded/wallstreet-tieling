@@ -23,7 +23,7 @@ useful only when they map to real modules, evidence, gaps, or next questions.
 
 ## 2. Current Release Boundary
 
-Current release: `0.5.0 Alpha`.
+Current release: `0.6.0 Alpha`.
 
 This release is a single-shot investigation packet:
 

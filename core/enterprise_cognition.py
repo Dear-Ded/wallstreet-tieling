@@ -15,7 +15,7 @@ from typing import Any
 from .enterprise_strategy import EnterpriseStrategyEngine
 from .financial_analyzer_v2 import EnhancedFinancialAnalyzer
 from .industry_intelligence import IndustryIntelligenceEngine
-from .intelligence_retrieval import RiskEvent, RiskSeverity
+from .intelligence_retrieval import RiskEvent
 from .product_intelligence import ProductIntelligenceEngine
 from .risk_event_store import RiskEventStore
 

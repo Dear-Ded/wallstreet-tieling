@@ -1,8 +1,7 @@
 """Tests for SubjectProfileAggregator."""
 import asyncio
-import pytest
 from core.subject_profile_aggregator import (
-    SubjectProfileAggregator, SubjectProfileReport, AdapterResult,
+    SubjectProfileAggregator, AdapterResult,
     IdentityAdapter, ContactAdapter, AddressAdapter,
     TravelAdapter, ConsumptionAdapter, SocialAdapter,
 )

@@ -289,7 +289,7 @@ assert(
 assert(release.release_preflight?.package_candidate_ready === true, 'release embedded preflight package candidate missing');
 assert(release.latest_acceptance_evidence?.status === 'passed', 'latest acceptance evidence status missing');
 assert(
-  release.latest_acceptance_evidence?.observed_at === '2026-07-06 08:24 Asia/Shanghai',
+  release.latest_acceptance_evidence?.observed_at === '2026-11-11 23:42 Asia/Shanghai',
   'latest acceptance evidence timestamp mismatch'
 );
 assert(
@@ -695,7 +695,7 @@ const investigation = parseJson(
   'investigate_company'
 );
 assert(investigation.type === 'investigation_packet', 'investigation packet type mismatch');
-assert(investigation.version === '0.5.0', 'investigation packet version mismatch');
+assert(investigation.version === '0.6.0', 'investigation packet version mismatch');
 assert(investigation.enterprise_cognition, 'enterprise_cognition missing');
 assert(investigation.quality_gate, 'quality_gate missing');
 assert(Array.isArray(investigation.evidence_ledger), 'evidence_ledger missing');
@@ -861,7 +861,7 @@ assert(
   'one_click_readiness people_control_closure_step missing'
 );
 assert(typeof investigation.report_markdown === 'string', 'report_markdown missing');
-assert(investigation.report_markdown.includes('0.5.0'), 'report_markdown lacks version header');
+assert(investigation.report_markdown.includes('0.6.0'), 'report_markdown lacks version header');
 assert(investigation.report_exports, 'report_exports missing');
 assert(
   investigation.report_exports.agent_decision_digest?.type === 'agent_decision_digest',

@@ -1,7 +1,7 @@
 ﻿{
   "name": "wallstreet-tieling",
   "displayName": "华尔街驻铁岭办事处",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "开源企业情报与风险发现系统。面向公开或用户授权数据，提供企业尽调、财务研究、行业研究、风险事件、证据图谱和报告生成。",
   "description_en": "Open-source enterprise intelligence and risk discovery system for public or user-authorized data. Due diligence, financial research, industry research, risk events, evidence graphs, and report-ready findings.",
   "category": "finance",

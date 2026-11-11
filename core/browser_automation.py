@@ -30,12 +30,10 @@ import json
 import logging
 import os
 import random
-import re
 import tempfile
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, AsyncIterator
 from urllib.parse import urlparse
 

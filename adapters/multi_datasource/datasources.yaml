@@ -1,5 +1,5 @@
 # wallstreet-tieling multi-datasource template
-# Version: 0.5.0
+# Version: 0.6.0
 #
 # Purpose
 # - Give non-technical users a clean default-safe starting point.
@@ -22,7 +22,7 @@ sources:
     description: "Public REST source example. Use for connectivity and routing smoke tests."
     headers:
       Accept: "application/vnd.github+json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     params:
       per_page: 30
     auth:
@@ -56,7 +56,7 @@ sources:
     description: "Self-hosted SearXNG JSON endpoint for public web search."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     params:
       format: "json"
       language: "auto"
@@ -93,7 +93,7 @@ sources:
     description: "GLEIF public LEI API for legal-entity identity and relationship records."
     headers:
       Accept: "application/vnd.api+json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -132,7 +132,7 @@ sources:
     description: "GLEIF public relationship traversal for parent, branch, and related-entity graph edges."
     headers:
       Accept: "application/vnd.api+json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -172,7 +172,7 @@ sources:
     description: "SEC EDGAR public APIs for submissions and XBRL company facts."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.5.0 contact@example.invalid"
+      User-Agent: "wallstreet-tieling/0.6.0 contact@example.invalid"
     auth:
       type: "none"
     ping: true
@@ -212,7 +212,7 @@ sources:
     description: "OpenSanctions public dataset catalog for sanctions, PEP, and related-entity coverage metadata."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -256,7 +256,7 @@ sources:
     description: "U.S. Treasury OFAC consolidated sanctions XML for public watchlist screening."
     headers:
       Accept: "text/xml,application/xml"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -295,7 +295,7 @@ sources:
     description: "United Nations Security Council consolidated sanctions XML for public watchlist screening."
     headers:
       Accept: "application/xml,text/xml"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -335,7 +335,7 @@ sources:
     description: "IDB public dataset catalog for sanctioned firms and individuals."
     headers:
       Accept: "text/html"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -439,7 +439,7 @@ sources:
     description: "World Bank public debarred firms list for procurement exclusion screening."
     headers:
       Accept: "text/html"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -479,7 +479,7 @@ sources:
     description: "Wikidata public EntitySearch API for entity graph corroboration."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: true
@@ -520,7 +520,7 @@ sources:
     description: "National Enterprise Credit Information Publicity System portal catalog entry."
     headers:
       Accept: "text/html,application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "challenge_aware"
       challenge_provider: "browser_handoff"
@@ -577,7 +577,7 @@ sources:
     description: "Credit China public portal catalog entry for administrative and credit-publicity records."
     headers:
       Accept: "text/html,application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "none"
     ping: false
@@ -633,7 +633,7 @@ sources:
     description: "China Enforcement Information public portal catalog entry."
     headers:
       Accept: "text/html,application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "challenge_aware"
       challenge_provider: "browser_handoff"
@@ -691,7 +691,7 @@ sources:
     description: "Licensed or user-authorized enterprise registry API."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "bearer"
       token: "${LICENSED_REGISTRY_TOKEN}"
@@ -724,7 +724,7 @@ sources:
     description: "Signed request example for public or authorized records."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "request_signature"
       signature_secret: "${PUBLIC_RECORDS_SIGNING_SECRET}"
@@ -760,7 +760,7 @@ sources:
     description: "Challenge-aware public portal with browser/plugin handoff."
     headers:
       Accept: "application/json,text/html"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "challenge_aware"
       token: "${USER_AUTHORIZED_PORTAL_TOKEN}"
@@ -800,7 +800,7 @@ sources:
     description: "Metadata placeholder for user-configured Telegram public-service transport."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.5.0"
+      User-Agent: "wallstreet-tieling/0.6.0"
     auth:
       type: "bearer"
       token: "${TELEGRAM_BOT_TOKEN}"

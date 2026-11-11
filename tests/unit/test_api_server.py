@@ -173,7 +173,7 @@ def test_investigate_endpoint_accepts_one_line_message(tmp_path) -> None:
     assert response.status_code == 200
     payload = response.get_json()["data"]
     assert payload["type"] == "investigation_packet"
-    assert payload["version"] == "0.5.0"
+    assert payload["version"] == "0.6.0"
     assert payload["input"] == "Demo One Click Co., Ltd."
     assert payload["one_click"] is True
     assert payload["summary"]["execution_state"] == "risk_events_found"
@@ -598,7 +598,7 @@ def test_release_endpoint_exposes_variant_contract() -> None:
     assert response.status_code == 200
     payload = response.get_json()["data"]
     assert payload["type"] == "release_readiness_brief"
-    assert payload["version"] == "0.5.0"
+    assert payload["version"] == "0.6.0"
     assert payload["persona_surface"]["role_count"] == 13
     assert payload["delivery_decision"]["status"] == "desktop_agent_alpha_release_candidate"
     assert payload["delivery_decision"]["desktop_agent_release_candidate"] is True
@@ -621,8 +621,8 @@ def test_release_endpoint_exposes_variant_contract() -> None:
     assert "npm run delivery:audit" in payload["delivery_closure"]["required_verification_commands"]
     assert "npm run objective:audit" in payload["delivery_closure"]["required_verification_commands"]
     assert payload["latest_acceptance_evidence"]["status"] == "passed"
-    assert payload["latest_acceptance_evidence"]["observed_at"] == "2026-07-06 08:24 Asia/Shanghai"
-    assert payload["latest_acceptance_evidence"]["python_tests_passed"] == 799
+    assert payload["latest_acceptance_evidence"]["observed_at"] == "2026-11-11 23:42 Asia/Shanghai"
+    assert payload["latest_acceptance_evidence"]["python_tests_passed"] == 2691
     focused_regression = payload["latest_acceptance_evidence"]["post_acceptance_focused_regressions"][0]
     assert focused_regression["observed_at"] == "2026-07-05 21:24 Asia/Shanghai"
     assert focused_regression["python_tests_passed"] == 223
@@ -727,7 +727,7 @@ def test_release_preflight_endpoint_exposes_packaging_go_no_go() -> None:
     assert "report_exports.directory_bundle.agent_handoff.report_visibility.premium_html" in payload["required_preserved_fields"]
     assert "qyyjt_public_origin_handoff.agent_autorun" in payload["required_preserved_fields"]
     assert "report_exports.directory_bundle.agent_handoff.report_artifact_autorun" in payload["required_preserved_fields"]
-    assert payload["latest_acceptance"]["python_tests_passed"] == 799
+    assert payload["latest_acceptance"]["python_tests_passed"] == 2691
     assert payload["packaging_review"]["dry_run_command"] == "npm pack --dry-run --json"
     assert payload["packaging_review"]["privacy_command"] == "npm run release:privacy-scan"
     assert "desktop-agent alpha release candidate" in payload["agent_handoff"]["safe_claim"].lower()
@@ -751,7 +751,7 @@ def test_delivery_audit_endpoint_exposes_single_go_no_go() -> None:
     assert payload["coverage"]["capital_risk"]["covered"] is True
     assert payload["coverage"]["relationship_graph"]["covered"] is True
     assert payload["coverage"]["report_visibility"]["covered"] is True
-    assert payload["verification_evidence"]["latest_acceptance"]["python_tests_passed"] == 799
+    assert payload["verification_evidence"]["latest_acceptance"]["python_tests_passed"] == 2691
     assert "not final polished product launch readiness" in payload["safe_claim"].lower()
 
 
@@ -767,7 +767,7 @@ def test_objective_audit_endpoint_maps_goal_to_evidence() -> None:
     assert payload["status"] == "complete"
     assert payload["completion_percent"] == 100
     assert payload["release_gate"]["delivery_audit_status"] == "pass"
-    assert payload["verification_evidence"]["latest_acceptance"]["python_tests_passed"] == 799
+    assert payload["verification_evidence"]["latest_acceptance"]["python_tests_passed"] == 2691
     assert payload["verification_evidence"]["public_release_hygiene"]["status"] == "pass"
     statuses = {item["id"]: item["status"] for item in payload["requirements"]}
     assert statuses["source_resilience"] == "complete"

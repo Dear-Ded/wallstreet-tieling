@@ -1,0 +1,5 @@
+username,name,url_main,url_user,exists,http_status,response_time_s
+demo-exec,GitLab,https://gitlab.com/,https://gitlab.com/demo-exec,Claimed,200,0.41
+demo-exec,HackerNews,https://news.ycombinator.com/,https://news.ycombinator.com/user?id=demo-exec,Available,200,0.38
+demo-exec,DEV Community,https://dev.to/,https://dev.to/demo-exec,Unknown,429,
+demo-exec,Docker Hub,https://hub.docker.com/,https://hub.docker.com/u/demo-exec,Illegal,,

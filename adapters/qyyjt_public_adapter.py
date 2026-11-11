@@ -15,10 +15,8 @@ qyyjt_public_adapter.py — 企业预警通公开数据适配器（不需要登�
 """
 
 import asyncio
-import json
-import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import requests
 try:

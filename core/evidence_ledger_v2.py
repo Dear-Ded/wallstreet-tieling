@@ -1,4 +1,7 @@
 """evidence_ledger_v2.py — DD v3.0 Evidence normalizer."""
+import re
+
+_IP_TOKEN = re.compile(r"(?<![a-z0-9])ip(?![a-z0-9])")
 
 
 def compute_evidence_depth(rows: list) -> dict:
@@ -41,7 +44,7 @@ def classify_content_type(text: str) -> str:
         return "industry_report"
     if any(k in t for k in ("recruiting","job posting","career","hiring","招聘","jobs")):
         return "recruitment_job_posting"
-    if any(k in t for k in ("patent","trademark","ip","intellectual property","专利","商标")):
+    if any(k in t for k in ("patent","trademark","intellectual property","专利","商标")) or _IP_TOKEN.search(t):
         return "ip_product_technical"
     return "general_web_page"
 def normalize_evidence_v2(raw: list | None) -> list:
@@ -71,7 +74,7 @@ def normalize_evidence_v2(raw: list | None) -> list:
         elif any(k in ct for k in ("address", "relation", "graph", "edge", "node")): lane = "graph"
         elif any(k in ct for k in ("source", "fixture", "smoke", "live_verified", "live_unverified")): lane = "source"
         elif any(k in ct for k in ("pledge", "freeze", "auction", "seal", "查封", "冻结", "拍卖")): lane = "capital"
-        elif any(k in ct for k in ("trademark", "patent", "ip", "brand", "recruit", "bid", "tender", "投标", "招聘")): lane = "goods"
+        elif any(k in ct for k in ("trademark", "patent", "brand", "recruit", "bid", "tender", "投标", "招聘")) or _IP_TOKEN.search(ct): lane = "goods"
         elif any(k in ct for k in ("ubo", "controller", "executive", "director", "shareholder", "关联", "任职")): lane = "people"
         elif any(k in ct for k in ("source", "fixture", "smoke", "live_verified", "live_unverified")): lane = "source"
         content_type = classify_content_type(ct)

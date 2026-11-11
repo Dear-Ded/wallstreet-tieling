@@ -9,7 +9,7 @@ def test_development_requirements_board_classifies_current_release_work() -> Non
     board = build_development_requirements_board()
 
     assert board["type"] == "development_requirements_board"
-    assert board["version"] == "0.5.0"
+    assert board["version"] == "0.6.0"
     assert board["completion_percent"] == 94
     assert board["summary"]["by_level"]["P0"] >= 6
     assert board["summary"]["p0_open_count"] >= 1
@@ -230,6 +230,10 @@ def test_acceptance_gates_are_machine_readable_by_priority() -> None:
     )
     assert any(
         "2026-07-06 08:24" in item and "799 Python tests" in item
+        for item in requirements["P0.RELEASE_ACCEPTANCE_HYGIENE"]["implemented"]
+    )
+    assert any(
+        "2026-11-11 23:42 Asia/Shanghai" in item and "2691 Python tests" in item
         for item in requirements["P0.RELEASE_ACCEPTANCE_HYGIENE"]["implemented"]
     )
     assert any(

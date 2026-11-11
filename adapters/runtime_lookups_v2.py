@@ -7,7 +7,6 @@
 from __future__ import annotations
 from adapters.safe_research_adapter import SafeResearchAdapter
 from typing import Any
-from core.user_auth_gate import UserAuthorizationGate
 import json
 import urllib.request
 import urllib.parse

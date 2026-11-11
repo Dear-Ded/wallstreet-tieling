@@ -54,25 +54,6 @@ def reality_drill_extract(snippet: str, url: str = "", source_type: str = "publi
         result["people_leads"].append({"hint": "personnel", "snippet": snippet[:100], "confidence": "lead"})
     return result
 
-
-def reality_drill_extract(snippet: str, url: str = "", source_type: str = "public_web_search") -> dict:
-    """EV-007: Extract structured leads from public web snippets.
-    Returns money/goods/people leads with confidence and evidence_id."""
-    t = snippet.lower()
-    result = {"source_url": url, "source_type": source_type, "money_leads": [], "goods_leads": [], "people_leads": []}
-    # Money
-    if any(k in t for k in ("revenue","sales","income","profit","debt","funding","investment","acquisition","融资","收入","利润","债务")):
-        result["money_leads"].append({"hint": "financial_metric", "snippet": snippet[:100], "confidence": "lead"})
-    if any(k in t for k in ("financial results","earnings","annual report","10-k","10-q","年报","财报")):
-        result["money_leads"].append({"hint": "financial_filing", "snippet": snippet[:100], "confidence": "lead"})
-    # Goods
-    if any(k in t for k in ("product","launch","release","patent","trademark","supplier","customer","market share","产品","发布","专利","供应商","客户")):
-        result["goods_leads"].append({"hint": "product_or_market", "snippet": snippet[:100], "confidence": "lead"})
-    # People
-    if any(k in t for k in ("ceo","cfo","cto","founder","director","executive","appointed","resigned","board","总裁","创始人","董事")):
-        result["people_leads"].append({"hint": "personnel", "snippet": snippet[:100], "confidence": "lead"})
-    return result
-
 class PublicWebSearchTool(ToolProvider):
     """Normalizes public web-search hits into standardized evidence records.
 
@@ -1062,7 +1043,7 @@ def _public_web_customer_concentration_signals(text: str) -> list[str]:
     m = re.search(r"(?:customer concentration|customer concentration ratio|client concentration|客户集中度)\D{0,40}(\d+(?:\.\d+)?)\s*%", lowered)
     if m:
         ratio = float(m.group(1)) / 100.0
-        signals.append(f"customer_concentration={ratio:.2f}" if ratio < 1 else f"customer_concentration=publicly_described")
+        signals.append(f"customer_concentration={ratio:.2f}" if ratio < 1 else "customer_concentration=publicly_described")
     if "top customer" in lowered or "top client" in lowered or "客户集中" in str(text or ""):
         if not signals:
             signals.append("customer_concentration=publicly_described")

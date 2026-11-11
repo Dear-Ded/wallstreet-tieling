@@ -1,0 +1,11 @@
+# Optional SOCMINT extras (runtime-detected by adapters/osint_tools.py; nothing assumes they are installed).
+# MIT-licensed libraries that may be installed into the same environment:
+maigret>=0.5
+sherlock-project>=0.16
+socid-extractor>=0.1
+# Copyleft tools are deliberately NOT listed here: install them separately and they are
+# executed only as external processes / services, never imported:
+#   holehe (GPL-3.0):        pipx install holehe
+#   theHarvester (GPL-2.0):  see https://github.com/laramies/theHarvester
+#   PhoneInfoga (GPL-3.0):   Go binary or `docker run -p 5000:5000 sundowndev/phoneinfoga serve`
+#   GHunt (AGPL-3.0):        pipx install ghunt && ghunt login   (operator's own Google session)

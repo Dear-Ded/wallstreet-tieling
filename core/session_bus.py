@@ -1,12 +1,9 @@
 ﻿#!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0"""
+"""wallstreet-tieling v0.6.0"""
 from __future__ import annotations
 
-import json
 import time
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
+from dataclasses import dataclass
 
 
 # ═══════════════════════════════════════════════════════════

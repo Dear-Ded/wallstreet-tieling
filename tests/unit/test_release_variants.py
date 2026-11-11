@@ -103,7 +103,7 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     objective_audit = objective_completion_audit_brief()
 
     assert contract["type"] == "release_contract"
-    assert contract["version"] == "0.5.0"
+    assert contract["version"] == "0.6.0"
     assert contract["summary"]["variant_count"] == 7
     assert contract["persona_surface"]["type"] == "persona_surface_brief"
     assert contract["persona_surface"]["role_count"] == 13
@@ -199,8 +199,8 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert brief["latest_acceptance_evidence"]["type"] == "latest_acceptance_evidence"
     assert brief["latest_acceptance_evidence"]["status"] == "passed"
     assert brief["latest_acceptance_evidence"]["command"] == "npm run acceptance"
-    assert brief["latest_acceptance_evidence"]["observed_at"] == "2026-07-06 08:24 Asia/Shanghai"
-    assert brief["latest_acceptance_evidence"]["python_tests_passed"] == 799
+    assert brief["latest_acceptance_evidence"]["observed_at"] == "2026-11-11 23:42 Asia/Shanghai"
+    assert brief["latest_acceptance_evidence"]["python_tests_passed"] == 2691
     focused_regression = brief["latest_acceptance_evidence"]["post_acceptance_focused_regressions"][0]
     assert focused_regression["observed_at"] == "2026-07-05 21:24 Asia/Shanghai"
     assert focused_regression["python_tests_passed"] == 223
@@ -223,7 +223,7 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert "source_strengthening risk_enforcement lane routing" in brief["latest_acceptance_evidence"]["covers"]
     assert "source_strengthening execution_plan agent handoff" in brief["latest_acceptance_evidence"]["covers"]
     assert "manifest agent_summary deep drift verification" in brief["latest_acceptance_evidence"]["covers"]
-    assert brief["latest_acceptance_evidence"]["python_tests_skipped"] == 9
+    assert brief["latest_acceptance_evidence"]["python_tests_skipped"] == 10
     assert "agent_tool_adapters runtime contract" in brief["latest_acceptance_evidence"]["covers"]
     assert "agent_tool_adapters premium_html preservation guards" in brief["latest_acceptance_evidence"]["covers"]
     assert "premium_html report_exports runtime contract" in brief["latest_acceptance_evidence"]["covers"]
@@ -259,7 +259,7 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert "npm run delivery:audit" in preflight["required_verification_commands"]
     assert "npm run objective:audit" in preflight["required_verification_commands"]
     assert "marketplace/operator screenshots" in " ".join(preflight["final_submission_blockers"])
-    assert preflight["latest_acceptance"]["observed_at"] == "2026-07-06 08:24 Asia/Shanghai"
+    assert preflight["latest_acceptance"]["observed_at"] == "2026-11-11 23:42 Asia/Shanghai"
     assert preflight["packaging_review"]["dry_run_command"] == "npm pack --dry-run --json"
     assert preflight["packaging_review"]["privacy_command"] == "npm run release:privacy-scan"
     assert "desktop-agent alpha release candidate" in preflight["agent_handoff"]["safe_claim"].lower()
@@ -277,7 +277,7 @@ def test_release_contract_can_be_loaded_by_runtime_api():
     assert audit["coverage"]["capital_risk"]["covered"] is True
     assert audit["coverage"]["report_visibility"]["covered"] is True
     assert audit["coverage"]["workbuddy_expert_team"]["covered"] is True
-    assert audit["verification_evidence"]["latest_acceptance"]["observed_at"] == "2026-07-06 08:24 Asia/Shanghai"
+    assert audit["verification_evidence"]["latest_acceptance"]["observed_at"] == "2026-11-11 23:42 Asia/Shanghai"
     assert "not final polished product launch readiness" in audit["safe_claim"].lower()
     assert objective_audit["type"] == "objective_completion_audit"
     assert objective_audit["status"] == "complete"
@@ -1009,7 +1009,7 @@ def test_agent_delivery_packet_is_single_runtime_start_surface():
     assert packet["status"] == "ready_for_desktop_agent_alpha"
     assert packet["release_candidate"] is True
     assert packet["delivery_decision"]["status"] == "desktop_agent_alpha_release_candidate"
-    assert packet["latest_acceptance_evidence"]["python_tests_passed"] == 799
+    assert packet["latest_acceptance_evidence"]["python_tests_passed"] == 2691
     assert "npm run release:agent-smoke" in packet["latest_acceptance_evidence"]["supporting_commands"]
     assert packet["start_here"]["operator_sequence"] == [
         "release_readiness",
@@ -1237,7 +1237,7 @@ def test_codex_marketplace_notes_are_clean_and_bound_to_alpha_claims():
     desktop_hosts = (PROJECT_ROOT / "docs" / "DESKTOP_AGENT_HOSTS.md").read_text(encoding="utf-8")
 
     for text in [readiness, notes]:
-        assert "0.5.0 Alpha" in text
+        assert "0.6.0 Alpha" in text
         assert "npm run acceptance" in text
         assert "npm pack --dry-run --json" in text
         assert "Fully automated live investigation" in text
@@ -1248,7 +1248,7 @@ def test_codex_marketplace_notes_are_clean_and_bound_to_alpha_claims():
     assert "retrieval_plan" in readiness
     assert "Screenshot Capture List" in notes
     assert "npm run codex:mcp-smoke" in notes
-    assert "0.5.0 Alpha" in desktop_hosts
+    assert "0.6.0 Alpha" in desktop_hosts
     assert "npm run acceptance" in desktop_hosts
     assert "npm pack --dry-run --json" in desktop_hosts
     assert "development_requirements.delivery_decision" in desktop_hosts
@@ -1258,7 +1258,7 @@ def test_codex_marketplace_notes_are_clean_and_bound_to_alpha_claims():
 def test_office_task_mode_handoff_is_readable_and_release_bound():
     text = (PROJECT_ROOT / "docs" / "OFFICE_TASK_MODE_HANDOFF.md").read_text(encoding="utf-8")
 
-    assert "Wallstreet Tieling 0.5.0 Alpha" in text
+    assert "Wallstreet Tieling 0.6.0 Alpha" in text
     assert "npx wallstreet-tieling --release" in text
     assert "POST /api/investigate" in text
     assert "npm pack --dry-run --json" in text
@@ -1359,8 +1359,8 @@ def test_desktop_agent_alpha_delivery_closure_is_actionable():
         "report_artifact_agent_autorun",
         "npx wallstreet-tieling --delivery-closure",
         "release_readiness -> delivery_audit -> connector_catalog -> development_requirements -> agent_tool_adapters -> investigate_company",
-        "799 passed, 9 skipped",
-        "2026-07-06 08:24 Asia/Shanghai",
+        "2691 passed, 10 skipped",
+        "2026-11-11 23:42 Asia/Shanghai",
         "Final polished product launch readiness",
         "Marketplace approval",
     ]:
@@ -1429,7 +1429,7 @@ def test_node_cli_release_preflight_entrypoint_returns_packaging_go_no_go():
     assert "report_exports.directory_bundle.agent_handoff.report_visibility.premium_html" in payload["required_preserved_fields"]
     assert "qyyjt_public_origin_handoff.agent_autorun" in payload["required_preserved_fields"]
     assert "report_exports.directory_bundle.agent_handoff.report_artifact_autorun" in payload["required_preserved_fields"]
-    assert payload["latest_acceptance"]["observed_at"] == "2026-07-06 08:24 Asia/Shanghai"
+    assert payload["latest_acceptance"]["observed_at"] == "2026-11-11 23:42 Asia/Shanghai"
     assert payload["packaging_review"]["dry_run_command"] == "npm pack --dry-run --json"
     assert payload["packaging_review"]["privacy_command"] == "npm run release:privacy-scan"
     assert any("runtime state" in item for item in payload["packaging_review"]["do_not_package"])

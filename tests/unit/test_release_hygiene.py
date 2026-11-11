@@ -377,3 +377,17 @@ def test_pages_deploy_uses_single_source_branch_and_concurrency() -> None:
     assert "branches: [master]" not in workflow
     assert "group: github-pages" in workflow
     assert "cancel-in-progress: false" in workflow
+    assert "url: ${{ steps.deployment.outputs.page_url }}" in workflow
+    assert "\\${{" not in workflow
+    assert "docs/assets/brand-card.svg" in workflow
+
+
+def test_skill_validation_workflow_fails_closed() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "validate.yml").read_text(encoding="utf-8")
+
+    assert '|| echo "Missing frontmatter"' not in workflow
+    assert '|| echo "Missing data-protocol.md"' not in workflow
+    assert '|| echo "Missing tests"' not in workflow
+    assert "aesthetic-design-system.md" in workflow
+    assert "Expected 13 role sub-skills" in workflow
+    assert "exit 1" in workflow

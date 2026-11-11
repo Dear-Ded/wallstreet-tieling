@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 统一错误处理装饰器
+"""wallstreet-tieling v0.6.0 统一错误处理装饰器
 
 提供统一的错误处理、重试、日志、验证功能。
 """
@@ -8,9 +8,9 @@ from __future__ import annotations
 import functools
 import logging
 import time
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Optional
 
-from .exceptions import WallStreetError, ConfigError, APIError, DataSourceError
+from .exceptions import WallStreetError
 
 logger = logging.getLogger("wst.decorators")
 

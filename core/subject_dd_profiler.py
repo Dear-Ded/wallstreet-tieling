@@ -6,7 +6,7 @@
 from __future__ import annotations
 from core.user_auth_gate import UserAuthorizationGate
 from typing import Any
-import hashlib, json, time
+import hashlib, time
 
 
 class SubjectDeepDueDiligenceProfiler:
@@ -302,7 +302,7 @@ class SubjectDeepDueDiligenceProfiler:
                 else:
                     continue
                 findings[key] = r
-                self._gate.log_access(f"dd_profiler_people", key, hashlib.sha256(subject.encode()).hexdigest()[:12], "executed")
+                self._gate.log_access("dd_profiler_people", key, hashlib.sha256(subject.encode()).hexdigest()[:12], "executed")
             except Exception as e:
                 findings[key] = {"error": str(e)}
         return findings
@@ -327,7 +327,7 @@ class SubjectDeepDueDiligenceProfiler:
                 else:
                     continue
                 findings[key] = r
-                self._gate.log_access(f"dd_profiler_money", key, hashlib.sha256(domain_or_name.encode()).hexdigest()[:12], "executed")
+                self._gate.log_access("dd_profiler_money", key, hashlib.sha256(domain_or_name.encode()).hexdigest()[:12], "executed")
             except Exception as e:
                 findings[key] = {"error": str(e)}
         return findings
@@ -354,7 +354,7 @@ class SubjectDeepDueDiligenceProfiler:
                 else:
                     continue
                 findings[key] = r
-                self._gate.log_access(f"dd_profiler_goods", key, hashlib.sha256(company.encode()).hexdigest()[:12], "executed")
+                self._gate.log_access("dd_profiler_goods", key, hashlib.sha256(company.encode()).hexdigest()[:12], "executed")
             except Exception as e:
                 findings[key] = {"error": str(e)}
         return findings

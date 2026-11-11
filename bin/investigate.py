@@ -104,6 +104,21 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Write the full investigation JSON packet to this path while still printing stdout.",
     )
+    parser.add_argument(
+        "--intel-domain",
+        default="",
+        help="Opt-in: run public infrastructure intel (urlscan/dns/geo) for this domain and attach as packet['intel_enrichment'].",
+    )
+    parser.add_argument(
+        "--intel-person",
+        default="",
+        help="Opt-in: run people intel for this person as 'name=<name>|email=<e>|github=<u>|username=<u>' and attach as packet['intel_enrichment'].",
+    )
+    parser.add_argument(
+        "--associate",
+        default="",
+        help="Opt-in: run entity association as 'type=<phone|address|person_name|business_name|email>|value=<v>' and attach as packet['entity_association'].",
+    )
     return parser
 
 
@@ -152,11 +167,76 @@ async def run(args: argparse.Namespace) -> dict:
         query_timeout_seconds=clamp_float(args.query_timeout_seconds, 0.1, 120.0),
     )
     graph_payload = export_risk_graph(result).to_dict()
-    return build_investigation_packet(
+    packet = build_investigation_packet(
         graph_payload,
         input_text=args.company,
         mode=args.mode,
     ).to_dict()
+    intel = _optional_intel_enrichment(args)
+    if intel:
+        packet["intel_enrichment"] = intel
+    return packet
+
+
+def _optional_intel_enrichment(args: argparse.Namespace) -> dict:
+    """Opt-in OSINT enrichment. Returns {} when no --intel-* flag is given."""
+    from core.intel_enrichment import enrich_domain, enrich_person
+    from core.people_intel import PersonQuery
+
+    enrichment: dict = {}
+    if getattr(args, "intel_domain", ""):
+        from adapters.infra_intel_adapters import (
+            HackertargetInfraLookup,
+            IpApiGeolocationLookup,
+            UrlScanDomainLookup,
+        )
+        enrichment["domain"] = enrich_domain(
+            args.intel_domain.strip(),
+            urlscan=UrlScanDomainLookup(),
+            hackertarget=HackertargetInfraLookup(),
+            ipapi=IpApiGeolocationLookup(),
+        )
+    person_spec = getattr(args, "intel_person", "") or ""
+    if person_spec.strip():
+        fields: dict[str, str] = {}
+        for chunk in person_spec.split("|"):
+            if "=" in chunk:
+                key, value = chunk.split("=", 1)
+                fields[key.strip().lower()] = value.strip()
+        query = PersonQuery(
+            name=fields.get("name") or None,
+            email=fields.get("email") or None,
+            github_username=fields.get("github") or None,
+            username=fields.get("username") or None,
+        )
+        adapters: dict = {}
+        if query.email:
+            from adapters.email_intel_adapter import EmailIntelLookup
+            adapters["email_adapter"] = EmailIntelLookup()
+        if query.github_username:
+            from adapters.github_deep_adapter import GitHubDeepEnrichment
+            adapters["github_adapter"] = GitHubDeepEnrichment()
+        if query.name:
+            from adapters.social_listen_adapters import HackerNewsAlgoliaSearch
+            adapters["social_adapter"] = HackerNewsAlgoliaSearch()
+        if query.username:
+            from adapters.mass_profiler import MassCrossPlatformProfiler
+            profiler = MassCrossPlatformProfiler()
+            profiler.enable(h=1)
+            adapters["username_adapter"] = profiler
+        enrichment["person"] = enrich_person(query, **adapters)
+    assoc_spec = getattr(args, "associate", "") or ""
+    if assoc_spec.strip():
+        fields: dict[str, str] = {}
+        for chunk in assoc_spec.split("|"):
+            if "=" in chunk:
+                key, value = chunk.split("=", 1)
+                fields[key.strip().lower()] = value.strip()
+        from core.entity_association import EntityAssociationEngine
+        engine = EntityAssociationEngine()
+        seed = {"type": fields.get("type") or "business_name", "value": fields.get("value") or ""}
+        enrichment["entity_association"] = engine.associate(seed, max_depth=2)
+    return enrichment
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -594,7 +674,7 @@ def _source_strengthening_handoff() -> dict:
         "mcp_tool": "connector_catalog",
         "cli": "npx wallstreet-tieling --connectors",
         "api": "GET /api/connectors",
-        "work_order_count": len(queue),
+        "work_order_count": len(top_work_orders),
         "top_work_orders": top_work_orders,
         "top_work_order": top_work_orders[0] if top_work_orders else {},
         "by_lane": by_lane,

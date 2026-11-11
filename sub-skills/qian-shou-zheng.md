@@ -38,7 +38,7 @@ approval: "收到。报告审核通过。"
 | 人/公开联系方式/公开身份标识/背调 | 马力全+周通 | `--roles ma-li-quan,zhou-tong` |
 | 报告/输出/生成 | 刘文华+颜好看 | `--roles liu-wen-hua` |
 | 验证/核实/冲突 | 郑慎之 | `--roles zheng-shen-zhi` |
-| 全面尽调 | 全部 Phase 1 | `--mode full` |
+| 全面尽调 | 全部 Phase 1 | `--mode deep` |
 
 ### 复杂度自适应
 
@@ -52,16 +52,16 @@ approval: "收到。报告审核通过。"
 
 ```bash
 # 指定角色
-python api/wst.py --target "腾讯科技" --roles zhang-tie-zhu,li-ming-yuan,zhao-gang
+python -m api.wst --target "腾讯科技" --roles zhang-tie-zhu,li-ming-yuan,zhao-gang
 
 # 场景模式
-python api/wst.py --target "某小微公司" --mode sme
+python -m api.wst --target "某小微公司" --mode sme
 
 # 完整尽调
-python api/wst.py --target "字节跳动" --mode full
+python -m api.wst --target "字节跳动" --mode deep
 
 # 干运行预览
-python api/wst.py --target "测试公司" --dry-run
+python -m api.wst --target "测试公司" --dry-run
 ```
 
 ### wst.py 编排架构

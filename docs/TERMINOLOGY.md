@@ -1,6 +1,6 @@
 # Terminology Standard
 
-Scope: `wallstreet-tieling` v0.5.0 Alpha.
+Scope: `wallstreet-tieling` v0.6.0 Alpha.
 
 This project is an enterprise intelligence and risk investigation product. Use
 professional, evidence-bound language in code, docs, reports, and user-facing
