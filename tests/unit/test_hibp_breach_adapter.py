@@ -137,12 +137,14 @@ def test_robots_disallow_blocks_query(net):
 
 
 def test_robots_allows_pwnedwebsites(net):
-    # Content-Signal line makes urllib.robotparser drop all rules (entries==[]);
-    # the hand-written parser must still work.
+    # Content-Signal is not a standard robots directive. Python 3.12 and
+    # earlier drop every rule when urllib.robotparser sees that line;
+    # Python 3.13 keeps the Disallow rules. /PwnedWebsites stays allowed
+    # either way, and the adapter's own parser must agree.
     import urllib.robotparser
     rp = urllib.robotparser.RobotFileParser()
     rp.parse(ROBOTS_OK.splitlines())
-    assert rp.entries == [], "urllib quirk precondition changed"
+    assert rp.can_fetch("*", "https://haveibeenpwned.com/PwnedWebsites") is True
     assert _adapter()._check_robots() is True  # /PwnedWebsites not disallowed
 
 

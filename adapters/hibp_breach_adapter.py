@@ -12,9 +12,9 @@
 - GET /PwnedWebsites -> 200, ~1MB 服务端渲染 HTML 表格, 1047 个 breach 行
   (<tr id="<Name>">, td[data-name=breach|pwncount|date|breachDate])。
 - robots.txt: /PwnedWebsites 不在 Disallow 列表 (Disallow 只有 /BreachSummary、
-  /account/*、/unifiedsearch/* 等账号相关路径)。注意 urllib.robotparser 解析
-  该 robots.txt 会因 "Content-Signal:" 行丢弃全部规则 (entries 为空) —
-  本适配器用手写解析器做 Disallow 前缀检查, 不依赖 urllib 的解析结果。
+  /account/*、/unifiedsearch/* 等账号相关路径)。Python 3.12 及更早的
+  urllib.robotparser 会因 "Content-Signal:" 行丢弃全部规则; 3.13 会保留
+  Disallow。本适配器用手写解析器做 Disallow 前缀检查, 不依赖 urllib。
 - 用途: 尽调时查 "某服务/厂商是否出现在公开 breach 名录" (lead, 非定罪)。
 
 Query 语义: query("adobe") -> 名录中名称匹配的 breach 条目。
@@ -63,9 +63,9 @@ class HIBPBreachCatalog(SafeResearchAdapter):
     def _check_robots(self) -> bool:
         """手写 robots.txt Disallow 前缀检查。
 
-        urllib.robotparser 解析 haveibeenpwned.com/robots.txt 时会因
-        "Content-Signal:" 非标准行丢弃全部规则 (实测 entries 为空),
-        故在此处手动解析, 只认 User-agent: * 段的 Disallow 前缀。
+        "Content-Signal:" 不是标准 robots 指令。Python 3.12 及更早的
+        urllib.robotparser 会因此丢弃全部规则, 3.13 会保留 Disallow。
+        此处手动解析, 只认 User-agent: * 段的 Disallow 前缀。
         """
         if self._robots_checker is not None:
             return bool(self._robots_checker(self.source_domain,
