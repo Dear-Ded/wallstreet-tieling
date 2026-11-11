@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import tempfile
 import uuid
 from pathlib import Path
 from typing import Iterator
@@ -30,13 +31,30 @@ def tmp_path(request: pytest.FixtureRequest) -> Iterator[Path]:
     list during setup or session cleanup. This fixture keeps tests isolated
     while bypassing that host-specific TempPathFactory failure mode.
     """
-    parent = _safe_tmp_parent() or Path.cwd()
+    parent = _safe_tmp_parent() or Path(tempfile.gettempdir())
     path = parent / f"{_safe_prefix(request.node.name)}{uuid.uuid4().hex}"
     path.mkdir(parents=True, exist_ok=False)
     try:
         yield path
     finally:
         shutil.rmtree(path, ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
+def _isolated_runtime_state(monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+    """Keep risk-event / monitor / memory stores out of the real home directory.
+
+    Without this, every test run (and every xdist worker) appends to
+    ~/.workbuddy/wallstreet-tieling/*.jsonl; concurrent runs corrupt the shared
+    JSONL and later runs fail with JSONDecodeError.
+    """
+    state = Path(tempfile.mkdtemp(prefix="wst-state-"))
+    monkeypatch.setenv("WST_STATE_DIR", str(state))
+    monkeypatch.delenv("WORKBUDDY_STATE_DIR", raising=False)
+    try:
+        yield state
+    finally:
+        shutil.rmtree(state, ignore_errors=True)
 
 
 @pytest.fixture
