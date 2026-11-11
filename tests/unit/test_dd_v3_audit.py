@@ -1948,3 +1948,9 @@ def test_bridge_summary_only_lists_runtime_backed():
         if bs.get("operational_count") == 0:
             assert operational == []
     asyncio.run(run())
+
+
+def test_classify_content_type_ip_is_whole_word_only():
+    from core.evidence_ledger_v2 import classify_content_type
+    assert classify_content_type("Shipping relationship description of the firm") == "general_web_page"
+    assert classify_content_type("IP portfolio and licensing") == "ip_product_technical"
