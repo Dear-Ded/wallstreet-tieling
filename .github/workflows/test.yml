@@ -46,7 +46,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          python -m pytest tests/unit/ -v --tb=short
+          python -m pytest -q --tb=short  # uses pytest.ini testpaths (also runs adapters/multi_datasource/test_security.py)
 
       - name: Run release terminology guard
         run: |
