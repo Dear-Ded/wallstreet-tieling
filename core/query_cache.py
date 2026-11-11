@@ -55,7 +55,7 @@ class GlobalCache:
         self._store: dict[str, tuple[float, Any]] = {}
 
     @classmethod
-    def get(cls) -> "GlobalCache":
+    def get_instance(cls) -> "GlobalCache":
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance

@@ -7061,11 +7061,11 @@ def _inject_fact_edges_from_evidence(graph, evidence_ledger):
             continue
         lane = ev.get("lane", "")
         if lane == "capital" and any(k in str(ev).lower() for k in ("pledge","freeze","auction")):
-            edges.append({"source": "subject_profile","from": "seed", "to": f"asset:{ev.get('evidence_id','?')}", "type": "pledged", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
+            edges.append({"from": "seed", "to": f"asset:{ev.get('evidence_id','?')}", "type": "pledged", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
         if lane == "goods" and any(k in str(ev).lower() for k in ("supplier","product")):
-            edges.append({"source": "subject_profile","from": "seed", "to": f"supplier:{ev.get('evidence_id','?')}", "source": "supply_chain_profile","type": "supplies", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
+            edges.append({"from": "seed", "to": f"supplier:{ev.get('evidence_id','?')}", "type": "supplies", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
         if lane == "people" and any(k in str(ev).lower() for k in ("controller","ubo","executive")):
-            edges.append({"source": "subject_profile","from": "seed", "to": f"person:{ev.get('evidence_id','?')}", "type": "controls", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
+            edges.append({"from": "seed", "to": f"person:{ev.get('evidence_id','?')}", "type": "controls", "confidence": float(ev.get("confidence",0.8)), "admission": "fact", "source": ev.get("source_name","evidence"), "explanation": str(ev.get("claim",""))[:80], "evidence_ids": [ev.get("evidence_id","")]})
     return graph
 def _build_related_parties_bridge(subject_profile, relationship_network) -> dict:
     sp = subject_profile or {}
@@ -7950,7 +7950,6 @@ def _enterprise_cognition(
         "strategy_quality_gate": (strategy_quality_gate := _build_strategy_quality_gate(strategy_plan, srs)),
         "evidence_depth_score": (evidence_depth_score := _build_evidence_depth_score(dd_profile_data, public_capital_profile, public_goods_profile, public_people_profile, risk_events, gv2.get("graph_summary") if gv2 else None, srs)),
         "edge_explainability_v3": _build_edge_explainability_v3(dd_profile_data.get("relationship_graph") if dd_profile_data else None),
-        "graph_quality_audit_v2": _graph_quality_audit_v2(dd_profile_data.get("relationship_graph") if dd_profile_data else None),
         "graph_sanity_check": (graph_sanity := _build_graph_sanity_check(dd_profile_data.get("relationship_graph") if dd_profile_data else None, gap_analysis)),
         "live_readiness_gate": (live_readiness := _build_live_readiness_gate(srs)),
         "evidence_ledger_v2": (evidence_ledger_v2 := normalize_evidence_v2(evidence_ledger)),
@@ -7969,9 +7968,7 @@ def _enterprise_cognition(
         "release_decision": (release_decision := compute_release_decision(live_readiness, blocker_gate, realness_score, evidence_depth_score, gqa, srs)),
         "qyyjt_bridge_packet": (qyyjt_bridge_packet := _build_qyyjt_bridge_packet(evidence_ledger)),
         "investigation_report_card": {
-            "dd_version": "4.9",
             "api_visible_release_decision": release_decision.get("release_decision","unknown"),
-            "api_visible_release_score": release_decision.get("release_score",0),
             "dd_summary": {
                 "version": "5.0",
                 "release_decision": release_decision.get("release_decision","internal_alpha"),
@@ -13023,11 +13020,6 @@ def _build_investigation_audit_log(
         "gaps": enterprise_cognition.get("evidence_gaps", [])[:5],
         "sources_used": _dedupe_strings([str(e.get("source","")) for e in evidence_ledger]),
         "admission_explanations": admission_reasons[:10],
-        "report_sections": ["company_profile", "risk_events", "financial", "industry", "supply_chain", "relationship_network", "evidence_ledger", "next_steps"],
-        "source_readiness_for_audit": {"ready_for_production": (enterprise_cognition.get("source_smoke_harness") or {}).get("ready_for_production",False),"overall_status": (enterprise_cognition.get("source_smoke_harness") or {}).get("overall_status","unknown")},
-        "graph_quality_for_audit": enterprise_cognition.get("graph_quality_audit_v2",{}),
-        "pipeline_contract_status": "verified" if len(enterprise_cognition.get("evidence_ledger_v2",[]))>0 else "unverified",
-        "strategy_action_count_for_audit": (enterprise_cognition.get("investigation_strategy_v2") or {}).get("action_count",0),
         "smoke_status": {
             "public": {
                 k: {"source_name": v["source_name"], "status": v["status"], "live_verified": v["live_verified"]}
@@ -13129,7 +13121,7 @@ def build_subject_relationship_graph(
         if name:
             nid = f"person:{name}"
             nodes[nid] = {"id": nid, "type": "person", "name": str(name), "role": "controller", "depth": 1, "entity_resolution_key": f"person:normalized:{str(name).lower().strip()}:controller:subject_profile"}
-            edges.append({"source": "subject_profile","from": "seed", "to": nid, "type": "controls", "confidence": float(item.get("confidence", 0.5)),
+            edges.append({"from": "seed", "to": nid, "type": "controls", "confidence": float(item.get("confidence", 0.5)),
                 "admission": str(item.get("admission", "lead")), "source": str(item.get("evidence_source", "subject_profile")),
                 "explanation": f"Controller candidate {name} from subject_profile"})
 
@@ -13138,7 +13130,7 @@ def build_subject_relationship_graph(
         if name:
             nid = f"person:legal:{name}"
             nodes[nid] = {"id": nid, "type": "person", "name": str(name), "role": "legal_representative", "depth": 1, "entity_resolution_key": f"person:normalized:{str(name).lower().strip()}:legal_rep:subject_profile"}
-            edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "subject_profile","type": "serves_as", "confidence": float(item.get("confidence", 0.5)),
+            edges.append({"from": "seed", "to": nid, "type": "serves_as", "confidence": float(item.get("confidence", 0.5)),
                 "admission": "fact" if item.get("authority") == "official" else "lead", "source": str(item.get("evidence_source", "subject_profile")),
                 "explanation": f"Legal representative {name} from subject_profile"})
 
@@ -13146,14 +13138,14 @@ def build_subject_relationship_graph(
     if addr:
         nid = f"address:{addr}"
         nodes[nid] = {"id": nid, "type": "address", "name": str(addr), "depth": 1, "entity_resolution_key": f"address:normalized:{str(addr).lower().strip()}"}
-        edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "subject_profile","type": "located_at", "confidence": 0.9, "admission": "fact", "source": "official_registry",
+        edges.append({"from": "seed", "to": nid, "type": "located_at", "confidence": 0.9, "admission": "fact", "source": "official_registry",
             "explanation": f"Registered address from official registry"})
 
     for a in rn.get("common_addresses", [])[:3]:
         nid = f"address:common:{a}"
         if nid not in nodes:
             nodes[nid] = {"id": nid, "type": "address", "name": str(a), "depth": 1}
-            edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "public_record","type": "same_address", "confidence": 0.35, "admission": "weak_lead", "source": "public_web",
+            edges.append({"from": "seed", "to": nid, "type": "same_address", "confidence": 0.35, "admission": "weak_lead", "source": "public_web",
                 "explanation": f"Same address {a} from public web — weak lead only, NOT fact"})
 
     for item in el:
@@ -13163,14 +13155,14 @@ def build_subject_relationship_graph(
                 nid = f"company:supplier:{name}"
                 if nid not in nodes:
                     nodes[nid] = {"id": nid, "type": "supplier", "name": name, "depth": 1}
-                    edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "supply_chain_profile","type": "supplies", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
+                    edges.append({"from": "seed", "to": nid, "type": "supplies", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
                         "explanation": f"Supplier {name} from public claims, needs corroboration"})
             if "customer=" in str(claim).lower():
                 name = str(claim).split("customer=")[1].split(";")[0].strip()
                 nid = f"company:customer:{name}"
                 if nid not in nodes:
                     nodes[nid] = {"id": nid, "type": "customer", "name": name, "depth": 1}
-                    edges.append({"source": "subject_profile","from": "seed", "to": nid, "source": "supply_chain_profile","type": "buys_from", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
+                    edges.append({"from": "seed", "to": nid, "type": "buys_from", "confidence": 0.5, "admission": "lead", "source": str(item.get("source", "")),
                         "explanation": f"Customer {name} from public claims, needs corroboration"})
 
     return {

@@ -3,7 +3,7 @@
 
 # ── 运行时依赖 ──
 flask>=3.1,<4.0
-Flask-Cors>=4.0,<6.0
+Flask-Cors>=6.0,<7.0
 aiohttp>=3.9,<4.0
 requests>=2.31,<3.0
 PyYAML>=6.0,<7.0

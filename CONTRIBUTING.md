@@ -60,7 +60,7 @@ npx skills add Dear-Ded/wallstreet-tieling -g -y
 python -c "import ast; ast.parse(open('api/wst.py').read()); print('✅ 语法通过')"
 
 # 干运行（无需 API Key）
-python api/wst.py --mode standard --target "测试企业" --dry-run
+python -m api.wst --mode standard --target "测试企业" --dry-run
 ```
 
 ---

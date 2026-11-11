@@ -28,7 +28,7 @@ result = await engine.run()
 
 ### CLI 独立运行
 ```bash
-python adapters/cli.py "ABC公司" standard
+python -m adapters.cli "ABC公司" standard
 ```
 
 ## 新增能力
