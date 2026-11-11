@@ -322,6 +322,39 @@ Follow-up subject expansion endpoint for desktop agents. Use it only after an
 investigation packet identifies a related company, controller, address cluster,
 or other subject that needs bounded association expansion.
 
+## `POST /api/people-intel`
+
+Live public OSINT people-intelligence. Runs only the sources explicitly listed
+in `sources`; all adapters are injected per-call, nothing runs by default.
+
+Request:
+
+```json
+{
+  "query": {"name": "Jane Doe", "email": "jane@example.com",
+            "github_username": "janedoe", "username": "janedoe"},
+  "sources": ["email", "github", "officer", "username", "social"],
+  "opencorporates_token": "<only when sources includes 'officer'>"
+}
+```
+
+Response: `people_lead_graph` with per-source results and cross-source
+corroboration leads (leads only, never identity assertions).
+
+## `POST /api/domain-intel`
+
+Live public infrastructure intelligence for a domain. Runs only the sources
+explicitly listed in `sources`.
+
+Request:
+
+```json
+{"domain": "example.com", "sources": ["urlscan", "hackertarget", "ipapi"]}
+```
+
+Response: `domain_intel_enrichment` with per-source results and `risk_notes`
+(lead-only risk hints).
+
 Request:
 
 ```json
