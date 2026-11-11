@@ -1036,12 +1036,12 @@ def test_next_questions_generated_for_gaps():
 
 # === Batch 3: Entity + Relationship Graph Trustworthiness Tests ===
 
-def test_entity_fact_requires_strong_id():
+def test_entity_fact_requires_strong_id_variant2():
     from core.entity_resolution import build_entity_resolution
     r=build_entity_resolution({"name":"Generic Co"},None)
     assert r["resolved_entities"][0]["match_confidence"]<=0.9
 
-def test_relationship_edge_has_source_and_explanation():
+def test_relationship_edge_has_source_and_explanation_variant2():
     from core.relationship_resolution import build_relationship_resolution
     g={"edges":[{"from":"A","to":"B","type":"controls","admission":"fact","explanation":"reg","source":"reg"}]}
     r=build_relationship_resolution(None,None,g)
@@ -1590,7 +1590,7 @@ def test_pledge_bridge_no_provenance_rejected():
     r = build_pledge_bridge([{}], [], [])
     assert r["rejected_count"] == 1
 
-def test_pledge_bridge_high_pressure():
+def test_pledge_bridge_high_pressure_variant2():
     from core.qyyjt_pledge_bridge import build_pledge_bridge
     r = build_pledge_bridge(
         [{"source":"q","amount":"1","pledgor":"a","pledgee":"b"}]*3,
@@ -1825,24 +1825,6 @@ def test_ev003_cross_case_drill():
         shared_gaps=[k for k in china if china[k]=="missing" and apple[k]=="missing"]
         assert china["goods"] in ("covered","weak","missing"), f"Expected goods gap in at least China: china={china} apple={apple}"
     asyncio.run(main())
-
-def test_ev007_reality_drill_money():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("Apple reported record revenue of $100B in Q4 2024")
-    assert len(r["money_leads"]) >= 1
-def test_ev007_reality_drill_goods():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("Company launched new product line with patent filings")
-    assert len(r["goods_leads"]) >= 1
-def test_ev007_reality_drill_people():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("CEO Tim Cook appointed new board director")
-    assert len(r["people_leads"]) >= 1
-def test_ev007_reality_drill_empty():
-    from adapters.public_web_search_tool import reality_drill_extract
-    r = reality_drill_extract("This page has no useful information")
-    assert len(r["money_leads"]) == 0 and len(r["goods_leads"]) == 0 and len(r["people_leads"]) == 0
-
 
 def test_p004_no_provenance_fact():
     """P0-004: Missing provenance must not become fact."""

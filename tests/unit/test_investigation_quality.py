@@ -658,27 +658,6 @@ def test_source_timeout_visible_in_diagnostics() -> None:
     asyncio.run(run())
 
 def test_empty_source_visible_not_risky() -> None:
-    from core.investigation_quality import InvestigationQualityGate
-    gate=InvestigationQualityGate(
-        evidence_ledger=[{"record_kind":"evidence","authority":"official","source":"test"}],
-        enterprise_cognition={"source_statuses":[{"source_name":"qyyjt_bond","status":"empty"}]},
-        report_markdown="## 数据源状态\n- qyyjt_bond: 搜索无结果",
-    )
-    result=gate.inspect()
-    assert "数据源状态" in result.report_markdown
-
-def test_blocked_source_creates_coverage_gap() -> None:
-    from core.investigation_quality import InvestigationQualityGate
-    gate=InvestigationQualityGate(
-        evidence_ledger=[{"record_kind":"evidence","authority":"official","source":"test"}],
-        enterprise_cognition={"source_statuses":[{"source_name":"qyyjt_bond","status":"blocked"}]},
-        report_markdown="## 数据源状态\n- qyyjt_bond: 受限",
-    )
-    result=gate.inspect()
-    assert result.score<100
-
-
-def test_empty_source_visible_not_risky() -> None:
     from core.investigation import build_investigation_packet
 
     graph = {

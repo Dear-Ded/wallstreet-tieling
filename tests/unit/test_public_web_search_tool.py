@@ -1128,11 +1128,11 @@ def test_cognition_claims_includes_bond_market_credit():
     assert "Public web market-structure lead" in joined
 
 
-def test_classify_page_type_court():
+def test_classify_page_type_court_variant2():
     from adapters.public_web_search_tool import _classify_page_type
     assert _classify_page_type("被执行人公告","失信") == "court_enforcement"
 
-def test_classify_page_type_procurement():
+def test_classify_page_type_procurement_variant2():
     from adapters.public_web_search_tool import _classify_page_type
     assert _classify_page_type("采购公告","招标项目") == "procurement"
 
