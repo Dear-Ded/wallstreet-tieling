@@ -13,6 +13,7 @@
     "README.md",
     "LICENSE",
     "requirements.txt",
+    "requirements-osint.txt",
     "index.html",
     ".codex-plugin/plugin.json",
     "adapters/*.py",

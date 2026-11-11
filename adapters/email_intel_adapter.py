@@ -13,7 +13,7 @@ choices:
 - 角色账号识别：admin@/support@/... are functional, not personal.
 
 What this adapter deliberately does NOT do:
-- No breach-data ("社工库") queries of any kind.
+- No leaked-credential database queries of any kind.
 - No mailbox-existence probing (SMTP VRFY / RCPT TO fishing).
 - No password-reset or account-recovery probing.
 

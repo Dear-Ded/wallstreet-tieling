@@ -171,24 +171,27 @@ Bot频繁更名。搜索策略:
 
 > 🔄 **平台降级**：如当前平台无此 MCP/Skill，请使用 WebSearch + WebFetch 替代。
 
-> ✅ v0.1.0: 核心 OSINT 工具已实际安装，可 Bash 直接调用。
+> 🔎 安装状态以运行时检测为准：`python bin/osint_tools.py --detect`（由周通在环境扫描时执行）。下表“可用性”列不再写死“已安装”。
 
 | 功能 | 核心工具 | 可用性 | 调用方式 |
 |------|---------|:-----:|---------|
-| 用户名搜索 | maigret 0.6.1 | ✅ 已安装 | `Bash("maigret {username} --all-sites --json")` |
-| 用户名追踪 | sherlock 0.16.0 | ✅ 已安装 | `Bash("sherlock {username} --timeout 15")` |
-| 邮箱注册检测 | holehe 1.61 | ✅ 已安装 | `Bash("holehe {email}")` |
-| 公开联系方式信息 | phoneinfoga CLI | ✅ 已安装 | `Bash("phoneinfoga scan -n {phone}")` |
-| 社交ID提取 | socid_extractor 0.0.28 | ✅ 已安装 | Python import |
-| WHOIS查询 | python-whois 0.9.6 | ✅ 已安装 | Python import |
-| DNS查询 | dnspython 2.8.0 | ✅ 已安装 | Python import |
-| 社交媒体搜索 | multi-search-engine | ✅ 可用 | Skill 调用 |
-| 深度搜索 | deep-research | ✅ 可用 | Skill 调用 |
+| 用户名搜索 | maigret（MIT） | 运行时检测 | `Bash("python bin/osint_tools.py --run maigret --query {username} --top-sites 500")`（需全站时加 `--all-sites`） |
+| 用户名追踪 | sherlock（MIT） | 运行时检测 | `Bash("python bin/osint_tools.py --run sherlock --query {username}")` |
+| 递归身份扩展 | maigret/sherlock + holehe + phoneinfoga | 运行时检测 | `Bash("python bin/osint_tools.py --recursive --query {username} --max-depth 2")` |
+| 邮箱注册检测 | holehe（GPL-3.0，独立进程） | 运行时检测 | `Bash("python bin/osint_tools.py --run holehe --query {email}")` |
+| 公开联系方式信息 | phoneinfoga（GPL-3.0，`phoneinfoga serve` 服务） | 运行时检测 | `Bash("python bin/osint_tools.py --run phoneinfoga --query {phone}")` |
+| 社交ID提取 | socid_extractor（MIT） | 运行时检测 | Python import（`OptionalToolRunner.extract_profile_ids`） |
+| WHOIS查询 | python-whois | 运行时检测 | Python import |
+| DNS查询 | dnspython | 运行时检测 | Python import |
+| 社交媒体搜索 | multi-search-engine | 宿主提供时可用 | Skill 调用 |
+| 深度搜索 | deep-research | 宿主提供时可用 | Skill 调用 |
 | Web抓取 | WebSearch + WebFetch | ✅ 原生 | 内置工具 |
 | 图片OSINT | WebSearch(Google Images) | ⚠️ Web服务 | 降级到搜索引擎 |
-| EXIF分析 | exiftool | ❌ 未安装 | 使用在线工具降级 |
+| EXIF分析 | exiftool | 运行时检测 | 未安装时使用在线工具降级 |
 
-**实际可用率：从 v0.0.1 的 ~5% 提升至 v0.1.0 的 ~80%**
+工具缺失、超时、站点返回 unknown/illegal 都会作为证据缺口写入 `osint_tool_run` 记录；“未检出”只是覆盖范围，不代表“没有账号”。
+
+
 
 ## 输出格式
 ```yaml
@@ -205,20 +208,20 @@ output:
 
 ## 工具调用指令
 
-> ⚠️ 以下为可执行的工具调用指令。所有 CLI 工具已安装且可直接调用。
+> ⚠️ 以下为可执行的工具调用指令。是否已安装以 `python bin/osint_tools.py --detect` 的结果为准，未安装时按降级路径执行。
 
-### 已安装 OSINT 工具
+### 可选 OSINT 工具（运行时检测）
 
 | 工具 | 版本 | 调用方式 | 功能 |
 |------|------|---------|------|
-| maigret | 0.6.1 | `Bash("{python} -c \"from maigret import search; ...\"")` | 用户名跨3000+网站搜索 |
-| sherlock | 0.16.0 | `Bash("{python} -c \"from sherlock_project import sherlock; ...\"")` | 用户名400+网站追踪 |
-| holehe | 1.61 | `Bash("{python} -c \"import holehe; ...\"")` | 邮箱120+平台注册检测 |
+| maigret | 检测到的版本 | `Bash("{python} -c \"from maigret import search; ...\"")` | 用户名跨3000+网站搜索 |
+| sherlock | 检测到的版本 | `Bash("{python} -c \"from sherlock_project import sherlock; ...\"")` | 用户名400+网站追踪 |
+| holehe | 检测到的版本 | `Bash("{python} -c \"import holehe; ...\"")` | 邮箱120+平台注册检测 |
 | phoneinfoga | CLI | `Bash("phoneinfoga scan -n {phone}")` | 公开联系方式归属地/运营商 |
-| socid_extractor | 0.0.28 | `Bash("{python} -c \"import socid_extractor; ...\"")` | 社交ID提取 |
-| python-whois | 0.9.6 | `Bash("{python} -c \"import whois; whois.whois('{domain}')\"")` | WHOIS域名查询 |
-| dnspython | 2.8.0 | `Bash("{python} -c \"import dns.resolver; ...\"")` | DNS查询 |
-| cloudscraper | 1.2.71 | `Bash("{python} -c \"import cloudscraper; ...\"")` | 合规浏览器会话接入 |
+| socid_extractor | 检测到的版本 | `Bash("{python} -c \"import socid_extractor; ...\"")` | 社交ID提取 |
+| python-whois | 检测到的版本 | `Bash("{python} -c \"import whois; whois.whois('{domain}')\"")` | WHOIS域名查询 |
+| dnspython | 检测到的版本 | `Bash("{python} -c \"import dns.resolver; ...\"")` | DNS查询 |
+| cloudscraper | 检测到的版本 | `Bash("{python} -c \"import cloudscraper; ...\"")` | 合规浏览器会话接入 |
 
 其中 `{python}` 为当前平台的 Python 解释器路径（由宿主环境自动解析）
 
@@ -253,9 +256,9 @@ async def search_username(username):
 
 ```bash
 # 使用 Bash 工具直接调用
-maigret {username} --all-sites --json --timeout 30
-sherlock {username} --timeout 15
-holehe {email}
+python bin/osint_tools.py --run maigret --query {username} --top-sites 500   # 全站: --all-sites
+python bin/osint_tools.py --run sherlock --query {username}
+python bin/osint_tools.py --run holehe --query {email}
 ```
 
 ### 调用优先级
@@ -270,9 +273,9 @@ holehe {email}
 ### 数据来源标注（强制）
 
 ```
-[来源: maigret v0.6.1 搜索 "zhangsan1990", 2026-06-09]
-[来源: sherlock_project v0.16.0 追踪 "zhangsan", 2026-06-09]
-[来源: holehe v1.61 检测 user@example.invalid, 2026-06-09]
+[来源: maigret v{检测到的版本} 搜索 "zhangsan1990", run_id={osint_tool_run.run_id}, 2026-06-09]
+[来源: sherlock_project v{检测到的版本} 追踪 "zhangsan", run_id={osint_tool_run.run_id}, 2026-06-09]
+[来源: holehe v{检测到的版本} 检测 user@example.invalid, run_id={osint_tool_run.run_id}, 2026-06-09]
 [来源: multi-search-engine "zhangsan1990 site:zhihu.com", 2026-06-09]
 ```
 

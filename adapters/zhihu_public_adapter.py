@@ -1,7 +1,7 @@
 """知乎公开信息适配器 (www.zhihu.com) — 免登录公开 API 解析。数据边界: fully_public
 
 知乎全站页面(HTML)对未登录访问是登录墙，但两条公开 JSON 接口
-经 2026-10-21 实测免登录可用(单次低频探测，无登录、无验证码绕过):
+经 2026-10-21 实测免登录可用(单次低频探测，无登录、不涉及人机验证):
 
 - 热榜: GET https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=20&desktop=true
   -> 200, JSON: data[].target{title_area.text, excerpt_area.text,

@@ -2,7 +2,7 @@
 
 This project should learn from mature open-source systems without copying them blindly. The product goal is not "more agents" or "more prompts"; it is executable enterprise risk discovery: connectors feed evidence, evidence builds graphs and events, events trigger monitoring, and reports become one render surface.
 
-Last refreshed: 2026-06-20
+Last refreshed: 2026-11-11
 
 ## Current Scan
 
@@ -10,6 +10,13 @@ Last refreshed: 2026-06-20
 |---|---|---|
 | Sherlock | https://github.com/sherlock-project/sherlock | Username fan-out works because every site has a module contract, timeout behavior, and confidence interpretation. Borrow the registry discipline, not the personal-data framing. |
 | Maigret | https://github.com/soxoj/maigret | Large source coverage needs normalized output and per-source metadata, otherwise 3000+ sites become noise. |
+| holehe | https://github.com/megadose/holehe | Email-registration checks as one module per site with explicit rate-limit flags. GPL-3.0: run as an external process only (adapters/osint_tools.py). |
+| PhoneInfoga | https://github.com/sundowndev/phoneinfoga | Scanner plugins behind a small REST API (`serve`); consume the JSON API, never import (GPL-3.0). |
+| socid-extractor | https://github.com/soxoj/socid-extractor | Per-platform extraction schemes turn profile pages into ids that seed recursive search (Maigret's recursion). |
+| WhatsMyName | https://github.com/WebBreacher/WhatsMyName | Community site registry with explicit exists/missing strings; data is CC BY-SA 4.0 and keeps its own license (adapters/_vendor/whatsmyname/NOTICE.md). |
+| GHunt | https://github.com/mxrch/GHunt | Module layout for Google-account OSINT; AGPL-3.0 and needs the operator's own login session, so only an external-process slot. |
+| recon-ng | https://github.com/lanmaster53/recon-ng | Workspace DB + module marketplace + key store; GPL-3.0, borrow practices only. |
+| XueQiuSuperSpider | https://github.com/decaywood/XueQiuSuperSpider | Collector -> Mapper -> Consumer stages and a bounded wait strategy for financial-community data (core/crawl_runtime.py, core/crawl_presets.py). Do not copy its credential/config login path. |
 | SpiderFoot | https://github.com/smicallef/spiderfoot | OSINT becomes useful when scan runs, modules, entities, and relationships are first-class records. |
 | web-check | https://github.com/lissy93/web-check | Website intelligence should be a composed checklist with provenance and human-readable diagnostics. |
 | OpenBB | https://github.com/OpenBB-finance/OpenBB | Data access is infrastructure: one provider layer can serve CLI, API, MCP, UI, and notebooks. |

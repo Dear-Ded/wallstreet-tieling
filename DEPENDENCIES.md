@@ -153,11 +153,17 @@ docker build -t wallstreet-tieling .
 
 | 工具 | 覆盖范围 | 用途 | 安装方式 |
 |:-----|:--------|:-----|:---------|
-| **maigret** | 3,000+ 网站 | 用户名跨平台搜索 | `pip install maigret` |
-| **sherlock** | 400+ 网站 | 社交媒体用户名搜索 | `pip install sherlock-project` |
-| **theHarvester** | 多搜索引擎 | 邮箱/域名/IP信息收集 | `pip install theharvester` |
-| **holehe** | 120+ 网站 | 邮箱注册状态检查 | `pip install holehe` |
-| **phoneinfoga** | 国际号码 | 电话号码信息查询 | `pip install phoneinfoga` |
+| **maigret** (MIT) | 3,000+ 网站 | 用户名跨平台搜索 + 递归 ID 扩展 | `pip install -r requirements-osint.txt` |
+| **sherlock** (MIT) | 约 480 网站 | 社交媒体用户名搜索（四态：claimed/available/unknown/illegal） | `pip install -r requirements-osint.txt` |
+| **socid-extractor** (MIT) | 主流平台资料页 | 从资料页提取 uid/用户名/邮箱等 ID | `pip install -r requirements-osint.txt` |
+| **theHarvester** (GPL-2.0) | 多搜索引擎 | 邮箱/域名/IP信息收集 | 从 GitHub 安装，作为独立进程调用（不在 PyPI 官方发布） |
+| **holehe** (GPL-3.0) | 约 120 网站 | 邮箱注册状态检查 | `pipx install holehe`（独立进程调用，不 import） |
+| **phoneinfoga** (GPL-3.0) | 国际号码 | 电话号码信息查询 | Go 二进制或 `docker run -p 5000:5000 sundowndev/phoneinfoga serve`（**不是** pip 包） |
+| **GHunt** (AGPL-3.0) | Google 账号 | Google 账号公开资料 | `pipx install ghunt && ghunt login`（需运营方自己的 Google 会话） |
+
+安装状态一律以 `python bin/osint_tools.py --detect` 的运行时检测为准；文档不再声明某台机器“已安装”。
+执行与标准化见 `adapters/osint_tools.py`：每次执行都会生成 `osint_tool_run` 记录（工具、版本、查询、命令、站点范围、各状态计数），
+命中账号生成 `social_account_candidate`，ID 关联生成 `identity_relationship`，工具缺失/超时/unknown 站点记为证据缺口。
 
 ### 降级机制
 
@@ -297,7 +303,9 @@ docker run -p 8080:8080 --env-file .env dearded/wallstreet-tieling
 
 ```bash
 # 人员背调增强（5个OSINT工具）
-pip install maigret sherlock-project theharvester holehe phoneinfoga
+pip install -r requirements-osint.txt   # maigret / sherlock-project / socid-extractor
+pipx install holehe                      # GPL-3.0, 独立进程
+# phoneinfoga: Go 二进制或 docker serve；theHarvester: 从 GitHub 安装
 
 # 文档处理增强
 pip install python-docx pymupdf Pillow pytesseract openpyxl
@@ -313,7 +321,7 @@ python -c "import flask; import flask_cors; import aiohttp; print('Python OK')"
 node --version  # 应 ≥18.0.0
 
 # 检查OSINT工具
-pip list | grep -E "maigret|sherlock|holehe|phoneinfoga|theharvester"
+python bin/osint_tools.py --detect
 
 # 检查MCP连接器（WorkBuddy内）
 ls ~/.workbuddy/skills/ | grep -E "qcc|tyc|lingxi|neodata|futu"

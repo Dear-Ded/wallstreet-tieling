@@ -201,12 +201,22 @@ class UsernameCrossPlatformVerifier(SafeResearchAdapter):
             source_name="跨平台公开身份验证",
             source_type="public_cross_platform_identity",
             default_config={"investigation_lane": "people", "compliance": "FATF CDD"})
-        self._has_maigret = False
-        try:
-            import maigret
-            self._has_maigret = True
-        except ImportError:
-            pass
+        from adapters.osint_tools import OptionalToolRunner, detect_optional_tools
+
+        self._detection = detect_optional_tools(tools=("maigret", "sherlock", "socid_extractor"))
+        self._has_maigret = bool(self._detection["tools"]["maigret"]["installed"])
+        self._has_sherlock = bool(self._detection["tools"]["sherlock"]["installed"])
+        self._tool_runner = OptionalToolRunner(detection=self._detection)
+        self._last_runs: list[Any] = []
+        self.tool_options: dict[str, dict[str, Any]] = {}
+
+    def use_tool_runner(self, runner: Any, detection: dict[str, Any] | None = None) -> None:
+        """Inject an OptionalToolRunner (tests, custom proxy/timeout settings)."""
+        self._tool_runner = runner
+        if detection is not None:
+            self._detection = detection
+            self._has_maigret = bool(detection["tools"].get("maigret", {}).get("installed"))
+            self._has_sherlock = bool(detection["tools"].get("sherlock", {}).get("installed"))
 
     def is_available(self) -> bool:
         return self._gate.is_authorized(self._source_key)
@@ -217,29 +227,31 @@ class UsernameCrossPlatformVerifier(SafeResearchAdapter):
         if not self.is_available(): return {"error": "source_not_authorized"}
         target = hashlib.sha256(username.encode()).hexdigest()[:12]
 
-        if self._has_maigret:
-            try:
-                import maigret
-                import asyncio
-                async def search():
-                    return await maigret.search(username=username)
-                result = asyncio.run(search())
-                platforms = list(result.keys()) if result else []
-                self._gate.log_access(self._source_key, "maigret_search", target, f"platforms_{len(platforms)}")
-                return {"query_subject_hash": target, "authorized": True, "engine": "maigret",
-                        "investigation_lane": "people", "investigation_purpose": "企业高管公开跨平台身份验证",
-                        "fields": {"platforms_found": len(platforms), "platforms": platforms[:20]},
-                        "field_count": 2, "response_status": 200}
-            except Exception as e:
-                self._gate.log_access(self._source_key, "maigret_error", target, type(e).__name__)
-                return {"error": str(e), "authorized": True, "engine": "maigret"}
+        # L1/L2: optional Maigret / Sherlock CLIs (runtime-detected, see adapters/osint_tools.py)
+        for tool, enabled in (("maigret", self._has_maigret), ("sherlock", self._has_sherlock)):
+            if not enabled:
+                continue
+            run = getattr(self._tool_runner, f"run_{tool}")(username, **self.tool_options.get(tool, {}))
+            self._last_runs.append(run)
+            self._gate.log_access(self._source_key, f"{tool}_search", target, f"status_{run.status}")
+            if run.status != "completed":
+                continue
+            claimed = [o for o in run.observations if o.status == "claimed"]
+            platforms = [o.site for o in claimed]
+            return {"query_subject_hash": target, "authorized": True, "engine": tool,
+                    "engine_version": run.tool_version,
+                    "investigation_lane": "people", "investigation_purpose": "企业高管公开跨平台身份验证",
+                    "fields": {"platforms_found": len(platforms), "platforms": platforms,
+                               "accounts": [o.to_dict() for o in claimed]},
+                    "tool_run": run.to_dict(),
+                    "field_count": 3, "response_status": 200}
 
         # 回退: 手动HTTP验证
         platforms = ["github", "gitlab", "keybase", "medium", "dev.to", "producthunt", "ycombinator-news"]
         found = []
         for platform in platforms:
             try:
-                url = f"https://{platform}.com/{username}" if platform != "ycombinator-news" else f"https://news.ycombinator.com/user?id={username}"
+                url = self._platform_url(platform, username)
                 req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (DueDiligence/1.0)"})
                 with urllib.request.urlopen(req, timeout=8) as resp:
                     if resp.status == 200:
@@ -267,6 +279,11 @@ class UsernameCrossPlatformVerifier(SafeResearchAdapter):
             "mode": "schema_contract",
             "requires_authorization": True,
             "optional_runtime_dependency": "maigret",
+            "optional_runtime_fallbacks": ["sherlock", "manual_http"],
+            "runtime_detection": {
+                name: {"installed": row["installed"], "version": row["version"]}
+                for name, row in getattr(self, "_detection", {}).get("tools", {}).items()
+            },
             "default_enabled": False,
             "output_contract": [
                 "engine",
@@ -325,13 +342,23 @@ class UsernameCrossPlatformVerifier(SafeResearchAdapter):
             ],
             "raw": result,
         }
-        return {"health": self.health_check(), "standardized_records": [record], "raw": result}
+        records = [record]
+        if isinstance(result.get("tool_run"), dict):
+            from adapters.osint_tools import ToolRun, tool_run_to_standardized_records
+
+            records.extend(tool_run_to_standardized_records(ToolRun.from_dict(result["tool_run"]), subject=clean_username))
+        return {"health": self.health_check(), "standardized_records": records, "raw": result}
 
     @staticmethod
     def _platform_url(platform: str, username: str) -> str:
+        quoted = urllib.parse.quote(username)
         if platform == "ycombinator-news":
-            return f"https://news.ycombinator.com/user?id={urllib.parse.quote(username)}"
-        return f"https://{platform}.com/{urllib.parse.quote(username)}"
+            return f"https://news.ycombinator.com/user?id={quoted}"
+        if platform == "medium":
+            return f"https://medium.com/@{quoted}"
+        if "." in platform:  # already a host, e.g. dev.to
+            return f"https://{platform}/{quoted}"
+        return f"https://{platform}.com/{quoted}"
 
 
 class AiqichaSessionLookup(SafeResearchAdapter):
