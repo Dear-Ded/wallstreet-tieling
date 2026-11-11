@@ -646,11 +646,13 @@ def _association_html(p: dict[str, Any]) -> str:
             _html.escape(f"{r.get('score', '?')} 分" + (f" | {r.get('level')}" if r.get("level") else ""), quote=True),
         ]))
     disclaimer = _html.escape(_short(p.get("disclaimer"), 200), quote=True) if p.get("disclaimer") else ""
+    # Nested same-quote f-strings are a SyntaxError on Python 3.11.
+    seed_label = f"{seed.get('type') or '?'}={_short(seed.get('value'), 30)}"
     return (
         "<section class=\"visual-panel\" aria-label=\"情报富化：实体关联发现\">\n"
         "  <h2>情报富化 · 实体关联发现</h2>\n"
         "  <div class=\"metric-strip\">\n"
-        f"    {_metric('种子', f"{seed.get('type') or '?'}={_short(seed.get('value'), 30)}")}\n"
+        f"    {_metric('种子', seed_label)}\n"
         f"    {_metric('实体', len(entity_list))}\n"
         f"    {_metric('关联', len(associations))}\n"
         f"    {_metric('证据分级', 'lead · 线索')}\n"
