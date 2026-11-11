@@ -17,7 +17,7 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Prepare public static site
@@ -28,8 +28,9 @@ jobs:
           cp LICENSE public/LICENSE
           cp robots.txt public/robots.txt
           cp sitemap.xml public/sitemap.xml
-          mkdir -p public/docs public/release
+          mkdir -p public/docs/assets public/release
           cp docs/RELEASE_PORTAL.md public/docs/RELEASE_PORTAL.md
+          cp docs/assets/brand-card.svg public/docs/assets/brand-card.svg
           cp release/variants.yaml public/release/variants.yaml
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3

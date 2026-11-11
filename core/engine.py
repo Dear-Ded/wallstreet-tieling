@@ -38,8 +38,11 @@ logger = logging.getLogger("wst.engine")
 # ═══════════════════════════════════════════════════════════
 
 class Engine:
-    """v0.5.0"ABC公司", adapter=adapter, mode="standard")
-    result = await engine.run()
+    """尽调编排引擎。
+
+    用法:
+        engine = Engine("ABC公司", adapter=adapter, mode="standard")
+        result = await engine.run()
     """
 
     _CB_FAIL_THRESHOLD = 5
@@ -476,7 +479,7 @@ class Engine:
     # ── 辅助 ──
 
     def _load_prompt(self, phase: str, agent_id: str) -> str:
-        """加载角色系统提示词: prompts/{platform}/ → api/sub-skills/ 回退"""
+        """加载角色系统提示词: prompts/system/{agent_id}.md，缺失时回退 sub-skills/{agent_id}.md。"""
         prompt_dir = Path(__file__).resolve().parent.parent / "prompts" / "system"
         prompt_file = prompt_dir / f"{agent_id}.md"
 

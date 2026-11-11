@@ -104,6 +104,17 @@ def test_static_workbench_exposes_report_exports() -> None:
     assert "function caseLensBriefItems(cognition)" in text
     assert "function caseLensMarkdown(cognition)" in text
     assert "扒光查案式调查" in text
+    assert "const hasRiskScore" in text
+    assert "Number.isFinite(riskScore)" in text
+    assert "risk.risk_score >= 70 ? 'warn' : 'ok'" not in text
+
+
+def test_design_token_block_is_not_version_stamp_corrupt() -> None:
+    text = Path("sub-skills/aesthetic-design-system.md").read_text(encoding="utf-8")
+
+    assert '颜好看 v0.5.0"' not in text
+    assert '背景色:   "#0a0a14"' in text
+    assert "#0a0a14" in text
 
 
 def test_cli_help_mentions_catalog_and_release_commands() -> None:

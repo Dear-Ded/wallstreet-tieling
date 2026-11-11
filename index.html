@@ -1159,7 +1159,9 @@
       els.qualityScore.textContent = quality.score ?? '--';
       els.evidenceCount.textContent = summary.evidence_count ?? packet.evidence_ledger?.length ?? '--';
       els.verdictTag.textContent = risk.verdict_label || risk.verdict || '待判断';
-      els.verdictTag.className = `tag ${risk.risk_score >= 70 ? 'warn' : 'ok'}`;
+      const riskScore = Number(risk.risk_score);
+      const hasRiskScore = risk.risk_score !== null && risk.risk_score !== undefined && risk.risk_score !== '' && Number.isFinite(riskScore);
+      els.verdictTag.className = hasRiskScore ? `tag ${riskScore >= 70 ? 'warn' : 'ok'}` : 'tag';
       els.qualityTag.textContent = quality.status || '待检查';
       els.qualityTag.className = `tag ${quality.status === 'ready_for_human_review' ? 'ok' : 'warn'}`;
       els.deliveryStatus.textContent = quality.status || '待检查';
