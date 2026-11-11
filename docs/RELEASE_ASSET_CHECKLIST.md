@@ -1,6 +1,6 @@
 # Release Asset Checklist
 
-Status: operator-facing capture checklist for `wallstreet-tieling 0.5.0 Alpha`.
+Status: operator-facing capture checklist for `wallstreet-tieling 0.6.0 Alpha`.
 
 This document defines the minimum screenshot and submission asset set for the
 desktop-agent-first public release. It is intentionally practical: what to

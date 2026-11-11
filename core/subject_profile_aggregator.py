@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """SubjectProfileAggregator — 主程序画像聚合引擎
 
-v0.5.0 新增模块。从多个数据源聚合主程序信息，输出结构化主程序画像报告。
+v0.6.0 新增模块。从多个数据源聚合主程序信息，输出结构化主程序画像报告。
 
 数据源适配器（统一接口）：
 - IdentityAdapter: 身份信息

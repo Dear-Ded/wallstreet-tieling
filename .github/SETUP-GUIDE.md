@@ -1,6 +1,6 @@
 # GitHub Setup Guide
 
-This repository is the public product portal for Wallstreet Tieling 0.5.0.
+This repository is the public product portal for Wallstreet Tieling 0.6.0.
 
 Use these values in GitHub repository settings:
 
@@ -38,5 +38,5 @@ Recommended about text:
 Notes:
 
 - Do not add token, cookie, PAT, or private browser profile text to the repository.
-- Keep the public portal version pinned to `0.5.0` until the next release cycle.
+- Keep the public portal version pinned to `0.6.0` until the next release cycle.
 - If you update the portal copy, keep the API, MCP manifest, package metadata, and README in sync.

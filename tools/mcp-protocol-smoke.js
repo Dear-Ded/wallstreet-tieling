@@ -127,7 +127,7 @@ async function main() {
     const init = await client.request('initialize', {
       protocolVersion: '2025-06-18',
       capabilities: {},
-      clientInfo: { name: 'wallstreet-tieling-protocol-smoke', version: '0.5.0' }
+      clientInfo: { name: 'wallstreet-tieling-protocol-smoke', version: '0.6.0' }
     });
     assert(init.protocolVersion, 'initialize response missing protocolVersion');
     client.notify('notifications/initialized');

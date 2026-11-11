@@ -1,7 +1,7 @@
 # Project Map / 项目总图
 
 This is the public module map and release checklist for `wallstreet-tieling`
-`0.5.0 Alpha`.
+`0.6.0 Alpha`.
 
 Public release operators should start with:
 
@@ -31,7 +31,7 @@ The current product must:
 
 ## 2. Current Release Checklist
 
-### Ready In 0.5.0 Alpha
+### Ready In 0.6.0 Alpha
 
 - [x] One-click investigation packet.
 - [x] Evidence ledger and risk graph export.

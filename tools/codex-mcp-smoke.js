@@ -163,7 +163,7 @@ async function runMcpFunctionalPathSmoke() {
       stderr += chunk.toString('utf8');
     });
   }
-  const client = new Client({ name: 'wallstreet-tieling-codex-smoke', version: '0.5.0-smoke' });
+  const client = new Client({ name: 'wallstreet-tieling-codex-smoke', version: '0.6.0-smoke' });
   try {
     await client.connect(transport);
     assert(stderr.includes('Wallstreet Tieling MCP server started'), 'MCP server startup trace missing');
@@ -465,7 +465,7 @@ assert(
 assert(release.release_preflight?.package_candidate_ready === true, 'release embedded preflight package candidate missing');
 assert(release.latest_acceptance_evidence?.status === 'passed', 'latest acceptance evidence status missing');
 assert(
-  release.latest_acceptance_evidence?.observed_at === '2026-07-06 08:24 Asia/Shanghai',
+  release.latest_acceptance_evidence?.observed_at === '2026-11-11 23:42 Asia/Shanghai',
   'latest acceptance evidence timestamp mismatch'
 );
 assert(

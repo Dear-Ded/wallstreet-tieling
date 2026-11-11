@@ -89,7 +89,7 @@ def test_investigation_packet_contains_report_and_monitoring_seed(tmp_path) -> N
     packet = build_investigation_packet(graph, input_text=company, mode="standard").to_dict()
 
     assert packet["type"] == "investigation_packet"
-    assert packet["version"] == "0.5.0"
+    assert packet["version"] == "0.6.0"
     assert packet["one_click"] is True
     assert packet["risk_brief"]["verdict"] in {
         "high_risk_verification_required",
@@ -2770,7 +2770,7 @@ def test_investigation_report_surfaces_relationship_network_and_parks_monitoring
     assert "## 来源出处" in report
     assert "官方/授权事实" in report
     assert "## 后续版本目标" in report
-    assert "当前 0.5.0 Alpha 不上线持续监控" in report
+    assert "当前 0.6.0 Alpha 不上线持续监控" in report
     assert "## 后续版本基线" not in report
 
 
@@ -3383,7 +3383,7 @@ def test_cli_can_print_release_readiness(tmp_path) -> None:
     assert result.returncode == 0
     payload = json.loads(result.stdout)
     assert payload["type"] == "release_readiness_brief"
-    assert payload["contract"]["version"] == "0.5.0"
+    assert payload["contract"]["version"] == "0.6.0"
     assert payload["delivery_decision"]["status"] == "desktop_agent_alpha_release_candidate"
     if payload.get("execution_mode") == "node_metadata_fallback":
         assert payload["blockers"] == []

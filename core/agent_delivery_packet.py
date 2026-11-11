@@ -29,7 +29,7 @@ def build_agent_delivery_packet(host_id: str | None = None) -> dict[str, Any]:
 
     return {
         "type": "agent_delivery_packet",
-        "version": release.get("version", "0.5.0"),
+        "version": release.get("version", "0.6.0"),
         "release_target": "desktop_agent_alpha",
         "status": "ready_for_desktop_agent_alpha" if release_candidate else "needs_runtime_closure",
         "host_filter": host_id or "all",

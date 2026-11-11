@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 统一配置中心
+"""wallstreet-tieling v0.6.0 统一配置中心
 所有模块共享的配置入口，支持环境变量覆盖和热更新。
 
 配置加载顺序（优先级从低到高）:

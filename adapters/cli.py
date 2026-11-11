@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0"""
+"""wallstreet-tieling v0.6.0"""
 from __future__ import annotations
 
 import asyncio
@@ -60,7 +60,7 @@ async def run_cli(company: str, *, mode: str = "standard", model: str | None = N
     engine = Engine(target=company, adapter=adapter, mode=mode, model=model)
 
     print(f"\n{'='*60}")
-    print("  华尔街驻铁岭办事处 v0.5.0")
+    print("  华尔街驻铁岭办事处 v0.6.0")
     print(f"  模式: {mode} | 模型: {adapter.llm.default_model}")
     print(f"{'='*60}\n")
 

@@ -4,7 +4,7 @@
 
 ![Wallstreet Tieling brand card](docs/assets/brand-card.svg)
 
-[![Release](https://img.shields.io/badge/release-0.5.0_alpha-0f766e)](#current-release)
+[![Release](https://img.shields.io/badge/release-0.6.0_alpha-0f766e)](#current-release)
 [![Desktop Agents](https://img.shields.io/badge/desktop_agents-Codex%20%7C%20Claude%20Code%20%7C%20Hermes%20%7C%20OpenClaude-1f2937)](#desktop-agent-surfaces)
 [![MCP](https://img.shields.io/badge/MCP-compatible-2563eb)](deploy/mcp-server.json)
 [![License](https://img.shields.io/badge/license-MIT-111827)](LICENSE)
@@ -99,7 +99,7 @@ on the harder operational layer:
 
 ## Current Release
 
-Status: `0.5.0 Alpha` desktop-agent release candidate.
+Status: `0.6.0 Alpha` desktop-agent release candidate.
 
 This release is ready for local desktop-agent packaging and public GitHub
 review. It is not a claim of marketplace approval, hosted SaaS readiness,
@@ -107,7 +107,7 @@ mini-program/app delivery, or guaranteed live access to every advertised source.
 
 Latest local evidence:
 
-- `npm run acceptance`: `799 passed, 9 skipped` on `2026-07-06 08:24 Asia/Shanghai`
+- `npm run acceptance`: `2691 passed, 10 skipped` on `2026-11-11 23:42 Asia/Shanghai`
 - `npm run api:smoke`: passed
 - `npm run codex:mcp-smoke`: passed
 - `npm run agent:host-smoke`: passed for all seven alpha desktop-agent variants

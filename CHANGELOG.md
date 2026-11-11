@@ -6,14 +6,18 @@
 
 ## Unreleased
 
+## v0.6.0 (2026-11-11) — 高置信修复、侦查与爬虫能力
+
+> 最终测试数：**2691 passed, 10 skipped**（PR #2 基线 1760 passed, 9 skipped）。版本号从 0.5.0 升到 0.6.0。这不是把 `feat/osint-acquisition` 整支合并进来。
+
 - 财务分析不再把缺失现金流、缺失客户集中度或 ROE 为 0 当成健康、低风险或可交易结论。
 - 修复编排引擎用法说明，以及设计 Token 里被版本号替换截断的背景色。
 - 角色数量检查和 GitHub Pages 环境 URL 改为失败即失败；Pages 产物补上 README 引用的品牌卡。
-- 测试不再写入真实家目录（`~/.workbuddy`、`~/.wallstreet`），并发跑测试不会再写坏 JSONL；17 个被同名覆盖的测试恢复运行或删除；CI 改为跑完整 testpaths（含 `test_security.py`）。
-- Docker 镜像补齐 `core/` 等代码目录，镜像可以启动；`flask-cors` 升到 6.x；`GlobalCache` 单例方法不再被覆盖；发布隐私扫描不再把用户名当子串误报；文档入口命令与实际一致；`"ip"` 关键词改为整词匹配。
-- 新增可选 SOCMINT 工具集成（`adapters/osint_tools.py`、`bin/osint_tools.py`、`requirements-osint.txt`）：Maigret / Sherlock / holehe / PhoneInfoga / socid-extractor 运行时检测、统一四态结果、递归身份扩展、`osint_tool_run` / `social_account_candidate` / `identity_relationship` 标准记录；文档不再写死“已安装”。
-- 新增爬虫运行时（`core/crawl_runtime.py`、`core/crawl_presets.py`、`bin/crawl.py`）：去重请求队列、会话池与 Cookie、运营方代理池、按域名限速与自适应、重试退避、JSON 断点续爬、Collector→Mapper→Consumer 管道；预置雪球行情/讨论与公司官网爬取；验证码/拦截页转人工交接并记为证据缺口。
-- 吸收 `feat/osint-acquisition` 中的合规采集能力：约 60 个公开/授权数据源适配器、人物情报编排、实体关联与亲属关系抽取、关联图谱、富化报告与图表，以及对应连接器注册（默认关闭）和测试。未吸收：企查查 WAF 求解与移动站签名复现、抖音 a_bogus 签名、知服服内置密钥签名、工信部 ICP 滑块验证码自动求解、免费代理猎取。
+- 测试不再写入真实家目录（`~/.workbuddy`、`~/.wallstreet`），并发跑测试不会再写坏 JSONL；17 个被同名覆盖的测试恢复运行或删除；CI 改为跑完整 testpaths（含 `test_security.py`）。`validate.yml` 仍按 13 个角色子技能检查。
+- Docker 镜像补齐 `core/` 等代码目录，镜像可以启动；`flask-cors` 升到 6.x；`GlobalCache` 单例方法不再被覆盖；发布隐私扫描不再把用户名当子串误报；文档入口命令与实际一致；`"ip"` 关键词改为整词匹配。`UsernameCrossPlatformVerifier` 不再调用不存在的 Maigret API；`deep_osint.query_tool` 在工具已安装时会真正执行，未安装时返回 `optional_tool_not_installed`。
+- 新增可选 SOCMINT 工具集成（`adapters/osint_tools.py`、`bin/osint_tools.py`、`requirements-osint.txt`）：Maigret / Sherlock / holehe / PhoneInfoga / socid-extractor / theHarvester / GHunt 运行时检测。GPL/AGPL 工具只走子进程或 HTTP 边界，不把源码拷进仓库。递归身份扩展有深度和标识符上限。标准记录为 `osint_tool_run`、`social_account_candidate`、`phone_number_intel`、`identity_relationship`。未知或未报告的站点记为证据缺口，不写成“未找到”。文档不再写死“已安装”。
+- 新增爬虫运行时（`core/crawl_runtime.py`、`core/crawl_presets.py`、`bin/crawl.py`）：去重请求队列、会话池与运营方 Cookie、运营方代理池（`WST_PROXY_URLS`）、按域名限速与自适应、重试退避、JSON 断点续爬、条目管道；预置雪球行情/讨论与站点链接抽取。验证码/拦截页转人工交接并记为证据缺口，不内置求解器。
+- 吸收 `feat/osint-acquisition` 中的合规采集能力：约 60 个公开/授权数据源适配器（默认关闭）、人物情报、亲属与实体关联、关联图谱、风险评分、时间线、富化报告与图表，以及对应测试。未吸收：企查查 WAF 求解与移动站签名复现、抖音 a_bogus 签名、知服服内置密钥签名、工信部 ICP 滑块验证码自动求解、免费代理猎取。
 
 ## v0.5.0 (2026-06-07 — 2026-06-10) — 架构跃迁：子母 Skill + 真并发 Agent + 平台无关引擎
 

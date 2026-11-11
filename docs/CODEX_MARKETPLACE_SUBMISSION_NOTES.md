@@ -2,15 +2,14 @@
 
 Status: ready for pre-submission review after the latest local acceptance pass.
 
-Latest local evidence: `npm run acceptance` passed on 2026-07-06 08:24
-Asia/Shanghai with `799 passed, 9 skipped`; `npm run terminology:check`
+Latest local evidence: `npm run acceptance` passed on 2026-11-11 23:42 Asia/Shanghai with `2691 passed, 10 skipped`; `npm run terminology:check`
 reported `0 findings`; `npm run codex:mcp-smoke`, `npm run agent:host-smoke`,
 `npm run api:smoke`, `npm run release:privacy-scan`, `npm run release:preflight`, and
 `npm pack --dry-run --json` passed.
 
 ## Reviewer Summary
 
-Wallstreet Tieling `0.5.0 Alpha` is a desktop-agent first investigation
+Wallstreet Tieling `0.6.0 Alpha` is a desktop-agent first investigation
 toolkit. The Codex package provides a plugin manifest, skill prompt, CLI, MCP
 server, release-readiness metadata, connector catalog, retrieval-plan smoke, and
 offline fixture investigation packet.

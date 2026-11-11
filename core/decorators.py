@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 统一错误处理装饰器
+"""wallstreet-tieling v0.6.0 统一错误处理装饰器
 
 提供统一的错误处理、重试、日志、验证功能。
 """

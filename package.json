@@ -1,6 +1,6 @@
 {
   "name": "wallstreet-tieling",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Wallstreet Tieling: evidence-first enterprise due diligence, OSINT, risk graph, and desktop-agent investigation runtime",
   "main": "SKILL.md",
   "bin": {

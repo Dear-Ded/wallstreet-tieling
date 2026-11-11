@@ -1,6 +1,6 @@
 # Agent Host Smoke Checklist
 
-Scope: release-facing smoke checklist for desktop-agent hosts in `0.5.0 Alpha`.
+Scope: release-facing smoke checklist for desktop-agent hosts in `0.6.0 Alpha`.
 The current release is agent-first and must not depend on the polished HTML
 workbench, mini-program, mobile app, or standalone desktop app.
 
@@ -75,7 +75,7 @@ The shared smoke must confirm:
 - `aggregate_subject` is available as a follow-up tool through MCP, REST
   `/api/aggregate`, and CLI `--aggregate-subject` after an investigation packet
   identifies a related company, controller, or other subject worth expanding.
-- `investigate_company` returns a `0.5.0` `investigation_packet`.
+- `investigate_company` returns a `0.6.0` `investigation_packet`.
 - The packet includes `report_markdown`, `quality_gate`, `evidence_ledger`,
   `enterprise_cognition`, `one_click_readiness`, `qyyjt_public_origin_handoff`,
   `report_exports`, `report_exports.premium_html`,

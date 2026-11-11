@@ -1,6 +1,6 @@
 # Multi-Platform Desktop Agent Guide
 
-Wallstreet Tieling `0.5.0 Alpha` is delivered first as a desktop-agent
+Wallstreet Tieling `0.6.0 Alpha` is delivered first as a desktop-agent
 tooling package. The same runtime core can be used through CLI, REST API, MCP,
 Codex skill/plugin, Claude Code instructions, Hermes-style local agents,
 Doubao Office Task Mode, OpenClaude-style agents, and WorkBuddy.
@@ -136,7 +136,7 @@ secrets into images or release artifacts.
 - Do not require polished HTML or a graphical workbench for current-release
   desktop-agent operation.
 - Do not claim marketplace approval, production-grade compliance replacement,
-  or fully automated live coverage for `0.5.0 Alpha`.
+  or fully automated live coverage for `0.6.0 Alpha`.
 
 ## Acceptance Gate
 

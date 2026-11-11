@@ -1,6 +1,6 @@
 ﻿# Desktop Agent Alpha Delivery Closure
 
-Status: `0.5.0 Alpha` desktop-agent release candidate.
+Status: `0.6.0 Alpha` desktop-agent release candidate.
 
 This page is the operator-facing closure checklist for the current release.
 It separates what is ready for desktop-agent delivery from what remains later
@@ -100,8 +100,8 @@ Latest accepted evidence:
 
 ```text
 npm run acceptance
-799 passed, 9 skipped
-2026-07-06 08:24 Asia/Shanghai
+2691 passed, 10 skipped
+2026-11-11 23:42 Asia/Shanghai
 Plugin validation passed
 API smoke passed
 Apple Inc. default one-click acceptance passed
@@ -193,7 +193,7 @@ report_exports.directory_bundle.agent_handoff.delivery_decision
 
 ## Not Current Release
 
-Do not claim these as delivered in `0.5.0 Alpha`:
+Do not claim these as delivered in `0.6.0 Alpha`:
 
 - Final polished product launch readiness.
 - Marketplace approval.

@@ -2,8 +2,8 @@ FROM python:3.11-slim
 
 # 元数据
 LABEL org.opencontainers.image.title="wallstreet-tieling"
-LABEL org.opencontainers.image.description="华尔街驻铁岭办事处 · Enterprise Intelligence & Risk Discovery System 0.5.0 Alpha"
-LABEL org.opencontainers.image.version="0.5.0"
+LABEL org.opencontainers.image.description="华尔街驻铁岭办事处 · Enterprise Intelligence & Risk Discovery System 0.6.0 Alpha"
+LABEL org.opencontainers.image.version="0.6.0"
 
 WORKDIR /app
 

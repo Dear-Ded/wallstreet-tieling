@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0"""
+"""wallstreet-tieling v0.6.0"""
 from __future__ import annotations
 
 import asyncio
@@ -24,7 +24,7 @@ from .risk_event_store import RiskEventStore
 from .storage_paths import runtime_state_path
 from .token_optimizer import compress_prompt
 
-# v0.5.0 api/ 层兼容 — 仅 import agent/quality 数据结构，不 import 平台相关代码
+# v0.6.0 api/ 层兼容 — 仅 import agent/quality 数据结构，不 import 平台相关代码
 from api.agent import DueDiligenceAgent, AgentState
 from api.agent_registry import AgentRegistry
 from api.quality_rules import QualityRules, Violation

@@ -1,6 +1,6 @@
 {
   "name": "wallstreet-tieling",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Executable MCP server for Wallstreet Tieling enterprise intelligence and risk discovery.",
   "mcpServers": {
     "wallstreet-tieling": {

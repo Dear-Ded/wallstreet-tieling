@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wallstreet-tieling v0.5.0 统一异常类
+"""wallstreet-tieling v0.6.0 统一异常类
 
 定义项目所有异常类型，支持结构化错误信息和错误码。
 """

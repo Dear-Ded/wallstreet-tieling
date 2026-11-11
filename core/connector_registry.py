@@ -264,7 +264,7 @@ class ConnectorRegistry:
             admission_counts[decision] = admission_counts.get(decision, 0) + 1
         return {
             "type": "connector_catalog",
-            "version": "0.5.0",
+            "version": "0.6.0",
             "summary": {
                 "total": len(connectors),
                 "default_enabled": len(default_enabled),

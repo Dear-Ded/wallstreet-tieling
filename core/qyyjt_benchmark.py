@@ -118,7 +118,7 @@ def build_qyyjt_benchmark() -> dict[str, Any]:
 
     return {
         "type": "qyyjt_benchmark",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "summary": {
             "module_count": counts["total_modules"],
             "api_modules": counts["api"],

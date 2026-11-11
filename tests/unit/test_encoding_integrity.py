@@ -112,7 +112,7 @@ def test_static_workbench_exposes_report_exports() -> None:
 def test_design_token_block_is_not_version_stamp_corrupt() -> None:
     text = Path("sub-skills/aesthetic-design-system.md").read_text(encoding="utf-8")
 
-    assert '颜好看 v0.5.0"' not in text
+    assert '颜好看 v0.6.0"' not in text
     assert '背景色:   "#0a0a14"' in text
     assert "#0a0a14" in text
 

@@ -90,7 +90,7 @@ def build_agent_delivery_doctor(host_id: str | None = None) -> dict[str, Any]:
 
     return {
         "type": "agent_delivery_doctor",
-        "version": release.get("version", "0.5.0"),
+        "version": release.get("version", "0.6.0"),
         "release_target": "desktop_agent_alpha",
         "host_filter": host_id or "all",
         "status": "pass" if not blockers else "fail",

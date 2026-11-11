@@ -321,6 +321,6 @@ class TestEngineIntegrationLight:
 
 def test_engine_usage_docstring_is_intact():
     doc = Engine.__doc__ or ""
-    assert 'v0.5.0"ABC公司"' not in doc
+    assert 'v0.6.0"ABC公司"' not in doc
     assert 'Engine("ABC公司", adapter=adapter, mode="standard")' in doc
     assert "result = await engine.run()" in doc

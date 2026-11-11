@@ -190,7 +190,7 @@ def build_investigation_packet(
     *,
     input_text: str,
     mode: str = "standard",
-    version: str = "0.5.0",
+    version: str = "0.6.0",
 ) -> InvestigationPacket:
     """Build a readable investigation packet from a risk graph payload."""
     summary = _dict(graph_payload.get("summary"))
@@ -4883,7 +4883,7 @@ def _build_subject_due_diligence_profile(
     return {
         "company": company,
         "dd_version": "1.0",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "type": "subject_due_diligence_profile",
         "executive_summary": {
             "overall_risk": overall,
@@ -12991,7 +12991,7 @@ def _persona_surface_for_investigation(
 
     return {
         "type": "investigation_persona_surface",
-        "version": "0.5.0",
+        "version": "0.6.0",
         "display_name": "华尔街驻铁岭办事处 13 角色专家团",
         "role_count": len(enriched_roles),
         "active_role_count": len(active_ids),
@@ -13500,7 +13500,7 @@ def _report_markdown(
     findings = risk_brief.get("key_findings", [])
     controllers = profile_brief.get("controller_candidates", [])
     lines = [
-        f"# 华尔街驻铁岭办事处 0.5.0 尽调快报 - {company}",
+        f"# 华尔街驻铁岭办事处 0.6.0 尽调快报 - {company}",
         "",
         f"- 模式: {mode}",
         f"- 结论: {risk_brief.get('verdict_label') or risk_brief.get('verdict')}",
@@ -15099,7 +15099,7 @@ def _report_markdown(
             )
 
     lines.extend(["", "## 后续版本目标"])
-    lines.append("- 持续监控: 当前 0.5.0 Alpha 不上线持续监控，只保留可复用基线。")
+    lines.append("- 持续监控: 当前 0.6.0 Alpha 不上线持续监控，只保留可复用基线。")
     lines.append(f"- 可沉淀为后续基线: {monitoring_seed.get('ready_for_continuous_watch')}")
     lines.append("- 后续可盯防维度: " + ", ".join(_domain_label(item) for item in monitoring_seed.get("watched_dimensions", [])))
     lines.append(f"- 后续建议频率: {_cadence_label(monitoring_seed.get('suggested_cadence'))}")
