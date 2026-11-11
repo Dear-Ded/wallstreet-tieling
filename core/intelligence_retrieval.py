@@ -472,6 +472,21 @@ class EvidenceGraph:
             entity.evidence_ids.append(evidence_id)
 
 
+_WIKIDATA_QID_RE = re.compile(r"^Q[1-9]\d*$")
+# GB 32100-2015 unified social credit code: 18 chars, no I/O/S/V/Z.
+_USCC_RE = re.compile(r"^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$")
+
+
+def _identifier_value_fits(target: str, key: str, value: str) -> bool:
+    """Validate identifiers that are read from generic, ambiguous keys."""
+    text = value.strip()
+    if target == "wikidata_id":
+        return bool(_WIKIDATA_QID_RE.match(text))
+    if target == "unified_social_credit_code" and key == "code":
+        return bool(_USCC_RE.match(text.upper()))
+    return True
+
+
 class EntityResolutionScorer:
     """Scores whether a provider record refers to the requested subject."""
 
@@ -518,16 +533,25 @@ class EntityResolutionScorer:
             contains = seed in candidate or candidate in seed
             score = ratio
             reasons.append(f"name similarity {ratio:.2f}")
+            review_cap = False
             if contains:
                 shorter_token_count = min(len(seed.split()), len(candidate.split()))
-                if shorter_token_count <= 1 and seed != candidate:
-                    score = max(score, 0.7)
+                if cls._is_branch_or_sub_unit(seed, candidate):
+                    # "中国工商银行股份有限公司汕头分行" contains the head-office
+                    # name but is a separate registrant (often LAPSED); it must
+                    # not be admitted as a fact about the head office.
+                    score = min(max(score, 0.62), 0.7)
+                    review_cap = True
+                    reasons.append("candidate is a branch or sub-unit of the subject, not the same legal entity")
+                elif shorter_token_count <= 1 and seed != candidate:
+                    score = min(max(score, 0.7), 0.81)
+                    review_cap = True
                     reasons.append("single-token name containment requires review")
                 else:
                     score = max(score, 0.9)
                     reasons.append("one normalized name contains the other")
             token_overlap = cls._token_overlap(seed, candidate)
-            if token_overlap:
+            if token_overlap and not review_cap:
                 score = max(score, 0.55 + 0.35 * token_overlap)
                 reasons.append(f"token overlap {token_overlap:.2f}")
 
@@ -565,6 +589,31 @@ class EntityResolutionScorer:
                     changed = True
         return text
 
+    BRANCH_SUFFIXES = (
+        "分行",
+        "支行",
+        "分公司",
+        "分理处",
+        "营业部",
+        "办事处",
+        "代表处",
+        "分店",
+        "分部",
+        "分社",
+        "branch",
+        "branch office",
+        "representative office",
+    )
+
+    @classmethod
+    def _is_branch_or_sub_unit(cls, seed: str, candidate: str) -> bool:
+        """Return True when one name is the other plus a branch/sub-unit suffix."""
+        shorter, longer = (seed, candidate) if len(seed) <= len(candidate) else (candidate, seed)
+        if not shorter or shorter == longer or not longer.startswith(shorter):
+            return False
+        tail = longer[len(shorter):].strip()
+        return any(tail.endswith(suffix) for suffix in cls.BRANCH_SUFFIXES)
+
     @staticmethod
     def _token_overlap(left: str, right: str) -> float:
         left_tokens = {token for token in left.split() if token}
@@ -591,7 +640,7 @@ class EntityResolutionScorer:
         }.items():
             for key in keys:
                 value = raw.get(key)
-                if value:
+                if value and _identifier_value_fits(target, key, str(value)):
                     identifiers[target] = str(value)
                     break
         return identifiers
@@ -1022,9 +1071,15 @@ class EvidenceIngestor:
                 value = record.get(key)
                 if value in (None, ""):
                     value = raw.get(key)
-                if value not in (None, ""):
-                    identifiers[target] = str(value)
-                    break
+                if value in (None, ""):
+                    continue
+                if not _identifier_value_fits(target, key, str(value)):
+                    # Generic keys such as "id" (a GLEIF LEI) or "code" (a
+                    # stock code) must not be filed as a Wikidata QID or a
+                    # unified social credit code.
+                    continue
+                identifiers[target] = str(value)
+                break
         if raw:
             identifiers["raw"] = raw
         return identifiers
