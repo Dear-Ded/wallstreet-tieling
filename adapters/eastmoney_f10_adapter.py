@@ -21,7 +21,7 @@ Survey（2026-10-21 实测, plain curl, 桌面 UA, 无登录无 key）:
 
 工作流: query(股票代码) -> 公司概况 + 十大股东 -> 合并抽取公开字段。
 股票代码归一化: 接受 "600519"/"SH600519"/"sh600519"/"600519.SH" 等写法;
-前缀按 A 股编码规则推断（60/68/90/58→SH, 00/30/20→SZ, 43/83/87/88→BJ）,
+前缀按 A 股编码规则推断（60/68/90/58→SH, 00/30/20→SZ, 920/43/83/87/88→BJ）,
 无法推断时返回空结果并明示原因。
 
 公司名→代码需调用方先行解析（深交所 A股列表 API CATALOGID=1110 可匿名
@@ -65,7 +65,8 @@ def normalize_stock_code(keyword: str) -> str | None:
             prefix = "SH"
         elif digits[:2] in ("00", "30", "20"):
             prefix = "SZ"
-        elif digits[:2] in ("43", "83", "87", "88"):
+        elif digits[:3] == "920" or digits[:2] in ("43", "83", "87", "88"):
+            # 北交所自 2025-10-09 起全部股票使用 920 号段（43/83/87 为旧代码）
             prefix = "BJ"
         else:
             return None
@@ -100,12 +101,18 @@ class EastmoneyF10Lookup(SafeResearchAdapter):
                 return (200, {"survey": survey, "holders": []}, "")
             # 实测 SecuCode 为 "600519.SH" 口径（datacenter 格式），经归一化再使用
             code = normalize_stock_code(survey.get("SecuCode") or "") or self._code_from_url(url)
-            holders = []
-            if code:
-                holders = self._fetch_holders(code, headers)
-            return (200, {"survey": survey, "holders": holders}, "")
         except Exception as e:  # noqa: BLE001 - 统一降级为可审计的空结果
             return (0, None, f"{type(e).__name__}: {e}")
+        holders: list[dict] = []
+        holders_error = ""
+        if code:
+            # 十大股东走另一个域名（datacenter-web，对频率敏感）。它失败时不能连带
+            # 丢掉已经拿到的公司概况；把失败记为证据缺口，而不是"无股东"。
+            try:
+                holders = self._fetch_holders(code, headers)
+            except Exception as e:  # noqa: BLE001
+                holders_error = f"{type(e).__name__}: {e}"
+        return (200, {"survey": survey, "holders": holders, "holders_error": holders_error}, "")
 
     @staticmethod
     def _code_from_url(url: str) -> str:
@@ -201,5 +208,11 @@ class EastmoneyF10Lookup(SafeResearchAdapter):
         if holders:
             fields["top_holders"] = holders
             fields["holder_count"] = len(holders)
+        elif raw_data.get("holders_error"):
+            fields["top_holders_gap"] = {
+                "reason": "holders_fetch_failed",
+                "detail": str(raw_data.get("holders_error"))[:200],
+                "absence_is_not_proof": True,
+            }
         fields["source"] = "eastmoney_f10"
         return fields
