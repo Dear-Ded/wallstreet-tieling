@@ -17,6 +17,8 @@
     ".codex-plugin/plugin.json",
     "adapters/*.py",
     "adapters/*.md",
+    "adapters/_vendor/whatsmyname/wmn-data.json",
+    "adapters/_vendor/whatsmyname/NOTICE.md",
     "adapters/multi_datasource/*.py",
     "adapters/multi_datasource/*.md",
     "adapters/multi_datasource/*.yaml",

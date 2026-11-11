@@ -12,6 +12,16 @@ from core.entity_resolution import build_entity_resolution
 from core.relationship_resolution import build_relationship_resolution
 from core.investigation_strategy import build_strategy_v2
 from core.release_gate import compute_release_decision
+from core.report_charts import CHART_SECTION_CSS, build_report_chart_section
+from core.association_graph import (
+    ASSOCIATION_GRAPH_CSS,
+    build_association_graph_section,
+)
+from core.enrichment_report import (
+    extract_enrichments,
+    render_enrichments_html,
+    render_enrichments_markdown,
+)
 from adapters.public_web_search_tool import reality_drill_extract
 from core.qyyjt_pledge_bridge import build_pledge_bridge
 from core.qyyjt_trade_bridge import build_trade_bridge
@@ -302,6 +312,7 @@ def build_investigation_packet(
         monitoring_seed=monitoring_seed,
         qyyjt_public_origin_handoff=qyyjt_public_origin_handoff,
         next_actions=next_actions,
+        enrichments=extract_enrichments(graph_payload),
     )
     quality_gate = evaluate_investigation_packet(
         summary=summary,
@@ -340,6 +351,7 @@ def build_investigation_packet(
         qyyjt_public_origin_handoff=qyyjt_public_origin_handoff,
         next_actions=next_actions,
         quality_gate=quality_gate,
+        enrichments=extract_enrichments(graph_payload),
     )
     report_exports = _report_export_bundle(
         company=str(graph_payload.get("company") or input_text),
@@ -353,6 +365,9 @@ def build_investigation_packet(
         source_provenance=source_provenance,
         risk_event_summary=risk_event_summary,
         evidence_ledger=evidence_ledger,
+        quality_gate=quality_gate,
+        risk_brief=risk_brief,
+        enrichments=extract_enrichments(graph_payload),
     )
 
     return InvestigationPacket(
@@ -904,7 +919,7 @@ def _packet_source_strengthening_handoff() -> dict[str, Any]:
         "type": "source_strengthening_handoff",
         "status": status,
         "catalog_tool": "connector_catalog",
-        "work_order_count": len(queue),
+        "work_order_count": len(top_work_orders),
         "top_work_orders": top_work_orders,
         "top_work_order": top_work_orders[0] if top_work_orders else {},
         "by_lane": by_lane,
@@ -1046,6 +1061,9 @@ def _report_export_bundle(
     source_provenance: dict[str, Any],
     risk_event_summary: dict[str, Any],
     evidence_ledger: list[dict[str, Any]],
+    quality_gate: dict[str, Any] | None = None,
+    risk_brief: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Describe desktop-agent report outputs without requiring the HTML workbench."""
     safe_company = _safe_report_filename(company)
@@ -1083,9 +1101,16 @@ def _report_export_bundle(
         agent_decision_digest=agent_decision_digest,
         image_evidence_inventory=print_package.get("image_evidence_inventory") if isinstance(print_package, dict) else {},
         chart_manifest=print_package.get("chart_manifest") if isinstance(print_package, dict) else [],
+        chart_packet={
+            "quality_gate": quality_gate or {},
+            "risk_brief": risk_brief or {},
+            "source_provenance": source_provenance or {},
+            "one_click_readiness": one_click_readiness or {},
+        },
         source_provenance_appendix=print_package.get("source_provenance_appendix") if isinstance(print_package, dict) else {},
         relationship_capital_appendix=print_package.get("relationship_capital_appendix") if isinstance(print_package, dict) else {},
         report_targets=report_targets,
+        enrichments=enrichments,
     )
     premium_html = _premium_html_profile(
         html_filename=html_filename,
@@ -1357,6 +1382,8 @@ def _premium_html_profile(
             "evidence darkroom",
             "source provenance appendix",
             "relationship and capital appendix",
+            "风险可视化",
+            "inline SVG risk charts",
         ],
         "design_language": [
             "cinematic paper-and-night contrast",
@@ -1374,6 +1401,7 @@ def _premium_html_profile(
             "image_evidence_inventory_visible",
             "agent_handoff_cards_visible",
             "delivery_checklist_visible",
+            "svg_risk_charts_visible",
         ],
         "forbidden_shortcuts": [
             "no_generic_purple_gradient",
@@ -1420,9 +1448,11 @@ def _portable_report_html(
     agent_decision_digest: dict[str, Any] | None = None,
     image_evidence_inventory: dict[str, Any] | None = None,
     chart_manifest: list[dict[str, Any]] | None = None,
+    chart_packet: dict[str, Any] | None = None,
     source_provenance_appendix: dict[str, Any] | None = None,
     relationship_capital_appendix: dict[str, Any] | None = None,
     report_targets: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> str:
     status = html.escape(str(one_click_readiness.get("status") or "unknown"))
     closure_status = html.escape(str(one_click_readiness.get("acceptance_closure_status") or "unknown"))
@@ -1445,10 +1475,14 @@ def _portable_report_html(
     delivery_html = _portable_delivery_checklist_html(delivery_checklist or {})
     decision_html = _portable_decision_digest_html(agent_decision_digest or {})
     chart_html = _portable_chart_manifest_html(chart_manifest or [])
+    chart_section_html = build_report_chart_section(chart_packet or {})
+    assoc_graph_html = build_association_graph_section(
+        (chart_packet or {}).get("entity_association"))
     image_html = _portable_image_evidence_html(image_evidence_inventory or {})
     relationship_capital_html = _portable_relationship_capital_html(relationship_capital_appendix or {})
     source_html = _portable_source_provenance_html(source_provenance_appendix or {})
     report_targets_html = _portable_report_targets_html(report_targets or {})
+    enrichment_html = render_enrichments_html(enrichments or {})
     return (
         "<!doctype html>\n"
         "<html lang=\"zh-CN\">\n"
@@ -1509,6 +1543,8 @@ def _portable_report_html(
         "    @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}\n"
         "    @media (max-width:900px){.report-layout{grid-template-columns:1fr;}h1{font-size:30px;}main{padding:24px 16px 48px;}}\n"
         "    @media print{body{background:#fff;}body:before{display:none;}main{padding:18mm;max-width:none;}header,.delivery,.visual-panel,pre.report-body{box-shadow:none;backdrop-filter:none;}header{break-after:avoid;}.report-layout{display:block;}.visual-panel{background:#fff;color:#111;border-color:#999;}.visual-panel h2{color:#111;}.visual-panel th,.visual-panel td{border-color:#ccc;color:#111;}.metric-strip div{border-color:#ccc;background:#fff;}.metric-strip b,.metric-strip span{color:#111;}.premium-qa:after{display:none;}}\n"
+        f"{CHART_SECTION_CSS}"
+        f"{ASSOCIATION_GRAPH_CSS}"
         "  </style>\n"
         "</head>\n"
         "<body>\n"
@@ -1535,6 +1571,9 @@ def _portable_report_html(
         f"      <div class=\"card\"><b>{capital_queue}</b><span>capital verification steps</span></div>\n"
         f"      <div class=\"card\"><b>{relationship_queue}</b><span>relationship audit steps</span></div>\n"
         "    </section>\n"
+        f"{chart_section_html}"
+        f"{assoc_graph_html}"
+        f"{enrichment_html}"
         "    <section class=\"visual-panel premium-qa\" aria-label=\"premium visual QA checklist\">\n"
         "      <h2>Premium HTML visual QA checklist</h2>\n"
         "      <p class=\"premium-copy\">This screen report uses component-level <code>liquid glass</code>, an <code>evidence darkroom</code> treatment, formal long-report typography, reduced-motion safety, and print-safe degradation while preserving the complete due-diligence body. It explicitly avoids generic purple gradients, decorative card piles, and any evidence truncation.</p>\n"
@@ -13456,6 +13495,7 @@ def _report_markdown(
     qyyjt_public_origin_handoff: dict[str, Any] | None = None,
     next_actions: list[str],
     quality_gate: dict[str, Any] | None = None,
+    enrichments: list[dict[str, Any]] | None = None,
 ) -> str:
     findings = risk_brief.get("key_findings", [])
     controllers = profile_brief.get("controller_candidates", [])
@@ -15205,6 +15245,13 @@ def _report_markdown(
         lines.append("## 证据准入")
         lines.append(f"- 事实级: {facts} 条（高置信+强来源，已进入报告）")
         lines.append(f"- 线索级: {leads} 条（中低置信或单一来源，需核验后使用）")
+
+    # ── Intel enrichment ──
+    # Render intel_enrichment / people-intel / entity-association payloads
+    # carried by the packet. Absent or empty → no section (graceful).
+    enrichment_lines = render_enrichments_markdown(enrichments or [])
+    if enrichment_lines:
+        lines.extend(enrichment_lines)
 
     lines.extend(["", "## 下一步"])
     for action in next_actions[:6]:
