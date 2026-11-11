@@ -1684,6 +1684,7 @@ def test_node_cli_passes_report_export_options(tmp_path) -> None:
             str(export_dir),
         ],
         cwd=ROOT,
+        env={**os.environ, "WST_PYTHON": os.environ.get("WST_PYTHON", sys.executable)},
         check=True,
         capture_output=True,
         text=True,

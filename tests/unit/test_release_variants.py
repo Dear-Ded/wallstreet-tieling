@@ -11,9 +11,20 @@ import subprocess
 import tempfile
 
 import yaml
+import sys
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def _node_cli_env() -> dict[str, str]:
+    """Point bin/cli.js at the interpreter running pytest.
+
+    Without this the Node CLI falls back to whatever ``python3`` is first on
+    PATH, which in a fresh virtualenv that is not activated lacks the project
+    dependencies (pydantic, PyYAML) and the CLI exits 1.
+    """
+    return {**os.environ, "WST_PYTHON": os.environ.get("WST_PYTHON", sys.executable)}
 VARIANTS_PATH = PROJECT_ROOT / "release" / "variants.yaml"
 PACKAGE_PATH = PROJECT_ROOT / "package.json"
 MCP_MANIFEST_PATH = PROJECT_ROOT / "deploy" / "mcp-server.json"
@@ -1372,6 +1383,7 @@ def test_node_cli_delivery_closure_entrypoint_returns_machine_readable_contract(
     result = subprocess.run(
         ["node", "bin/cli.js", "--delivery-closure"],
         cwd=PROJECT_ROOT,
+        env=_node_cli_env(),
         check=True,
         capture_output=True,
         text=True,
@@ -1407,6 +1419,7 @@ def test_node_cli_release_preflight_entrypoint_returns_packaging_go_no_go():
     result = subprocess.run(
         ["node", "bin/cli.js", "--release-preflight"],
         cwd=PROJECT_ROOT,
+        env=_node_cli_env(),
         check=True,
         capture_output=True,
         text=True,
@@ -1441,6 +1454,7 @@ def test_node_cli_delivery_audit_entrypoint_returns_single_go_no_go():
     result = subprocess.run(
         ["node", "bin/cli.js", "--delivery-audit"],
         cwd=PROJECT_ROOT,
+        env=_node_cli_env(),
         check=True,
         capture_output=True,
         text=True,
@@ -1467,6 +1481,7 @@ def test_node_cli_objective_audit_entrypoint_maps_goal_to_evidence():
     result = subprocess.run(
         ["node", "bin/cli.js", "--objective-audit"],
         cwd=PROJECT_ROOT,
+        env=_node_cli_env(),
         check=True,
         capture_output=True,
         text=True,
