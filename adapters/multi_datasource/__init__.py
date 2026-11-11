@@ -138,6 +138,28 @@ def _safe_url_for_diagnostics(raw: str) -> str:
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
 
+_WIKIMEDIA_CONTACT = "+https://github.com/Dear-Ded/wallstreet-tieling"
+
+
+def _wikimedia_compliant_headers(headers: Dict[str, str]) -> Dict[str, str]:
+    """Ensure Wikimedia requests carry a User-Agent with contact information.
+
+    Wikimedia's robot policy (https://w.wiki/4wJS) answers HTTP 403 to bare
+    client User-Agents such as ``wallstreet-tieling/0.6.0`` or the aiohttp
+    default, so older configs copied from the 0.6.0 template would fail every
+    Wikidata lookup. Operator-supplied UAs that already carry contact details
+    (a parenthesised comment, URL, or e-mail) are left untouched.
+    """
+    result = dict(headers or {})
+    ua_key = next((key for key in result if key.lower() == "user-agent"), "User-Agent")
+    ua = str(result.get(ua_key) or "").strip()
+    if not ua:
+        result[ua_key] = f"wallstreet-tieling/0.6.0 ({_WIKIMEDIA_CONTACT})"
+    elif not re.search(r"\(|https?://|@", ua):
+        result[ua_key] = f"{ua} ({_WIKIMEDIA_CONTACT})"
+    return result
+
+
 def _join_endpoint(base_url: str, endpoint: str) -> str:
     """Build a request URL while allowing vetted provider-specific absolute URLs."""
     endpoint = str(endpoint or "")
@@ -1830,9 +1852,9 @@ class RestApiDataSource(BaseDataSource):
         cik = str(raw_data.get("cik") or "").zfill(10) if raw_data.get("cik") is not None else ""
         facts = ((raw_data.get("facts") or {}).get("us-gaap") or {})
         metrics = {
-            "revenue": self._sec_latest_fact(facts, ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet")),
-            "net_income": self._sec_latest_fact(facts, ("NetIncomeLoss",)),
-            "operating_cash_flow": self._sec_latest_fact(facts, ("NetCashProvidedByUsedInOperatingActivities",)),
+            "revenue": self._sec_latest_fact(facts, ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet"), duration=True),
+            "net_income": self._sec_latest_fact(facts, ("NetIncomeLoss",), duration=True),
+            "operating_cash_flow": self._sec_latest_fact(facts, ("NetCashProvidedByUsedInOperatingActivities",), duration=True),
             "assets": self._sec_latest_fact(facts, ("Assets",)),
             "liabilities": self._sec_latest_fact(facts, ("Liabilities",)),
             "stockholders_equity": self._sec_latest_fact(facts, ("StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest")),
@@ -1850,10 +1872,22 @@ class RestApiDataSource(BaseDataSource):
         assets = self._fact_value(metrics["assets"])
         liabilities = self._fact_value(metrics["liabilities"])
         equity = self._fact_value(metrics["stockholders_equity"])
-        net_margin = self._safe_ratio(net_income, revenue)
-        cash_conversion = self._safe_ratio(operating_cash_flow, net_income)
-        debt_to_assets = self._safe_ratio(liabilities, assets)
-        debt_to_equity = self._safe_ratio(liabilities, equity)
+        # Ratios are only meaningful when both facts cover the same reporting
+        # period; mixing a 3-month quarter with a 9-month YTD or annual figure
+        # produces numbers that look precise but are wrong.
+        period_mismatches: List[str] = []
+        net_margin = self._sec_period_ratio(
+            "net_margin", metrics["net_income"], metrics["revenue"], period_mismatches
+        )
+        cash_conversion = self._sec_period_ratio(
+            "cash_conversion", metrics["operating_cash_flow"], metrics["net_income"], period_mismatches
+        )
+        debt_to_assets = self._sec_period_ratio(
+            "debt_to_assets", metrics["liabilities"], metrics["assets"], period_mismatches
+        )
+        debt_to_equity = self._sec_period_ratio(
+            "debt_to_equity", metrics["liabilities"], metrics["stockholders_equity"], period_mismatches
+        )
         risk_events: List[Dict[str, Any]] = []
         warnings: List[str] = []
         if net_income and net_income > 0 and cash_conversion is not None and cash_conversion < 0.5:
@@ -1909,6 +1943,7 @@ class RestApiDataSource(BaseDataSource):
                 "cik": cik,
                 "entityName": entity,
                 "metrics": present,
+                "period_mismatches": period_mismatches,
                 "ratios": {
                     "net_margin": net_margin,
                     "cash_conversion": cash_conversion,
@@ -1919,8 +1954,27 @@ class RestApiDataSource(BaseDataSource):
         }
         return {"standardized_records": [record], "raw": record["raw"]}
 
-    @staticmethod
-    def _sec_latest_fact(facts: Dict[str, Any], keys: tuple[str, ...]) -> Dict[str, Any] | None:
+    # Forms whose duration facts are fiscal-year totals.
+    _SEC_ANNUAL_FORMS = frozenset({"10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A", "10-KT", "10-KT/A"})
+
+    @classmethod
+    def _sec_latest_fact(
+        cls,
+        facts: Dict[str, Any],
+        keys: tuple[str, ...],
+        *,
+        duration: bool = False,
+    ) -> Dict[str, Any] | None:
+        """Pick the latest fact for ``keys``.
+
+        For duration (income-statement / cash-flow) concepts the latest *end*
+        date is not enough: a 10-Q reports both the 3-month quarter and the
+        year-to-date figure with the same end date, and a 10-K reports the
+        fiscal-year total. When ``duration`` is set, the latest fiscal-year
+        fact (annual form, ~1 year span) wins; only if the filer has no annual
+        fact do we fall back to the latest interim fact, choosing the longest
+        span for the latest end date and labelling its period explicitly.
+        """
         candidates: List[Dict[str, Any]] = []
         for key in keys:
             fact = facts.get(key)
@@ -1934,12 +1988,21 @@ class RestApiDataSource(BaseDataSource):
                             latest = dict(item)
                             latest["concept"] = key
                             latest["unit"] = str(unit)
+                            if duration:
+                                days = cls._sec_period_days(latest)
+                                latest["period_days"] = days
+                                latest["period_type"] = cls._sec_period_type(latest, days)
                             candidates.append(latest)
         if not candidates:
             return None
+        if duration:
+            annual = [item for item in candidates if item.get("period_type") == "fiscal_year"]
+            if annual:
+                candidates = annual
         candidates.sort(
             key=lambda item: (
                 str(item.get("end") or ""),
+                int(item.get("period_days") or 0) if duration else 0,
                 str(item.get("filed") or ""),
                 str(item.get("form") or ""),
                 str(item.get("concept") or ""),
@@ -1947,6 +2010,51 @@ class RestApiDataSource(BaseDataSource):
             reverse=True,
         )
         return candidates[0]
+
+    @staticmethod
+    def _sec_period_days(fact: Dict[str, Any]) -> int | None:
+        start = str(fact.get("start") or "")[:10]
+        end = str(fact.get("end") or "")[:10]
+        if not start or not end:
+            return None
+        try:
+            return (datetime.strptime(end, "%Y-%m-%d") - datetime.strptime(start, "%Y-%m-%d")).days + 1
+        except ValueError:
+            return None
+
+    @classmethod
+    def _sec_period_type(cls, fact: Dict[str, Any], days: int | None) -> str:
+        if days is None:
+            return "unknown_period"
+        form = str(fact.get("form") or "").upper()
+        fp = str(fact.get("fp") or "").upper()
+        if 330 <= days <= 400 and (form in cls._SEC_ANNUAL_FORMS or fp == "FY"):
+            return "fiscal_year"
+        if 330 <= days <= 400:
+            return "trailing_year"
+        if days <= 100:
+            return "quarter"
+        return "year_to_date"
+
+    @classmethod
+    def _sec_period_ratio(
+        cls,
+        label: str,
+        numerator: Dict[str, Any] | None,
+        denominator: Dict[str, Any] | None,
+        mismatches: List[str],
+    ) -> float | None:
+        if not numerator or not denominator:
+            return None
+        num_period = (str(numerator.get("start") or ""), str(numerator.get("end") or ""))
+        den_period = (str(denominator.get("start") or ""), str(denominator.get("end") or ""))
+        if num_period != den_period:
+            mismatches.append(
+                f"{label}: {numerator.get('concept')} {num_period[0] or '?'}..{num_period[1] or '?'} "
+                f"vs {denominator.get('concept')} {den_period[0] or '?'}..{den_period[1] or '?'}"
+            )
+            return None
+        return cls._safe_ratio(cls._fact_value(numerator), cls._fact_value(denominator))
 
     @staticmethod
     def _fact_value(fact: Dict[str, Any] | None) -> float | None:
@@ -1965,6 +2073,12 @@ class RestApiDataSource(BaseDataSource):
         if value is None:
             return ""
         suffix = f" end={fact.get('end')}" if fact.get("end") else ""
+        if fact.get("start"):
+            suffix += f" start={fact.get('start')}"
+        if fact.get("period_type"):
+            suffix += f" period={fact.get('period_type')}"
+        if fact.get("form"):
+            suffix += f" form={fact.get('form')}"
         return f"{label}={value:g}{suffix}"
 
     @staticmethod
@@ -3245,6 +3359,8 @@ class RestApiDataSource(BaseDataSource):
         endpoint, params = self._prepare_provider_request(request)
         url = _join_endpoint(self.config.base_url, endpoint)
         headers = {**self.config.headers, **request.headers}
+        if str(self.config.custom.get("provider_type", "")) == "wikidata_entity_search":
+            headers = _wikimedia_compliant_headers(headers)
         auth_context = await self._auth_handler.prepare(
             AuthRequestContext(
                 source_name=self.name,
