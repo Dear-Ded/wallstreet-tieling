@@ -128,3 +128,24 @@ def test_query_subject_is_hashed_not_plaintext():
     out = a.query("600519")
     assert out["query_subject_hash"] != "600519"
     assert len(out["query_subject_hash"]) == 12
+
+
+def test_resolve_and_format_eastmoney_records():
+    from adapters.eastmoney_f10_adapter import (
+        EASTMONEY_F10_SOURCE,
+        format_eastmoney_f10_standardized_records,
+        resolve_eastmoney_stock_code,
+    )
+
+    assert resolve_eastmoney_stock_code("贵州茅台") is None
+    assert resolve_eastmoney_stock_code("贵州茅台", {"stock_code": "600519"}) == "SH600519"
+    lookup = _adapter(FIXTURE_HOLDERS).query("600519")
+    records = format_eastmoney_f10_standardized_records("贵州茅台", lookup, stock_code="SH600519")
+    assert len(records) == 1
+    record = records[0]
+    assert record["source_name"] == EASTMONEY_F10_SOURCE
+    assert record["entity"] == "贵州茅台酒股份有限公司"
+    assert record["stock_code"] == "SH600519"
+    assert record["unified_social_credit_code"] == "9152000071430580XT"
+    assert any(item["name"] == "陈华" and item["relation"] == "legal_representative" for item in record["entities"])
+    assert any("中国贵州茅台酒厂" in item["name"] for item in record["entities"] if item["relation"] == "shareholder")

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from core.interfaces import ToolResult
+from adapters.eastmoney_f10_adapter import EASTMONEY_F10_SOURCE
 from core.one_click_defaults import (
     DEFAULT_ONE_CLICK_SOURCE,
+    DEFAULT_SEARCHENGINE_OFFICIAL_SOURCE_NAMES,
     DefaultOneClickSearchEngine,
     build_default_one_click_plan,
     build_default_one_click_search_engine,
+    resolve_one_click_retrieval_async,
 )
 
 
@@ -38,9 +41,10 @@ async def test_default_one_click_engine_does_not_initialize_official_sources_by_
     engine = await build_default_one_click_search_engine()
 
     assert engine.official_engine is None
-    assert engine.list_sources() == [DEFAULT_ONE_CLICK_SOURCE]
-    assert engine.available_sources() == [DEFAULT_ONE_CLICK_SOURCE]
+    assert engine.list_sources() == [DEFAULT_ONE_CLICK_SOURCE, EASTMONEY_F10_SOURCE]
+    assert engine.available_sources() == sorted([DEFAULT_ONE_CLICK_SOURCE, EASTMONEY_F10_SOURCE])
     assert engine.can_handle_source_hint(DEFAULT_ONE_CLICK_SOURCE) is True
+    assert engine.can_handle_source_hint(EASTMONEY_F10_SOURCE) is True
     assert engine.can_handle_source_hint("sec_edgar_public_api") is False
     assert engine.can_handle_source_hint("gleif_lei_public_api") is False
 
@@ -109,3 +113,58 @@ def test_default_one_click_plan_includes_targeted_money_and_goods_public_tasks()
     assert goods_task.params["qyyjt_public_plan_limit"] == 3
     assert money_task.params["execute_qyyjt_public_plan"] is True
     assert goods_task.params["execute_qyyjt_public_plan"] is True
+
+
+def test_default_one_click_plan_includes_official_public_and_cn_sources() -> None:
+    apple = build_default_one_click_plan("Apple Inc.")
+    apple_hints = [task.source_hint for task in apple.tasks]
+    assert "gleif_lei_public_api" in apple_hints
+    assert "sec_edgar_public_api" in apple_hints
+    assert "ofac_consolidated_sanctions_xml" in apple_hints
+    assert "un_sc_consolidated_sanctions_xml" in apple_hints
+    assert "wikidata_public_entity_graph" in apple_hints
+    assert "opensanctions_public_dataset_catalog" in apple_hints
+    assert "world_bank_debarred_firms_public_list" in apple_hints
+    assert EASTMONEY_F10_SOURCE not in apple_hints
+
+    moutai = build_default_one_click_plan("贵州茅台")
+    moutai_hints = [task.source_hint for task in moutai.tasks]
+    assert EASTMONEY_F10_SOURCE in moutai_hints
+    assert "sec_edgar_public_api" in moutai_hints
+
+
+async def test_resolve_one_click_initializes_official_engine_and_bounded_fanout(monkeypatch) -> None:
+    class FakeOfficial:
+        @staticmethod
+        def available_sources():
+            return list(DEFAULT_SEARCHENGINE_OFFICIAL_SOURCE_NAMES)
+
+    async def fake_build(*, include_official_public: bool = False):
+        assert include_official_public is True
+        return DefaultOneClickSearchEngine(
+            public_tool=CapturingPublicTool(),
+            official_engine=FakeOfficial,
+        )
+
+    monkeypatch.setattr(
+        "core.one_click_defaults.build_default_one_click_search_engine",
+        fake_build,
+    )
+    selected = await resolve_one_click_retrieval_async(company="Apple Inc.")
+    assert selected.mode_name == "default_public_one_click"
+    assert selected.fanout_rounds == 2
+    assert selected.identifier_fanout_only is True
+    assert selected.search_engine.official_engine is FakeOfficial
+    assert selected.search_engine.can_handle_source_hint("sec_edgar_public_api") is True
+
+
+async def test_resolve_one_click_records_official_init_failure_as_gap() -> None:
+    engine = DefaultOneClickSearchEngine(
+        public_tool=CapturingPublicTool(),
+        official_engine=None,
+        official_init_error="ConfigError: boom",
+    )
+    gaps = engine.coverage_gaps()
+    assert gaps
+    assert "evidence gap" in gaps[0]
+    assert "ConfigError: boom" in gaps[0]

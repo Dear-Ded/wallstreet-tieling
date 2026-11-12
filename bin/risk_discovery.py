@@ -134,7 +134,7 @@ async def run(args: argparse.Namespace) -> dict:
         existing_plan=selected.existing_plan,
         retrieval_concurrency=max(1, args.retrieval_concurrency),
         fanout_rounds=1 if args.official_public_smoke else selected.fanout_rounds,
-        identifier_fanout_only=bool(args.official_public_smoke),
+        identifier_fanout_only=bool(args.official_public_smoke or getattr(selected, "identifier_fanout_only", False)),
         query_timeout_seconds=max(0.1, args.query_timeout_seconds),
     )
     return result.to_dict(include_plan=args.include_plan)
