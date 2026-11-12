@@ -39,7 +39,7 @@ class FinancialRatio(BaseModel):
     # 偿债能力
     current_ratio: Optional[float] = Field(None, description="流动比率")
     quick_ratio: Optional[float] = Field(None, description="速动比率")
-    debt_to_equity: Optional[float] = Field(None, description="资产负债率")
+    debt_to_equity: Optional[float] = Field(None, description="负债权益比（负债/股东权益）")
     interest_coverage: Optional[float] = Field(None, description="利息保障倍数")
     
     # 运营能力
@@ -337,10 +337,10 @@ class EnhancedFinancialAnalyzer:
         risk_score = 0.0
         warnings = []
         
-        # 偿债能力风险。字段中文口径是资产负债率，0 是有效观测值。
+        # 偿债能力风险。字段口径是负债/股东权益，0 是有效观测值。
         if ratios.debt_to_equity is not None and ratios.debt_to_equity > 0.7:
             risk_score += 30
-            warnings.append("资产负债率过高")
+            warnings.append("负债权益比过高")
         
         # 盈利能力风险。ROE 为 0 时不能被真值判断吞掉。
         if ratios.roe is not None and ratios.roe < 0.05:
