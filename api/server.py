@@ -447,7 +447,7 @@ async def _build_risk_graph_payload(data: dict[str, Any], *, allow_message: bool
         retrieval_concurrency=retrieval_concurrency,
         fanout_rounds=selected.fanout_rounds,
         max_fanout_tasks=max_fanout_tasks,
-        identifier_fanout_only=official_public_smoke,
+        identifier_fanout_only=official_public_smoke or getattr(selected, "identifier_fanout_only", False),
         query_timeout_seconds=query_timeout_seconds,
     )
     return export_risk_graph(result).to_dict()

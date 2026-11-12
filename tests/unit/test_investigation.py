@@ -5520,7 +5520,7 @@ def test_e2e_dd_pipeline_all_outputs() -> None:
         assert "capital_lane" in dd
         assert "goods_lane" in dd
         assert "people_lane" in dd
-        assert dd["executive_summary"]["overall_risk"] in ("low", "medium", "high")
+        assert dd["executive_summary"]["overall_risk"] in ("low", "medium", "high", "unknown")
 
         # 4. Audit log
         audit = ec.get("investigation_audit_log")

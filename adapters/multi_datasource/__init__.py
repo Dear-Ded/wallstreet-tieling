@@ -1112,7 +1112,11 @@ class RestApiDataSource(BaseDataSource):
                 for key, value in params.items()
                 if key.startswith("filter[") or key.startswith("page[")
             }
-            provider_params.setdefault("filter[entity.legalName]", query)
+            lei = str(params.get("lei") or "").strip().upper()
+            if re.fullmatch(r"[A-Z0-9]{20}", lei):
+                provider_params.setdefault("filter[lei]", lei)
+            else:
+                provider_params.setdefault("filter[entity.legalName]", query)
             provider_params.setdefault("page[size]", 5)
             return endpoint, provider_params
 
@@ -1153,11 +1157,12 @@ class RestApiDataSource(BaseDataSource):
                     for key, value in params.items()
                     if key not in {"wikidata_endpoint", "wikidata_id", "qid", "company", "domain", "objective"}
                 }
+            language = "zh" if re.search("[\u4e00-\u9fff]", query) else "en"
             return "api.php", {
                 "action": "wbsearchentities",
                 "format": "json",
-                "language": "en",
-                "uselang": "en",
+                "language": language,
+                "uselang": language,
                 "limit": 10,
                 "search": query,
             }
@@ -2349,16 +2354,41 @@ class RestApiDataSource(BaseDataSource):
             aliases = item.get("aliases") if isinstance(item.get("aliases"), list) else []
             normalized_query = self._normalize_label_for_match(self._current_query_hint)
             normalized_entity = self._normalize_label_for_match(entity)
-            exact_label = bool(normalized_query and normalized_query == normalized_entity)
+            normalized_aliases = [self._normalize_label_for_match(str(alias)) for alias in aliases]
+            exact_label = bool(
+                normalized_query
+                and (
+                    normalized_query == normalized_entity
+                    or normalized_query in normalized_aliases
+                )
+            )
+            kind = self._wikidata_search_entity_kind(description, aliases)
+            contains_label = bool(
+                normalized_query
+                and normalized_entity
+                and (
+                    normalized_query in normalized_entity
+                    or normalized_entity in normalized_query
+                )
+            )
+            # Substring matches only upgrade company-like hits, not court cases or other namesakes.
+            strong_label = bool(
+                exact_label or (contains_label and kind in {"listed_company", "company"})
+            )
+            if exact_label:
+                level, score, reason = "exact", 1.0, "Wikidata label or alias exact match"
+            elif strong_label:
+                level, score, reason = "strong", 0.86, "Wikidata label contains the investigation seed"
+            else:
+                level, score, reason = "review", 0.68, "Wikidata public related-topic search result"
             entity_match = {
                 "seed_name": self._current_query_hint,
                 "candidate_name": entity,
-                "score": 1.0 if exact_label else 0.68,
-                "level": "exact" if exact_label else "review",
-                "reasons": [
-                    "Wikidata label exact match" if exact_label else "Wikidata public related-topic search result"
-                ],
+                "score": score,
+                "level": level,
+                "reasons": [reason],
                 "identifiers": {"wikidata_id": entity_id} if entity_id else {},
+                "wikidata_kind": kind,
             }
             records.append({
                 "source_name": self.name,
@@ -2377,6 +2407,7 @@ class RestApiDataSource(BaseDataSource):
                 ),
                 "url": concept_uri,
                 "confidence": 0.56,
+                "wikidata_id": entity_id,
                 "entity_match": entity_match,
                 "evidence": [
                     {
@@ -2388,7 +2419,114 @@ class RestApiDataSource(BaseDataSource):
                 ],
                 "raw": item,
             })
+        records = self._disambiguate_wikidata_search_records(records)
         return {"standardized_records": records, "raw": raw_data}
+
+    @staticmethod
+    def _wikidata_search_entity_kind(description: str, aliases: Any = None) -> str:
+        """Classify a Wikidata search hit as company-like, namesake, or unknown."""
+        text = " ".join(
+            [
+                str(description or ""),
+                " ".join(str(item) for item in aliases if str(item).strip()) if isinstance(aliases, list) else "",
+            ]
+        ).lower()
+        namesake_markers = (
+            "football", "soccer", "basketball", "baseball", "sports club", "football club",
+            "soccer club", "club", "team", "stadium", "athlete", "university", "school",
+            "album", "film", "song", "village", "river", "mountain", "politician",
+            "足球", "篮球", "棒球", "俱乐部", "球队", "体育", "运动员", "大学", "学校",
+            "电影", "歌曲", "专辑", "村庄", "河流",
+        )
+        company_markers = (
+            "company", "corporation", "enterprise", "business", "manufacturer",
+            "listed company", "publicly traded", "holding", "bank", "brewery",
+            "distillery", "winery", "inc.", "ltd", "limited", "group",
+            "公司", "企业", "股份", "集团", "有限", "上市", "银行", "酒业", "酒厂", "制造",
+        )
+        is_namesake = any(marker in text for marker in namesake_markers)
+        is_company = any(marker in text for marker in company_markers)
+        is_listed = any(
+            marker in text
+            for marker in ("listed company", "publicly traded", "listed", "上市", "股份有限")
+        )
+        if is_namesake and not is_company:
+            return "namesake"
+        if is_company and is_namesake:
+            if any(marker in text for marker in ("football", "soccer", "俱乐部", "球队", "体育")):
+                return "namesake"
+        if is_listed and not is_namesake:
+            return "listed_company"
+        if is_company and not is_namesake:
+            return "company"
+        return "unknown"
+
+    @classmethod
+    def _disambiguate_wikidata_search_records(cls, records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Prefer company entities over namesakes; do not promote an ambiguous QID."""
+        if len(records) <= 1:
+            return records
+        def _kind(record: Dict[str, Any]) -> str:
+            match = record.get("entity_match") if isinstance(record.get("entity_match"), dict) else {}
+            return str(match.get("wikidata_kind") or "unknown")
+
+        def _level(record: Dict[str, Any]) -> str:
+            match = record.get("entity_match") if isinstance(record.get("entity_match"), dict) else {}
+            return str(match.get("level") or "")
+
+        strong_levels = {"exact", "strong"}
+        listed = [record for record in records if _level(record) in strong_levels and _kind(record) == "listed_company"]
+        companies = [
+            record
+            for record in records
+            if _level(record) in strong_levels and _kind(record) in {"listed_company", "company"}
+        ]
+        exact_company = listed if len(listed) == 1 else companies
+        if len(listed) > 1:
+            exact_company = listed
+        if len(exact_company) == 1:
+            winner_id = str(exact_company[0].get("wikidata_id") or "")
+            for record in records:
+                match = record.get("entity_match") if isinstance(record.get("entity_match"), dict) else {}
+                kind = str(match.get("wikidata_kind") or "unknown")
+                if str(record.get("wikidata_id") or "") == winner_id:
+                    match["reasons"] = list(match.get("reasons") or []) + [
+                        "Preferred company/enterprise entity over namesake matches"
+                    ]
+                    record["confidence"] = 0.72
+                    continue
+                if kind == "namesake" or str(match.get("level") or "") == "exact":
+                    match["level"] = "weak"
+                    match["score"] = 0.35
+                    match["reasons"] = list(match.get("reasons") or []) + [
+                        "Namesake or non-preferred Wikidata entity; kept as a lead, not the seed subject"
+                    ]
+                    record["entity_match"] = match
+                    record["confidence"] = 0.32
+            return records
+        if len(exact_company) > 1:
+            for record in records:
+                match = record.get("entity_match") if isinstance(record.get("entity_match"), dict) else {}
+                if str(match.get("level") or "") == "exact":
+                    match["level"] = "review"
+                    match["score"] = 0.6
+                    match["reasons"] = list(match.get("reasons") or []) + [
+                        "Multiple Wikidata company candidates share this name; identifiers were not promoted to the seed subject"
+                    ]
+                    record["entity_match"] = match
+                    record["title"] = str(record.get("title") or "") + " (ambiguous company match)"
+            return records
+        # No unique company winner: exact label hits stay reviewable leads.
+        for record in records:
+            match = record.get("entity_match") if isinstance(record.get("entity_match"), dict) else {}
+            if str(match.get("level") or "") == "exact":
+                match["level"] = "review"
+                match["score"] = min(float(match.get("score") or 0.68), 0.68)
+                match["reasons"] = list(match.get("reasons") or []) + [
+                    "Exact label match is not a unique company entity; kept as a lead"
+                ]
+                record["entity_match"] = match
+        return records
 
     @staticmethod
     def _is_wikidata_entitydata_payload(raw_data: Any) -> bool:
@@ -2401,9 +2539,10 @@ class RestApiDataSource(BaseDataSource):
             if not isinstance(entity_payload, dict):
                 continue
             qid = str(qid or entity_payload.get("id") or "").strip()
-            label = self._wikidata_label(entity_payload) or qid
-            description = self._wikidata_description(entity_payload)
+            label = self._wikidata_label(entity_payload, self._current_query_hint) or qid
+            description = self._wikidata_description(entity_payload, self._current_query_hint)
             relationship_entities = self._wikidata_relationship_entities(entity_payload)
+            tickers = self._wikidata_tickers(entity_payload)
             evidence = [
                 {
                     "type": "public_knowledge_graph_entitydata",
@@ -2446,6 +2585,8 @@ class RestApiDataSource(BaseDataSource):
                 "confidence": 0.7,
                 "wikidata_id": qid,
                 "wikidata_endpoint": "entitydata",
+                "tickers": tickers,
+                "ticker": tickers[0] if tickers else "",
                 "entity_match": EntityResolutionScorer.score(self._current_query_hint, label, {"wikidata_id": qid}) if EntityResolutionScorer and label else {},
                 "entities": relationship_entities,
                 "evidence": evidence,
@@ -2454,24 +2595,51 @@ class RestApiDataSource(BaseDataSource):
         return {"standardized_records": records, "raw": raw_data}
 
     @staticmethod
-    def _wikidata_label(entity_payload: Dict[str, Any]) -> str:
-        labels = entity_payload.get("labels") if isinstance(entity_payload, dict) else {}
-        if isinstance(labels, dict):
-            for language in ("en", "zh", "zh-hans"):
-                value = labels.get(language)
-                if isinstance(value, dict) and str(value.get("value") or "").strip():
-                    return str(value["value"]).strip()
-        return ""
+    def _wikidata_label_languages(query_hint: str = "") -> tuple[str, ...]:
+        if re.search("[\u4e00-\u9fff]", str(query_hint or "")):
+            return ("zh", "zh-hans", "zh-cn", "zh-hant", "en")
+        return ("en", "zh", "zh-hans")
 
-    @staticmethod
-    def _wikidata_description(entity_payload: Dict[str, Any]) -> str:
-        descriptions = entity_payload.get("descriptions") if isinstance(entity_payload, dict) else {}
-        if isinstance(descriptions, dict):
-            for language in ("en", "zh", "zh-hans"):
-                value = descriptions.get(language)
-                if isinstance(value, dict) and str(value.get("value") or "").strip():
-                    return str(value["value"]).strip()
-        return ""
+    @classmethod
+    def _wikidata_text_from_multilingual(
+        cls,
+        payload: Dict[str, Any],
+        field: str,
+        query_hint: str = "",
+    ) -> str:
+        values = payload.get(field) if isinstance(payload, dict) else {}
+        if not isinstance(values, dict):
+            return ""
+        hint = cls._normalize_label_for_match(query_hint)
+        fallback = ""
+        for language in cls._wikidata_label_languages(query_hint):
+            value = values.get(language)
+            if not isinstance(value, dict):
+                continue
+            text = str(value.get("value") or "").strip()
+            if not text:
+                continue
+            if hint and cls._normalize_label_for_match(text) == hint:
+                return text
+            if not fallback:
+                fallback = text
+        if hint:
+            for value in values.values():
+                if not isinstance(value, dict):
+                    continue
+                text = str(value.get("value") or "").strip()
+                norm = cls._normalize_label_for_match(text)
+                if norm == hint or (hint and hint in norm):
+                    return text
+        return fallback
+
+    @classmethod
+    def _wikidata_label(cls, entity_payload: Dict[str, Any], query_hint: str = "") -> str:
+        return cls._wikidata_text_from_multilingual(entity_payload, "labels", query_hint)
+
+    @classmethod
+    def _wikidata_description(cls, entity_payload: Dict[str, Any], query_hint: str = "") -> str:
+        return cls._wikidata_text_from_multilingual(entity_payload, "descriptions", query_hint)
 
     def _wikidata_relationship_entities(self, entity_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
         claims = entity_payload.get("claims") if isinstance(entity_payload, dict) else {}
@@ -2497,17 +2665,20 @@ class RestApiDataSource(BaseDataSource):
                 if not qid:
                     continue
                 name = labels.get(qid, qid)
-                key = (kind, relation, name)
+                ended = self._wikidata_claim_has_end_time(claim)
+                current_relation = f"former_{relation}" if ended else relation
+                key = (kind, current_relation, name)
                 if key in seen:
                     continue
                 seen.add(key)
                 related.append({
                     "kind": kind,
                     "name": name,
-                    "relation": relation,
-                    "confidence": confidence,
+                    "relation": current_relation,
+                    "confidence": 0.5 if ended else confidence,
                     "source": "Wikidata",
                     "wikidata_id": qid,
+                    "current": not ended,
                 })
         return related
 
@@ -2541,6 +2712,53 @@ class RestApiDataSource(BaseDataSource):
             return str(entity_id)
         numeric_id = value.get("numeric-id")
         return f"Q{numeric_id}" if numeric_id else ""
+
+    @staticmethod
+    def _wikidata_claim_has_end_time(claim: Any) -> bool:
+        """Return True when a claim has already ended (P582) or was dissolved (P576)."""
+        if not isinstance(claim, dict):
+            return False
+        qualifiers = claim.get("qualifiers")
+        if not isinstance(qualifiers, dict):
+            return False
+        return bool(qualifiers.get("P582") or qualifiers.get("P576"))
+
+    @classmethod
+    def _wikidata_tickers(cls, entity_payload: Dict[str, Any]) -> List[str]:
+        claims = entity_payload.get("claims") if isinstance(entity_payload, dict) else {}
+        if not isinstance(claims, dict):
+            return []
+        tickers: List[str] = []
+        seen: set[str] = set()
+
+        def _add(symbol: str) -> None:
+            symbol = str(symbol or "").strip()
+            if symbol and symbol not in seen:
+                seen.add(symbol)
+                tickers.append(symbol)
+
+        def _snak_string(snak: Any) -> str:
+            if not isinstance(snak, dict):
+                return ""
+            datavalue = snak.get("datavalue") if "datavalue" in snak else snak
+            if not isinstance(datavalue, dict):
+                return ""
+            value = datavalue.get("value")
+            return str(value).strip() if isinstance(value, str) else ""
+
+        for claim in claims.get("P249") or []:
+            if isinstance(claim, dict):
+                _add(_snak_string(claim.get("mainsnak")))
+        # Many listed companies store the ticker as a P249 qualifier on P414
+        # (stock exchange) rather than as a standalone P249 claim.
+        for claim_list in claims.values():
+            for claim in claim_list or []:
+                if not isinstance(claim, dict):
+                    continue
+                qualifiers = claim.get("qualifiers") if isinstance(claim.get("qualifiers"), dict) else {}
+                for qualifier in qualifiers.get("P249") or []:
+                    _add(_snak_string(qualifier))
+        return tickers
 
     @staticmethod
     def _normalize_label_for_match(raw: str) -> str:

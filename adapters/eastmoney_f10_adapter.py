@@ -216,3 +216,108 @@ class EastmoneyF10Lookup(SafeResearchAdapter):
             }
         fields["source"] = "eastmoney_f10"
         return fields
+
+
+EASTMONEY_F10_SOURCE = "public_eastmoney_f10_company_profile"
+
+
+def resolve_eastmoney_stock_code(query: str, params: dict[str, Any] | None = None) -> str | None:
+    """Resolve an A-share code from a seed query or identifier params."""
+    candidates = [query]
+    if isinstance(params, dict):
+        for key in ("stock_code", "a_share_code", "ticker", "code", "secucode"):
+            value = params.get(key)
+            if value not in (None, ""):
+                candidates.append(str(value))
+    for raw in candidates:
+        code = normalize_stock_code(str(raw or "").strip())
+        if code:
+            return code
+    return None
+
+
+def format_eastmoney_f10_standardized_records(
+    query: str,
+    lookup_result: dict[str, Any] | None,
+    *,
+    stock_code: str | None = None,
+) -> list[dict[str, Any]]:
+    """Convert an Eastmoney F10 lookup payload into investigation records."""
+    if not isinstance(lookup_result, dict):
+        return []
+    fields = lookup_result.get("fields") if isinstance(lookup_result.get("fields"), dict) else {}
+    if not fields:
+        return []
+    name = str(fields.get("company_name") or fields.get("a_share_name") or query or "").strip()
+    code = stock_code or resolve_eastmoney_stock_code(query, fields) or ""
+    credit_code = str(fields.get("credit_code") or "").strip()
+    url = ""
+    if code:
+        url = f"{_SURVEY_URL}?code={code}"
+    entities: list[dict[str, Any]] = []
+    for key, relation in (
+        ("legal_rep", "legal_representative"),
+        ("chairman", "chairperson"),
+        ("ceo", "chief_executive_officer"),
+        ("board_secretary", "board_secretary"),
+    ):
+        person = str(fields.get(key) or "").strip()
+        if person:
+            entities.append({
+                "kind": "person",
+                "name": person,
+                "relation": relation,
+                "confidence": 0.7,
+                "source": EASTMONEY_F10_SOURCE,
+            })
+    for holder in fields.get("top_holders") or []:
+        if not isinstance(holder, dict):
+            continue
+        holder_name = str(holder.get("name") or "").strip()
+        if not holder_name:
+            continue
+        entities.append({
+            "kind": "company",
+            "name": holder_name,
+            "relation": "shareholder",
+            "confidence": 0.68,
+            "source": EASTMONEY_F10_SOURCE,
+            "ownership_ratio": holder.get("ratio"),
+        })
+    summary_parts = [
+        part
+        for part in (
+            f"stock_code={code}" if code else "",
+            f"credit_code={credit_code}" if credit_code else "",
+            f"legal_rep={fields['legal_rep']}" if fields.get("legal_rep") else "",
+            f"exchange={fields['exchange']}" if fields.get("exchange") else "",
+            f"holders={fields['holder_count']}" if fields.get("holder_count") else "",
+        )
+        if part
+    ]
+    return [
+        {
+            "source_name": EASTMONEY_F10_SOURCE,
+            "source_type": "exchange_public_disclosure",
+            "source_hint": EASTMONEY_F10_SOURCE,
+            "entity": name,
+            "title": f"Eastmoney F10 company profile: {name}",
+            "summary": "; ".join(summary_parts),
+            "url": url,
+            "confidence": 0.78,
+            "stock_code": code,
+            "ticker": fields.get("a_share_code") or (code[2:] if len(code) == 8 else code),
+            "unified_social_credit_code": credit_code or None,
+            "extracted_fields": fields,
+            "entities": entities,
+            "evidence": [
+                {
+                    "type": "listed_company_profile",
+                    "provider": "Eastmoney F10",
+                    "stock_code": code,
+                    "claim": "; ".join(summary_parts) or name,
+                }
+            ],
+            "raw": fields,
+        }
+    ]

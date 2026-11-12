@@ -2780,7 +2780,7 @@ def _risk_brief(
     highest = str(summary.get("highest_severity") or "").lower()
     verdict = _verdict(execution_state, highest, score)
     key_findings = [_finding(event) for event in risk_events[:6]]
-    if not key_findings and execution_state in {"not_executed", "no_available_sources"}:
+    if not key_findings and execution_state in {"not_executed", "no_available_sources", "no_evidence_found", "leads_only"}:
         key_findings.append({
             "title": "尚未形成有效取证，当前证据不足",
             "severity": "info",
@@ -4788,24 +4788,101 @@ def _build_subject_due_diligence_profile(
     - Source attribution
     """
 
-    def _risk_rating(profile: dict | None, risk_count: int, gap: bool) -> str:
-        if risk_count >= 2: return "high"
-        if profile and risk_count >= 1: return "medium"
-        if profile: return "low"
-        if gap: return "unknown"
-        return "low"
+    def _profile_has_facts(profile: dict | None) -> bool:
+        if not isinstance(profile, dict) or not profile:
+            return False
+        status = str(profile.get("verification_status") or profile.get("corroboration_status") or "").lower()
+        if (
+            status in {
+                "public_lead",
+                "public_lead_needs_corroboration",
+                "lead",
+                "leads_only",
+                "unverified",
+                "relationship_or_legal_only_needs_controller_corroboration",
+            }
+            or status.endswith("_needs_corroboration")
+        ):
+            return False
+        if "fact_count" in profile:
+            try:
+                if int(profile.get("fact_count") or 0) <= 0:
+                    return False
+            except (TypeError, ValueError):
+                pass
+        for key in (
+            "fact_count",
+            "row_count",
+            "customer_count",
+            "supplier_count",
+            "administrative_penalty_count",
+            "court_enforcement_count",
+            "risk_event_count",
+        ):
+            try:
+                if int(profile.get(key) or 0) > 0:
+                    return True
+            except (TypeError, ValueError):
+                continue
+        # Metadata / empty investigation scaffolding is not factual evidence.
+        signal_keys = (
+            "controller_signals",
+            "key_person_signals",
+            "control_path_signals",
+            "legal_pressure_signals",
+            "relationship_signals",
+            "money_in_signals",
+            "products",
+            "customers",
+            "suppliers",
+        )
+        def _substantive(value: Any) -> bool:
+            if isinstance(value, list):
+                return any(_substantive(item) for item in value)
+            if isinstance(value, dict):
+                return any(_substantive(item) for item in value.values())
+            if not isinstance(value, str):
+                return False
+            text = value.strip()
+            if not text:
+                return False
+            weak_markers = (
+                "relationship_network_subjects=",
+                "relation_types=",
+                "mentioned_with;relation=",
+                "relation=mentioned_with",
+            )
+            return not any(marker in text for marker in weak_markers)
 
-    # Capital lane risk
+        for key in signal_keys:
+            if _substantive(profile.get(key)):
+                return True
+        return False
+
+    def _risk_rating(has_facts: bool, risk_count: int) -> str:
+        # A lane with only leads or no factual evidence is unknown, not low risk.
+        if risk_count >= 2:
+            return "high"
+        if has_facts and risk_count >= 1:
+            return "medium"
+        if has_facts:
+            return "low"
+        return "unknown"
+
+    # Capital lane risk: public_capital_profile is lead-only and cannot clear the lane.
     cap_risks = sum(1 for e in risk_events if str(e.get("category","")).lower() in {"financing","credit","bond","asset_pressure","court_enforcement"})
-    cap_rating = _risk_rating(fund_flow_profile or public_capital_profile, cap_risks, financial is None)
+    cap_rating = _risk_rating(financial is not None or _profile_has_facts(fund_flow_profile), cap_risks)
 
     # Goods lane risk
     goods_risks = sum(1 for e in risk_events if str(e.get("category","")).lower() in {"supply_chain","trade","product","industry"})
-    goods_rating = _risk_rating(goods_flow_profile or public_goods_profile, goods_risks, not public_goods_profile)
+    goods_rating = _risk_rating(_profile_has_facts(goods_flow_profile) or _profile_has_facts(supply_chain_profile), goods_risks)
 
     # People lane risk
     people_risks = sum(1 for e in risk_events if str(e.get("category","")).lower() in {"court_enforcement","administrative_penalty","ownership_control","dishonesty"})
-    people_rating = _risk_rating(people_flow_profile or public_people_profile, people_risks, not public_people_profile)
+    people_rating = _risk_rating(
+        _profile_has_facts(people_flow_profile) or _profile_has_facts(legal_administrative_profile),
+        people_risks,
+    )
 
     # Overall risk
     ratings = [cap_rating, goods_rating, people_rating]
@@ -15540,7 +15617,7 @@ def _short_text(raw: Any, limit: int) -> str:
 
 
 def _verdict(execution_state: str, highest: str, score: int) -> str:
-    if execution_state in {"not_executed", "no_available_sources"}:
+    if execution_state in {"not_executed", "no_available_sources", "no_evidence_found", "leads_only"}:
         return "insufficient_data"
     if highest == "critical" or score >= 85:
         return "critical_risk_review_required"
@@ -15568,6 +15645,7 @@ def _execution_state_label(state: str) -> str:
         "no_available_sources": "当前没有可用数据源",
         "all_sources_failed": "数据源全部失败，需要重试或检查网络",
         "no_evidence_found": "已查询，但暂无有效证据",
+        "leads_only": "仅有检索计划或弱线索，没有取回的事实证据",
         "partial_source_failure": "部分数据源失败，已有结果可先参考",
         "evidence_found": "已取得可用证据",
         "risk_events_found": "已发现风险事件",

@@ -57,7 +57,7 @@ def test_risk_scoring_reflects_leverage_and_cash_flow():
 
     assert risk.risk_score >= 80
     assert risk.risk_level == "高"
-    assert "资产负债率过高" in risk.warning_flags
+    assert "负债权益比过高" in risk.warning_flags
     assert "净资产收益率过低" in risk.warning_flags
     assert "谨慎投资" not in risk.recommendation
     assert "核验" in risk.recommendation

@@ -133,7 +133,9 @@ def test_qyyjt_websearch_plan_does_not_raise_risk_event(tmp_path) -> None:
 
     assert result.evidence_count == 1
     assert result.risk_event_count == 0
-    assert result.retrieval_summary["execution_state"] == "evidence_found"
+    assert result.retrieval_summary["factual_evidence_count"] == 0
+    assert result.retrieval_summary["lead_count"] == 1
+    assert result.retrieval_summary["execution_state"] == "leads_only"
     assert len(result.graph.entities) == 1
     assert result.graph.relations == []
     assert not any(

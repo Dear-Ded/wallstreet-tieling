@@ -163,7 +163,7 @@ async def run(args: argparse.Namespace) -> dict:
         retrieval_concurrency=clamp_int(args.retrieval_concurrency, 1, 20),
         fanout_rounds=1 if args.official_public_smoke else selected.fanout_rounds,
         max_fanout_tasks=clamp_int(args.max_fanout_tasks, 0, 80),
-        identifier_fanout_only=bool(args.official_public_smoke),
+        identifier_fanout_only=bool(args.official_public_smoke or getattr(selected, "identifier_fanout_only", False)),
         query_timeout_seconds=clamp_float(args.query_timeout_seconds, 0.1, 120.0),
     )
     graph_payload = export_risk_graph(result).to_dict()

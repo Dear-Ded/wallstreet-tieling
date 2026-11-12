@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from contextlib import suppress
 from dataclasses import dataclass
 import inspect
@@ -414,20 +415,52 @@ class RiskDiscoveryPipeline:
         """Create high-authority follow-up tasks from official identifiers."""
         if entity.kind is not EntityKind.COMPANY:
             return []
+        tasks: list[SearchTask] = []
         cik = RiskDiscoveryPipeline._entity_attribute(entity, "cik")
-        if not cik:
-            return []
-        task = SearchTask(
-            RetrievalDomain.FINANCING_CAPITAL_MARKETS,
-            entity.name,
-            "sec_edgar_public_api",
-            f"Fanout round {round_index}: collect SEC companyfacts financial metrics for the matched issuer.",
-            19 + (round_index * 5),
-            (),
-            (),
-            params={"cik": str(cik).zfill(10), "sec_endpoint": "companyfacts"},
-        )
-        return [] if RiskDiscoveryPipeline._task_key(task) in seen_task_keys else [task]
+        if cik:
+            tasks.append(
+                SearchTask(
+                    RetrievalDomain.FINANCING_CAPITAL_MARKETS,
+                    entity.name,
+                    "sec_edgar_public_api",
+                    f"Fanout round {round_index}: collect SEC companyfacts financial metrics for the matched issuer.",
+                    19 + (round_index * 5),
+                    (),
+                    (),
+                    params={"cik": str(cik).zfill(10), "sec_endpoint": "companyfacts"},
+                )
+            )
+        lei = RiskDiscoveryPipeline._entity_attribute(entity, "lei")
+        if lei and RiskDiscoveryPipeline._looks_like_lei(lei):
+            tasks.append(
+                SearchTask(
+                    RetrievalDomain.CORPORATE_REGISTRY,
+                    entity.name,
+                    "gleif_lei_public_api",
+                    f"Fanout round {round_index}: collect GLEIF legal-entity details for the matched LEI.",
+                    16 + (round_index * 5),
+                    (),
+                    (),
+                    params={"lei": lei.upper()},
+                )
+            )
+        stock_code = RiskDiscoveryPipeline._company_stock_code(entity)
+        if stock_code:
+            from adapters.eastmoney_f10_adapter import EASTMONEY_F10_SOURCE
+
+            tasks.append(
+                SearchTask(
+                    RetrievalDomain.CORPORATE_REGISTRY,
+                    entity.name,
+                    EASTMONEY_F10_SOURCE,
+                    f"Fanout round {round_index}: collect Eastmoney F10 listed-company profile for the matched A-share code.",
+                    18 + (round_index * 5),
+                    (),
+                    (),
+                    params={"stock_code": stock_code},
+                )
+            )
+        return [task for task in tasks if RiskDiscoveryPipeline._task_key(task) not in seen_task_keys]
 
     @staticmethod
     def _public_graph_fanout_tasks(
@@ -464,6 +497,33 @@ class RiskDiscoveryPipeline:
             if value not in (None, ""):
                 return str(value)
         return ""
+
+    @staticmethod
+    def _looks_like_lei(value: str) -> bool:
+        return bool(re.fullmatch(r"[A-Z0-9]{20}", str(value or "").strip().upper()))
+
+    @staticmethod
+    def _company_stock_code(entity: InvestigationEntity) -> str:
+        from adapters.eastmoney_f10_adapter import normalize_stock_code, resolve_eastmoney_stock_code
+
+        for key in ("stock_code", "a_share_code", "ticker", "code"):
+            code = normalize_stock_code(RiskDiscoveryPipeline._entity_attribute(entity, key) or "")
+            if code:
+                return code
+        raw = entity.attributes.get("raw")
+        if isinstance(raw, dict):
+            from adapters.multi_datasource import RestApiDataSource
+
+            payload = raw
+            entities = raw.get("entities")
+            if not raw.get("claims") and isinstance(entities, dict) and entities:
+                payload = next(iter(entities.values()))
+            if isinstance(payload, dict):
+                for symbol in RestApiDataSource._wikidata_tickers(payload):
+                    code = normalize_stock_code(symbol)
+                    if code:
+                        return code
+        return resolve_eastmoney_stock_code(entity.name) or ""
 
     async def _execute_search_task(
         self,
@@ -967,11 +1027,14 @@ class RiskDiscoveryPipeline:
         )
         missing_domains = sorted(set(planned_domains) - set(attempted_domains))
         domains_without_evidence = sorted(set(attempted_domains) - set(domains_with_evidence))
+        factual_evidence_count, lead_count = RiskDiscoveryPipeline._factual_and_lead_counts(plan)
         execution_state = RiskDiscoveryPipeline._execution_state(
             diagnostics,
             evidence_count=evidence_count,
             risk_event_count=risk_event_count,
             source_routing=source_routing,
+            factual_evidence_count=factual_evidence_count,
+            lead_count=lead_count,
         )
 
         summary = {
@@ -982,6 +1045,8 @@ class RiskDiscoveryPipeline:
             "record_count": record_count,
             "ingested_count": ingested_count,
             "evidence_count": evidence_count,
+            "factual_evidence_count": factual_evidence_count,
+            "lead_count": lead_count,
             "risk_event_count": risk_event_count,
             "coverage": {
                 "planned_domain_count": len(planned_domains),
@@ -1096,10 +1161,15 @@ class RiskDiscoveryPipeline:
         evidence_count: int,
         risk_event_count: int,
         source_routing: dict[str, Any] | None,
+        factual_evidence_count: int | None = None,
+        lead_count: int | None = None,
     ) -> str:
+        # Graph evidence_count may include self-generated query-plan leads.
+        facts = evidence_count if factual_evidence_count is None else int(factual_evidence_count)
+        leads = 0 if lead_count is None else int(lead_count)
         if risk_event_count > 0:
             return "risk_events_found"
-        if evidence_count > 0:
+        if facts > 0:
             return "evidence_found"
         if not diagnostics:
             if source_routing and int(source_routing.get("available_count") or 0) == 0:
@@ -1108,11 +1178,50 @@ class RiskDiscoveryPipeline:
         statuses = {str(item.get("status") or "unknown") for item in diagnostics}
         if statuses <= {"failed", "timeout"}:
             return "all_sources_failed"
-        if statuses <= {"no_results", "empty", "skipped_unsupported_source"}:
-            return "no_evidence_found"
         if "failed" in statuses or "timeout" in statuses:
             return "partial_source_failure"
+        if leads > 0:
+            return "leads_only"
         return "no_evidence_found"
+
+    @staticmethod
+    def _factual_and_lead_counts(plan: RetrievalPlan | None) -> tuple[int, int]:
+        if plan is None:
+            return 0, 0
+        facts = 0
+        leads = 0
+        for evidence in plan.graph.evidence.values():
+            if RiskDiscoveryPipeline._evidence_counts_as_fact(evidence):
+                facts += 1
+            else:
+                leads += 1
+        return facts, leads
+
+    @staticmethod
+    def _evidence_is_query_plan_lead(evidence: Any) -> bool:
+        match = getattr(evidence, "entity_match", None)
+        source_type = ""
+        if isinstance(match, dict):
+            source_type = str(match.get("record_source_type") or "")
+        return EvidenceIngestor._record_is_query_plan_lead(
+            {
+                "source_type": source_type,
+                "source_hint": getattr(evidence, "source", ""),
+                "source_name": getattr(evidence, "source", ""),
+                "entity_match": match,
+            }
+        )
+
+    @staticmethod
+    def _evidence_counts_as_fact(evidence: Any) -> bool:
+        """Return whether evidence is a retrieved fact about a strongly matched subject."""
+        if RiskDiscoveryPipeline._evidence_is_query_plan_lead(evidence):
+            return False
+        match = getattr(evidence, "entity_match", None)
+        if not isinstance(match, dict) or not match:
+            return False
+        level = str(match.get("level") or "").strip().lower()
+        return level in {"exact", "strong"}
 
     @staticmethod
     def _next_actions(
@@ -1135,7 +1244,12 @@ class RiskDiscoveryPipeline:
         if statuses.get("no_results") or statuses.get("empty"):
             actions.append("Empty retrieval is a coverage signal, not proof of no risk; expand source coverage or refine queries for empty domains.")
         if statuses.get("skipped_unsupported_source"):
-            actions.append("Some planned sources were skipped because the selected retrieval tool cannot execute them; provide a datasource config with those connectors enabled.")
+            actions.append("Some planned sources were skipped because the selected retrieval tool cannot execute them; this is an evidence gap, not a clean result.")
+        coverage_gaps = list((source_routing or {}).get("coverage_gaps") or [])
+        for gap in coverage_gaps[:4]:
+            actions.append(str(gap))
+        if execution_state == "leads_only":
+            actions.append("Only self-generated query plans or weak leads were produced; these are not retrieved facts and cannot support a low-risk conclusion.")
         if missing_domains:
             actions.append("Execute missing planned domains: " + ", ".join(missing_domains[:6]))
         if domains_without_evidence:
@@ -1186,7 +1300,11 @@ class RiskDiscoveryPipeline:
         available_set = {str(item) for item in available_sources}
         unavailable = sorted(configured_set - available_set)
 
-        return {
+        coverage_gaps = call_optional("coverage_gaps", [])
+        if not isinstance(coverage_gaps, list):
+            coverage_gaps = []
+
+        snapshot = {
             "configured_count": len(configured_set),
             "available_count": len(available_set),
             "configured_sources": sorted(configured_set),
@@ -1199,6 +1317,9 @@ class RiskDiscoveryPipeline:
                 if isinstance(value, dict)
             },
         }
+        if coverage_gaps:
+            snapshot["coverage_gaps"] = [str(item) for item in coverage_gaps if str(item).strip()]
+        return snapshot
 
     @staticmethod
     def _source_health_snapshot(search_engine: Any) -> dict[str, bool] | None:

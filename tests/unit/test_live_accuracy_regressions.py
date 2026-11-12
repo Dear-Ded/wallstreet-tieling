@@ -283,3 +283,107 @@ def test_stock_code_in_generic_code_is_not_filed_as_uscc() -> None:
     assert "unified_social_credit_code" not in extract({"raw": {"code": "600519"}})
     assert extract({"raw": {"code": "9152000071430580XT"}})["unified_social_credit_code"] == "9152000071430580XT"
     assert "unified_social_credit_code" not in EntityResolutionScorer.score("贵州茅台", "贵州茅台", {"code": "600519"})["identifiers"]
+
+
+# --- Lane ratings: leads are not a low-risk clearance --------------------------------
+
+def test_lane_with_only_public_leads_is_unknown_not_low() -> None:
+    profile = _build_subject_due_diligence_profile(
+        company="Demo Lead Only Co.",
+        financial=None,
+        fund_flow_profile=None,
+        goods_flow_profile=None,
+        people_flow_profile=None,
+        cross_lane_insights=[],
+        supply_chain_profile=None,
+        legal_administrative_profile=None,
+        public_capital_profile={"row_count": 2, "claims": ["financing lead"]},
+        public_goods_profile={"row_count": 1, "claims": ["market lead"]},
+        public_people_profile={"row_count": 0, "claims": []},
+        risk_events=[],
+        next_questions=[],
+        evidence_gaps=["people lane has no facts"],
+    )
+    summary = profile["executive_summary"]
+    assert summary["capital_risk"] == "unknown"
+    assert summary["goods_risk"] == "unknown"
+    assert summary["people_risk"] == "unknown"
+    assert summary["overall_risk"] == "unknown"
+    from core.investigation import _build_human_readable_dd_summary
+
+    rendered = _build_human_readable_dd_summary(profile)
+    assert "People: INSUFFICIENT DATA" in rendered
+    assert "People: LOW RISK (0 signals)" not in rendered
+
+
+def test_people_lane_with_public_lead_key_persons_is_unknown_not_low() -> None:
+    profile = _build_subject_due_diligence_profile(
+        company="贵州茅台酒股份有限公司",
+        financial=None,
+        fund_flow_profile=None,
+        goods_flow_profile=None,
+        people_flow_profile={
+            "controller_signals": ["陈华"],
+            "key_person_signals": ["legal_rep=陈华"],
+            "verification_status": "public_lead",
+            "fact_count": 0,
+            "lead_count": 4,
+        },
+        cross_lane_insights=[],
+        supply_chain_profile=None,
+        legal_administrative_profile=None,
+        public_capital_profile=None,
+        public_goods_profile=None,
+        public_people_profile={
+            "row_count": 1,
+            "claims": ["legal_rep=陈华"],
+            "verification_status": "public_lead_needs_corroboration",
+        },
+        risk_events=[],
+        next_questions=[],
+        evidence_gaps=["people lane has no official facts"],
+    )
+    summary = profile["executive_summary"]
+    assert summary["people_risk"] == "unknown"
+    assert summary["overall_risk"] == "unknown"
+    from core.investigation import _build_human_readable_dd_summary
+
+    rendered = _build_human_readable_dd_summary(profile)
+    assert "People: INSUFFICIENT DATA" in rendered
+    assert "People: LOW RISK" not in rendered
+
+
+def test_people_lane_relationship_only_profile_is_unknown() -> None:
+    profile = _build_subject_due_diligence_profile(
+        company="Apple Inc.",
+        financial={"revenue": 478834000000, "net_income": 132175000000},
+        fund_flow_profile=None,
+        goods_flow_profile=None,
+        people_flow_profile={
+            "controller_signals": [],
+            "key_person_signals": ["relationship_network_subjects=7;relations=7"],
+            "relationship_signals": [
+                "relation_types=mentioned_with,registered_address,headquarters_address",
+                "Apple Inc.->C/O C T Corporation System;relation=registered_address;confidence=0.82",
+            ],
+            "verification_status": "relationship_or_legal_only_needs_controller_corroboration",
+        },
+        cross_lane_insights=[],
+        supply_chain_profile=None,
+        legal_administrative_profile=None,
+        public_capital_profile=None,
+        public_goods_profile=None,
+        public_people_profile=None,
+        risk_events=[],
+        next_questions=[],
+        evidence_gaps=["people lane has no controller facts"],
+    )
+    summary = profile["executive_summary"]
+    assert summary["people_risk"] == "unknown"
+    assert summary["capital_risk"] == "low"
+    assert summary["overall_risk"] == "unknown"
+    from core.investigation import _build_human_readable_dd_summary
+
+    rendered = _build_human_readable_dd_summary(profile)
+    assert "People: INSUFFICIENT DATA" in rendered
+    assert "People: LOW RISK (0 signals)" not in rendered

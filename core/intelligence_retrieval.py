@@ -209,6 +209,16 @@ class SourceCatalog:
             SourceAuthority.PUBLIC_WEB,
             notes=("Use Wikidata as a public knowledge-graph corroboration layer for entities, people, identifiers, and websites.",),
         ),
+        "public_eastmoney_f10_company_profile": SourceProfile(
+            "public_eastmoney_f10_company_profile",
+            ConnectorShape.REST_API,
+            SourceAccess.PUBLIC,
+            SourceAuthority.PUBLIC_WEB,
+            notes=(
+                "Use Eastmoney F10 public listed-company survey and top-holder disclosures when a stock code is known.",
+                "This is a no-credential public aggregator of A-share company profiles, not an official registry filing.",
+            ),
+        ),
         "court_and_credit_sources": SourceProfile(
             "court_and_credit_sources",
             ConnectorShape.OFFICIAL_PLATFORM,
@@ -628,7 +638,7 @@ class EntityResolutionScorer:
         for target, keys in {
             "lei": ("lei",),
             "cik": ("cik", "cik_str"),
-            "ticker": ("ticker", "symbol"),
+            "ticker": ("ticker", "symbol", "stock_code", "a_share_code"),
             "unified_social_credit_code": (
                 "unified_social_credit_code",
                 "unifiedSocialCreditCode",
@@ -886,7 +896,7 @@ class EvidenceIngestor:
         claims = tuple(str(item) for item in result.get("claims", []) if str(item).strip())
         seed_entity = graph.entities.get(seed_entity_id)
         seed_name = seed_entity.name if seed_entity else task.query
-        entity_match = cls._entity_match(seed_name, result)
+        entity_match = cls._entity_match(seed_name, result, task)
 
         evidence = EvidenceItem(
             id=cls._stable_id(
@@ -1038,6 +1048,13 @@ class EvidenceIngestor:
             "field_contract": record.get("field_contract"),
             "report_admission": record.get("report_admission"),
             "qyyjt_module": record.get("qyyjt_module"),
+            "extracted_fields": record.get("extracted_fields"),
+            "lei": record.get("lei"),
+            "cik": record.get("cik"),
+            "ticker": record.get("ticker") or record.get("stock_code"),
+            "stock_code": record.get("stock_code"),
+            "unified_social_credit_code": record.get("unified_social_credit_code"),
+            "wikidata_id": record.get("wikidata_id"),
         }
 
     @staticmethod
@@ -1062,7 +1079,7 @@ class EvidenceIngestor:
         for target, keys in {
             "cik": ("cik", "cik_str"),
             "lei": ("lei",),
-            "ticker": ("ticker", "symbol"),
+            "ticker": ("ticker", "symbol", "stock_code", "a_share_code"),
             "wikidata_id": ("wikidata_id", "id"),
             "unified_social_credit_code": ("unified_social_credit_code", "unifiedSocialCreditCode", "creditCode", "uscc", "code"),
             "registration_number": ("registration_number", "registrationNo", "regNo"),
@@ -1807,7 +1824,12 @@ class EvidenceIngestor:
         return EvidenceType.DATABASE_RESULT
 
     @classmethod
-    def _entity_match(cls, seed_name: str, result: dict[str, Any]) -> dict[str, Any] | None:
+    def _entity_match(
+        cls,
+        seed_name: str,
+        result: dict[str, Any],
+        task: SearchTask | None = None,
+    ) -> dict[str, Any] | None:
         def with_record_metadata(match: dict[str, Any] | None) -> dict[str, Any] | None:
             source_type = str(result.get("record_source_type") or result.get("source_type") or "").strip()
             if not source_type:
@@ -1835,8 +1857,43 @@ class EvidenceIngestor:
                         break
         if not candidate:
             return with_record_metadata(None)
-        raw_payload = result.get("raw") if isinstance(result.get("raw"), dict) else {}
-        return with_record_metadata(EntityResolutionScorer.score(seed_name, candidate, raw_payload))
+        payload = cls._identifier_payload_from_result(result)
+        match = EntityResolutionScorer.score(seed_name, candidate, payload)
+        query = str(task.query if task is not None else "").strip()
+        if query and query != seed_name:
+            alt = EntityResolutionScorer.score(query, candidate, payload)
+            if float(alt.get("score") or 0) > float(match.get("score") or 0):
+                reasons = list(alt.get("reasons") or [])
+                reasons.append("matched the identifier-fanout or task query name")
+                alt = {**alt, "reasons": reasons, "seed_name": seed_name}
+                match = alt
+        return with_record_metadata(match)
+
+    @staticmethod
+    def _identifier_payload_from_result(result: dict[str, Any]) -> dict[str, Any]:
+        payload: dict[str, Any] = {}
+        raw = result.get("raw")
+        if isinstance(raw, dict):
+            payload.update(raw)
+        extracted = result.get("extracted_fields")
+        if isinstance(extracted, dict):
+            payload.update(extracted)
+        for key in (
+            "lei",
+            "cik",
+            "cik_str",
+            "ticker",
+            "symbol",
+            "stock_code",
+            "a_share_code",
+            "unified_social_credit_code",
+            "wikidata_id",
+            "registration_number",
+        ):
+            value = result.get(key)
+            if value not in (None, ""):
+                payload[key] = value
+        return payload
 
     @staticmethod
     def _clamp_confidence(raw: Any) -> float:
@@ -1851,8 +1908,13 @@ class EvidenceIngestor:
         raw_profile = result.get("source_profile")
         if isinstance(raw_profile, SourceProfile):
             return raw_profile
-        source_hint = result.get("source_hint") or task.source_hint
-        return SourceCatalog.profile_for(str(source_hint))
+        source_hint = str(result.get("source_hint") or task.source_hint or "")
+        catalog = SourceCatalog.profile_for(source_hint)
+        if catalog.authority is not SourceAuthority.UNKNOWN:
+            return catalog
+        if source_hint and source_hint == str(task.source_hint or ""):
+            return task.resolved_source_profile()
+        return catalog
 
     @staticmethod
     def _entity_id(kind: EntityKind, name: str) -> str:
