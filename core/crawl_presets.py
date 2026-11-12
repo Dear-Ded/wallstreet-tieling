@@ -34,15 +34,20 @@ XUEQIU_DISCUSSION = "https://xueqiu.com/query/v1/symbol/search/status.json?symbo
 
 
 def xueqiu_symbol(code: str) -> str:
-    """600519 -> SH600519, 000001 -> SZ000001, 830799 -> BJ830799, AAPL/00700 passthrough."""
+    """600519 -> SH600519, 000001 -> SZ000001, 920799 / 830799 -> BJ..., AAPL/00700 passthrough.
+
+    Beijing Stock Exchange stocks all trade under the 920 prefix since
+    2025-10-09 (legacy 43/83/87 codes still map to BJ); 5xxxxx are Shanghai
+    funds/ETFs.
+    """
     raw = code.strip().upper()
     if raw[:2] in {"SH", "SZ", "BJ"} or not raw.isdigit():
         return raw
     if len(raw) == 6:
-        if raw.startswith(("6", "9")):
-            return "SH" + raw
-        if raw.startswith(("4", "8")):
+        if raw.startswith("920") or raw.startswith(("4", "8")):
             return "BJ" + raw
+        if raw.startswith(("5", "6", "9")):
+            return "SH" + raw
         return "SZ" + raw
     return raw
 

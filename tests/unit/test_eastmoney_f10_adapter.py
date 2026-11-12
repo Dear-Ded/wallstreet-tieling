@@ -24,7 +24,7 @@ FIXTURE_SURVEY = json.dumps({
         "gsjj": "公司成立于1999年",
     },
     "fxxg": {"ssrq": "2001-08-27", "mgfxj": "31.39", "clrq": "1999-11-20"},
-    "SecuCode": "SH600519",
+    "SecuCode": "600519.SH",  # live CompanySurveyAjax shape (2026-11-12)
     "SecurityCode": "600519",
 })
 

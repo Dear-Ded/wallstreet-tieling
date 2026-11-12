@@ -479,7 +479,9 @@ sources:
     description: "Wikidata public EntitySearch API for entity graph corroboration."
     headers:
       Accept: "application/json"
-      User-Agent: "wallstreet-tieling/0.6.0"
+      # Wikimedia's robot policy (https://w.wiki/4wJS) rejects bare client UAs
+      # with HTTP 403; the UA must carry contact information.
+      User-Agent: "wallstreet-tieling/0.6.0 (+https://github.com/Dear-Ded/wallstreet-tieling)"
     auth:
       type: "none"
     ping: true

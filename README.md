@@ -119,6 +119,21 @@ Latest local evidence:
 
 ## Quick Start
 
+The package is not published to the npm registry yet, so `npx wallstreet-tieling`
+only resolves inside a clone of this repository. Install the Python runtime
+dependencies first; the Node CLI and MCP bridge shell out to Python and the
+REST API is Python (set `WST_PYTHON` if the interpreter that has them is not
+`python3`):
+
+```bash
+git clone https://github.com/Dear-Ded/wallstreet-tieling.git
+cd wallstreet-tieling
+python -m pip install -r requirements.txt
+npm install
+```
+
+Then, from the repository root:
+
 ```bash
 npx wallstreet-tieling --help
 npx wallstreet-tieling --release

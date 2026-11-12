@@ -4809,7 +4809,17 @@ def _build_subject_due_diligence_profile(
 
     # Overall risk
     ratings = [cap_rating, goods_rating, people_rating]
-    overall = "high" if "high" in ratings else ("medium" if "medium" in ratings else "low")
+    # A lane without evidence is "unknown", not "low": the overall rating may
+    # only read "low" when every lane was actually assessed as low. Otherwise
+    # a packet with no evidence at all used to print "Overall: LOW RISK".
+    if "high" in ratings:
+        overall = "high"
+    elif "medium" in ratings:
+        overall = "medium"
+    elif all(rating == "low" for rating in ratings):
+        overall = "low"
+    else:
+        overall = "unknown"
     profile_count = sum(1 for p in [financial, public_capital_profile, public_goods_profile, public_people_profile, supply_chain_profile, legal_administrative_profile] if p)
 
     # Key findings
