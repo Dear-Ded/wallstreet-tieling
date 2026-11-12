@@ -4792,13 +4792,17 @@ def _build_subject_due_diligence_profile(
         if not isinstance(profile, dict) or not profile:
             return False
         status = str(profile.get("verification_status") or profile.get("corroboration_status") or "").lower()
-        if status in {
-            "public_lead",
-            "public_lead_needs_corroboration",
-            "lead",
-            "leads_only",
-            "unverified",
-        }:
+        if (
+            status in {
+                "public_lead",
+                "public_lead_needs_corroboration",
+                "lead",
+                "leads_only",
+                "unverified",
+                "relationship_or_legal_only_needs_controller_corroboration",
+            }
+            or status.endswith("_needs_corroboration")
+        ):
             return False
         if "fact_count" in profile:
             try:
